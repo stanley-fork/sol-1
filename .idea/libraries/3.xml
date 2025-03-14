@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="3">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/misc/cpm/3/cpm3-s.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/cpm/3/cpm3on2.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/cpm/3/cpm3src.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/cpm/3/cpm2000s.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/cpm/3/cpm3_src.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/cpm/3/cpm3src_unix.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

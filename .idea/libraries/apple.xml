@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="apple">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/misc/zork/infocom-zcode-terps-master/apple/apple-g.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/zork/infocom-zcode-terps-master/apple/apple-h.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

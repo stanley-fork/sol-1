@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="c64-d">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/misc/zork/infocom-zcode-terps-master/64/zip/c64-d.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

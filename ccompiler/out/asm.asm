@@ -2048,6 +2048,7 @@ _same_signs_61:
   lea d, [bp + -129] ; $j
   mov b, [d]
   mov c, 0
+  mov c, 0
   add32 cb, ga
   pop g
   pop a
@@ -2133,6 +2134,7 @@ _same_signs_65:
   mov g, c
   lea d, [bp + -129] ; $j
   mov b, [d]
+  mov c, 0
   mov c, 0
   add32 cb, ga
   pop g
@@ -3258,6 +3260,7 @@ _same_signs_100:
   lea d, [bp + -131] ; $j
   mov b, [d]
   mov c, 0
+  mov c, 0
   add32 cb, ga
   pop g
   pop a
@@ -3343,6 +3346,7 @@ _same_signs_104:
   mov g, c
   lea d, [bp + -131] ; $j
   mov b, [d]
+  mov c, 0
   mov c, 0
   add32 cb, ga
   pop g
@@ -8738,6 +8742,7 @@ _same_signs_197:
   add b, a
   pop a
 ; --- END TERMS
+  mov c, 0
   add32 cb, ga
   pop g
   pop a
@@ -8849,6 +8854,7 @@ _same_signs_202:
   add b, a
   pop a
 ; --- END TERMS
+  mov c, 0
   add32 cb, ga
   pop g
   pop a
@@ -8922,6 +8928,7 @@ _same_signs_206:
   mov b, a
   pop a
 ; --- END TERMS
+  mov c, 0
   add32 cb, ga
   pop g
   pop a
@@ -10255,6 +10262,7 @@ _if227_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   slt ; <
   pop g
@@ -10301,6 +10309,7 @@ _if228_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -10334,6 +10343,7 @@ _while229_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgt
   pop g
@@ -10376,6 +10386,7 @@ _while229_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -10501,6 +10512,7 @@ _if237_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -10533,6 +10545,7 @@ _while238_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgu
   pop g
@@ -10575,6 +10588,7 @@ _while238_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS

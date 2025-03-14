@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="zork0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/misc/zork/zorkzero-master/zork0.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

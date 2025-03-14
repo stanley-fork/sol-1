@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="kicad_models">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/hardware/schematics/kicad_models/100SP1T1B4M2QE.zip!/" />
+      <root url="jar://$PROJECT_DIR$/hardware/schematics/kicad_models/M48T02_200PC1.zip!/" />
+      <root url="jar://$PROJECT_DIR$/hardware/schematics/kicad_models/SPST_Switch.zip!/" />
+      <root url="jar://$PROJECT_DIR$/hardware/schematics/kicad_models/KiCad-libs-master.zip!/" />
+      <root url="jar://$PROJECT_DIR$/hardware/schematics/kicad_models/SPDT.zip!/" />
+      <root url="jar://$PROJECT_DIR$/hardware/schematics/kicad_models/4116R_1_102LF.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

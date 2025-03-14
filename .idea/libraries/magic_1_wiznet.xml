@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="magic-1-wiznet">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/hardware/wiznet/magic-1-wiznet/W5300_Drv_V1.2.4.zip!/" />
+      <root url="jar://$PROJECT_DIR$/hardware/wiznet/magic-1-wiznet/._W5300_Drv_V1.2.4.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

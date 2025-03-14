@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="coco">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/misc/zork/infocom-zcode-terps-master/colorcomputer/coco.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

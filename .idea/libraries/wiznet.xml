@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="wiznet">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/hardware/wiznet/WIZnet adapter/wiznet.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="68k">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/misc/cpm/68k/cpm68k.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/cpm/68k/68k_pgms.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/cpm/68k/cpm68k1.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/cpm/68k/68_12src.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

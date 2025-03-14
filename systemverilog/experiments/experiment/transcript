@@ -13,21 +13,19 @@
 # // of the Customer's facilities without the express written permission of SISW,
 # // and may not be used in any way not expressly authorized by SISW.
 # //
-# vsim -gui -voptargs="+acc=rtl" -work work exp_tb 
-# Start time: 21:33:32 on Feb 26,2025
+# vsim -gui -debugDB -voptargs="+acc=rtl" -work work exp_tb 
+# Start time: 20:45:02 on Mar 14,2025
 # ** Note: (vsim-3812) Design is being optimized...
+# ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
 # ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
 # Loading sv_std.std
 # Loading work.exp_tb(fast)
-add wave -position insertpoint  \
-sim:/exp_tb/a \
-sim:/exp_tb/b \
-sim:/exp_tb/c \
-sim:/exp_tb/d \
-sim:/exp_tb/hh
+# ** Note: (vsim-8900) Creating design debug database vsim.dbg.
 run -all
-# 01101
-# ** Note: $stop    : exp_tb.sv(16)
-#    Time: 10 us  Iteration: 0  Instance: /exp_tb
-# Break in Module exp_tb at exp_tb.sv line 16
+# val:           2
+# ** Note: $stop    : exp_tb.sv(15)
+#    Time: 20 us  Iteration: 0  Instance: /exp_tb
+# Break in Module exp_tb at exp_tb.sv line 15
+# End time: 20:45:10 on Mar 14,2025, Elapsed time: 0:00:08
+# Errors: 0, Warnings: 1

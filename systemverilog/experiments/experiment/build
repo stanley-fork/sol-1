@@ -17,4 +17,4 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Launch QuestaSim GUI
-vsim -gui -voptargs="+acc=rtl" -work $LIBRARY_NAME $TOP_MODULE
+vsim -gui -debugDB -voptargs="+acc=rtl" -work $LIBRARY_NAME $TOP_MODULE

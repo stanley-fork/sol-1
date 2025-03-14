@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="beyondzork-master">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/misc/zork/beyondzork-master/z.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/zork/beyondzork-master/bzbeta.zip!/" />
+      <root url="jar://$PROJECT_DIR$/misc/zork/beyondzork-master/bzalpha.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

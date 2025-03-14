@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="starcross">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/misc/zork/starcross-master/starcross.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
