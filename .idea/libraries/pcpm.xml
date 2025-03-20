@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="pcpm">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/misc/cpm/pcpm.zip!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

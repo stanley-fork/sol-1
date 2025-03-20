@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="ziptest">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/misc/zork/infocom-zcode-terps-master/ziptest/ziptest.zip!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

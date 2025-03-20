@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="pdp11">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/misc/zork/infocom-zcode-terps-master/pdp11.zip!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
