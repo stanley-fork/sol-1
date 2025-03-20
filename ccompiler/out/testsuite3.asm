@@ -1,4 +1,4 @@
-; --- FILENAME: ctestsuite/testsuite2.c
+; --- FILENAME: ctestsuite/testsuite3.c
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -7,289 +7,60 @@
 main:
   mov bp, $FFE0 ;
   mov sp, $FFE0 ; Make space for argc(2 bytes) and for 10 pointers in argv (local variables)
-; int pass[10]; 
-  sub sp, 20
-; int i; 
-  sub sp, 2
-; int nbr_tests = 10; 
+; int pass = 1; 
   sub sp, 2
 ; --- START LOCAL VAR INITIALIZATION
-  lea d, [bp + -23] ; $nbr_tests
-  push d
-  mov32 cb, $0000000a
-  pop d
-  mov [d], b
-; --- END LOCAL VAR INITIALIZATION
-; for(i = 0; i < nbr_tests; i++){ 
-_for1_init:
-  lea d, [bp + -21] ; $i
-  push d
-  mov32 cb, $00000000
-  pop d
-  mov [d], b
-_for1_cond:
-  lea d, [bp + -21] ; $i
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  lea d, [bp + -23] ; $nbr_tests
-  mov b, [d]
-  mov c, 0
-  cmp a, b
-  slt ; < (signed)
-  pop a
-; --- END RELATIONAL
-  cmp b, 0
-  je _for1_exit
-_for1_block:
-; pass[i] = -1; 
-  lea d, [bp + -19] ; $pass
-  push a
-  push d
-  lea d, [bp + -21] ; $i
-  mov b, [d]
-  mov c, 0
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-  mov32 cb, $ffffffff
-  pop d
-  mov [d], b
-_for1_update:
-  lea d, [bp + -21] ; $i
-  mov b, [d]
-  mov c, 0
-  mov a, b
-  inc b
-  lea d, [bp + -21] ; $i
-  mov [d], b
-  mov b, a
-  jmp _for1_cond
-_for1_exit:
-; pass[0] = test0(); 
-  lea d, [bp + -19] ; $pass
-  push a
-  push d
-  mov32 cb, $00000000
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-; --- START FUNCTION CALL
-  call test0
-  pop d
-  mov [d], b
-; pass[1] = test1(); 
-  lea d, [bp + -19] ; $pass
-  push a
+  lea d, [bp + -1] ; $pass
   push d
   mov32 cb, $00000001
   pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-; --- START FUNCTION CALL
-  call test1
-  pop d
   mov [d], b
-; pass[2] = test2(); 
-  lea d, [bp + -19] ; $pass
-  push a
-  push d
-  mov32 cb, $00000002
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
+; --- END LOCAL VAR INITIALIZATION
+; struct s1 ss[5]; 
+  sub sp, 995
+; printf("\nassigning values...\n"); 
 ; --- START FUNCTION CALL
-  call test2
-  pop d
-  mov [d], b
-; pass[3] = test3(st1); 
-  lea d, [bp + -19] ; $pass
-  push a
-  push d
-  mov32 cb, $00000003
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-; --- START FUNCTION CALL
-  mov d, _st1_data ; $st1
-  mov b, d
-  mov c, 0
-  sub sp, 13
-  mov si, b
-  lea d, [sp + 1]
-  mov di, d
-  mov c, 13
-  rep movsb
-  call test3
-  add sp, 13
-; --- END FUNCTION CALL
-  pop d
-  mov [d], b
-; for(i = 0; i < nbr_tests; i++){ 
-_for2_init:
-  lea d, [bp + -21] ; $i
-  push d
-  mov32 cb, $00000000
-  pop d
-  mov [d], b
-_for2_cond:
-  lea d, [bp + -21] ; $i
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  lea d, [bp + -23] ; $nbr_tests
-  mov b, [d]
-  mov c, 0
-  cmp a, b
-  slt ; < (signed)
-  pop a
-; --- END RELATIONAL
-  cmp b, 0
-  je _for2_exit
-_for2_block:
-; printf("Test %d, Result: %d\n", i, pass[i]); 
-; --- START FUNCTION CALL
-  lea d, [bp + -19] ; $pass
-  push a
-  push d
-  lea d, [bp + -21] ; $i
-  mov b, [d]
-  mov c, 0
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-  swp b
-  push b
-  lea d, [bp + -21] ; $i
-  mov b, [d]
-  mov c, 0
-  swp b
-  push b
-  mov b, _s0 ; "Test %d, Result: %d\n"
+  mov b, _s0 ; "\nassigning values...\n"
   swp b
   push b
   call printf
-  add sp, 6
+  add sp, 2
 ; --- END FUNCTION CALL
-_for2_update:
-  lea d, [bp + -21] ; $i
-  mov b, [d]
-  mov c, 0
-  mov a, b
-  inc b
-  lea d, [bp + -21] ; $i
-  mov [d], b
-  mov b, a
-  jmp _for2_cond
-_for2_exit:
-  syscall sys_terminate_proc
-
-test0:
-  enter 0 ; (push bp; mov bp, sp)
-; int result; 
-  sub sp, 2
-; int pass = 1; 
-  sub sp, 2
-; --- START LOCAL VAR INITIALIZATION
-  lea d, [bp + -3] ; $pass
-  push d
-  mov32 cb, $00000001
-  pop d
-  mov [d], b
-; --- END LOCAL VAR INITIALIZATION
-; char c; 
-  sub sp, 1
-; int i; 
-  sub sp, 2
-; char ca[5]; 
-  sub sp, 5
-; int ia[5]; 
-  sub sp, 10
-; c = 'A'; 
-  lea d, [bp + -4] ; $c
-  push d
-  mov32 cb, $00000041
-  pop d
-  mov [d], bl
-; i = 55; 
-  lea d, [bp + -6] ; $i
-  push d
-  mov32 cb, $00000037
-  pop d
-  mov [d], b
-; ca[0] = 'A'; 
-  lea d, [bp + -11] ; $ca
+; ss[0].c = 'a'; 
+  lea d, [bp + -996] ; $ss
   push a
   push d
   mov32 cb, $00000000
   pop d
-  add d, b
+  mma 199 ; mov a, 199; mul a, b; add d, b
   pop a
+  add d, 0
   push d
-  mov32 cb, $00000041
+  mov32 cb, $00000061
   pop d
   mov [d], bl
-; ca[1] = 'B'; 
-  lea d, [bp + -11] ; $ca
+; ss[0].i = 123; 
+  lea d, [bp + -996] ; $ss
   push a
   push d
-  mov32 cb, $00000001
+  mov32 cb, $00000000
   pop d
-  add d, b
+  mma 199 ; mov a, 199; mul a, b; add d, b
   pop a
+  add d, 1
   push d
-  mov32 cb, $00000042
+  mov32 cb, $0000007b
   pop d
-  mov [d], bl
-; ca[2] = 'C'; 
-  lea d, [bp + -11] ; $ca
+  mov [d], b
+; ss[0].a[0] = 555; 
+  lea d, [bp + -996] ; $ss
   push a
   push d
-  mov32 cb, $00000002
+  mov32 cb, $00000000
   pop d
-  add d, b
+  mma 199 ; mov a, 199; mul a, b; add d, b
   pop a
-  push d
-  mov32 cb, $00000043
-  pop d
-  mov [d], bl
-; ca[3] = 'D'; 
-  lea d, [bp + -11] ; $ca
-  push a
-  push d
-  mov32 cb, $00000003
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000044
-  pop d
-  mov [d], bl
-; ca[4] = 'E'; 
-  lea d, [bp + -11] ; $ca
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000045
-  pop d
-  mov [d], bl
-; ia[0] = 0; 
-  lea d, [bp + -21] ; $ia
+  add d, 3
   push a
   push d
   mov32 cb, $00000000
@@ -297,11 +68,18 @@ test0:
   mma 2 ; mov a, 2; mul a, b; add d, b
   pop a
   push d
+  mov32 cb, $0000022b
+  pop d
+  mov [d], b
+; ss[0].a[1] = 666; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
   mov32 cb, $00000000
   pop d
-  mov [d], b
-; ia[1] = 1; 
-  lea d, [bp + -21] ; $ia
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 3
   push a
   push d
   mov32 cb, $00000001
@@ -309,11 +87,271 @@ test0:
   mma 2 ; mov a, 2; mul a, b; add d, b
   pop a
   push d
+  mov32 cb, $0000029a
+  pop d
+  mov [d], b
+; ss[0].a[2] = 777; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000002
+  pop d
+  mma 2 ; mov a, 2; mul a, b; add d, b
+  pop a
+  push d
+  mov32 cb, $00000309
+  pop d
+  mov [d], b
+; ss[0].b[0] = 100; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 23
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  add d, b
+  pop a
+  push d
+  mov32 cb, $00000064
+  pop d
+  mov [d], bl
+; ss[0].b[1] = 200; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 23
+  push a
+  push d
   mov32 cb, $00000001
   pop d
+  add d, b
+  pop a
+  push d
+  mov32 cb, $000000c8
+  pop d
+  mov [d], bl
+; ss[0].b[2] = 30; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 23
+  push a
+  push d
+  mov32 cb, $00000002
+  pop d
+  add d, b
+  pop a
+  push d
+  mov32 cb, $0000001e
+  pop d
+  mov [d], bl
+; ss[3].s2[3].cc = 'z'; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 0
+  push d
+  mov32 cb, $0000007a
+  pop d
+  mov [d], bl
+; ss[3].s2[3].ii = 999; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 1
+  push d
+  mov32 cb, $000003e7
+  pop d
   mov [d], b
-; ia[2] = 2; 
-  lea d, [bp + -21] ; $ia
+; ss[3].s2[3].cc2[0] = 255; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  add d, b
+  pop a
+  push d
+  mov32 cb, $000000ff
+  pop d
+  mov [d], bl
+; ss[3].s2[3].cc2[1] = 128; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000001
+  pop d
+  add d, b
+  pop a
+  push d
+  mov32 cb, $00000080
+  pop d
+  mov [d], bl
+; ss[3].s2[3].cc2[2] = 100; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000002
+  pop d
+  add d, b
+  pop a
+  push d
+  mov32 cb, $00000064
+  pop d
+  mov [d], bl
+; ss[3].s2[3].ii2[0] = 65535; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 13
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 2 ; mov a, 2; mul a, b; add d, b
+  pop a
+  push d
+  mov32 cb, $0000ffff
+  pop d
+  mov [d], b
+; ss[3].s2[3].ii2[1] = 50000; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 13
+  push a
+  push d
+  mov32 cb, $00000001
+  pop d
+  mma 2 ; mov a, 2; mul a, b; add d, b
+  pop a
+  push d
+  mov32 cb, $0000c350
+  pop d
+  mov [d], b
+; ss[3].s2[3].ii2[2] = 20000; 
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 13
   push a
   push d
   mov32 cb, $00000002
@@ -321,1134 +359,80 @@ test0:
   mma 2 ; mov a, 2; mul a, b; add d, b
   pop a
   push d
-  mov32 cb, $00000002
+  mov32 cb, $00004e20
   pop d
   mov [d], b
-; ia[3] = 3; 
-  lea d, [bp + -21] ; $ia
+; ss[3].cc2 = 'b'; 
+  lea d, [bp + -996] ; $ss
   push a
   push d
   mov32 cb, $00000003
   pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
+  mma 199 ; mov a, 199; mul a, b; add d, b
   pop a
+  add d, 198
   push d
-  mov32 cb, $00000003
+  mov32 cb, $00000062
   pop d
-  mov [d], b
-; ia[4] = 4; 
-  lea d, [bp + -21] ; $ia
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-  mov32 cb, $00000004
-  pop d
-  mov [d], b
-; pass = pass && test0_subTest0(c, i, ca, ia); 
-  lea d, [bp + -3] ; $pass
-  push d
-  lea d, [bp + -3] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
+  mov [d], bl
+; printf("printing assignments...\n"); 
 ; --- START FUNCTION CALL
-  lea d, [bp + -21] ; $ia
-  mov b, d
-  mov c, 0
+  mov b, _s1 ; "printing assignments...\n"
   swp b
   push b
-  lea d, [bp + -11] ; $ca
-  mov b, d
-  mov c, 0
-  swp b
-  push b
-  lea d, [bp + -6] ; $i
-  mov b, [d]
-  mov c, 0
-  swp b
-  push b
-  lea d, [bp + -4] ; $c
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-  push bl
-  call test0_subTest0
-  add sp, 7
+  call printf
+  add sp, 2
 ; --- END FUNCTION CALL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; return pass; 
-  lea d, [bp + -3] ; $pass
-  mov b, [d]
-  mov c, 0
-  leave
-  ret
-
-test0_subTest0:
-  enter 0 ; (push bp; mov bp, sp)
-; int pass = 1; 
-  sub sp, 2
-; --- START LOCAL VAR INITIALIZATION
-  lea d, [bp + -1] ; $pass
-  push d
-  mov32 cb, $00000001
-  pop d
-  mov [d], b
-; --- END LOCAL VAR INITIALIZATION
-; pass = pass && c == 'A'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + 5] ; $c
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000041
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && i == 55; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + 6] ; $i
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000037
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ca[0] == 'A'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 8] ; $ca
-  mov d, b
+; printf("%c\n", ss[0].c); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
   push a
   push d
   mov32 cb, $00000000
   pop d
-  add d, b
+  mma 199 ; mov a, 199; mul a, b; add d, b
   pop a
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000041
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ca[1] == 'B'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 8] ; $ca
-  mov d, b
-  push a
-  push d
-  mov32 cb, $00000001
-  pop d
-  add d, b
-  pop a
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000042
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ca[2] == 'C'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 8] ; $ca
-  mov d, b
-  push a
-  push d
-  mov32 cb, $00000002
-  pop d
-  add d, b
-  pop a
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000043
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ca[3] == 'D'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 8] ; $ca
-  mov d, b
-  push a
-  push d
-  mov32 cb, $00000003
-  pop d
-  add d, b
-  pop a
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000044
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ca[4] == 'E'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 8] ; $ca
-  mov d, b
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  add d, b
-  pop a
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000045
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ia[0] == 0; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 10] ; $ia
-  mov d, b
-  push a
-  push d
-  mov32 cb, $00000000
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000000
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ia[1] == 1; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 10] ; $ia
-  mov d, b
-  push a
-  push d
-  mov32 cb, $00000001
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000001
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ia[2] == 2; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 10] ; $ia
-  mov d, b
-  push a
-  push d
-  mov32 cb, $00000002
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000002
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ia[3] == 3; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 10] ; $ia
-  mov d, b
-  push a
-  push d
-  mov32 cb, $00000003
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000003
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && ia[4] == 4; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  mov b, [bp + 10] ; $ia
-  mov d, b
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000004
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; return pass; 
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-  leave
-  ret
-
-test1:
-  enter 0 ; (push bp; mov bp, sp)
-; int pass = 1; 
-  sub sp, 2
-; --- START LOCAL VAR INITIALIZATION
-  lea d, [bp + -1] ; $pass
-  push d
-  mov32 cb, $00000001
-  pop d
-  mov [d], b
-; --- END LOCAL VAR INITIALIZATION
-; char ca[5]; 
-  sub sp, 5
-; char *p; 
-  sub sp, 2
-; p = ca; 
-  lea d, [bp + -8] ; $p
-  push d
-  lea d, [bp + -6] ; $ca
-  mov b, d
-  mov c, 0
-  pop d
-  mov [d], b
-; ca[0] = 'A'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000000
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000041
-  pop d
-  mov [d], bl
-; ca[1] = 'B'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000001
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000042
-  pop d
-  mov [d], bl
-; ca[2] = 'C'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000002
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000043
-  pop d
-  mov [d], bl
-; ca[3] = 'D'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000003
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000044
-  pop d
-  mov [d], bl
-; ca[4] = 'E'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000045
-  pop d
-  mov [d], bl
-; pass = pass && *p == 'A'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -8] ; $p
-  mov b, [d]
-  mov c, 0
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000041
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && *(p + 1) == 'B'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -8] ; $p
-  mov b, [d]
-  mov c, 0
-; --- START TERMS
-  push a
-  mov a, b
-  mov32 cb, $00000001
-  add b, a
-  pop a
-; --- END TERMS
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000042
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && *(p + 2) == 'C'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -8] ; $p
-  mov b, [d]
-  mov c, 0
-; --- START TERMS
-  push a
-  mov a, b
-  mov32 cb, $00000002
-  add b, a
-  pop a
-; --- END TERMS
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000043
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && *(p + 3) == 'D'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -8] ; $p
-  mov b, [d]
-  mov c, 0
-; --- START TERMS
-  push a
-  mov a, b
-  mov32 cb, $00000003
-  add b, a
-  pop a
-; --- END TERMS
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000044
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && *(p + 4) == 'E'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -8] ; $p
-  mov b, [d]
-  mov c, 0
-; --- START TERMS
-  push a
-  mov a, b
-  mov32 cb, $00000004
-  add b, a
-  pop a
-; --- END TERMS
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000045
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; return pass; 
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-  leave
-  ret
-
-test2:
-  enter 0 ; (push bp; mov bp, sp)
-; int pass = 1; 
-  sub sp, 2
-; --- START LOCAL VAR INITIALIZATION
-  lea d, [bp + -1] ; $pass
-  push d
-  mov32 cb, $00000001
-  pop d
-  mov [d], b
-; --- END LOCAL VAR INITIALIZATION
-; char ca[5]; 
-  sub sp, 5
-; int indices[5]; 
-  sub sp, 10
-; char *p; 
-  sub sp, 2
-; p = ca; 
-  lea d, [bp + -18] ; $p
-  push d
-  lea d, [bp + -6] ; $ca
-  mov b, d
-  mov c, 0
-  pop d
-  mov [d], b
-; ca[0] = 'A'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000000
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000041
-  pop d
-  mov [d], bl
-; ca[1] = 'B'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000001
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000042
-  pop d
-  mov [d], bl
-; ca[2] = 'C'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000002
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000043
-  pop d
-  mov [d], bl
-; ca[3] = 'D'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000003
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000044
-  pop d
-  mov [d], bl
-; ca[4] = 'E'; 
-  lea d, [bp + -6] ; $ca
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  add d, b
-  pop a
-  push d
-  mov32 cb, $00000045
-  pop d
-  mov [d], bl
-; indices[0] = 0; 
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000000
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-  mov32 cb, $00000000
-  pop d
-  mov [d], b
-; indices[1] = 1; 
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000001
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-  mov32 cb, $00000001
-  pop d
-  mov [d], b
-; indices[2] = 2; 
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000002
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-  mov32 cb, $00000002
-  pop d
-  mov [d], b
-; indices[3] = 3; 
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000003
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-  mov32 cb, $00000003
-  pop d
-  mov [d], b
-; indices[4] = 4; 
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-  mov32 cb, $00000004
-  pop d
-  mov [d], b
-; pass = pass && *(p + indices[0]) == 'A'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -18] ; $p
-  mov b, [d]
-  mov c, 0
-; --- START TERMS
-  push a
-  mov a, b
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000000
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-  add b, a
-  pop a
-; --- END TERMS
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000041
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && *(p + indices[1]) == 'B'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -18] ; $p
-  mov b, [d]
-  mov c, 0
-; --- START TERMS
-  push a
-  mov a, b
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000001
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-  add b, a
-  pop a
-; --- END TERMS
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000042
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && *(p + indices[2]) == 'C'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -18] ; $p
-  mov b, [d]
-  mov c, 0
-; --- START TERMS
-  push a
-  mov a, b
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000002
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-  add b, a
-  pop a
-; --- END TERMS
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000043
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && *(p + indices[3]) == 'D'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -18] ; $p
-  mov b, [d]
-  mov c, 0
-; --- START TERMS
-  push a
-  mov a, b
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000003
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-  add b, a
-  pop a
-; --- END TERMS
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000044
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; pass = pass && *(p + indices[4]) == 'E'; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + -18] ; $p
-  mov b, [d]
-  mov c, 0
-; --- START TERMS
-  push a
-  mov a, b
-  lea d, [bp + -16] ; $indices
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-  add b, a
-  pop a
-; --- END TERMS
-  mov d, b
-  mov bl, [d]
-  mov bh, 0
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000045
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; return pass; 
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-  leave
-  ret
-
-test3:
-  enter 0 ; (push bp; mov bp, sp)
-; int pass = 1; 
-  sub sp, 2
-; --- START LOCAL VAR INITIALIZATION
-  lea d, [bp + -1] ; $pass
-  push d
-  mov32 cb, $00000001
-  pop d
-  mov [d], b
-; --- END LOCAL VAR INITIALIZATION
-; st.c = 'A'; 
-  lea d, [bp + 5] ; $st
   add d, 0
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+  swp b
+  push b
+  mov b, _s2 ; "%c\n"
+  swp b
+  push b
+  call printf
+  add sp, 3
+; --- END FUNCTION CALL
+; printf("%d\n", ss[0].i); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
   push d
-  mov32 cb, $00000041
+  mov32 cb, $00000000
   pop d
-  mov [d], bl
-; st.i = 277; 
-  lea d, [bp + 5] ; $st
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
   add d, 1
+  mov b, [d]
+  mov c, 0
+  swp b
+  push b
+  mov b, _s3 ; "%d\n"
+  swp b
+  push b
+  call printf
+  add sp, 4
+; --- END FUNCTION CALL
+; printf("%d\n", ss[0].a[0]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
   push d
-  mov32 cb, $00000115
+  mov32 cb, $00000000
   pop d
-  mov [d], b
-; st.m[0] = 0; 
-  lea d, [bp + 5] ; $st
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
   add d, 3
   push a
   push d
@@ -1456,12 +440,25 @@ test3:
   pop d
   mma 2 ; mov a, 2; mul a, b; add d, b
   pop a
+  mov b, [d]
+  mov c, 0
+  swp b
+  push b
+  mov b, _s3 ; "%d\n"
+  swp b
+  push b
+  call printf
+  add sp, 4
+; --- END FUNCTION CALL
+; printf("%d\n", ss[0].a[1]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
   push d
   mov32 cb, $00000000
   pop d
-  mov [d], b
-; st.m[1] = 1; 
-  lea d, [bp + 5] ; $st
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
   add d, 3
   push a
   push d
@@ -1469,50 +466,409 @@ test3:
   pop d
   mma 2 ; mov a, 2; mul a, b; add d, b
   pop a
+  mov b, [d]
+  mov c, 0
+  swp b
+  push b
+  mov b, _s3 ; "%d\n"
+  swp b
+  push b
+  call printf
+  add sp, 4
+; --- END FUNCTION CALL
+; printf("%d\n", ss[0].a[2]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000002
+  pop d
+  mma 2 ; mov a, 2; mul a, b; add d, b
+  pop a
+  mov b, [d]
+  mov c, 0
+  swp b
+  push b
+  mov b, _s3 ; "%d\n"
+  swp b
+  push b
+  call printf
+  add sp, 4
+; --- END FUNCTION CALL
+; printf("%d\n", ss[0].b[0]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 23
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+  swp b
+  push b
+  mov b, _s3 ; "%d\n"
+  swp b
+  push b
+  call printf
+  add sp, 3
+; --- END FUNCTION CALL
+; printf("%d\n", ss[0].b[1]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 23
+  push a
   push d
   mov32 cb, $00000001
   pop d
-  mov [d], b
-; st.m[2] = 2; 
-  lea d, [bp + 5] ; $st
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+  swp b
+  push b
+  mov b, _s3 ; "%d\n"
+  swp b
+  push b
+  call printf
+  add sp, 3
+; --- END FUNCTION CALL
+; printf("%d\n", ss[0].b[2]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 23
+  push a
+  push d
+  mov32 cb, $00000002
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+  swp b
+  push b
+  mov b, _s3 ; "%d\n"
+  swp b
+  push b
+  call printf
+  add sp, 3
+; --- END FUNCTION CALL
+; printf("%c\n", ss[3].s2[3].cc); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 0
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+  swp b
+  push b
+  mov b, _s2 ; "%c\n"
+  swp b
+  push b
+  call printf
+  add sp, 3
+; --- END FUNCTION CALL
+; printf("%d\n", ss[3].s2[3].ii); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 1
+  mov b, [d]
+  mov c, 0
+  swp b
+  push b
+  mov b, _s3 ; "%d\n"
+  swp b
+  push b
+  call printf
+  add sp, 4
+; --- END FUNCTION CALL
+; printf("%u\n", ss[3].s2[3].cc2[0]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
   add d, 3
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+  swp b
+  push b
+  mov b, _s4 ; "%u\n"
+  swp b
+  push b
+  call printf
+  add sp, 3
+; --- END FUNCTION CALL
+; printf("%u\n", ss[3].s2[3].cc2[1]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000001
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+  swp b
+  push b
+  mov b, _s4 ; "%u\n"
+  swp b
+  push b
+  call printf
+  add sp, 3
+; --- END FUNCTION CALL
+; printf("%u\n", ss[3].s2[3].cc2[2]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000002
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+  swp b
+  push b
+  mov b, _s4 ; "%u\n"
+  swp b
+  push b
+  call printf
+  add sp, 3
+; --- END FUNCTION CALL
+; printf("%u\n", ss[3].s2[3].ii2[0]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 13
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 2 ; mov a, 2; mul a, b; add d, b
+  pop a
+  mov b, [d]
+  mov c, 0
+  swp b
+  push b
+  mov b, _s4 ; "%u\n"
+  swp b
+  push b
+  call printf
+  add sp, 4
+; --- END FUNCTION CALL
+; printf("%u\n", ss[3].s2[3].ii2[1]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 13
+  push a
+  push d
+  mov32 cb, $00000001
+  pop d
+  mma 2 ; mov a, 2; mul a, b; add d, b
+  pop a
+  mov b, [d]
+  mov c, 0
+  swp b
+  push b
+  mov b, _s4 ; "%u\n"
+  swp b
+  push b
+  call printf
+  add sp, 4
+; --- END FUNCTION CALL
+; printf("%u\n", ss[3].s2[3].ii2[2]); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 13
   push a
   push d
   mov32 cb, $00000002
   pop d
   mma 2 ; mov a, 2; mul a, b; add d, b
   pop a
-  push d
-  mov32 cb, $00000002
-  pop d
-  mov [d], b
-; st.m[3] = 3; 
-  lea d, [bp + 5] ; $st
-  add d, 3
+  mov b, [d]
+  mov c, 0
+  swp b
+  push b
+  mov b, _s4 ; "%u\n"
+  swp b
+  push b
+  call printf
+  add sp, 4
+; --- END FUNCTION CALL
+; printf("%c\n", ss[3].cc2); 
+; --- START FUNCTION CALL
+  lea d, [bp + -996] ; $ss
   push a
   push d
   mov32 cb, $00000003
   pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
+  mma 199 ; mov a, 199; mul a, b; add d, b
   pop a
-  push d
-  mov32 cb, $00000003
-  pop d
-  mov [d], b
-; st.m[4] = 4; 
-  lea d, [bp + 5] ; $st
-  add d, 3
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  push d
-  mov32 cb, $00000004
-  pop d
-  mov [d], b
-; pass = pass && st.c == 'A'; 
+  add d, 198
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+  swp b
+  push b
+  mov b, _s2 ; "%c\n"
+  swp b
+  push b
+  call printf
+  add sp, 3
+; --- END FUNCTION CALL
+; printf("checking results...\n");     
+; --- START FUNCTION CALL
+  mov b, _s5 ; "checking results...\n"
+  swp b
+  push b
+  call printf
+  add sp, 2
+; --- END FUNCTION CALL
+; pass = pass && ss[0].c == 'a'; 
   lea d, [bp + -1] ; $pass
   push d
   lea d, [bp + -1] ; $pass
@@ -1521,7 +877,13 @@ test3:
 ; --- START LOGICAL AND
   push a
   mov a, b
-  lea d, [bp + 5] ; $st
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
   add d, 0
   mov bl, [d]
   mov bh, 0
@@ -1529,7 +891,7 @@ test3:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000041
+  mov32 cb, $00000061
   cmp a, b
   seq ; ==
   pop a
@@ -1539,7 +901,7 @@ test3:
 ; --- END LOGICAL AND
   pop d
   mov [d], b
-; pass = pass && st.i == 277; 
+; pass = pass && ss[0].i == 123; 
   lea d, [bp + -1] ; $pass
   push d
   lea d, [bp + -1] ; $pass
@@ -1548,14 +910,20 @@ test3:
 ; --- START LOGICAL AND
   push a
   mov a, b
-  lea d, [bp + 5] ; $st
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
   add d, 1
   mov b, [d]
   mov c, 0
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000115
+  mov32 cb, $0000007b
   cmp a, b
   seq ; ==
   pop a
@@ -1565,7 +933,7 @@ test3:
 ; --- END LOGICAL AND
   pop d
   mov [d], b
-; pass = pass && st.m[0] == 0; 
+; pass = pass && ss[0].a[0] == 555; 
   lea d, [bp + -1] ; $pass
   push d
   lea d, [bp + -1] ; $pass
@@ -1574,7 +942,13 @@ test3:
 ; --- START LOGICAL AND
   push a
   mov a, b
-  lea d, [bp + 5] ; $st
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
   add d, 3
   push a
   push d
@@ -1587,26 +961,32 @@ test3:
 ; --- START RELATIONAL
   push a
   mov a, b
+  mov32 cb, $0000022b
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[0].a[1] == 666; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
   mov32 cb, $00000000
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
   pop d
-  mov [d], b
-; pass = pass && st.m[1] == 1; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + 5] ; $st
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
   add d, 3
   push a
   push d
@@ -1619,7 +999,123 @@ test3:
 ; --- START RELATIONAL
   push a
   mov a, b
+  mov32 cb, $0000029a
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[0].a[2] == 777; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000002
+  pop d
+  mma 2 ; mov a, 2; mul a, b; add d, b
+  pop a
+  mov b, [d]
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $00000309
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[0].b[0] == 100; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 23
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $00000064
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[0].b[1] == 200; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 23
+  push a
+  push d
   mov32 cb, $00000001
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $000000c8
   cmp a, b
   seq ; ==
   pop a
@@ -1629,7 +1125,7 @@ test3:
 ; --- END LOGICAL AND
   pop d
   mov [d], b
-; pass = pass && st.m[2] == 2; 
+; pass = pass && ss[0].b[2] == 30; 
   lea d, [bp + -1] ; $pass
   push d
   lea d, [bp + -1] ; $pass
@@ -1638,8 +1134,367 @@ test3:
 ; --- START LOGICAL AND
   push a
   mov a, b
-  lea d, [bp + 5] ; $st
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 23
+  push a
+  push d
+  mov32 cb, $00000002
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $0000001e
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[3].s2[3].cc == 'z'; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 0
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $0000007a
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[3].s2[3].ii == 999; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 1
+  mov b, [d]
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $000003e7
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[3].s2[3].cc2[0] == 255; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
   add d, 3
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $000000ff
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[3].s2[3].cc2[1] == 128; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000001
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $00000080
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[3].s2[3].cc2[2] == 100; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 3
+  push a
+  push d
+  mov32 cb, $00000002
+  pop d
+  add d, b
+  pop a
+  mov bl, [d]
+  mov bh, 0
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $00000064
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[3].s2[3].ii2[0] == 65535; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 13
+  push a
+  push d
+  mov32 cb, $00000000
+  pop d
+  mma 2 ; mov a, 2; mul a, b; add d, b
+  pop a
+  mov b, [d]
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $0000ffff
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[3].s2[3].ii2[1] == 50000; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 13
+  push a
+  push d
+  mov32 cb, $00000001
+  pop d
+  mma 2 ; mov a, 2; mul a, b; add d, b
+  pop a
+  mov b, [d]
+  mov c, 0
+; --- START RELATIONAL
+  push a
+  mov a, b
+  mov32 cb, $0000c350
+  cmp a, b
+  seq ; ==
+  pop a
+; --- END RELATIONAL
+  sand a, b
+  pop a
+; --- END LOGICAL AND
+  pop d
+  mov [d], b
+; pass = pass && ss[3].s2[3].ii2[2] == 20000; 
+  lea d, [bp + -1] ; $pass
+  push d
+  lea d, [bp + -1] ; $pass
+  mov b, [d]
+  mov c, 0
+; --- START LOGICAL AND
+  push a
+  mov a, b
+  lea d, [bp + -996] ; $ss
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 199 ; mov a, 199; mul a, b; add d, b
+  pop a
+  add d, 33
+  push a
+  push d
+  mov32 cb, $00000003
+  pop d
+  mma 33 ; mov a, 33; mul a, b; add d, b
+  pop a
+  add d, 13
   push a
   push d
   mov32 cb, $00000002
@@ -1651,7 +1506,7 @@ test3:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000002
+  mov32 cb, $00004e20
   cmp a, b
   seq ; ==
   pop a
@@ -1661,7 +1516,7 @@ test3:
 ; --- END LOGICAL AND
   pop d
   mov [d], b
-; pass = pass && st.m[3] == 3; 
+; pass = pass && ss[3].cc2 == 'b'; 
   lea d, [bp + -1] ; $pass
   push d
   lea d, [bp + -1] ; $pass
@@ -1670,20 +1525,21 @@ test3:
 ; --- START LOGICAL AND
   push a
   mov a, b
-  lea d, [bp + 5] ; $st
-  add d, 3
+  lea d, [bp + -996] ; $ss
   push a
   push d
   mov32 cb, $00000003
   pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
+  mma 199 ; mov a, 199; mul a, b; add d, b
   pop a
-  mov b, [d]
+  add d, 198
+  mov bl, [d]
+  mov bh, 0
   mov c, 0
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000003
+  mov32 cb, $00000062
   cmp a, b
   seq ; ==
   pop a
@@ -1693,44 +1549,29 @@ test3:
 ; --- END LOGICAL AND
   pop d
   mov [d], b
-; pass = pass && st.m[4] == 4; 
-  lea d, [bp + -1] ; $pass
-  push d
-  lea d, [bp + -1] ; $pass
-  mov b, [d]
-  mov c, 0
-; --- START LOGICAL AND
-  push a
-  mov a, b
-  lea d, [bp + 5] ; $st
-  add d, 3
-  push a
-  push d
-  mov32 cb, $00000004
-  pop d
-  mma 2 ; mov a, 2; mul a, b; add d, b
-  pop a
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $00000004
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  sand a, b
-  pop a
-; --- END LOGICAL AND
-  pop d
-  mov [d], b
-; return pass; 
+; printf("final test result: %s\n", pass ? "passed" : "failed"); 
+; --- START FUNCTION CALL
+_ternary2_cond:
   lea d, [bp + -1] ; $pass
   mov b, [d]
   mov c, 0
-  leave
-  ret
+  cmp b, 0
+  je _ternary2_FALSE
+_ternary2_TRUE:
+  mov b, _s6 ; "passed"
+  jmp _ternary2_exit
+_ternary2_FALSE:
+  mov b, _s7 ; "failed"
+_ternary2_exit:
+  swp b
+  push b
+  mov b, _s8 ; "final test result: %s\n"
+  swp b
+  push b
+  call printf
+  add sp, 4
+; --- END FUNCTION CALL
+  syscall sys_terminate_proc
 
 printf:
   enter 0 ; (push bp; mov bp, sp)
@@ -1987,7 +1828,7 @@ _if9_TRUE:
 _if9_else:
 ; err("Unexpected format in printf."); 
 ; --- START FUNCTION CALL
-  mov b, _s1 ; "Unexpected format in printf."
+  mov b, _s9 ; "Unexpected format in printf."
   swp b
   push b
   call err
@@ -2171,7 +2012,7 @@ _switch6_case7:
 _switch6_default:
 ; print("Error: Unknown argument type.\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s2 ; "Error: Unknown argument type.\n"
+  mov b, _s10 ; "Error: Unknown argument type.\n"
   swp b
   push b
   call print
@@ -3180,10 +3021,17 @@ s_hex_digits_printx16:    .db "0123456789ABCDEF"
 ; --- END TEXT SEGMENT
 
 ; --- BEGIN DATA SEGMENT
-_st1_data: .fill 13, 0
-_s0: .db "Test %d, Result: %d\n", 0
-_s1: .db "Unexpected format in printf.", 0
-_s2: .db "Error: Unknown argument type.\n", 0
+_s0: .db "\nassigning values...\n", 0
+_s1: .db "printing assignments...\n", 0
+_s2: .db "%c\n", 0
+_s3: .db "%d\n", 0
+_s4: .db "%u\n", 0
+_s5: .db "checking results...\n", 0
+_s6: .db "passed", 0
+_s7: .db "failed", 0
+_s8: .db "final test result: %s\n", 0
+_s9: .db "Unexpected format in printf.", 0
+_s10: .db "Error: Unknown argument type.\n", 0
 
 _heap_top: .dw _heap
 _heap: .db 0
