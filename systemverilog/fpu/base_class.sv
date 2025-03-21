@@ -10,8 +10,8 @@ virtual class cl_base;
 
   // -- Class constructor.
   function new(virtual interface_fpu in_fpu);
-    super.new(in_fpu);
-    this.in_fpu    = in_fpu;
+    new(in_fpu);
+    this.in_fpu = in_fpu;
   endfunction : new
 
   // -- Virtual task to list test cases in regression.
