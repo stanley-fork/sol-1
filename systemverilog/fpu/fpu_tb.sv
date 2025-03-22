@@ -1,5 +1,3 @@
-import pa_fpu::*;
-
 module fpu_tb;
 
   logic arst;
@@ -59,7 +57,7 @@ module fpu_tb;
     ta_start_operation();
     ta_read_result(result);
 
-    $display("Result: 0x%x", result);
+    $display("Result: 0x%x, %.6f", result, $bitstoshortreal(result));
 
     $stop;
   end

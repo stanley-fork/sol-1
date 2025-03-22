@@ -1,6 +1,10 @@
 // FPU Prototype
 // This is an FPU unit that will perform addition, subtraction, multiplication, division, square root, and transcendental functions
+// It is written in SystemVerilog here for prototyping purposes.
 // Totally non-optimized and for prototyping and studying purposes only!
+//
+// Created P. Constantino 2024
+//
 
 /*
   sqrt: newton-raphson
@@ -84,13 +88,15 @@ module fpu(
   logic             [31:0] ieee_packet;
 
   logic             [31:0] operand_a;
-  logic             [25:0] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
-  logic             [25:0] a_mantissa_adjusted;
+  logic            [25:-2] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
+                                       // plus 3 lower guard bits
+  logic            [25:-2] a_mantissa_adjusted;
   logic             [ 7:0] a_exp;
   logic                    a_sign;
   logic             [31:0] operand_b;
-  logic             [25:0] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
-  logic             [25:0] b_mantissa_adjusted;
+  logic            [25:-2] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
+                                        // plus 3 lower guard bits
+  logic            [25:-2] b_mantissa_adjusted;
   logic             [ 7:0] b_exp;
   logic                    b_sign;
   logic             [ 7:0] ab_exp_diff;
@@ -98,10 +104,15 @@ module fpu(
   logic             [ 7:0] a_exp_adjusted;
   logic             [ 7:0] b_exp_adjusted;
 
-  // addition/subtraction datapath
-  logic             [25:0] result_m_add_sub; // 24 bits plus carry
-  logic             [ 7:0] result_e_add_sub;
-  logic                    result_s_add_sub;
+  // addition datapath
+  logic             [25:0] result_mantissa_add; // 24 bits plus carry
+  logic             [ 7:0] result_exp_add;
+  logic                    result_sign_add;
+
+  // subtraction datapath
+  logic             [25:0] result_mantissa_sub; // 24 bits plus carry
+  logic             [ 7:0] result_exp_sub;
+  logic                    result_sign_sub;
 
   // multiplication datapath
   logic             [23:0] result_mantissa_mul;
@@ -129,10 +140,12 @@ module fpu(
   logic                    operation_done_div_fsm;   
 
   // sqrt datapath
-  logic             [23:0] sqrt_xn_mantissa;
+  logic             [23:0] sqrt_xn_mantissa;   // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
+                                               // plus 3 lower guard bits
   logic              [7:0] sqrt_xn_exp;
   logic                    sqrt_xn_sign;
-  logic             [23:0] sqrt_A_mantissa;
+  logic             [23:0] sqrt_A_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
+                                             // plus 3 lower guard bits
   logic              [7:0] sqrt_A_exp;
   logic                    sqrt_A_sign;
   logic              [3:0] sqrt_counter;
@@ -174,11 +187,7 @@ module fpu(
   logic                    log2_sign;
 
   // status
-  logic                    overflow;
-  logic                    underflow;
-  logic                    NaN;
-  logic                    pos_infinity;
-  logic                    neg_infinity;
+  logic              [4:0] status; // invalid operation, div by zero, overflow, underflow, inexact 
 
   // fsm states
   pa_fpu::e_main_st        curr_state_main_fsm;
@@ -193,13 +202,16 @@ module fpu(
   pa_fpu::e_sqrt_st        next_state_sqrt_fsm;
 
 
-  // ---------------------------------------------------------------------------------------
+  // todo
+  // microcode sequencer
 
   assign ab_exp_diff = a_exp - b_exp;
+
   assign start_operation_div_fsm = start_operation_div_ar_fsm || sqrt_div_A_by_xn_start;
 
   // ---------------------------------------------------------------------------------------
 
+  // a_mantissa, a_exp and b_mantissa, b_exp register writing
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
       a_mantissa <= '0;
@@ -211,30 +223,30 @@ module fpu(
     end   
     else begin
       if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
-        a_mantissa <= {operand_a[30:23] != 8'd0, operand_a[22:0]};
+        a_mantissa <= {operand_a[30:23] != 8'd0, operand_a[22:0], 3'b0};
         a_exp      <= operand_a[30:23];
         a_sign     <= operand_a[31];
-        b_mantissa <= {operand_b[30:23] != 8'd0, operand_b[22:0]};
+        b_mantissa <= {operand_b[30:23] != 8'd0, operand_b[22:0], 3'b0};
         b_exp      <= operand_b[30:23];
         b_sign     <= operand_b[31];
       end
       if(sqrt_a_xn_wrt) begin
-        a_mantissa <= sqrt_xn_mantissa;
+        a_mantissa <= {sqrt_xn_mantissa, 3'b0};
         a_exp      <= sqrt_xn_exp;
         a_sign     <= sqrt_xn_sign;
       end
       else if(sqrt_a_A_wrt) begin
-        a_mantissa <= sqrt_A_mantissa;
+        a_mantissa <= {sqrt_A_mantissa, 3'b0};
         a_exp      <= sqrt_A_exp;
         a_sign     <= sqrt_A_sign;
       end
       if(sqrt_b_xn_wrt) begin
-        b_mantissa <= sqrt_xn_mantissa;
+        b_mantissa <= {sqrt_xn_mantissa, 3'b0};
         b_exp      <= sqrt_xn_exp;
         b_sign     <= sqrt_xn_sign;
       end
       else if(sqrt_b_div_wrt) begin
-        b_mantissa <= result_mantissa_div;
+        b_mantissa <= {result_mantissa_div, 3'b0};
         b_exp      <= result_exp_div;
         b_sign     <= result_sign_div;
       end
@@ -248,9 +260,9 @@ module fpu(
     else if(curr_state_arith_fsm == pa_fpu::arith_result_valid_st) begin
       case(operation)
         pa_fpu::op_add: 
-          ieee_packet <= {result_s_add_sub, result_e_add_sub, result_m_add_sub[22:0]};
+          ieee_packet <= {result_sign_add, result_exp_add, result_mantissa_add[22:0]};
         pa_fpu::op_sub: 
-          ieee_packet <= {result_s_add_sub, result_e_add_sub, result_m_add_sub[22:0]};
+          ieee_packet <= {result_sign_sub, result_exp_sub, result_mantissa_sub[22:0]};
         pa_fpu::op_mul: 
           ieee_packet <= {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]};
         pa_fpu::op_square: 
@@ -357,19 +369,35 @@ module fpu(
   // else if aexp > bexp, then increase bexp and right-shift b_mantissa by same number
   // else, exponents are the same
   always_comb begin
-    if(a_exp < b_exp) begin
-      a_mantissa_adjusted = a_mantissa >> -ab_exp_diff;
-      a_exp_adjusted      = b_exp;
+    logic sticky;
 
-      b_mantissa_adjusted = b_mantissa;
-      b_exp_adjusted      = b_exp;
+    if(a_exp < b_exp) begin
+      sticky = 0;
+      for(int i = 0; i <= -ab_exp_diff - 3; i++) 
+        if(a_mantissa[i] == 1) begin
+          sticky = 1;
+          break;
+        end
+      a_mantissa_adjusted     = a_mantissa >> -ab_exp_diff;
+      a_mantissa_adjusted[-2] = sticky;
+      a_exp_adjusted          = b_exp;
+
+      b_mantissa_adjusted     = b_mantissa;
+      b_exp_adjusted          = b_exp;
     end   
     else if(b_exp < a_exp) begin
-      a_mantissa_adjusted = a_mantissa;
-      a_exp_adjusted      = a_exp;
+      sticky = 0;
+      for(int i = 0; i <= ab_exp_diff - 3; i++) 
+        if(b_mantissa[i] == 1) begin
+          sticky = 1;
+          break;
+        end
+      a_mantissa_adjusted     = a_mantissa;
+      a_exp_adjusted          = a_exp;
 
-      b_mantissa_adjusted = b_mantissa >> ab_exp_diff;
-      b_exp_adjusted      = a_exp;
+      b_mantissa_adjusted     = b_mantissa >> ab_exp_diff;
+      b_mantissa_adjusted[-2] = sticky;
+      b_exp_adjusted          = a_exp;
     end   
     else begin
       a_mantissa_adjusted = a_mantissa;
@@ -379,32 +407,50 @@ module fpu(
     end
     // the _adjusted variables are used for add and sub operations only
     // negate mantissas if signs are negative
-    if(a_sign == 1'b1) a_mantissa_adjusted = ~a_mantissa_adjusted + 1;
-    if(b_sign == 1'b1) b_mantissa_adjusted = ~b_mantissa_adjusted + 1;
+    if(a_sign == 1'b1) a_mantissa_adjusted = -a_mantissa_adjusted;
+    if(b_sign == 1'b1) b_mantissa_adjusted = -b_mantissa_adjusted;
   end
 
-  // addition/subtraction datapath
+  // addition datapath
   always_comb begin
-    if(operation == pa_fpu::op_add)
-      result_m_add_sub = a_mantissa_adjusted + b_mantissa_adjusted;
-    else
-      result_m_add_sub = a_mantissa_adjusted - b_mantissa_adjusted;
-    result_e_add_sub = b_exp_adjusted;
-    result_s_add_sub = result_m_add_sub[25];
-    if(result_s_add_sub) result_m_add_sub = -result_m_add_sub;
-    if(result_m_add_sub[25]) begin
-      result_m_add_sub = result_m_add_sub >> 2;
-      result_e_add_sub = result_e_add_sub + 2;
+    result_mantissa_add = a_mantissa_adjusted + b_mantissa_adjusted;
+    result_exp_add = b_exp_adjusted;
+    result_sign_add = result_mantissa_add[25];
+    if(result_sign_add) result_mantissa_add = -result_mantissa_add;
+    if(result_mantissa_add[25]) begin
+      result_mantissa_add = result_mantissa_add >> 2;
+      result_exp_add = result_exp_add + 2;
     end
-    else if(result_m_add_sub[24]) begin
-      result_m_add_sub = result_m_add_sub >> 1;
-      result_e_add_sub = result_e_add_sub + 1;
+    else if(result_mantissa_add[24]) begin
+      result_mantissa_add = result_mantissa_add >> 1;
+      result_exp_add = result_exp_add + 1;
     end
-    else while(!result_m_add_sub[23]) begin
-      if(result_m_add_sub == '0) break;
-      result_m_add_sub = result_m_add_sub << 1;
-      result_e_add_sub = result_e_add_sub - 1;
+    else if(result_mantissa_add[23:0] != 24'h0)
+      while(!result_mantissa_add[23]) begin
+        result_mantissa_add = result_mantissa_add << 1;
+        result_exp_add = result_exp_add - 1;
+      end
+  end
+
+  // subtraction datapath
+  always_comb begin
+    result_mantissa_sub = a_mantissa_adjusted - b_mantissa_adjusted;
+    result_exp_sub = b_exp_adjusted;
+    result_sign_sub = result_mantissa_sub[25];
+    if(result_sign_sub) result_mantissa_sub = -result_mantissa_sub;
+    if(result_mantissa_sub[25]) begin
+      result_mantissa_sub = result_mantissa_sub >> 2;
+      result_exp_sub = result_exp_sub + 2;
     end
+    else if(result_mantissa_sub[24]) begin
+      result_mantissa_sub = result_mantissa_sub >> 1;
+      result_exp_sub = result_exp_sub + 1;
+    end
+    else if(result_mantissa_sub[23:0] != 24'h0)
+      while(!result_mantissa_sub[23]) begin
+        result_mantissa_sub = result_mantissa_sub << 1;
+        result_exp_sub = result_exp_sub - 1;
+      end
   end
 
   // ---------------------------------------------------------------------------------------
@@ -740,11 +786,10 @@ module fpu(
       if(next_state_div_fsm == pa_fpu::div_sub_divisor_test_st)  
         div_counter <= div_counter + 1;
       if(curr_state_div_fsm == pa_fpu::div_result_valid_st) begin
-        automatic logic  [7:0] e = (a_exp - b_exp) + 8'd127;
+        automatic logic [7:0] e = (a_exp - b_exp) + 8'd127;
         automatic logic [23:0] m = remainder_dividend[23:0];
         result_sign_div <= a_sign ^ b_sign;
         while(m[23] == 1'b0) begin
-          if(m == '0) break;
           m = m << 1;
           e = e - 1;
         end
@@ -860,7 +905,7 @@ module fpu(
         sqrt_xn_sign     <= 1'b0;
       end
       else if(sqrt_xn_a_approx_wrt) begin
-        sqrt_xn_mantissa <= a_mantissa; 
+        sqrt_xn_mantissa <= a_mantissa[25:0]; 
         //sqrt_xn_exp      <= a_exp - 8'd1;
         // 9'b110000001 = -127 with 1 bit extended for signed arithmetic
         //sqrt_xn_exp      <= (({1'b0, a_exp} + 9'b110000001) >> 1) + 9'd127 ; // divide a_exp by 2. hence initial approx to A = m*2^E  is  m*e^(E/2) which is very close to its square root.
@@ -869,17 +914,17 @@ module fpu(
         sqrt_xn_sign     <= a_sign;
       end
       else if(sqrt_xn_a_wrt) begin
-        sqrt_xn_mantissa <= a_mantissa;
+        sqrt_xn_mantissa <= a_mantissa[25:0];
         sqrt_xn_exp      <= a_exp;
         sqrt_xn_sign     <= a_sign;
       end
       else if(sqrt_xn_add_wrt) begin
-        sqrt_xn_mantissa <= result_m_add_sub;
-        sqrt_xn_exp      <= result_e_add_sub - 8'd1;
-        sqrt_xn_sign     <= result_s_add_sub;
+        sqrt_xn_mantissa <= result_mantissa_add;
+        sqrt_xn_exp      <= result_exp_add - 8'd1;
+        sqrt_xn_sign     <= result_sign_add;
       end
       if(sqrt_A_a_wrt) begin
-        sqrt_A_mantissa <= a_mantissa;
+        sqrt_A_mantissa <= a_mantissa[25:0];
         sqrt_A_exp      <= a_exp;
         sqrt_A_sign     <= a_sign;
       end
@@ -916,7 +961,7 @@ module fpu(
         next_state_sqrt_fsm = pa_fpu::sqrt_mov_xn_a_dec_exp_st;
       end
       // perform addition during this clock cycle
-      // set xn = result_m_add_sub, while decreasing xn_exp by 1
+      // set xn = result_mantissa_add, while decreasing xn_exp by 1
       // dec sqrt_counter when entering this state
       // check sqrt_counter == 4
       pa_fpu::sqrt_mov_xn_a_dec_exp_st: begin
@@ -1064,14 +1109,13 @@ module fpu(
     if(a_exp - 8'd127 < 0) result_float2int = 32'b0;
     else begin
       shift = a_exp - 8'd127;
-      result_float2int = {1'b1, a_mantissa};
+      result_float2int = {1'b1, a_mantissa[25:0]};
     end
   end
 
 
   // sin x
   // x - x^3/6 + x^5/120 - x^7/5040
-  // 
   // 
 
   // next state clocking
