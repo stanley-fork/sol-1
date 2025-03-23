@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #include "definitions.h"
 #include "char.h"
@@ -304,6 +305,12 @@ int main(int argc, char *argv[]){
   int total_c_lines;
   int total_asm_lines;
   float apc_ratio; // asm lines per c lines ratio
+  char date_str[64];
+  time_t now = time(NULL);
+  struct tm *t = localtime(&now);
+
+  // Format date as "DD-MM-YYYY"
+  strftime(date_str, sizeof(date_str), "%d-%m-%Y at %H:%M:%S", t);
 
   switch_display_function_table = 0;
   switch_display_typedef_table  = 0;
@@ -334,6 +341,7 @@ int main(int argc, char *argv[]){
   data_block_p = data_block_asm; // data block pointer
 
   emitln("", "; --- FILENAME: %s", argv[1]);
+  emitln("", "; --- DATE:     %s", date_str);
   if(include_kernel_exp) emitln("", ".include \"lib/asm/kernel.exp\"");
   emitln("", ".include \"lib/asm/bios.exp\"");
 
