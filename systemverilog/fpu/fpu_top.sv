@@ -81,116 +81,116 @@ module fpu(
   output logic busy     // active high when an operation is in progress
 );
 
-  logic             [31:0] ieee_packet;
+  logic [31:0] ieee_packet;
 
-  logic             [31:0] operand_a;
-  logic             [25:0] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
-  logic             [25:0] a_mantissa_adjusted;
-  logic             [ 7:0] a_exp;
-  logic                    a_sign;
-  logic             [31:0] operand_b;
-  logic             [25:0] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
-  logic             [25:0] b_mantissa_adjusted;
-  logic             [ 7:0] b_exp;
-  logic                    b_sign;
-  logic             [ 7:0] ab_exp_diff;
+  logic [31:0] operand_a;
+  logic [25:0] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
+  logic [25:0] a_mantissa_adjusted;
+  logic [ 7:0] a_exp;
+  logic        a_sign;
+  logic [31:0] operand_b;
+  logic [25:0] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
+  logic [25:0] b_mantissa_adjusted;
+  logic [ 7:0] b_exp;
+  logic        b_sign;
+  logic [ 7:0] ab_exp_diff;
 
-  logic             [ 7:0] a_exp_adjusted;
-  logic             [ 7:0] b_exp_adjusted;
+  logic [ 7:0] a_exp_adjusted;
+  logic [ 7:0] b_exp_adjusted;
 
   // addition/subtraction datapath
-  logic             [25:0] result_m_add_sub; // 24 bits plus carry
-  logic             [ 7:0] result_e_add_sub;
-  logic                    result_s_add_sub;
+  logic [25:0] result_m_add_sub; // 24 bits plus carry
+  logic [ 7:0] result_e_add_sub;
+  logic        result_s_add_sub;
 
   // multiplication datapath
-  logic             [23:0] result_mantissa_mul;
-  logic             [ 7:0] result_exp_mul;
-  logic                    result_sign_mul;
-  logic             [48:0] product_multiplier;  // keeps the product and multiplier. shifted right till product occupies entire space and multiplier disappears
-  logic             [ 4:0] mul_counter;   // this keeps a count of how many times we have performed the product addition cycle. total = 24.
+  logic [23:0] result_mantissa_mul;
+  logic [ 7:0] result_exp_mul;
+  logic        result_sign_mul;
+  logic [48:0] product_multiplier;  // keeps the product and multiplier. shifted right till product occupies entire space and multiplier disappears
+  logic [ 4:0] mul_counter;   // this keeps a count of how many times we have performed the product addition cycle. total = 24.
   // fsm control
-  logic                    product_add;
-  logic                    product_shift;
-  logic                    start_operation_mul_fsm;  // ...
-  logic                    operation_done_mul_fsm;   // for handshake between main fsm and multiply fsm
+  logic product_add;
+  logic product_shift;
+  logic start_operation_mul_fsm;  // ...
+  logic operation_done_mul_fsm;   // for handshake between main fsm and multiply fsm
 
   // division datapath 
-  logic             [23:0] result_mantissa_div;
-  logic             [ 7:0] result_exp_div;
-  logic                    result_sign_div;
-  logic             [48:0] remainder_dividend; // 24 bits for quotient, 25 bits for the subtraction register (one more bit needed at MSB position for when dividend < divisor)
-                                            // in such a case, the dividend is shifted left until it becomes larger than divisor and subtraction can happen (for fractional divisions)
+  logic [23:0] result_mantissa_div;
+  logic [ 7:0] result_exp_div;
+  logic        result_sign_div;
+  logic [48:0] remainder_dividend; // 24 bits for quotient, 25 bits for the subtraction register (one more bit needed at MSB position for when dividend < divisor)
+                                   // in such a case, the dividend is shifted left until it becomes larger than divisor and subtraction can happen (for fractional divisions)
   // fsm control
-  logic              [4:0] div_counter;
-  logic                    div_shift;
-  logic                    div_set_q0;
-  logic                    start_operation_div_fsm;  
-  logic                    operation_done_div_fsm;   
+  logic [4:0] div_counter;
+  logic       div_shift;
+  logic       div_set_q0;
+  logic       start_operation_div_fsm;  
+  logic       operation_done_div_fsm;   
 
   // sqrt datapath
-  logic             [23:0] sqrt_xn_mantissa;
-  logic              [7:0] sqrt_xn_exp;
-  logic                    sqrt_xn_sign;
-  logic             [23:0] sqrt_A_mantissa;
-  logic              [7:0] sqrt_A_exp;
-  logic                    sqrt_A_sign;
-  logic              [3:0] sqrt_counter;
+  logic [23:0] sqrt_xn_mantissa;
+  logic [7:0] sqrt_xn_exp;
+  logic       sqrt_xn_sign;
+  logic [23:0] sqrt_A_mantissa;
+  logic [7:0] sqrt_A_exp;
+  logic       sqrt_A_sign;
+  logic [3:0] sqrt_counter;
 
   // fsm control
-  logic                    start_operation_sqrt_fsm;  
-  logic                    operation_done_sqrt_fsm;   
-  logic                    sqrt_div_A_by_xn_start;
-  logic                    sqrt_xn_A_wrt;
-  logic                    sqrt_xn_a_approx_wrt;
-  logic                    sqrt_xn_a_wrt;
-  logic                    sqrt_xn_add_wrt;
-  logic                    sqrt_A_a_wrt;
-  logic                    sqrt_a_xn_wrt;
-  logic                    sqrt_a_A_wrt;
-  logic                    sqrt_b_xn_wrt;
-  logic                    sqrt_b_div_wrt;
+  logic       start_operation_sqrt_fsm;  
+  logic       operation_done_sqrt_fsm;   
+  logic       sqrt_div_A_by_xn_start;
+  logic       sqrt_xn_A_wrt;
+  logic       sqrt_xn_a_approx_wrt;
+  logic       sqrt_xn_a_wrt;
+  logic       sqrt_xn_add_wrt;
+  logic       sqrt_A_a_wrt;
+  logic       sqrt_a_xn_wrt;
+  logic       sqrt_a_A_wrt;
+  logic       sqrt_b_xn_wrt;
+  logic       sqrt_b_div_wrt;
 
   // float2int
-  logic             [31:0] result_float2int;
+  logic [31:0] result_float2int;
 
-  pa_fpu::e_fpu_op         operation; // arithmetic operation to be performed
-  logic                    start_operation;
+  pa_fpu::e_fpu_op operation; // arithmetic operation to be performed
+  logic            start_operation;
 
   // other datapath control signals
-  logic                    operation_wrt; // when needing to internally change the operator
-  pa_fpu::e_fpu_op         new_operation; // arithmetic operation to be performed
+  logic            operation_wrt; // when needing to internally change the operator
+  pa_fpu::e_fpu_op new_operation; // arithmetic operation to be performed
 
-  logic                    start_operation_ar_fsm;  // ...
-  logic                    operation_done_ar_fsm;   // for handshake between main fsm and arithmetic fsm
-  logic                    start_operation_div_ar_fsm;  
+  logic            start_operation_ar_fsm;  // ...
+  logic            operation_done_ar_fsm;   // for handshake between main fsm and arithmetic fsm
+  logic            start_operation_div_ar_fsm;  
 
   // logarithm
-  logic             [30:0] log2_a_exp; 
-  logic             [30:0] log2_m;     
-  logic             [30:0] log2_sigma;
-  logic             [30:0] log2;       
-  logic              [7:0] log2_exp;       
-  logic                    log2_sign;
+  logic [30:0] log2_a_exp; 
+  logic [30:0] log2_m;     
+  logic [30:0] log2_sigma;
+  logic [30:0] log2;       
+  logic [7:0]  log2_exp;       
+  logic        log2_sign;
 
   // status
-  logic                    overflow;
-  logic                    underflow;
-  logic                    NaN;
-  logic                    pos_infinity;
-  logic                    neg_infinity;
+  logic overflow;
+  logic underflow;
+  logic NaN;
+  logic pos_infinity;
+  logic neg_infinity;
 
   // fsm states
-  pa_fpu::e_main_st        curr_state_main_fsm;
-  pa_fpu::e_main_st        next_state_main_fsm;
-  pa_fpu::e_arith_st       curr_state_arith_fsm;
-  pa_fpu::e_arith_st       next_state_arith_fsm;
-  pa_fpu::e_mul_st         curr_state_mul_fsm;
-  pa_fpu::e_mul_st         next_state_mul_fsm;
-  pa_fpu::e_div_st         curr_state_div_fsm;
-  pa_fpu::e_div_st         next_state_div_fsm;
-  pa_fpu::e_sqrt_st        curr_state_sqrt_fsm;
-  pa_fpu::e_sqrt_st        next_state_sqrt_fsm;
+  pa_fpu::e_main_st  curr_state_main_fsm;
+  pa_fpu::e_main_st  next_state_main_fsm;
+  pa_fpu::e_arith_st curr_state_arith_fsm;
+  pa_fpu::e_arith_st next_state_arith_fsm;
+  pa_fpu::e_mul_st   curr_state_mul_fsm;
+  pa_fpu::e_mul_st   next_state_mul_fsm;
+  pa_fpu::e_div_st   curr_state_div_fsm;
+  pa_fpu::e_div_st   next_state_div_fsm;
+  pa_fpu::e_sqrt_st  curr_state_sqrt_fsm;
+  pa_fpu::e_sqrt_st  next_state_sqrt_fsm;
 
 
   // ---------------------------------------------------------------------------------------
