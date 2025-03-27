@@ -87,16 +87,16 @@ module fpu(
   logic [25:0] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
   logic [25:0] a_mantissa_adjusted;
   logic [ 7:0] a_exp;
+  logic [ 7:0] a_exp_adjusted;
   logic        a_sign;
+
   logic [31:0] operand_b;
   logic [25:0] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
   logic [25:0] b_mantissa_adjusted;
   logic [ 7:0] b_exp;
+  logic [ 7:0] b_exp_adjusted;
   logic        b_sign;
   logic [ 7:0] ab_exp_diff;
-
-  logic [ 7:0] a_exp_adjusted;
-  logic [ 7:0] b_exp_adjusted;
 
   // addition/subtraction datapath
   logic [25:0] result_m_add_sub; // 24 bits plus carry
@@ -109,6 +109,7 @@ module fpu(
   logic        result_sign_mul;
   logic [48:0] product_multiplier;  // keeps the product and multiplier. shifted right till product occupies entire space and multiplier disappears
   logic [ 4:0] mul_counter;   // this keeps a count of how many times we have performed the product addition cycle. total = 24.
+
   // fsm control
   logic product_add;
   logic product_shift;
@@ -130,40 +131,40 @@ module fpu(
 
   // sqrt datapath
   logic [23:0] sqrt_xn_mantissa;
-  logic [7:0] sqrt_xn_exp;
-  logic       sqrt_xn_sign;
+  logic  [7:0] sqrt_xn_exp;
+  logic        sqrt_xn_sign;
   logic [23:0] sqrt_A_mantissa;
-  logic [7:0] sqrt_A_exp;
-  logic       sqrt_A_sign;
-  logic [3:0] sqrt_counter;
+  logic  [7:0] sqrt_A_exp;
+  logic        sqrt_A_sign;
+  logic  [3:0] sqrt_counter;
 
   // fsm control
-  logic       start_operation_sqrt_fsm;  
-  logic       operation_done_sqrt_fsm;   
-  logic       sqrt_div_A_by_xn_start;
-  logic       sqrt_xn_A_wrt;
-  logic       sqrt_xn_a_approx_wrt;
-  logic       sqrt_xn_a_wrt;
-  logic       sqrt_xn_add_wrt;
-  logic       sqrt_A_a_wrt;
-  logic       sqrt_a_xn_wrt;
-  logic       sqrt_a_A_wrt;
-  logic       sqrt_b_xn_wrt;
-  logic       sqrt_b_div_wrt;
+  logic start_operation_sqrt_fsm;  
+  logic operation_done_sqrt_fsm;   
+  logic sqrt_div_A_by_xn_start;
+  logic sqrt_xn_A_wrt;
+  logic sqrt_xn_a_approx_wrt;
+  logic sqrt_xn_a_wrt;
+  logic sqrt_xn_add_wrt;
+  logic sqrt_A_a_wrt;
+  logic sqrt_a_xn_wrt;
+  logic sqrt_a_A_wrt;
+  logic sqrt_b_xn_wrt;
+  logic sqrt_b_div_wrt;
 
   // float2int
   logic [31:0] result_float2int;
 
   pa_fpu::e_fpu_op operation; // arithmetic operation to be performed
-  logic            start_operation;
+  logic start_operation;
 
   // other datapath control signals
-  logic            operation_wrt; // when needing to internally change the operator
+  logic operation_wrt; // when needing to internally change the operator
   pa_fpu::e_fpu_op new_operation; // arithmetic operation to be performed
 
-  logic            start_operation_ar_fsm;  // ...
-  logic            operation_done_ar_fsm;   // for handshake between main fsm and arithmetic fsm
-  logic            start_operation_div_ar_fsm;  
+  logic start_operation_ar_fsm;  // ...
+  logic operation_done_ar_fsm;   // for handshake between main fsm and arithmetic fsm
+  logic start_operation_div_ar_fsm;  
 
   // logarithm
   logic [30:0] log2_a_exp; 
@@ -174,11 +175,18 @@ module fpu(
   logic        log2_sign;
 
   // status
-  logic overflow;
-  logic underflow;
-  logic NaN;
-  logic pos_infinity;
-  logic neg_infinity;
+  logic a_overflow;
+  logic a_underflow;
+  logic a_nan;
+  logic a_pos_infinity;
+  logic a_neg_infinity;
+  logic a_zero;
+  logic b_overflow;
+  logic b_underflow;
+  logic b_nan;
+  logic b_pos_infinity;
+  logic b_neg_infinity;
+  logic b_zero;
 
   // fsm states
   pa_fpu::e_main_st  curr_state_main_fsm;
@@ -194,6 +202,9 @@ module fpu(
 
 
   // ---------------------------------------------------------------------------------------
+
+  assign a_zero = a_operand[30:23] == 8'h00 && a_operand[22:0] == 23'h0;
+  assign b_zero = b_operand[30:23] == 8'h00 && b_operand[22:0] == 23'h0;
 
   assign ab_exp_diff = a_exp - b_exp;
   assign start_operation_div_fsm = start_operation_div_ar_fsm || sqrt_div_A_by_xn_start;
