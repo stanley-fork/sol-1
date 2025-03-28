@@ -203,8 +203,15 @@ module fpu(
 
   // ---------------------------------------------------------------------------------------
 
-  assign a_zero = a_operand[30:23] == 8'h00 && a_operand[22:0] == 23'h0;
-  assign b_zero = b_operand[30:23] == 8'h00 && b_operand[22:0] == 23'h0;
+  assign a_nan     = a_operand[30:23] == 8'hff && |a_operand[22:0];
+  assign a_zero    = a_operand[30:23] == 8'h00 &&  a_operand[22:0]  == 23'h0;
+  assign a_pos_inf = a_operand[31]    == 1'b0  &&  a_operand[30:23] == 8'hff && a_operand[22:0] == 23'h0;
+  assign a_neg_inf = a_operand[31]    == 1'b1  &&  a_operand[30:23] == 8'hff && a_operand[22:0] == 23'h0;
+
+  assign b_nan     = b_operand[30:23] == 8'hff && |b_operand[22:0];
+  assign b_zero    = b_operand[30:23] == 8'h00 &&  b_operand[22:0]  == 23'h0;
+  assign b_pos_inf = b_operand[31]    == 1'b0  &&  b_operand[30:23] == 8'hff && b_operand[22:0] == 23'h0;
+  assign b_neg_inf = b_operand[31]    == 1'b1  &&  b_operand[30:23] == 8'hff && b_operand[22:0] == 23'h0;
 
   assign ab_exp_diff = a_exp - b_exp;
   assign start_operation_div_fsm = start_operation_div_ar_fsm || sqrt_div_A_by_xn_start;
