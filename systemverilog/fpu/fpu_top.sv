@@ -83,21 +83,26 @@ module fpu(
 
   logic [31:0] ieee_packet;
 
-  logic [31:0] operand_a;
+  logic [31:0] a_operand;
   logic [25:0] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
+  logic [25:0] a_mantissa_shifted;
   logic [25:0] a_mantissa_adjusted;
   logic [ 7:0] a_exp;
   logic [ 7:0] a_exp_adjusted;
   logic        a_sign;
 
-  logic [31:0] operand_b;
+  logic [31:0] b_operand;
   logic [25:0] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
+  logic [25:0] b_mantissa_shifted;
   logic [25:0] b_mantissa_adjusted;
   logic [ 7:0] b_exp;
   logic [ 7:0] b_exp_adjusted;
   logic        b_sign;
   logic [ 7:0] ab_exp_diff;
 
+  // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 which always carries
+  // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
+  // that always comes out of bit 23, since bit 23 is always 1 in both operands. 
   // addition/subtraction datapath
   logic [25:0] result_m_add_sub; // 24 bits plus carry
   logic [ 7:0] result_e_add_sub;
@@ -200,7 +205,6 @@ module fpu(
   pa_fpu::e_sqrt_st  curr_state_sqrt_fsm;
   pa_fpu::e_sqrt_st  next_state_sqrt_fsm;
 
-
   // ---------------------------------------------------------------------------------------
 
   assign a_nan     = a_operand[30:23] == 8'hff && |a_operand[22:0];
@@ -229,12 +233,12 @@ module fpu(
     end   
     else begin
       if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
-        a_mantissa <= {operand_a[30:23] != 8'd0, operand_a[22:0]};
-        a_exp      <= operand_a[30:23];
-        a_sign     <= operand_a[31];
-        b_mantissa <= {operand_b[30:23] != 8'd0, operand_b[22:0]};
-        b_exp      <= operand_b[30:23];
-        b_sign     <= operand_b[31];
+        a_mantissa <= {a_operand[30:23] != 8'd0, a_operand[22:0]};
+        a_exp      <= a_operand[30:23];
+        a_sign     <= a_operand[31];
+        b_mantissa <= {b_operand[30:23] != 8'd0, b_operand[22:0]};
+        b_exp      <= b_operand[30:23];
+        b_sign     <= b_operand[31];
       end
       if(sqrt_a_xn_wrt) begin
         a_mantissa <= sqrt_xn_mantissa;
@@ -287,23 +291,23 @@ module fpu(
 
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
-      operand_a  <= {1'b0, 8'd127, 23'h0};
-      operand_b  <= {1'b0, 8'd127, 23'h0};
+      a_operand  <= {1'b0, 8'd127, 23'h0};
+      b_operand  <= {1'b0, 8'd127, 23'h0};
       operation  <= pa_fpu::op_add;  
       start_operation <= 1'b0;
     end
     else begin
       if(cs == 1'b0 && wr == 1'b0) begin
         case(addr)
-          4'h0: operand_a[7:0]   <= databus_in;
-          4'h1: operand_a[15:8]  <= databus_in;
-          4'h2: operand_a[23:16] <= databus_in;
-          4'h3: operand_a[31:24] <= databus_in;
+          4'h0: a_operand[7:0]   <= databus_in;
+          4'h1: a_operand[15:8]  <= databus_in;
+          4'h2: a_operand[23:16] <= databus_in;
+          4'h3: a_operand[31:24] <= databus_in;
 
-          4'h4: operand_b[7:0]   <= databus_in;
-          4'h5: operand_b[15:8]  <= databus_in;
-          4'h6: operand_b[23:16] <= databus_in;
-          4'h7: operand_b[31:24] <= databus_in;
+          4'h4: b_operand[7:0]   <= databus_in;
+          4'h5: b_operand[15:8]  <= databus_in;
+          4'h6: b_operand[23:16] <= databus_in;
+          4'h7: b_operand[31:24] <= databus_in;
 
           4'h8: operation  <= pa_fpu::e_fpu_op'(databus_in[3:0]);
           4'h9: start_operation <= 1'b1;
@@ -313,9 +317,9 @@ module fpu(
       if(next_state_main_fsm == pa_fpu::main_wait_st) 
         start_operation <= 1'b0;
 
-      // set operand_a to latest result
+      // set a_operand to latest result
       if(next_state_main_fsm == pa_fpu::main_wait_ack_st) 
-        operand_a <= ieee_packet;
+        a_operand <= ieee_packet;
 
       if(operation_wrt == 1'b1) 
         operation <= new_operation;
@@ -326,15 +330,15 @@ module fpu(
   always_comb begin
     if(cs == 1'b0 && rd == 1'b0) begin
       case(addr)
-        4'h0: databus_out = operand_a[7:0];
-        4'h1: databus_out = operand_a[15:8];
-        4'h2: databus_out = operand_a[23:16];
-        4'h3: databus_out = operand_a[31:24];
+        4'h0: databus_out = a_operand[7:0];
+        4'h1: databus_out = a_operand[15:8];
+        4'h2: databus_out = a_operand[23:16];
+        4'h3: databus_out = a_operand[31:24];
 
-        4'h4: databus_out = operand_b[7:0];
-        4'h5: databus_out = operand_b[15:8];
-        4'h6: databus_out = operand_b[23:16];
-        4'h7: databus_out = operand_b[31:24];
+        4'h4: databus_out = b_operand[7:0];
+        4'h5: databus_out = b_operand[15:8];
+        4'h6: databus_out = b_operand[23:16];
+        4'h7: databus_out = b_operand[31:24];
 
         4'h8: databus_out = operation;
 
@@ -353,7 +357,7 @@ module fpu(
   always_comb begin
     // aliasing the floating point number as a new number such that (exponent-127) is the integral part, and mantissa is the fractional part
     // then adding a fractional error term gives the approximate log2 of the floating point.
-    log2      = {operand_a[30:23] - 8'd127, operand_a[22:0]} + {8'b0, 23'b00001011000001000110011};
+    log2      = {a_operand[30:23] - 8'd127, a_operand[22:0]} + {8'b0, 23'b00001011000001000110011};
     log2_exp  = 7;
     log2_sign = 1'b0;
     if(log2[30]) begin
@@ -374,32 +378,20 @@ module fpu(
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
   // else if aexp > bexp, then increase bexp and right-shift b_mantissa by same number
   // else, exponents are the same
-  always_comb begin
-    if(a_exp < b_exp) begin
-      a_mantissa_adjusted = a_mantissa >> -ab_exp_diff;
-      a_exp_adjusted      = b_exp;
 
-      b_mantissa_adjusted = b_mantissa;
-      b_exp_adjusted      = b_exp;
-    end   
-    else if(b_exp < a_exp) begin
-      a_mantissa_adjusted = a_mantissa;
-      a_exp_adjusted      = a_exp;
+  assign a_mantissa_shifted = a_exp < b_exp ? a_mantissa >> -ab_exp_diff : a_mantissa;
+  assign b_mantissa_shifted = a_exp < b_exp ? b_mantissa : 
+                              b_exp < a_exp ? b_mantissa >>  ab_exp_diff : b_mantissa;
+  assign a_exp_adjusted     = a_exp < b_exp ? b_exp : a_exp;
+  assign b_exp_adjusted     = a_exp < b_exp ? b_exp : 
+                              b_exp < a_exp ? a_exp : b_exp;
 
-      b_mantissa_adjusted = b_mantissa >> ab_exp_diff;
-      b_exp_adjusted      = a_exp;
-    end   
-    else begin
-      a_mantissa_adjusted = a_mantissa;
-      a_exp_adjusted      = a_exp;
-      b_mantissa_adjusted = b_mantissa;
-      b_exp_adjusted      = b_exp;
-    end
-    // the _adjusted variables are used for add and sub operations only
-    // negate mantissas if signs are negative
-    if(a_sign == 1'b1) a_mantissa_adjusted = ~a_mantissa_adjusted + 1;
-    if(b_sign == 1'b1) b_mantissa_adjusted = ~b_mantissa_adjusted + 1;
-  end
+  assign a_mantissa_adjusted = a_sign ? ~a_mantissa_shifted + 1 : a_mantissa_shifted;
+  assign b_mantissa_adjusted = b_sign ? ~b_mantissa_shifted + 1 : b_mantissa_shifted;
+
+  // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 which always carries
+  // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
+  // that always comes out of bit 23, since bit 23 is always 1 in both operands. 
 
   // addition/subtraction datapath
   always_comb begin
@@ -413,10 +405,12 @@ module fpu(
     if(result_m_add_sub[25]) begin
       result_m_add_sub = result_m_add_sub >> 2;
       result_e_add_sub = result_e_add_sub + 2;
+      $display("reached bit 25");
     end
     else if(result_m_add_sub[24]) begin
       result_m_add_sub = result_m_add_sub >> 1;
       result_e_add_sub = result_e_add_sub + 1;
+      $display("reached bit 24");
     end
     else while(!result_m_add_sub[23]) begin
       if(result_m_add_sub == '0) break;

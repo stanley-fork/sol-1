@@ -12,10 +12,10 @@ Z0 !s99 nomlopt
 cModel Technology
 Z1 d/home/pconst/Desktop/sol-1/systemverilog/fpu
 T_opt
-!s110 1743110749
-Vm7ee:ZCFob5oIn<?U?Fb32
+!s110 1743195890
+VYOSTZB_HC]mWcPHM?PV]P3
 04 6 4 work fpu_tb fast 0
-=1-000ae431a4f1-67e5c25d-7b596-4b36c
+=1-000ae431a4f1-67e70ef2-44d72-5d7e1
 R0
 !s12f OEM100
 !s12b OEM100
@@ -28,23 +28,23 @@ vfpu
 Z3 2pa_fpu.sv|fpu_top.sv|fpu_tb.sv
 Z4 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
 Z5 DXx4 work 6 pa_fpu 0 22 @`NN6DhT=H:M`1?n;?@n:2
-Z6 !s110 1743110747
+Z6 !s110 1743195885
 !i10b 1
-!s100 jR3lijJnZoNYK>cFkcUPZ2
-Ig[Ni`0FB7ZhA9TX]II`i;3
+!s100 BYJlXG=<aJjC^97j[cOWz1
+I>F25Jo[;[g:R]D]Ng2CN52
 S1
 R1
-w1743110739
+w1743195730
 8fpu_top.sv
 Ffpu_top.sv
 !i122 0
-L0 70 1060
+L0 70 1070
 Z7 VDg1SIo80bB@j0V0VzS_@n1
 Z8 OL;L;2024.1;79
 r1
 !s85 0
 31
-Z9 !s108 1743110747.000000
+Z9 !s108 1743195885.000000
 Z10 !s107 fpu_tb.sv|fpu_top.sv|pa_fpu.sv|
 Z11 !s90 -work|work|+acc|-f|fpu.f|
 !i113 0
@@ -56,11 +56,11 @@ R4
 R5
 R6
 !i10b 1
-!s100 X4]51Ud[Ro4k<WOPMgz3n2
-INDIH7SFdKDYFd0>SI[9WG3
+!s100 YMi@XCLPXUGB<<Q4?WZhj2
+Ig0Vm2CT:Sd9<KVDZkC2IX3
 S1
 R1
-w1743110745
+w1743195881
 8fpu_tb.sv
 Ffpu_tb.sv
 !i122 0

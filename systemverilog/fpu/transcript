@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 21:25:49 on Mar 27,2025
+# Start time: 21:04:50 on Mar 28,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
@@ -25,24 +25,42 @@
 # Loading work.fpu_tb(fast)
 # Loading work.fpu(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
-add wave -position insertpoint  \
-sim:/fpu_tb/arst \
-sim:/fpu_tb/clk \
-sim:/fpu_tb/databus_in \
-sim:/fpu_tb/databus_out \
-sim:/fpu_tb/addr \
-sim:/fpu_tb/cs \
-sim:/fpu_tb/rd \
-sim:/fpu_tb/wr \
-sim:/fpu_tb/end_ack \
-sim:/fpu_tb/cmd_end \
-sim:/fpu_tb/busy \
-sim:/fpu_tb/result \
-sim:/fpu_tb/computation_list
-# (vsim-4027) Logging is not supported for Dynamic Array item: /fpu_tb/computation_list
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/operand_a'.
+# Executing ONERROR command at macro ./wave.do line 15
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/operand_b'.
+# Executing ONERROR command at macro ./wave.do line 20
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_mantissa_add'.
+# Executing ONERROR command at macro ./wave.do line 28
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_exp_add'.
+# Executing ONERROR command at macro ./wave.do line 29
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_sign_add'.
+# Executing ONERROR command at macro ./wave.do line 30
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_mantissa_sub'.
+# Executing ONERROR command at macro ./wave.do line 31
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_exp_sub'.
+# Executing ONERROR command at macro ./wave.do line 32
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_sign_sub'.
+# Executing ONERROR command at macro ./wave.do line 33
 run -all
-# Result: 0x4070e560, 3.764000
+# reached bit 24
+# Result: 0xc0000000, -2.000000
 # ** Note: $stop    : fpu_tb.sv(62)
-#    Time: 55500 ns  Iteration: 1  Instance: /fpu_tb
+#    Time: 24 us  Iteration: 1  Instance: /fpu_tb
 # Break in Module fpu_tb at fpu_tb.sv line 62
-# Break key hit
+add wave -position 26  sim:/fpu_tb/fpu_top/result_m_add_sub
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# ** Note: (vsim-8716) Reusing existing debug database vsim.dbg.
+run -all
+# reached bit 24
+# Result: 0xc0000000, -2.000000
+# ** Note: $stop    : fpu_tb.sv(62)
+#    Time: 24 us  Iteration: 1  Instance: /fpu_tb
+# Break in Module fpu_tb at fpu_tb.sv line 62
+# End time: 21:13:09 on Mar 28,2025, Elapsed time: 0:08:19
+# Errors: 0, Warnings: 1

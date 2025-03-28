@@ -50,10 +50,10 @@ module fpu_tb;
     #500ns;
     arst = 0;
 
-    write_operand_a(32'h42168f5c); //  37.64
-    write_operand_b(32'h41200000); //  10
+    write_a_operand(32'hbf800000); //  37.64
+    write_b_operand(32'hbf800000); //  10
 
-    ta_set_operation(pa_fpu::op_div);
+    ta_set_operation(pa_fpu::op_add);
     ta_start_operation();
     ta_read_result(result);
 
@@ -129,13 +129,13 @@ module fpu_tb;
     end_ack = 1'b0;
   endtask
 
-  task write_operand_a(
-    input logic [31:0] op_a
+  task write_a_operand(
+    input logic [31:0] a_op
   );
     @(posedge clk);
     cs = 1'b0;
     for(bit [3:0] i = 0; i < 4; i++) begin
-      databus_in = op_a[i*8+:8];
+      databus_in = a_op[i*8+:8];
       addr = i;
       @(negedge clk);
       wr = 1'b0;
@@ -146,13 +146,13 @@ module fpu_tb;
     cs = 1'b1;
   endtask
 
-  task write_operand_b(
-    input logic [31:0] op_b
+  task write_b_operand(
+    input logic [31:0] b_op
   );
     @(posedge clk);
     cs = 1'b0;
     for(bit [3:0] i = 0; i < 4; i++) begin
-      databus_in = op_b[i*8+:8];
+      databus_in = b_op[i*8+:8];
       addr = 4'd4 + i;
       @(negedge clk);
       wr = 1'b0;
