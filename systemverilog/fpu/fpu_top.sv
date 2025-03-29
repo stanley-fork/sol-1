@@ -413,9 +413,15 @@ module fpu(
       $display("reached bit 24");
     end
     else while(!result_m_add_sub[23]) begin
-      if(result_m_add_sub == '0) break;
-      result_m_add_sub = result_m_add_sub << 1;
-      result_e_add_sub = result_e_add_sub - 1;
+      // deal with the case where the result is 0
+      if(result_m_add_sub == '0) begin 
+        result_e_add_sub = '0; // set exponent to 0
+        break;
+      end
+      else begin
+        result_m_add_sub = result_m_add_sub << 1;
+        result_e_add_sub = result_e_add_sub - 1;
+      end
     end
   end
 
