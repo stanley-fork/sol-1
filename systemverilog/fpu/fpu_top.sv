@@ -205,6 +205,17 @@ module fpu(
   pa_fpu::e_sqrt_st  curr_state_sqrt_fsm;
   pa_fpu::e_sqrt_st  next_state_sqrt_fsm;
 
+  // counts number of leading zeroes
+  function logic [4 : 0] lzc(
+    input logic [25:0] a
+  );
+    for(int unsigned i = 0; i < 26; i++) begin
+      if(a[25 - i]) return (5)'(i);
+    end
+
+    return (5)'(26);    
+  endfunction
+
   // ---------------------------------------------------------------------------------------
 
   assign a_nan     = a_operand[30:23] == 8'hff && |a_operand[22:0];
@@ -366,7 +377,7 @@ module fpu(
     end
     while(log2[30] == 1'b0) begin
       if(log2 == '0) break;
-      log2_exp = log2_exp - 1;
+      log2_exp = log2_exp - 1'b1;
       log2 = log2 << 1;
     end
     log2_exp = log2_exp + 8'd127;
@@ -386,42 +397,39 @@ module fpu(
   assign b_exp_adjusted     = a_exp < b_exp ? b_exp : 
                               b_exp < a_exp ? a_exp : b_exp;
 
-  assign a_mantissa_adjusted = a_sign ? ~a_mantissa_shifted + 1 : a_mantissa_shifted;
-  assign b_mantissa_adjusted = b_sign ? ~b_mantissa_shifted + 1 : b_mantissa_shifted;
+  assign a_mantissa_adjusted = a_sign ? ~a_mantissa_shifted + 1'b1 : a_mantissa_shifted;
+  assign b_mantissa_adjusted = b_sign ? ~b_mantissa_shifted + 1'b1 : b_mantissa_shifted;
 
   // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 which always carries
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
   // that always comes out of bit 23, since bit 23 is always 1 in both operands. 
-
   // addition/subtraction datapath
   always_comb begin
-    if(operation == pa_fpu::op_add)
+    logic [4:0] zcount;
+    if(operation == pa_fpu::op_add) 
       result_m_add_sub = a_mantissa_adjusted + b_mantissa_adjusted;
-    else
+    else 
       result_m_add_sub = a_mantissa_adjusted - b_mantissa_adjusted;
     result_e_add_sub = b_exp_adjusted;
     result_s_add_sub = result_m_add_sub[25];
-    if(result_s_add_sub) result_m_add_sub = -result_m_add_sub;
-    if(result_m_add_sub[25]) begin
-      result_m_add_sub = result_m_add_sub >> 2;
-      result_e_add_sub = result_e_add_sub + 2;
-      $display("reached bit 25");
+    if(result_s_add_sub) 
+      result_m_add_sub = -result_m_add_sub;
+
+    // normalize result
+    // check for zero
+    if(result_m_add_sub == '0) begin 
+      result_e_add_sub = '0; // set exponent to 0
     end
+    // check for carry at position 24
     else if(result_m_add_sub[24]) begin
       result_m_add_sub = result_m_add_sub >> 1;
-      result_e_add_sub = result_e_add_sub + 1;
-      $display("reached bit 24");
+      result_e_add_sub = result_e_add_sub + 1'b1;
     end
-    else while(!result_m_add_sub[23]) begin
-      // deal with the case where the result is 0
-      if(result_m_add_sub == '0) begin 
-        result_e_add_sub = '0; // set exponent to 0
-        break;
-      end
-      else begin
-        result_m_add_sub = result_m_add_sub << 1;
-        result_e_add_sub = result_e_add_sub - 1;
-      end
+    // normalize mantissa by shifting left according to number of leading zeroes
+    else begin
+      zcount = lzc(result_m_add_sub);
+      result_m_add_sub = result_m_add_sub << zcount;
+      result_m_add_sub = result_e_add_sub - 1'b1;
     end
   end
 
@@ -654,7 +662,7 @@ module fpu(
         result_sign_mul <= a_sign ^ b_sign;
         if(m[23] == 1'b1) e = e + 8'd1;    // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
                                            // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-        else if(m[23] == 1'b0) m = m << 1; // if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
+        else if(m[23] == 1'b0) m = m << 1; // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
                                            // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
         result_exp_mul <= e;
         result_mantissa_mul <= m;
@@ -756,16 +764,14 @@ module fpu(
         remainder_dividend[48:24] <= {1'b0, remainder_dividend[48:24]} + ~{2'b00, b_mantissa[23:0]} + 26'b1;
       end
       if(next_state_div_fsm == pa_fpu::div_sub_divisor_test_st)  
-        div_counter <= div_counter + 1;
+        div_counter <= div_counter + 1'b1;
       if(curr_state_div_fsm == pa_fpu::div_result_valid_st) begin
         automatic logic  [7:0] e = (a_exp - b_exp) + 8'd127;
         automatic logic [23:0] m = remainder_dividend[23:0];
+        automatic logic [4:0] zcount = lzc({2'b00, m}) - 2;
         result_sign_div <= a_sign ^ b_sign;
-        while(m[23] == 1'b0) begin
-          if(m == '0) break;
-          m = m << 1;
-          e = e - 1;
-        end
+        m = m << zcount;
+        e = e - zcount;
         result_exp_div <= e;
         result_mantissa_div <= m;
       end
