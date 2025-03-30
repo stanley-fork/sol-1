@@ -647,7 +647,7 @@ module fpu(
     end
     else begin
       if(product_add) begin
-        if(product_multiplier[0]) product_multiplier[48:24] <= product_multiplier[48:24] + a_mantissa[23:0]; // product_multiplier is 49 bits rather than 48 so it can also keep the carry out
+        if(product_multiplier[0]) product_multiplier[48:24] <= product_multiplier[48:24] + {1'b0, a_mantissa[23:0]}; // product_multiplier is 49 bits rather than 48 so it can also keep the carry out
         mul_counter <= mul_counter + 5'd1; // increment counter here so that we can check the counter value in the next state. otherwise would need an extra state after shift_st to check counter == 16.
       end
       if(product_shift) product_multiplier <= product_multiplier >> 1;

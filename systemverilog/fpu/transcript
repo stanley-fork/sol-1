@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 00:10:05 on Mar 30,2025
+# Start time: 00:30:09 on Mar 30,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
@@ -25,24 +25,9 @@
 # Loading work.fpu_tb(fast)
 # Loading work.fpu(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
-# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/operand_a'.
-# Executing ONERROR command at macro ./wave.do line 15
-# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/operand_b'.
-# Executing ONERROR command at macro ./wave.do line 20
-# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_mantissa_add'.
-# Executing ONERROR command at macro ./wave.do line 28
-# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_exp_add'.
-# Executing ONERROR command at macro ./wave.do line 29
-# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_sign_add'.
-# Executing ONERROR command at macro ./wave.do line 30
-# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_mantissa_sub'.
-# Executing ONERROR command at macro ./wave.do line 31
-# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_exp_sub'.
-# Executing ONERROR command at macro ./wave.do line 32
-# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_sign_sub'.
-# Executing ONERROR command at macro ./wave.do line 33
 run -all
-# Result: 0x4d16890d, 157847760.000000
+# testing
+# Result: 0x4e16890c, 631390976.000000
 # ** Note: $stop    : fpu_tb.sv(62)
-#    Time: 55 us  Iteration: 1  Instance: /fpu_tb
+#    Time: 50500 ns  Iteration: 1  Instance: /fpu_tb
 # Break in Module fpu_tb at fpu_tb.sv line 62
