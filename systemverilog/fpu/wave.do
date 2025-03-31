@@ -11,13 +11,13 @@ add wave -noupdate /fpu_tb/fpu_top/wr
 add wave -noupdate /fpu_tb/fpu_top/end_ack
 add wave -noupdate /fpu_tb/fpu_top/cmd_end
 add wave -noupdate /fpu_tb/fpu_top/busy
+add wave -noupdate -radix hexadecimal /fpu_tb/fpu_top/ieee_packet
 add wave -noupdate -radix binary /fpu_tb/fpu_top/ieee_packet
-add wave -noupdate -radix binary /fpu_tb/fpu_top/operand_a
+add wave -noupdate -radix float32 /fpu_tb/fpu_top/ieee_packet
 add wave -noupdate -radix binary /fpu_tb/fpu_top/a_mantissa
 add wave -noupdate -radix binary /fpu_tb/fpu_top/a_mantissa_adjusted
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/a_exp
 add wave -noupdate /fpu_tb/fpu_top/a_sign
-add wave -noupdate -radix binary /fpu_tb/fpu_top/operand_b
 add wave -noupdate -radix binary /fpu_tb/fpu_top/b_mantissa
 add wave -noupdate -radix binary /fpu_tb/fpu_top/b_mantissa_adjusted
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/b_exp
@@ -25,12 +25,6 @@ add wave -noupdate /fpu_tb/fpu_top/b_sign
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/ab_exp_diff
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/a_exp_adjusted
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/b_exp_adjusted
-add wave -noupdate -radix binary /fpu_tb/fpu_top/result_mantissa_add
-add wave -noupdate -radix unsigned /fpu_tb/fpu_top/result_exp_add
-add wave -noupdate /fpu_tb/fpu_top/result_sign_add
-add wave -noupdate -radix binary /fpu_tb/fpu_top/result_mantissa_sub
-add wave -noupdate -radix unsigned /fpu_tb/fpu_top/result_exp_sub
-add wave -noupdate /fpu_tb/fpu_top/result_sign_sub
 add wave -noupdate -radix binary /fpu_tb/fpu_top/result_mantissa_mul
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/result_exp_mul
 add wave -noupdate /fpu_tb/fpu_top/result_sign_mul
@@ -71,10 +65,10 @@ add wave -noupdate -radix unsigned /fpu_tb/fpu_top/log2_sigma
 add wave -noupdate /fpu_tb/fpu_top/log2_exp
 add wave -noupdate -radix binary /fpu_tb/fpu_top/log2
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 3} {13318 ns} 0}
+WaveRestoreCursors {{Cursor 3} {47851 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 245
-configure wave -valuecolwidth 463
+configure wave -valuecolwidth 331
 configure wave -justifyvalue left
 configure wave -signalnamewidth 1
 configure wave -snapdistance 10
@@ -87,4 +81,4 @@ configure wave -griddelta 45
 configure wave -timeline 0
 configure wave -timelineunits us
 update
-WaveRestoreZoom {0 ns} {25200 ns}
+WaveRestoreZoom {0 ns} {53025 ns}

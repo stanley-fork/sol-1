@@ -50,8 +50,8 @@ module fpu_tb;
     #500ns;
     arst = 0;
 
-    write_a_operand(32'h4d96890d); //  315695520
-    write_b_operand(32'h40000000); //  2
+    write_a_operand(32'h3fffffff); //  1.999999
+    write_b_operand(32'h3f800000); //  1.0
 
     ta_set_operation(pa_fpu::op_mul);
     ta_start_operation();

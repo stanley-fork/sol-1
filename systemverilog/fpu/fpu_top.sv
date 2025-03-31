@@ -628,11 +628,20 @@ module fpu(
   // for multiplication an example follows:
   //     1.00   minimum possible multiplication
   //     1.00
-  //  01.0000
+  //  01.0000   
+  //   1.00     normalized and truncated
 
   //     1.11   maximum possible multiplication
   //     1.11
   //  11.0001
+  //   1.10     normalized and truncated
+
+  // rounding example with carry after rounding is performed: 
+  //  1.11101
+  //  1.11|101  bit after machine epsilon is 1, hence round up
+  // 10.00      rounding up causes a carry, hence it needs another normalization
+  //  1.00 * 2  hence exponent increases by 1
+
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
       product_multiplier <= '0;
@@ -650,16 +659,34 @@ module fpu(
       end
       // this is tested on current state rather than next state because when the fsm reaches mul_result_set_st, the shift operation is clocked in 
       if(curr_state_mul_fsm == pa_fpu::mul_result_set_st) begin
-        automatic logic [23:0] m = product_multiplier[47:24];
-        automatic logic [7:0]  e = (a_exp - 8'd127) + b_exp;
+        automatic logic [48:0] product = product_multiplier[48:0]; // one extra bit at MSB position to keep a possible carry out after rounding
+        automatic logic [7:0]  mul_exp = (a_exp - 8'd127) + b_exp;
         result_sign_mul <= a_sign ^ b_sign;
-        if(m[23] == 1'b1) e = e + 8'd1;    // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
-                                           // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-        else if(m[23] == 1'b0) m = m << 1; // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
-                                           // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
-        result_exp_mul <= e;
-        result_mantissa_mul <= m;
+        // normalize floating point result
+        if(product[47] == 1'b1) mul_exp = mul_exp + 1'b1; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+                                                    // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
+        else if(product[47] == 1'b0) product = product << 1; // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
+                                                    // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
+        // rounding: round to nearest ties to even
+        if(product[23] == 1'b1) // if first bit after epsilon is 1, then round up (and account for possible carry out)
+          product[48:24] = product[47:24] + 1'b1; 
+        else if(product[23:0] == '0) begin // if all bits after epsilon are 0, we have a tie
+          if({product[47:24] + 1'b1}[0] == 1'b0) // if rounding up produces an even result, then round up (and account for possible carry out)
+            product[48:24] = product[47:24] + 1'b1; 
         end
+        else if(product[23] == 1'b0 && |product[22:0]) // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
+          product[48:24] = product[47:24] + 1'b1;
+
+        // now check whether there was a carry out after rounding up
+        if(product[48]) begin // and if there was a carry, then re-normalize
+          product = product >> 1;
+          mul_exp = mul_exp + 1'b1;
+          $display("CARRY OUT!");
+         end
+
+        result_exp_mul <= mul_exp;
+        result_mantissa_mul <= product[47:24];
+      end
     end
   end
 
