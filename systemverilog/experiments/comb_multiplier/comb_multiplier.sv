@@ -1,7 +1,7 @@
 module comb_multiplier(
-  input logic [3:0] a,
+  input logic [23:0] a,
   input logic [3:0] b,
-  output logic [7:0] result
+  output logic [47:0] result
 );
   logic [3:0][7:0] partial;
   logic [7:0]      partial3_signed;

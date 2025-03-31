@@ -216,8 +216,6 @@ module fpu(
     return (5)'(26);    
   endfunction
 
-  // ---------------------------------------------------------------------------------------
-
   assign a_nan     = a_operand[30:23] == 8'hff && |a_operand[22:0];
   assign a_zero    = a_operand[30:23] == 8'h00 &&  a_operand[22:0]  == 23'h0;
   assign a_pos_inf = a_operand[31]    == 1'b0  &&  a_operand[30:23] == 8'hff && a_operand[22:0] == 23'h0;
@@ -230,8 +228,6 @@ module fpu(
 
   assign ab_exp_diff = a_exp - b_exp;
   assign start_operation_div_fsm = start_operation_div_ar_fsm || sqrt_div_A_by_xn_start;
-
-  // ---------------------------------------------------------------------------------------
 
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -274,8 +270,6 @@ module fpu(
     end
   end
 
-  // ---------------------------------------------------------------------------------------
-
   always_ff @(posedge clk, posedge arst) begin
     if(arst) ieee_packet <= '0;
     else if(curr_state_arith_fsm == pa_fpu::arith_result_valid_st) begin
@@ -297,8 +291,6 @@ module fpu(
       endcase
     end
   end
-
-  // ---------------------------------------------------------------------------------------
 
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -383,8 +375,7 @@ module fpu(
     log2_exp = log2_exp + 8'd127;
   end
 
-  // ---------------------------------------------------------------------------------------
-  // addition & subtraction combinational datapath
+  // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
 
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
   // else if aexp > bexp, then increase bexp and right-shift b_mantissa by same number
@@ -433,9 +424,7 @@ module fpu(
     end
   end
 
-  // ---------------------------------------------------------------------------------------
-
-  // main fsm
+  // MAIN FSM
   // next state assignments
   always_comb begin
     next_state_main_fsm = curr_state_main_fsm;
@@ -492,9 +481,7 @@ module fpu(
     end
   end
 
-  // ---------------------------------------------------------------------------------------
-
-  // arithmetic fsm
+  // ARITHMETIC FSM
   // next state assignments
   always_comb begin
     next_state_arith_fsm = curr_state_arith_fsm;
@@ -552,7 +539,7 @@ module fpu(
     endcase
   end
 
-  // arithmetic fsm
+  // ARITHMETIC FSM
   // output assignments
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -637,9 +624,15 @@ module fpu(
     end
   end
 
-  // ---------------------------------------------------------------------------------------
+  // MULTIPLICATION DATAPATH
+  // for multiplication an example follows:
+  //     1.00   minimum possible multiplication
+  //     1.00
+  //  01.0000
 
-  // multiplication datapath
+  //     1.11   maximum possible multiplication
+  //     1.11
+  //  11.0001
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
       product_multiplier <= '0;
@@ -670,7 +663,7 @@ module fpu(
     end
   end
 
-  // multiply fsm
+  // MULTIPLY FSM
   // next state assignments
   always_comb begin
     next_state_mul_fsm = curr_state_mul_fsm;
@@ -700,7 +693,7 @@ module fpu(
     endcase
   end
 
-  // multiply fsm
+  // MULTIPLY FSM
   // output assignments
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -744,9 +737,7 @@ module fpu(
     end
   end
 
-  // ------------------------------------------------------------------------------------------------
-
-  // division datapath
+  // DIVISION DATAPATH
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
       remainder_dividend <= '0;
@@ -778,7 +769,7 @@ module fpu(
     end
   end
 
-  // divide fsm
+  // DIVIDE FSM
   // next state assignments
   always_comb begin
     next_state_div_fsm = curr_state_div_fsm;
@@ -814,7 +805,7 @@ module fpu(
     endcase
   end
 
-  // divide fsm
+  // DIVIDE FSM
   // output assignments
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -858,9 +849,7 @@ module fpu(
     end
   end
 
-  // ------------------------------------------------------------------------------------------------
-
-  // sqrt datapath
+  // SQRT DATAPATH
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
       sqrt_xn_mantissa <= '0;
@@ -910,7 +899,7 @@ module fpu(
     end
   end
 
-  // sqrt fsm
+  // SQRT FSM
   // next state assignments
   // xn = 0.5(xn + A/xn)
   always_comb begin
@@ -954,7 +943,7 @@ module fpu(
     endcase
   end
 
-  // sqrt fsm
+  // SQRT FSM
   // output assignments
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -1115,39 +1104,5 @@ module fpu(
       curr_state_sqrt_fsm  <= next_state_sqrt_fsm;
     end
   end
-
-/*
-  always_comb begin
-    logic [2:0] sum;
-    logic [3:0] op;
-
-    sum = 0;
-    sum = sum + op[3];
-    sum = sum + op[3] && op[2];
-    sum = sum + op[3] && op[2] && op[1];
-    sum = sum + op[3] && op[2] && op[1] && op[0];
-
-    if(op[3] && op[2] && op[1] && op[0]) sum = 4;
-    else if(op[3] && op[2] && op[1]) sum = 3;
-    else if(op[3] && op[2]) sum = 2;
-    else if(op[3]) sum = 1;
-    else sum = 0;
-
-    casex(op)
-      4'b0000: sum = 4;
-      4'b000x: sum = 3;
-      4'b00xx: sum = 2;
-      4'b0xxx: sum = 1;
-      4'bxxxx: sum = 0;
-    endcase
-
-    sum = 0;
-    if(op == 4'b0) sum = 4;
-    else while(op[3] == 1'b0) begin
-      sum = sum + 1;
-      op = op << 1;
-    end
-  end
-*/
 
 endmodule
