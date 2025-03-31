@@ -24,7 +24,7 @@ module comb_multiplier(
   assign partial[3] = {{(1){b[3] & a[3]}}, b[3] & a[3], b[3] & a[2], b[3] & a[1], b[3] & a[0], 3'b000};
   assign partial3_signed = b[3] ? ~partial[3] + 1'b1 : partial[3]; // if b is negative then we subtract partial3 rather than add
 
-  assign {carry[1], product[0]} = {1'b0, partial0[0]};
+  assign {carry[1], product[0]} = {1'b0, partial[0][0]};
   assign {carry[2], product[1]} = partial[0][1] + partial[1][1];
   assign {carry[3], product[2]} = partial[0][2] + partial[1][2] + partial[2][2] + carry[2];
   assign {carry[4], product[3]} = partial[0][3] + partial[1][3] + partial[2][3] + partial3_signed[3] + carry[3];
