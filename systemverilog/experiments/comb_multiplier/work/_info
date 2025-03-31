@@ -12,10 +12,10 @@ Z0 !s99 nomlopt
 cModel Technology
 Z1 d/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier
 T_opt
-!s110 1743381508
-VD>Jn`9I07>7DncKL`lhXi3
+!s110 1743387235
+VW6?NT33O^YM2R?S1?J>nd2
 04 18 4 work comb_multiplier_tb fast 0
-=1-000ae431a4f1-67e9e404-bc483-8d850
+=1-000ae431a4f1-67e9fa63-a28b5-913c3
 R0
 !s12f OEM100
 !s12b OEM100
@@ -27,23 +27,23 @@ OL;O;2024.1;79
 vcomb_multiplier
 Z3 2comb_multiplier_tb.sv|comb_multiplier.sv
 Z4 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
-Z5 !s110 1743381507
+Z5 !s110 1743387232
 !i10b 1
-!s100 U:=U?_@cRbE5]Z:aeeQEK2
-IU30bWPazoUW@GZea4EeHZ1
+!s100 T:^hX`E6coM27_<C8:2ie2
+Ili]LmC1j[dHSo3Y9m6hXQ1
 S1
 R1
-w1743381503
+w1743387092
 8comb_multiplier.sv
 Fcomb_multiplier.sv
 !i122 0
-L0 1 37
+L0 1 40
 Z6 VDg1SIo80bB@j0V0VzS_@n1
 Z7 OL;L;2024.1;79
 r1
 !s85 0
 31
-Z8 !s108 1743381507.000000
+Z8 !s108 1743387232.000000
 Z9 !s107 comb_multiplier.sv|comb_multiplier_tb.sv|
 Z10 !s90 -work|work|+acc|comb_multiplier_tb.sv|comb_multiplier.sv|
 !i113 0
@@ -54,11 +54,11 @@ R3
 R4
 R5
 !i10b 1
-!s100 3^Pf[n>NJ7KW;6lR[6z801
-I4F7GZZ0:k[8@lc:f7^_T:2
+!s100 c;QHf`72XF3b[4K;Kjf=?3
+I@OSOFENe2_n<zc^VYe@=E0
 S1
 R1
-w1743380797
+w1743387230
 8comb_multiplier_tb.sv
 Fcomb_multiplier_tb.sv
 !i122 0

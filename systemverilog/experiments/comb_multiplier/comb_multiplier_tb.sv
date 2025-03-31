@@ -5,10 +5,10 @@ module comb_multiplier_tb;
   logic [7:0] result;
 
   initial begin
-    a = 4'b1111; // 15 or -1
-    b = 4'b1111; // 2
+    a = 4'b1110; // 6
+    b = 4'b1100; // -4
     #10us;
-    $display("%b * %b = %b", a, b, result);
+    $display("%d(%b) * %d(%b) = %d(%b)", $signed(a), a, $signed(b), b, $signed(result), result);
     $stop;
   end
 
