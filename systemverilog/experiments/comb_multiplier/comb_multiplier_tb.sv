@@ -6,9 +6,9 @@ module comb_multiplier_tb;
 
   initial begin
     a = 4'b1111; // 15 or -1
-    b = 4'b0010; // 2
+    b = 4'b1111; // 2
     #10us;
-
+    $display("%b * %b = %b", a, b, result);
     $stop;
   end
 
