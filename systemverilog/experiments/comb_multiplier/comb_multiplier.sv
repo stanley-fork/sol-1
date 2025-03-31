@@ -11,10 +11,10 @@ module comb_multiplier(
 /*
                      a3  a2  a1  a0
                      b3  b2  b1  b0
-                b0a3 b0a2 b0a1 b0a0     partial0
-           b1a3 b1a2 b1a1 b1a0          partial1
-      b2a3 b2a2 b2a1 b2a0               partial2
- b3a3 b3a2 b3a1 b3a0                    partial3
+                b0a3 b0a2 b0a1 b0a0     partial[0]
+           b1a3 b1a2 b1a1 b1a0          partial[1]
+      b2a3 b2a2 b2a1 b2a0               partial[2]
+ b3a3 b3a2 b3a1 b3a0                    partial[3]
    p6   p5   p4   p3   p2   p1   p0
 */
 
