@@ -5,8 +5,8 @@ module comb_multiplier_tb;
   logic [47:0] result;
 
   initial begin
-    a = '1; 
-    b = '1; 
+    a = 129; 
+    b = -59; 
     #10us;
     $display("%d(%b) * %d(%b) = %d(%b)", $signed(a), a, $signed(b), b, $signed(result), result);
     $stop;

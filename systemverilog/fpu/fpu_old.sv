@@ -109,11 +109,17 @@ module fpu(
   logic        result_s_add_sub;
 
   // multiplication datapath
-  logic [47:0] product_pre_norm;
-  logic [48:0] product;
   logic [23:0] result_mantissa_mul;
   logic [ 7:0] result_exp_mul;
   logic        result_sign_mul;
+  logic [48:0] product_multiplier;  // keeps the product and multiplier. shifted right till product occupies entire space and multiplier disappears
+  logic [ 4:0] mul_counter;   // this keeps a count of how many times we have performed the product addition cycle. total = 24.
+
+  // fsm control
+  logic product_add;
+  logic product_shift;
+  logic start_operation_mul_fsm;  // ...
+  logic operation_done_mul_fsm;   // for handshake between main fsm and multiply fsm
 
   // division datapath 
   logic [23:0] result_mantissa_div;
@@ -508,7 +514,9 @@ module fpu(
         next_state_arith_fsm = pa_fpu::arith_result_valid_st;
 
       pa_fpu::arith_mul_st:
-        next_state_arith_fsm = pa_fpu::arith_result_valid_st;
+        if(operation_done_mul_fsm == 1'b1) next_state_arith_fsm = pa_fpu::arith_mul_done_st;
+      pa_fpu::arith_mul_done_st:
+        if(operation_done_mul_fsm == 1'b0) next_state_arith_fsm = pa_fpu::arith_result_valid_st;
 
       pa_fpu::arith_div_st:
         if(operation_done_div_fsm == 1'b1) next_state_arith_fsm = pa_fpu::arith_div_done_st;
@@ -536,6 +544,7 @@ module fpu(
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
       operation_done_ar_fsm <= 1'b0;
+      start_operation_mul_fsm <= 1'b0;
       start_operation_div_ar_fsm <= 1'b0;
       start_operation_sqrt_fsm <= 1'b0;
     end
@@ -543,36 +552,49 @@ module fpu(
       case(next_state_arith_fsm)
         pa_fpu::arith_idle_st: begin
           operation_done_ar_fsm <= 1'b0;
+          start_operation_mul_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end
         pa_fpu::arith_load_operands_st: begin
           operation_done_ar_fsm <= 1'b0;
+          start_operation_mul_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end
         pa_fpu::arith_add_st: begin
           operation_done_ar_fsm <= 1'b0;
+          start_operation_mul_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end
         pa_fpu::arith_sub_st: begin
           operation_done_ar_fsm <= 1'b0;
+          start_operation_mul_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end
         pa_fpu::arith_mul_st: begin
           operation_done_ar_fsm   <= 1'b0;
+          start_operation_mul_fsm <= 1'b1;
+          start_operation_div_ar_fsm <= 1'b0;
+          start_operation_sqrt_fsm <= 1'b0;
+        end
+        pa_fpu::arith_mul_done_st: begin
+          operation_done_ar_fsm <= 1'b0;
+          start_operation_mul_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end
         pa_fpu::arith_div_st: begin
           operation_done_ar_fsm <= 1'b0;
+          start_operation_mul_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b1;
           start_operation_sqrt_fsm <= 1'b0;
         end
         pa_fpu::arith_div_done_st: begin
           operation_done_ar_fsm <= 1'b0;
+          start_operation_mul_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end
@@ -588,11 +610,13 @@ module fpu(
         end
         pa_fpu::arith_log2_st: begin
           operation_done_ar_fsm <= 1'b0;
+          start_operation_mul_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end
         pa_fpu::arith_result_valid_st: begin
           operation_done_ar_fsm <= 1'b1;
+          start_operation_mul_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end
@@ -617,42 +641,41 @@ module fpu(
   //  1.11|101  bit after machine epsilon is 1, hence round up
   // 10.00      rounding up causes a carry, hence it needs another normalization
   //  1.00 * 2  hence exponent increases by 1
-  comb_multiplier multiply(
-    .a(a_mantissa[23:0]),
-    .b(b_mantissa[23:0]),
-    ._signed(1'b0),
-    .result(product_pre_norm)
-  );
-  
-  always_comb begin
-    automatic logic [7:0]  mul_exp = (a_exp - 8'd127) + b_exp;
-
-    result_sign_mul = a_sign ^ b_sign;
-    // normalize floating point result
-    product = product_pre_norm;
-    if(product[47] == 1'b1) mul_exp = mul_exp + 1'b1; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
-                                                // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-    else if(product[47] == 1'b0) product = product << 1; // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
-                                                // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
-    // rounding: round to nearest ties to even
-    if(product[23] == 1'b1) // if first bit after epsilon is 1, then round up (and account for possible carry out)
-      product[48:24] = product[47:24] + 1'b1; 
-    else if(product[23:0] == '0) begin // if all bits after epsilon are 0, we have a tie
-      if({product[47:24] + 1'b1}[0] == 1'b0) // if rounding up produces an even result, then round up (and account for possible carry out)
-        product[48:24] = product[47:24] + 1'b1; 
+  always_ff @(posedge clk, posedge arst) begin
+    if(arst) begin
+      product_multiplier <= '0;
+      mul_counter  <= '0;
     end
-    else if(product[23] == 1'b0 && |product[22:0]) // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
-      product[48:24] = product[47:24] + 1'b1;
+    else begin
+      if(product_add) begin
+        if(product_multiplier[0]) product_multiplier[48:24] <= product_multiplier[48:24] + {1'b0, a_mantissa[23:0]}; // product_multiplier is 49 bits rather than 48 so it can also keep the carry out
+        mul_counter <= mul_counter + 5'd1; // increment counter here so that we can check the counter value in the next state. otherwise would need an extra state after shift_st to check counter == 16.
+      end
+      if(product_shift) product_multiplier <= product_multiplier >> 1;
+      if(next_state_mul_fsm == pa_fpu::mul_start_st) begin
+        mul_counter  <= '0;
+        product_multiplier <= {25'b0, b_mantissa[23:0]};  // initiate register, copy b_mantissa, as the multiplier
+      end
+      // this is tested on current state rather than next state because when the fsm reaches mul_result_set_st, the shift operation is clocked in 
+      if(curr_state_mul_fsm == pa_fpu::mul_result_set_st) begin
+        automatic logic [48:0] product = product_multiplier[48:0]; // one extra bit at MSB position to keep a possible carry out after rounding
+        automatic logic [7:0]  mul_exp = (a_exp - 8'd127) + b_exp;
+        result_sign_mul <= a_sign ^ b_sign;
+        // normalize floating point result
+        if(product[47] == 1'b1) mul_exp = mul_exp + 1'b1; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+                                                    // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
+        else if(product[47] == 1'b0) product = product << 1; // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
+                                                    // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
+        // rounding: round to nearest ties to even
+        if(product[23] == 1'b1) // if first bit after epsilon is 1, then round up (and account for possible carry out)
+          product[48:24] = product[47:24] + 1'b1; 
+        else if(product[23:0] == '0) begin // if all bits after epsilon are 0, we have a tie
+          if({product[47:24] + 1'b1}[0] == 1'b0) // if rounding up produces an even result, then round up (and account for possible carry out)
+            product[48:24] = product[47:24] + 1'b1; 
+        end
+        else if(product[23] == 1'b0 && |product[22:0]) // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
+          product[48:24] = product[47:24] + 1'b1;
 
-    // now check whether there was a carry out after rounding up
-    if(product[48]) begin // if there was a carry, then re-normalize
-      product = product >> 1;
-      mul_exp = mul_exp + 1'b1;
-    end
-
-    result_exp_mul = mul_exp;
-    result_mantissa_mul = product[47:24];
-  end
         // rounding example:
         //      1.111
         //      1.000
@@ -660,6 +683,92 @@ module fpu(
         //   11110000 msb is 0 hence shift left
         //  100000000 rounding: bits after epsilon are all zero and adding epsilon to lsb results in even lsb, hence add epsilon, which creates a carry out
         //   10000000 finally, shift right to renormalize
+
+        // now check whether there was a carry out after rounding up
+        if(product[48]) begin // if there was a carry, then re-normalize
+          product = product >> 1;
+          mul_exp = mul_exp + 1'b1;
+         end
+
+        result_exp_mul <= mul_exp;
+        result_mantissa_mul <= product[47:24];
+      end
+    end
+  end
+
+  // MULTIPLY FSM
+  // next state assignments
+  always_comb begin
+    next_state_mul_fsm = curr_state_mul_fsm;
+
+    case(curr_state_mul_fsm)
+      pa_fpu::mul_idle_st: 
+        if(start_operation_mul_fsm) next_state_mul_fsm = pa_fpu::mul_start_st;
+
+      pa_fpu::mul_start_st:
+        next_state_mul_fsm = pa_fpu::mul_product_add_st;
+      
+      pa_fpu::mul_product_add_st:
+        next_state_mul_fsm = pa_fpu::mul_product_shift_st;
+      
+      pa_fpu::mul_product_shift_st:
+        if(mul_counter == 5'd24) next_state_mul_fsm = pa_fpu::mul_result_set_st;
+        else next_state_mul_fsm = pa_fpu::mul_product_add_st;
+      
+      pa_fpu::mul_result_set_st:
+        next_state_mul_fsm = pa_fpu::mul_result_valid_st;
+      
+      pa_fpu::mul_result_valid_st:
+        if(start_operation_mul_fsm == 1'b0) next_state_mul_fsm = pa_fpu::mul_idle_st;
+
+      default:
+        next_state_mul_fsm = pa_fpu::mul_idle_st;
+    endcase
+  end
+
+  // MULTIPLY FSM
+  // output assignments
+  always_ff @(posedge clk, posedge arst) begin
+    if(arst) begin
+      operation_done_mul_fsm <= 1'b0;
+      product_add            <= 1'b0;
+      product_shift          <= 1'b0;
+    end
+    else begin
+      case(next_state_mul_fsm)
+        pa_fpu::mul_idle_st: begin
+          operation_done_mul_fsm <= 1'b0;
+          product_add           <= 1'b0;
+          product_shift         <= 1'b0;
+        end
+        pa_fpu::mul_start_st: begin
+          operation_done_mul_fsm <= 1'b0;
+          product_add <= 1'b0;
+          product_shift <= 1'b0;
+        end
+        pa_fpu::mul_product_add_st: begin
+          operation_done_mul_fsm <= 1'b0;
+          product_add <= 1'b1;
+          product_shift <= 1'b0;
+        end
+        pa_fpu::mul_product_shift_st: begin
+          operation_done_mul_fsm <= 1'b0;
+          product_add <= 1'b0;
+          product_shift <= 1'b1;
+        end
+        pa_fpu::mul_result_set_st: begin
+          operation_done_mul_fsm <= 1'b0;
+          product_add <= 1'b0;
+          product_shift <= 1'b0;
+        end
+        pa_fpu::mul_result_valid_st: begin
+          operation_done_mul_fsm <= 1'b1;
+          product_add <= 1'b0;
+          product_shift <= 1'b0;
+        end
+      endcase  
+    end
+  end
 
   // DIVISION DATAPATH
   always_ff @(posedge clk, posedge arst) begin
