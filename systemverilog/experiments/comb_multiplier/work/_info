@@ -5,30 +5,6 @@ Z0 !s12c _opt
 Z1 !s99 nomlopt
 R0
 R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
 !s11f vlog 2024.1 2024.04, Apr 19 2024
 13
 !s112 1.1
@@ -38,10 +14,10 @@ R1
 cModel Technology
 Z2 d/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier
 T_opt
-!s110 1743530217
-V0]>`_Ob[z3Czo@j22I=zM1
+!s110 1743532489
+VkX;chTGYmdfV8W5[i<gCW1
 04 18 4 work comb_multiplier_tb fast 0
-=15-000ae431a4f1-67ec28e9-63679-1dc41
+=2-000ae431a4f1-67ec31c9-65ec3-21885
 R1
 !s12f OEM100
 !s12b OEM100
@@ -53,23 +29,23 @@ OL;O;2024.1;79
 vcomb_multiplier
 Z4 2/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
 Z5 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
-Z6 !s110 1743530214
+Z6 !s110 1743532486
 !i10b 1
-!s100 GWDZd8^1R2o=LEU5TJBla3
-IO[NR>4a6UO8Rh_n7Hnij83
+!s100 2Z`RkN>Th<b9A6E6k3:1f2
+Ie84_z8Mld3364AF5JO]b11
 S1
 R2
-w1743530193
+w1743532430
 8/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv
 F/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv
-!i122 14
-L0 1 89
+!i122 1
+L0 1 83
 Z7 VDg1SIo80bB@j0V0VzS_@n1
 Z8 OL;L;2024.1;79
 r1
 !s85 0
 31
-Z9 !s108 1743530214.000000
+Z9 !s108 1743532486.000000
 Z10 !s107 /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv|
 Z11 !s90 -reportprogress|300|-work|work|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv|
 !i113 0
@@ -80,14 +56,14 @@ R4
 R5
 R6
 !i10b 1
-!s100 OV@ZNIU9o^oe?4P]J8aER3
-I?G`Ql=Z]b<4I0`43i7biY0
+!s100 G9[^oMCkzX_9Qh6@7mF7G1
+IlnJC3]<<f9[oIXz:0bV7f0
 S1
 R2
-w1743530210
+w1743532478
 8/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
 F/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
-!i122 14
+!i122 1
 L0 1 23
 R7
 R8

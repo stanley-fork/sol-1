@@ -16,7 +16,7 @@ module comb_multiplier_tb;
   comb_multiplier multiplier(
     .a(a),
     .b(b),
-    ._signed(0),
+    ._signed(1),
     .result(result)
   );
 
