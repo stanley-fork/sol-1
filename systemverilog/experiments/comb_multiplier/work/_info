@@ -14,10 +14,10 @@ R1
 cModel Technology
 Z2 d/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier
 T_opt
-!s110 1743532489
-VkX;chTGYmdfV8W5[i<gCW1
+!s110 1743533266
+VCiX55Fi9eJfN0;kdNC5QT0
 04 18 4 work comb_multiplier_tb fast 0
-=2-000ae431a4f1-67ec31c9-65ec3-21885
+=2-000ae431a4f1-67ec34d2-4efe0-21de8
 R1
 !s12f OEM100
 !s12b OEM100
@@ -29,23 +29,23 @@ OL;O;2024.1;79
 vcomb_multiplier
 Z4 2/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
 Z5 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
-Z6 !s110 1743532486
+Z6 !s110 1743533263
 !i10b 1
-!s100 2Z`RkN>Th<b9A6E6k3:1f2
-Ie84_z8Mld3364AF5JO]b11
+!s100 E6Z>F;2BmI?5]3:Ukjb4X1
+IRfGekhhU17BNRH^6PUF8V0
 S1
 R2
-w1743532430
+w1743533220
 8/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv
 F/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv
 !i122 1
-L0 1 83
+L0 1 81
 Z7 VDg1SIo80bB@j0V0VzS_@n1
 Z8 OL;L;2024.1;79
 r1
 !s85 0
 31
-Z9 !s108 1743532486.000000
+Z9 !s108 1743533263.000000
 Z10 !s107 /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv|
 Z11 !s90 -reportprogress|300|-work|work|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv|
 !i113 0
@@ -56,11 +56,11 @@ R4
 R5
 R6
 !i10b 1
-!s100 G9[^oMCkzX_9Qh6@7mF7G1
-IlnJC3]<<f9[oIXz:0bV7f0
+!s100 iW4=NCFDk4g]hJ@_kkoZ?2
+ISQALdHjQ?I:IhjKSVm2;J2
 S1
 R2
-w1743532478
+w1743533258
 8/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
 F/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
 !i122 1
