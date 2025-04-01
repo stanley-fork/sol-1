@@ -14,29 +14,108 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -voptargs="+acc=rtl" -work work comb_multiplier_tb 
-# Start time: 19:26:37 on Mar 31,2025
+# Start time: 01:43:27 on Apr 01,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
 # ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
 # Loading sv_std.std
 # Loading work.comb_multiplier_tb(fast)
 # Loading work.comb_multiplier(fast)
-# ** Warning: (vsim-3015) [PCDPC] - Port size (24) does not match connection size (4) for port 'a'. The port definition is at: comb_multiplier.sv(2).
-#    Time: 0 ns  Iteration: 0  Instance: /comb_multiplier_tb/multiplier File: comb_multiplier_tb.sv Line: 16
-# ** Warning: (vsim-3015) [PCDPC] - Port size (48) does not match connection size (8) for port 'result'. The port definition is at: comb_multiplier.sv(4).
-#    Time: 0 ns  Iteration: 0  Instance: /comb_multiplier_tb/multiplier File: comb_multiplier_tb.sv Line: 16
 add wave -position insertpoint  \
 sim:/comb_multiplier_tb/multiplier/a \
 sim:/comb_multiplier_tb/multiplier/b \
 sim:/comb_multiplier_tb/multiplier/result \
 sim:/comb_multiplier_tb/multiplier/partial \
-sim:/comb_multiplier_tb/multiplier/partial3_signed \
+sim:/comb_multiplier_tb/multiplier/partial23_signed \
 sim:/comb_multiplier_tb/multiplier/product \
-sim:/comb_multiplier_tb/multiplier/carry
+sim:/comb_multiplier_tb/multiplier/carry \
+sim:/comb_multiplier_tb/multiplier/partial3_signed
 run -all
-#  -2(1110) *  -4(1100) =    8(00001000)
+#        14(000000000000000000001110) *        12(000000000000000000001100) =                x(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
 # ** Note: $stop    : comb_multiplier_tb.sv(12)
 #    Time: 10 us  Iteration: 0  Instance: /comb_multiplier_tb
 # Break in Module comb_multiplier_tb at comb_multiplier_tb.sv line 12
-# End time: 19:26:50 on Mar 31,2025, Elapsed time: 0:00:13
-# Errors: 0, Warnings: 3
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 01:44:43 on Apr 01,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv 
+# -- Compiling module comb_multiplier
+# -- Compiling module comb_multiplier_tb
+# 
+# Top level modules:
+# 	comb_multiplier_tb
+# End time: 01:44:43 on Apr 01,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.comb_multiplier_tb(fast)
+# Warning in wave window restart: (vish-4014) No objects found matching '/comb_multiplier_tb/multiplier/a'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/comb_multiplier_tb/multiplier/b'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/comb_multiplier_tb/multiplier/partial3_signed'. 
+run -all
+#        14(000000000000000000001110) *        -1(111111111111111111111111) =                x(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
+# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv(12)
+#    Time: 10 us  Iteration: 0  Instance: /comb_multiplier_tb
+# Break in Module comb_multiplier_tb at /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv line 12
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 01:46:06 on Apr 01,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv 
+# -- Compiling module comb_multiplier
+# 
+# Top level modules:
+# 	comb_multiplier
+# End time: 01:46:06 on Apr 01,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 01:46:08 on Apr 01,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv 
+# -- Compiling module comb_multiplier_tb
+# ** Warning: /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv(9): (vlog-2600) [RDGN] - Redundant digits in numeric literal.
+# 
+# Top level modules:
+# 	comb_multiplier_tb
+# End time: 01:46:08 on Apr 01,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 01:46:15 on Apr 01,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv 
+# -- Compiling module comb_multiplier
+# -- Compiling module comb_multiplier_tb
+# ** Warning: /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv(9): (vlog-2600) [RDGN] - Redundant digits in numeric literal.
+# 
+# Top level modules:
+# 	comb_multiplier_tb
+# End time: 01:46:15 on Apr 01,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 01:46:37 on Apr 01,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier.sv /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv 
+# -- Compiling module comb_multiplier
+# -- Compiling module comb_multiplier_tb
+# 
+# Top level modules:
+# 	comb_multiplier_tb
+# End time: 01:46:37 on Apr 01,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.comb_multiplier_tb(fast)
+run -all
+#        -1(111111111111111111111111) *    -65281(111111110000000011111111) =                x(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
+# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv(12)
+#    Time: 10 us  Iteration: 0  Instance: /comb_multiplier_tb
+# Break in Module comb_multiplier_tb at /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier/comb_multiplier_tb.sv line 12
+# End time: 01:46:53 on Apr 01,2025, Elapsed time: 0:03:26
+# Errors: 0, Warnings: 1

@@ -641,7 +641,6 @@ module fpu(
   //  1.11|101  bit after machine epsilon is 1, hence round up
   // 10.00      rounding up causes a carry, hence it needs another normalization
   //  1.00 * 2  hence exponent increases by 1
-
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
       product_multiplier <= '0;
@@ -677,11 +676,18 @@ module fpu(
         else if(product[23] == 1'b0 && |product[22:0]) // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
           product[48:24] = product[47:24] + 1'b1;
 
+        // rounding example:
+        //      1.111
+        //      1.000
+        //   01111000 multiplication result
+        //   11110000 msb is 0 hence shift left
+        //  100000000 rounding: bits after epsilon are all zero and adding epsilon to lsb results in even lsb, hence add epsilon, which creates a carry out
+        //   10000000 finally, shift right to renormalize
+
         // now check whether there was a carry out after rounding up
-        if(product[48]) begin // and if there was a carry, then re-normalize
+        if(product[48]) begin // if there was a carry, then re-normalize
           product = product >> 1;
           mul_exp = mul_exp + 1'b1;
-          $display("CARRY OUT!");
          end
 
         result_exp_mul <= mul_exp;

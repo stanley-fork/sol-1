@@ -1,12 +1,13 @@
 module comb_multiplier(
   input logic [23:0] a,
-  input logic [3:0] b,
+  input logic [23:0] b,
   output logic [47:0] result
 );
-  logic [3:0][7:0] partial;
-  logic [7:0]      partial3_signed;
-  logic [7:0]      product;
-  logic [7:0][2:0] carry;
+
+  logic [23:0][47:0] partial;
+  logic [47:0]       partial23_signed;
+  logic [47:0]       product;
+  logic [47:0][23:0] carry;
 
 /*
                      a3  a2  a1  a0
@@ -18,12 +19,14 @@ module comb_multiplier(
    p6   p5   p4   p3   p2   p1   p0
 */
 
-  assign partial[0] = {{(4){b[0] & a[3]}}, b[0] & a[3], b[0] & a[2], b[0] & a[1], b[0] & a[0]        };
-  assign partial[1] = {{(3){b[1] & a[3]}}, b[1] & a[3], b[1] & a[2], b[1] & a[1], b[1] & a[0], 1'b0  };
-  assign partial[2] = {{(2){b[2] & a[3]}}, b[2] & a[3], b[2] & a[2], b[2] & a[1], b[2] & a[0], 2'b00 };
-  assign partial[3] = {{(1){b[3] & a[3]}}, b[3] & a[3], b[3] & a[2], b[3] & a[1], b[3] & a[0], 3'b000};
+
+  for(genvar i = 0; i < 24; i++) begin
+    assign partial[i] = {(48){b[i]}} & {{(24 - i){a[23]}},  a, {(i){1'b0}}};
+  end
+
   assign partial3_signed = b[3] ? ~partial[3] + 1'b1 : partial[3]; // if b is negative then we subtract partial3 rather than add
 
+/*
   assign {carry[1], product[0]} = {1'b0, partial[0][0]};
   assign {carry[2], product[1]} = partial[0][1] + partial[1][1];
   assign {carry[3], product[2]} = partial[0][2] + partial[1][2] + partial[2][2] + carry[2];
@@ -34,6 +37,7 @@ module comb_multiplier(
   assign {          product[7]} = partial[0][7] + partial[1][7] + partial[2][7] + partial3_signed[7] + carry[7];
   
   assign result = product;
+  */
 
 endmodule
 
