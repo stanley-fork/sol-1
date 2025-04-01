@@ -1,30 +1,31 @@
 module comb_multiplier(
-  input logic [23:0] a,
-  input logic [23:0] b,
+  input  logic [23:0] a,
+  input  logic [23:0] b,
+  input  logic _signed,
   output logic [47:0] result
 );
 
   logic [23:0][47:0] partial;
-  logic [47:0]       partial23_signed;
   logic [47:0]       product;
   logic [47:0][23:0] carry;
 
 /*
-                     a3  a2  a1  a0
-                     b3  b2  b1  b0
-                b0a3 b0a2 b0a1 b0a0     partial[0]
-           b1a3 b1a2 b1a1 b1a0          partial[1]
-      b2a3 b2a2 b2a1 b2a0               partial[2]
- b3a3 b3a2 b3a1 b3a0                    partial[3]
-   p6   p5   p4   p3   p2   p1   p0
+                        a3  a2  a1  a0
+                        b3  b2  b1  b0
+                   b0a3 b0a2 b0a1 b0a0     partial[0]
+              b1a3 b1a2 b1a1 b1a0          partial[1]
+         b2a3 b2a2 b2a1 b2a0               partial[2]
+    b3a3 b3a2 b3a1 b3a0                    partial[3]
+ p7   p6   p5   p4   p3   p2   p1   p0
 */
 
 
-  for(genvar i = 0; i < 24; i++) begin
-    assign partial[i] = {(48){b[i]}} & {{(24 - i){a[23]}},  a, {(i){1'b0}}};
+  for(genvar i = 0; i < 23; i++) begin
+    assign partial[i] = {(48){b[i]}} & {{(24 - i){_signed ? a[23] : 1'b0}},  a, {(i){1'b0}}};
   end
 
-  assign partial23_signed = b[23] ? ~partial[23] + 1'b1 : partial[23]; // if b is negative then we subtract partial23 rather than add
+  assign partial[23] = _signed ? (b[23] ? {(48){b[23]}} & {~{a[23],  a} + 1'b1, {(23){1'b0}}}  : {(48){b[23]}} & {a[23],  a, {(23){1'b0}}}) :
+                       {(48){b[23]}} & {1'b0,  a, {(23){1'b0}}};
 
   assign carry[0] = '0;
   assign {carry[1],  product[0]}  = partial[0][0]  + carry[0];         
@@ -38,13 +39,45 @@ module comb_multiplier(
   assign {carry[9],  product[8]}  = partial[0][8]  + partial[1][8]  + partial[2][8]  + partial[3][8]  + partial[4][8]  + partial[5][8]  + partial[6][8]  + partial[7][8]  + partial[8][8]  + carry[8]; 
   assign {carry[10], product[9]}  = partial[0][9]  + partial[1][9]  + partial[2][9]  + partial[3][9]  + partial[4][9]  + partial[5][9]  + partial[6][9]  + partial[7][9]  + partial[8][9]  + partial[9][9]  + carry[9];
   assign {carry[11], product[10]} = partial[0][10] + partial[1][10] + partial[2][10] + partial[3][10] + partial[4][10] + partial[5][10] + partial[6][10] + partial[7][10] + partial[8][10] + partial[9][10] + partial[10][10] + carry[10];
+  assign {carry[12], product[11]} = partial[0][11] + partial[1][11] + partial[2][11] + partial[3][11] + partial[4][11] + partial[5][11] + partial[6][11] + partial[7][11] + partial[8][11] + partial[9][11] + partial[10][11] + partial[11][11] + carry[11];                                      
+  assign {carry[13], product[12]} = partial[0][12] + partial[1][12] + partial[2][12] + partial[3][12] + partial[4][12] + partial[5][12] + partial[6][12] + partial[7][12] + partial[8][12] + partial[9][12] + partial[10][12] + partial[11][12] + partial[12][12] + carry[12];
+  assign {carry[14], product[13]} = partial[0][13] + partial[1][13] + partial[2][13] + partial[3][13] + partial[4][13] + partial[5][13] + partial[6][13] + partial[7][13] + partial[8][13] + partial[9][13] + partial[10][13] + partial[11][13] + partial[12][13] + partial[13][13] + carry[13];
+  assign {carry[15], product[14]} = partial[0][14] + partial[1][14] + partial[2][14] + partial[3][14] + partial[4][14] + partial[5][14] + partial[6][14] + partial[7][14] + partial[8][14] + partial[9][14] + partial[10][14] + partial[11][14] + partial[12][14] + partial[13][14] + partial[14][14] + carry[14];
+  assign {carry[16], product[15]} = partial[0][15] + partial[1][15] + partial[2][15] + partial[3][15] + partial[4][15] + partial[5][15] + partial[6][15] + partial[7][15] + partial[8][15] + partial[9][15] + partial[10][15] + partial[11][15] + partial[12][15] + partial[13][15] + partial[14][15] + partial[15][15] + carry[15];
+  assign {carry[17], product[16]} = partial[0][16] + partial[1][16] + partial[2][16] + partial[3][16] + partial[4][16] + partial[5][16] + partial[6][16] + partial[7][16] + partial[8][16] + partial[9][16] + partial[10][16] + partial[11][16] + partial[12][16] + partial[13][16] + partial[14][16] + partial[15][16] + partial[16][16] + carry[16];
+  assign {carry[18], product[17]} = partial[0][17] + partial[1][17] + partial[2][17] + partial[3][17] + partial[4][17] + partial[5][17] + partial[6][17] + partial[7][17] + partial[8][17] + partial[9][17] + partial[10][17] + partial[11][17] + partial[12][17] + partial[13][17] + partial[14][17] + partial[15][17] + partial[16][17] + partial[17][17] + carry[17];
+  assign {carry[19], product[18]} = partial[0][18] + partial[1][18] + partial[2][18] + partial[3][18] + partial[4][18] + partial[5][18] + partial[6][18] + partial[7][18] + partial[8][18] + partial[9][18] + partial[10][18] + partial[11][18] + partial[12][18] + partial[13][18] + partial[14][18] + partial[15][18] + partial[16][18] + partial[17][18] + partial[18][18] + carry[18];
+  assign {carry[20], product[19]} = partial[0][19] + partial[1][19] + partial[2][19] + partial[3][19] + partial[4][19] + partial[5][19] + partial[6][19] + partial[7][19] + partial[8][19] + partial[9][19] + partial[10][19] + partial[11][19] + partial[12][19] + partial[13][19] + partial[14][19] + partial[15][19] + partial[16][19] + partial[17][19] + partial[18][19] + partial[19][19] + carry[19];
+  assign {carry[21], product[20]} = partial[0][20] + partial[1][20] + partial[2][20] + partial[3][20] + partial[4][20] + partial[5][20] + partial[6][20] + partial[7][20] + partial[8][20] + partial[9][20] + partial[10][20] + partial[11][20] + partial[12][20] + partial[13][20] + partial[14][20] + partial[15][20] + partial[16][20] + partial[17][20] + partial[18][20] + partial[19][20] + partial[20][20] + carry[20];
+  assign {carry[22], product[21]} = partial[0][21] + partial[1][21] + partial[2][21] + partial[3][21] + partial[4][21] + partial[5][21] + partial[6][21] + partial[7][21] + partial[8][21] + partial[9][21] + partial[10][21] + partial[11][21] + partial[12][21] + partial[13][21] + partial[14][21] + partial[15][21] + partial[16][21] + partial[17][21] + partial[18][21] + partial[19][21] + partial[20][21] + partial[21][21] + carry[21];
+  assign {carry[23], product[22]} = partial[0][22] + partial[1][22] + partial[2][22] + partial[3][22] + partial[4][22] + partial[5][22] + partial[6][22] + partial[7][22] + partial[8][22] + partial[9][22] + partial[10][22] + partial[11][22] + partial[12][22] + partial[13][22] + partial[14][22] + partial[15][22] + partial[16][22] + partial[17][22] + partial[18][22] + partial[19][22] + partial[20][22] + partial[21][22] + partial[22][22] + carry[22];
+  assign {carry[24], product[23]} = partial[0][23] + partial[1][23] + partial[2][23] + partial[3][23] + partial[4][23] + partial[5][23] + partial[6][23] + partial[7][23] + partial[8][23] + partial[9][23] + partial[10][23] + partial[11][23] + partial[12][23] + partial[13][23] + partial[14][23] + partial[15][23] + partial[16][23] + partial[17][23] + partial[18][23] + partial[19][23] + partial[20][23] + partial[21][23] + partial[22][23] + partial[23][23] + carry[23];
 
-/*
-  assign {carry[6], product[5]} = partial[0][5] + partial[1][5] + partial[2][5] + partial[3][5] + carry[5];
-  assign {carry[7], product[6]} = partial[0][6] + partial[1][6] + partial[2][6] + partial[3][6] + carry[6];
-  assign {          product[7]} = partial[0][7] + partial[1][7] + partial[2][7] + partial[3][7] + carry[7];
-  */
-  
+  assign {carry[25], product[24]} = partial[0][24] + partial[1][24] + partial[2][24] + partial[3][24] + partial[4][24] + partial[5][24] + partial[6][24] + partial[7][24] + partial[8][24] + partial[9][24] + partial[10][24] + partial[11][24] + partial[12][24] + partial[13][24] + partial[14][24] + partial[15][24] + partial[16][24] + partial[17][24] + partial[18][24] + partial[19][24] + partial[20][24] + partial[21][24] + partial[22][24] + partial[23][24] + carry[24];
+  assign {carry[26], product[25]} = partial[0][25] + partial[1][25] + partial[2][25] + partial[3][25] + partial[4][25] + partial[5][25] + partial[6][25] + partial[7][25] + partial[8][25] + partial[9][25] + partial[10][25] + partial[11][25] + partial[12][25] + partial[13][25] + partial[14][25] + partial[15][25] + partial[16][25] + partial[17][25] + partial[18][25] + partial[19][25] + partial[20][25] + partial[21][25] + partial[22][25] + partial[23][25] + carry[25];
+  assign {carry[27], product[26]} = partial[0][26] + partial[1][26] + partial[2][26] + partial[3][26] + partial[4][26] + partial[5][26] + partial[6][26] + partial[7][26] + partial[8][26] + partial[9][26] + partial[10][26] + partial[11][26] + partial[12][26] + partial[13][26] + partial[14][26] + partial[15][26] + partial[16][26] + partial[17][26] + partial[18][26] + partial[19][26] + partial[20][26] + partial[21][26] + partial[22][26] + partial[23][26] + carry[26];
+  assign {carry[28], product[27]} = partial[0][27] + partial[1][27] + partial[2][27] + partial[3][27] + partial[4][27] + partial[5][27] + partial[6][27] + partial[7][27] + partial[8][27] + partial[9][27] + partial[10][27] + partial[11][27] + partial[12][27] + partial[13][27] + partial[14][27] + partial[15][27] + partial[16][27] + partial[17][27] + partial[18][27] + partial[19][27] + partial[20][27] + partial[21][27] + partial[22][27] + partial[23][27] + carry[27];
+  assign {carry[29], product[28]} = partial[0][28] + partial[1][28] + partial[2][28] + partial[3][28] + partial[4][28] + partial[5][28] + partial[6][28] + partial[7][28] + partial[8][28] + partial[9][28] + partial[10][28] + partial[11][28] + partial[12][28] + partial[13][28] + partial[14][28] + partial[15][28] + partial[16][28] + partial[17][28] + partial[18][28] + partial[19][28] + partial[20][28] + partial[21][28] + partial[22][28] + partial[23][28] + carry[28];
+  assign {carry[30], product[29]} = partial[0][29] + partial[1][29] + partial[2][29] + partial[3][29] + partial[4][29] + partial[5][29] + partial[6][29] + partial[7][29] + partial[8][29] + partial[9][29] + partial[10][29] + partial[11][29] + partial[12][29] + partial[13][29] + partial[14][29] + partial[15][29] + partial[16][29] + partial[17][29] + partial[18][29] + partial[19][29] + partial[20][29] + partial[21][29] + partial[22][29] + partial[23][29] + carry[29];
+  assign {carry[31], product[30]} = partial[0][30] + partial[1][30] + partial[2][30] + partial[3][30] + partial[4][30] + partial[5][30] + partial[6][30] + partial[7][30] + partial[8][30] + partial[9][30] + partial[10][30] + partial[11][30] + partial[12][30] + partial[13][30] + partial[14][30] + partial[15][30] + partial[16][30] + partial[17][30] + partial[18][30] + partial[19][30] + partial[20][30] + partial[21][30] + partial[22][30] + partial[23][30] + carry[30];
+  assign {carry[32], product[31]} = partial[0][31] + partial[1][31] + partial[2][31] + partial[3][31] + partial[4][31] + partial[5][31] + partial[6][31] + partial[7][31] + partial[8][31] + partial[9][31] + partial[10][31] + partial[11][31] + partial[12][31] + partial[13][31] + partial[14][31] + partial[15][31] + partial[16][31] + partial[17][31] + partial[18][31] + partial[19][31] + partial[20][31] + partial[21][31] + partial[22][31] + partial[23][31] + carry[31];
+  assign {carry[33], product[32]} = partial[0][32] + partial[1][32] + partial[2][32] + partial[3][32] + partial[4][32] + partial[5][32] + partial[6][32] + partial[7][32] + partial[8][32] + partial[9][32] + partial[10][32] + partial[11][32] + partial[12][32] + partial[13][32] + partial[14][32] + partial[15][32] + partial[16][32] + partial[17][32] + partial[18][32] + partial[19][32] + partial[20][32] + partial[21][32] + partial[22][32] + partial[23][32] + carry[32];
+  assign {carry[34], product[33]} = partial[0][33] + partial[1][33] + partial[2][33] + partial[3][33] + partial[4][33] + partial[5][33] + partial[6][33] + partial[7][33] + partial[8][33] + partial[9][33] + partial[10][33] + partial[11][33] + partial[12][33] + partial[13][33] + partial[14][33] + partial[15][33] + partial[16][33] + partial[17][33] + partial[18][33] + partial[19][33] + partial[20][33] + partial[21][33] + partial[22][33] + partial[23][33] + carry[33];
+  assign {carry[35], product[34]} = partial[0][34] + partial[1][34] + partial[2][34] + partial[3][34] + partial[4][34] + partial[5][34] + partial[6][34] + partial[7][34] + partial[8][34] + partial[9][34] + partial[10][34] + partial[11][34] + partial[12][34] + partial[13][34] + partial[14][34] + partial[15][34] + partial[16][34] + partial[17][34] + partial[18][34] + partial[19][34] + partial[20][34] + partial[21][34] + partial[22][34] + partial[23][34] + carry[34];
+  assign {carry[36], product[35]} = partial[0][35] + partial[1][35] + partial[2][35] + partial[3][35] + partial[4][35] + partial[5][35] + partial[6][35] + partial[7][35] + partial[8][35] + partial[9][35] + partial[10][35] + partial[11][35] + partial[12][35] + partial[13][35] + partial[14][35] + partial[15][35] + partial[16][35] + partial[17][35] + partial[18][35] + partial[19][35] + partial[20][35] + partial[21][35] + partial[22][35] + partial[23][35] + carry[35];
+  assign {carry[37], product[36]} = partial[0][36] + partial[1][36] + partial[2][36] + partial[3][36] + partial[4][36] + partial[5][36] + partial[6][36] + partial[7][36] + partial[8][36] + partial[9][36] + partial[10][36] + partial[11][36] + partial[12][36] + partial[13][36] + partial[14][36] + partial[15][36] + partial[16][36] + partial[17][36] + partial[18][36] + partial[19][36] + partial[20][36] + partial[21][36] + partial[22][36] + partial[23][36] + carry[36];
+  assign {carry[38], product[37]} = partial[0][37] + partial[1][37] + partial[2][37] + partial[3][37] + partial[4][37] + partial[5][37] + partial[6][37] + partial[7][37] + partial[8][37] + partial[9][37] + partial[10][37] + partial[11][37] + partial[12][37] + partial[13][37] + partial[14][37] + partial[15][37] + partial[16][37] + partial[17][37] + partial[18][37] + partial[19][37] + partial[20][37] + partial[21][37] + partial[22][37] + partial[23][37] + carry[37];
+  assign {carry[39], product[38]} = partial[0][38] + partial[1][38] + partial[2][38] + partial[3][38] + partial[4][38] + partial[5][38] + partial[6][38] + partial[7][38] + partial[8][38] + partial[9][38] + partial[10][38] + partial[11][38] + partial[12][38] + partial[13][38] + partial[14][38] + partial[15][38] + partial[16][38] + partial[17][38] + partial[18][38] + partial[19][38] + partial[20][38] + partial[21][38] + partial[22][38] + partial[23][38] + carry[38];
+  assign {carry[40], product[39]} = partial[0][39] + partial[1][39] + partial[2][39] + partial[3][39] + partial[4][39] + partial[5][39] + partial[6][39] + partial[7][39] + partial[8][39] + partial[9][39] + partial[10][39] + partial[11][39] + partial[12][39] + partial[13][39] + partial[14][39] + partial[15][39] + partial[16][39] + partial[17][39] + partial[18][39] + partial[19][39] + partial[20][39] + partial[21][39] + partial[22][39] + partial[23][39] + carry[39];
+  assign {carry[41], product[40]} = partial[0][40] + partial[1][40] + partial[2][40] + partial[3][40] + partial[4][40] + partial[5][40] + partial[6][40] + partial[7][40] + partial[8][40] + partial[9][40] + partial[10][40] + partial[11][40] + partial[12][40] + partial[13][40] + partial[14][40] + partial[15][40] + partial[16][40] + partial[17][40] + partial[18][40] + partial[19][40] + partial[20][40] + partial[21][40] + partial[22][40] + partial[23][40] + carry[40];
+  assign {carry[42], product[41]} = partial[0][41] + partial[1][41] + partial[2][41] + partial[3][41] + partial[4][41] + partial[5][41] + partial[6][41] + partial[7][41] + partial[8][41] + partial[9][41] + partial[10][41] + partial[11][41] + partial[12][41] + partial[13][41] + partial[14][41] + partial[15][41] + partial[16][41] + partial[17][41] + partial[18][41] + partial[19][41] + partial[20][41] + partial[21][41] + partial[22][41] + partial[23][41] + carry[41];                                                                                                                                                        
+  assign {carry[43], product[42]} = partial[0][42] + partial[1][42] + partial[2][42] + partial[3][42] + partial[4][42] + partial[5][42] + partial[6][42] + partial[7][42] + partial[8][42] + partial[9][42] + partial[10][42] + partial[11][42] + partial[12][42] + partial[13][42] + partial[14][42] + partial[15][42] + partial[16][42] + partial[17][42] + partial[18][42] + partial[19][42] + partial[20][42] + partial[21][42] + partial[22][42] + partial[23][42] + carry[42];
+  assign {carry[44], product[43]} = partial[0][43] + partial[1][43] + partial[2][43] + partial[3][43] + partial[4][43] + partial[5][43] + partial[6][43] + partial[7][43] + partial[8][43] + partial[9][43] + partial[10][43] + partial[11][43] + partial[12][43] + partial[13][43] + partial[14][43] + partial[15][43] + partial[16][43] + partial[17][43] + partial[18][43] + partial[19][43] + partial[20][43] + partial[21][43] + partial[22][43] + partial[23][43] + carry[43];
+  assign {carry[45], product[44]} = partial[0][44] + partial[1][44] + partial[2][44] + partial[3][44] + partial[4][44] + partial[5][44] + partial[6][44] + partial[7][44] + partial[8][44] + partial[9][44] + partial[10][44] + partial[11][44] + partial[12][44] + partial[13][44] + partial[14][44] + partial[15][44] + partial[16][44] + partial[17][44] + partial[18][44] + partial[19][44] + partial[20][44] + partial[21][44] + partial[22][44] + partial[23][44] + carry[44];
+  assign {carry[46], product[45]} = partial[0][45] + partial[1][45] + partial[2][45] + partial[3][45] + partial[4][45] + partial[5][45] + partial[6][45] + partial[7][45] + partial[8][45] + partial[9][45] + partial[10][45] + partial[11][45] + partial[12][45] + partial[13][45] + partial[14][45] + partial[15][45] + partial[16][45] + partial[17][45] + partial[18][45] + partial[19][45] + partial[20][45] + partial[21][45] + partial[22][45] + partial[23][45] + carry[45];
+  assign {carry[47], product[46]} = partial[0][46] + partial[1][46] + partial[2][46] + partial[3][46] + partial[4][46] + partial[5][46] + partial[6][46] + partial[7][46] + partial[8][46] + partial[9][46] + partial[10][46] + partial[11][46] + partial[12][46] + partial[13][46] + partial[14][46] + partial[15][46] + partial[16][46] + partial[17][46] + partial[18][46] + partial[19][46] + partial[20][46] + partial[21][46] + partial[22][46] + partial[23][46] + carry[46];
+  assign {           product[47]} = partial[0][47] + partial[1][47] + partial[2][47] + partial[3][47] + partial[4][47] + partial[5][47] + partial[6][47] + partial[7][47] + partial[8][47] + partial[9][47] + partial[10][47] + partial[11][47] + partial[12][47] + partial[13][47] + partial[14][47] + partial[15][47] + partial[16][47] + partial[17][47] + partial[18][47] + partial[19][47] + partial[20][47] + partial[21][47] + partial[22][47] + partial[23][47] + carry[47];
+
   assign result = product;
 
 endmodule
