@@ -19,9 +19,8 @@ module comb_multiplier(
  p7   p6   p5   p4   p3   p2   p1   p0
 */
 
-
   for(genvar i = 0; i < 23; i++) 
-    assign partial[i] = {(48){b[i]}} & {{(24 - i){_signed ? a[23] : 1'b0}},  a, {(i){1'b0}}};
+    assign partial[i] = b[i] ? {{(24 - i){_signed ? a[23] : 1'b0}},  a, {(i){1'b0}}} : 48'b0;
 
   assign partial[23] = _signed ? (b[23] ? {(48){b[23]}} & {~{a[23],  a} + 1'b1, {(23){1'b0}}}  : {(48){b[23]}} & {a[23],  a, {(23){1'b0}}}) :
                        {(48){b[23]}} & {1'b0,  a, {(23){1'b0}}};
@@ -37,6 +36,8 @@ module comb_multiplier(
                                          partial[18][i] + partial[19][i] + partial[20][i] + 
                                          partial[21][i] + partial[22][i] + partial[23][i] + carry[i];
   end
+
+  assign result = product;
 
 /*
   assign {carry[1],  product[ 0]} = partial[0][ 0] + partial[1][ 0] + partial[2][ 0] + partial[3][ 0] + partial[4][ 0] + partial[5][ 0] + partial[6][ 0] + partial[7][ 0] + partial[8][ 0] + partial[9][ 0] + partial[10][ 0] + partial[11][ 0] + partial[12][ 0] + partial[13][ 0] + partial[14][ 0] + partial[15][ 0] + partial[16][ 0] + partial[17][ 0] + partial[18][ 0] + partial[19][ 0] + partial[20][ 0] + partial[21][ 0] + partial[22][ 0] + partial[23][ 0];
@@ -81,7 +82,7 @@ module comb_multiplier(
   assign {carry[39], product[38]} = partial[0][38] + partial[1][38] + partial[2][38] + partial[3][38] + partial[4][38] + partial[5][38] + partial[6][38] + partial[7][38] + partial[8][38] + partial[9][38] + partial[10][38] + partial[11][38] + partial[12][38] + partial[13][38] + partial[14][38] + partial[15][38] + partial[16][38] + partial[17][38] + partial[18][38] + partial[19][38] + partial[20][38] + partial[21][38] + partial[22][38] + partial[23][38] + carry[38];
   assign {carry[40], product[39]} = partial[0][39] + partial[1][39] + partial[2][39] + partial[3][39] + partial[4][39] + partial[5][39] + partial[6][39] + partial[7][39] + partial[8][39] + partial[9][39] + partial[10][39] + partial[11][39] + partial[12][39] + partial[13][39] + partial[14][39] + partial[15][39] + partial[16][39] + partial[17][39] + partial[18][39] + partial[19][39] + partial[20][39] + partial[21][39] + partial[22][39] + partial[23][39] + carry[39];
   assign {carry[41], product[40]} = partial[0][40] + partial[1][40] + partial[2][40] + partial[3][40] + partial[4][40] + partial[5][40] + partial[6][40] + partial[7][40] + partial[8][40] + partial[9][40] + partial[10][40] + partial[11][40] + partial[12][40] + partial[13][40] + partial[14][40] + partial[15][40] + partial[16][40] + partial[17][40] + partial[18][40] + partial[19][40] + partial[20][40] + partial[21][40] + partial[22][40] + partial[23][40] + carry[40];
-  assign {carry[42], product[41]} = partial[0][41] + partial[1][41] + partial[2][41] + partial[3][41] + partial[4][41] + partial[5][41] + partial[6][41] + partial[7][41] + partial[8][41] + partial[9][41] + partial[10][41] + partial[11][41] + partial[12][41] + partial[13][41] + partial[14][41] + partial[15][41] + partial[16][41] + partial[17][41] + partial[18][41] + partial[19][41] + partial[20][41] + partial[21][41] + partial[22][41] + partial[23][41] + carry[41];                                                                                                                                                        
+  assign {carry[42], product[41]} = partial[0][41] + partial[1][41] + partial[2][41] + partial[3][41] + partial[4][41] + partial[5][41] + partial[6][41] + partial[7][41] + partial[8][41] + partial[9][41] + partial[10][41] + partial[11][41] + partial[12][41] + partial[13][41] + partial[14][41] + partial[15][41] + partial[16][41] + partial[17][41] + partial[18][41] + partial[19][41] + partial[20][41] + partial[21][41] + partial[22][41] + partial[23][41] + carry[41];
   assign {carry[43], product[42]} = partial[0][42] + partial[1][42] + partial[2][42] + partial[3][42] + partial[4][42] + partial[5][42] + partial[6][42] + partial[7][42] + partial[8][42] + partial[9][42] + partial[10][42] + partial[11][42] + partial[12][42] + partial[13][42] + partial[14][42] + partial[15][42] + partial[16][42] + partial[17][42] + partial[18][42] + partial[19][42] + partial[20][42] + partial[21][42] + partial[22][42] + partial[23][42] + carry[42];
   assign {carry[44], product[43]} = partial[0][43] + partial[1][43] + partial[2][43] + partial[3][43] + partial[4][43] + partial[5][43] + partial[6][43] + partial[7][43] + partial[8][43] + partial[9][43] + partial[10][43] + partial[11][43] + partial[12][43] + partial[13][43] + partial[14][43] + partial[15][43] + partial[16][43] + partial[17][43] + partial[18][43] + partial[19][43] + partial[20][43] + partial[21][43] + partial[22][43] + partial[23][43] + carry[43];
   assign {carry[45], product[44]} = partial[0][44] + partial[1][44] + partial[2][44] + partial[3][44] + partial[4][44] + partial[5][44] + partial[6][44] + partial[7][44] + partial[8][44] + partial[9][44] + partial[10][44] + partial[11][44] + partial[12][44] + partial[13][44] + partial[14][44] + partial[15][44] + partial[16][44] + partial[17][44] + partial[18][44] + partial[19][44] + partial[20][44] + partial[21][44] + partial[22][44] + partial[23][44] + carry[44];
@@ -89,7 +90,6 @@ module comb_multiplier(
   assign {carry[47], product[46]} = partial[0][46] + partial[1][46] + partial[2][46] + partial[3][46] + partial[4][46] + partial[5][46] + partial[6][46] + partial[7][46] + partial[8][46] + partial[9][46] + partial[10][46] + partial[11][46] + partial[12][46] + partial[13][46] + partial[14][46] + partial[15][46] + partial[16][46] + partial[17][46] + partial[18][46] + partial[19][46] + partial[20][46] + partial[21][46] + partial[22][46] + partial[23][46] + carry[46];
   assign {           product[47]} = partial[0][47] + partial[1][47] + partial[2][47] + partial[3][47] + partial[4][47] + partial[5][47] + partial[6][47] + partial[7][47] + partial[8][47] + partial[9][47] + partial[10][47] + partial[11][47] + partial[12][47] + partial[13][47] + partial[14][47] + partial[15][47] + partial[16][47] + partial[17][47] + partial[18][47] + partial[19][47] + partial[20][47] + partial[21][47] + partial[22][47] + partial[23][47] + carry[47];
 */
-  assign result = product;
 
 endmodule
 

@@ -21,7 +21,7 @@ module comb_multiplier(
 
 
   for(genvar i = 0; i < 23; i++) 
-    assign partial[i] = {(48){b[i]}} & {{(24 - i){_signed ? a[23] : 1'b0}},  a, {(i){1'b0}}};
+    assign partial[i] = b[i] ? {{(24 - i){_signed ? a[23] : 1'b0}},  a, {(i){1'b0}}} : 48'b0;
 
   assign partial[23] = _signed ? (b[23] ? {(48){b[23]}} & {~{a[23],  a} + 1'b1, {(23){1'b0}}}  : {(48){b[23]}} & {a[23],  a, {(23){1'b0}}}) :
                        {(48){b[23]}} & {1'b0,  a, {(23){1'b0}}};

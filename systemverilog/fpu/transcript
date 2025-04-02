@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 20:05:46 on Apr 02,2025
+# Start time: 21:33:00 on Apr 02,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
@@ -26,3 +26,20 @@
 # Loading work.fpu(fast)
 # Loading work.comb_multiplier(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/product_multiplier'.
+# Executing ONERROR command at macro ./wave.do line 31
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/product_add'.
+# Executing ONERROR command at macro ./wave.do line 33
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/product_shift'.
+# Executing ONERROR command at macro ./wave.do line 34
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/start_operation_mul_fsm'.
+# Executing ONERROR command at macro ./wave.do line 35
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/operation_done_mul_fsm'.
+# Executing ONERROR command at macro ./wave.do line 36
+run -all
+# Result: 0x40c90fda, 6.283185
+# ** Note: $stop    : fpu_tb.sv(64)
+#    Time: 24 us  Iteration: 1  Instance: /fpu_tb
+# Break in Module fpu_tb at fpu_tb.sv line 64
+# End time: 21:33:14 on Apr 02,2025, Elapsed time: 0:00:14
+# Errors: 0, Warnings: 1

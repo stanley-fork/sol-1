@@ -654,8 +654,8 @@ module fpu(
                                 (~product_norm[23] && |product_norm[22:0]) ? product_norm[47:24] + 1'b1 : product_norm[47:24];
   // now check whether there was a carry out after rounding up
   // if there was a carry, then re-normalize
-  assign product_renorm = product_rounded[48] ? product_rounded >> 1 : product_rounded;
-  assign mul_exp_renorm = product_rounded[48] ? mul_exp_norm + 1'b1 : mul_exp_norm;
+  assign product_renorm = product_rounded[48] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
+  assign mul_exp_renorm = product_rounded[48] ? mul_exp_norm + 1'b1  : mul_exp_norm;    // and increase exponent
   assign result_exp_mul = mul_exp_renorm;
   assign result_mantissa_mul = product_renorm[47:24];
 
