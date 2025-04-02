@@ -26,11 +26,16 @@ module comb_multiplier(
   assign partial[23] = _signed ? (b[23] ? {(48){b[23]}} & {~{a[23],  a} + 1'b1, {(23){1'b0}}}  : {(48){b[23]}} & {a[23],  a, {(23){1'b0}}}) :
                        {(48){b[23]}} & {1'b0,  a, {(23){1'b0}}};
 
-
-
   assign carry[0] = '0;
   for(genvar i = 0; i < 48; i++) begin
-    assign {carry[i + 1],  product[i]} = partial[0][i] + partial[1][i] + partial[2][i] + partial[3][i] + partial[4][i] + partial[5][i] + partial[6][i] + partial[7][i] + partial[8][i] + partial[9][i] + partial[10][i] + partial[11][i] + partial[12][i] + partial[13][i] + partial[14][i] + partial[15][i] + partial[16][i] + partial[17][i] + partial[18][i] + partial[19][i] + partial[20][i] + partial[21][i] + partial[22][i] + partial[23][i] + carry[i];
+    assign {carry[i + 1],  product[i]} = partial[ 0][i] + partial[ 1][i] + partial[ 2][i] + 
+                                         partial[ 3][i] + partial[ 4][i] + partial[ 5][i] + 
+                                         partial[ 6][i] + partial[ 7][i] + partial[ 8][i] + 
+                                         partial[ 9][i] + partial[10][i] + partial[11][i] + 
+                                         partial[12][i] + partial[13][i] + partial[14][i] + 
+                                         partial[15][i] + partial[16][i] + partial[17][i] + 
+                                         partial[18][i] + partial[19][i] + partial[20][i] + 
+                                         partial[21][i] + partial[22][i] + partial[23][i] + carry[i];
   end
 
 /*
