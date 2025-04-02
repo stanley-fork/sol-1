@@ -111,9 +111,15 @@ module fpu(
   // multiplication datapath
   logic [47:0] product_pre_norm;
   logic [48:0] product;
+  logic [48:0] product_norm;
+  logic [48:0] product_renorm;
+  logic [48:0] product_rounded;
   logic [23:0] result_mantissa_mul;
   logic [ 7:0] result_exp_mul;
   logic        result_sign_mul;
+  logic [ 7:0] mul_exp;
+  logic [ 7:0] mul_exp_norm;
+  logic [ 7:0] mul_exp_renorm;
 
   // division datapath 
   logic [23:0] result_mantissa_div;
@@ -617,49 +623,43 @@ module fpu(
   //  1.11|101  bit after machine epsilon is 1, hence round up
   // 10.00      rounding up causes a carry, hence it needs another normalization
   //  1.00 * 2  hence exponent increases by 1
-  comb_multiplier multiply(
+
+  // rounding example:
+  //      1.111
+  //      1.000
+  //   01111000 multiplication result
+  //   11110000 msb is 0 hence shift left
+  //  100000000 rounding: bits after epsilon are all zero and adding epsilon to lsb results in even lsb, hence add epsilon, which creates a carry out
+  //   10000000 finally, shift right to renormalize
+  comb_multiplier mantissa_multiplier(
     .a(a_mantissa[23:0]),
     .b(b_mantissa[23:0]),
     ._signed(1'b0),
     .result(product_pre_norm)
   );
-  
-  always_comb begin
-    automatic logic [7:0]  mul_exp = (a_exp - 8'd127) + b_exp;
+  assign mul_exp = (a_exp - 8'd127) + b_exp;
+  assign result_sign_mul = a_sign ^ b_sign;
+  // normalize floating point result
+  assign mul_exp_norm = product_pre_norm[47] ? mul_exp + 1'b1 : mul_exp;                   // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+  assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
+                                                                                           // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
+                                                                                           // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
+  // rounding: round to nearest ties to even
+  // if first bit after epsilon is 1, then round up (and account for possible carry out)
+  // if all bits after epsilon are 0, we have a tie
+  // if rounding up produces an even result, then round up (and account for possible carry out)
+  // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
+  assign product_rounded[48:24] = product_norm[23] || 
+                                 (product_norm[23:0] == '0 && ~{product_norm[47:24] + 1'b1}[0]) || 
+                                (~product_norm[23] && |product_norm[22:0]) ? product_norm[47:24] + 1'b1 : product_norm[47:24];
+  // now check whether there was a carry out after rounding up
+  // if there was a carry, then re-normalize
+  assign product_renorm = product_rounded[48] ? product_rounded >> 1 : product_rounded;
+  assign mul_exp_renorm = product_rounded[48] ? mul_exp_norm + 1'b1 : mul_exp_norm;
+  assign result_exp_mul = mul_exp_renorm;
+  assign result_mantissa_mul = product_renorm[47:24];
 
-    result_sign_mul = a_sign ^ b_sign;
-    // normalize floating point result
-    product = product_pre_norm;
-    if(product[47] == 1'b1) mul_exp = mul_exp + 1'b1; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
-                                                // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-    else if(product[47] == 1'b0) product = product << 1; // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
-                                                // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
-    // rounding: round to nearest ties to even
-    if(product[23] == 1'b1) // if first bit after epsilon is 1, then round up (and account for possible carry out)
-      product[48:24] = product[47:24] + 1'b1; 
-    else if(product[23:0] == '0) begin // if all bits after epsilon are 0, we have a tie
-      if({product[47:24] + 1'b1}[0] == 1'b0) // if rounding up produces an even result, then round up (and account for possible carry out)
-        product[48:24] = product[47:24] + 1'b1; 
-    end
-    else if(product[23] == 1'b0 && |product[22:0]) // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
-      product[48:24] = product[47:24] + 1'b1;
-
-    // now check whether there was a carry out after rounding up
-    if(product[48]) begin // if there was a carry, then re-normalize
-      product = product >> 1;
-      mul_exp = mul_exp + 1'b1;
-    end
-
-    result_exp_mul = mul_exp;
-    result_mantissa_mul = product[47:24];
-  end
-        // rounding example:
-        //      1.111
-        //      1.000
-        //   01111000 multiplication result
-        //   11110000 msb is 0 hence shift left
-        //  100000000 rounding: bits after epsilon are all zero and adding epsilon to lsb results in even lsb, hence add epsilon, which creates a carry out
-        //   10000000 finally, shift right to renormalize
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
   // DIVISION DATAPATH
   always_ff @(posedge clk, posedge arst) begin

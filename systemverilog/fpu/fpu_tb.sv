@@ -1,3 +1,5 @@
+`default_nettype none
+
 module fpu_tb;
 
   logic arst;
