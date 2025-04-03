@@ -3,7 +3,7 @@ export QUESTASIM_PATH="/home/pconst/intelFPGA_pro/24.2/questa_fse/bin"  # Adjust
 export PATH="$QUESTASIM_PATH:$PATH"
 export LIBRARY_NAME="work"
 export TOP_MODULE="comb_multiplier_tb"  # Change to your top-level testbench module
-export SRC_FILES="comb_multiplier_tb.sv comb_multiplier.sv"  # Add all source files here
+export SRC_FILES="comb_multiplier_tb.sv comb_multiplier.sv wallace_mul.sv"  # Add all source files here
 
 # Clean previous work
 rm -rf $LIBRARY_NAME

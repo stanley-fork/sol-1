@@ -13,10 +13,9 @@ module comb_multiplier_tb;
   end
 
 
-  comb_multiplier multiplier(
+  wallace_mul multiplier(
     .a(a),
     .b(b),
-    ._signed(1),
     .result(result)
   );
 
