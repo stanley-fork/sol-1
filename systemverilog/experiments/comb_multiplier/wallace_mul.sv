@@ -224,6 +224,112 @@ module wallace_mul(
   assign stage2_2[14] = stage1_5[14];
   assign stage2_3[14] = {2'(stage1_4[13] + stage1_5[13])}[1];
 
+  // stage 3
+  assign stage3_0[0] = stage2_0[0];
+  assign stage3_1[0] = 1'b0;
+  assign stage3_2[0] = 1'b0;
+
+  assign stage3_0[1] = stage2_0[1];
+  assign stage3_1[1] = 1'b0;
+  assign stage3_2[1] = 1'b0;
+
+  assign stage3_0[2] = stage2_0[2];
+  assign stage3_1[2] = 1'b0;
+  assign stage3_2[2] = 1'b0;
+
+  assign stage3_0[3] = stage2_0[3] + stage2_1[3];
+  assign stage3_1[3] = 1'b0;
+  assign stage3_2[3] = 1'b0;
+
+  assign stage3_0[4] = stage2_0[4] + stage2_1[4];
+  assign stage3_1[4] = {2'(stage2_0[3] + stage2_1[3])}[1]; // carry
+  assign stage3_2[4] = 1'b0;
+
+  assign stage3_0[5] = stage2_0[5] + stage2_1[5] + stage2_2[5];
+  assign stage3_1[5] = {2'(stage2_0[4] + stage2_1[4])}[1]; // carry
+  assign stage3_2[5] = 1'b0;
+
+  assign stage3_0[6] = stage2_0[6] + stage2_1[6] + stage2_2[6];
+  assign stage3_1[6] = {2'(stage2_0[5] + stage2_1[5] + stage2_2[5])}[1]; // carry
+  assign stage3_2[6] = 1'b0;
+
+  assign stage3_0[7] = stage2_0[7] + stage2_1[7] + stage2_2[7];
+  assign stage3_1[7] = {2'(stage2_0[6] + stage2_1[6] + stage2_2[6])}[1]; // carry
+  assign stage3_2[7] = stage2_3[7];
+
+  assign stage3_0[8] = stage2_0[8] + stage2_1[8] + stage2_2[8];
+  assign stage3_1[8] = {2'(stage2_0[7] + stage2_1[7] + stage2_2[7])}[1]; // carry
+  assign stage3_2[8] = stage2_3[8];
+
+  assign stage3_0[9] = stage2_0[9] + stage2_1[9] + stage2_2[9];
+  assign stage3_1[9] = {2'(stage2_0[8] + stage2_1[8] + stage2_2[8])}[1]; // carry
+  assign stage3_2[9] = stage2_3[9];
+
+  assign stage3_0[10] = stage2_0[10] + stage2_1[10] + stage2_2[10];
+  assign stage3_1[10] = {2'(stage2_0[9] + stage2_1[9] + stage2_2[9])}[1]; // carry
+  assign stage3_2[10] = stage2_3[10];
+
+  assign stage3_0[11] = stage2_1[11] + stage2_2[11];
+  assign stage3_1[11] = {2'(stage2_0[10] + stage2_1[10] + stage2_2[10])}[1]; // carry
+  assign stage3_2[11] = stage2_3[11];
+
+  assign stage3_0[12] = stage2_1[12] + stage2_2[12];
+  assign stage3_1[12] = {2'(stage2_1[11] + stage2_2[11])}[1]; // carry
+  assign stage3_2[12] = stage2_3[12];
+
+  assign stage3_0[14] = 1'b0;
+  assign stage3_1[14] = stage2_2[14];
+  assign stage3_2[14] = stage2_3[14];
+
+  // stage 4
+  assign stage4_0[0] = stage3_0[0];
+  assign stage4_1[0] = 1'b0;
+
+  assign stage4_0[1] = stage3_0[1];
+  assign stage4_1[1] = 1'b0;
+
+  assign stage4_0[2] = stage3_0[2];
+  assign stage4_1[2] = 1'b0;
+
+  assign stage4_0[3] = stage3_0[3];
+  assign stage4_1[3] = 1'b0;
+
+  assign stage4_0[4] = stage3_0[4] + stage3_1[4];
+  assign stage4_1[4] = 1'b0;
+
+  assign stage4_0[5] = stage3_0[5] + stage3_1[5];
+  assign stage4_1[5] = {2'(stage3_0[4] + stage3_1[4])}[1]; // carry
+
+  assign stage4_0[6] = stage3_0[6] + stage3_1[6];
+  assign stage4_1[6] = {2'(stage3_0[5] + stage3_1[5])}[1]; // carry
+
+  assign stage4_0[7] = stage3_0[7] + stage3_1[7] + stage3_2[7];
+  assign stage4_1[7] = {2'(stage3_0[6] + stage3_1[6])}[1]; // carry
+
+  assign stage4_0[8] = stage3_0[8] + stage3_1[8] + stage3_2[8];
+  assign stage4_1[8] = {2'(stage3_0[7] + stage3_1[7] + stage3_2[7])}[1]; // carry
+
+  assign stage4_0[9] = stage3_0[9] + stage3_1[9] + stage3_2[9];
+  assign stage4_1[9] = {2'(stage3_0[8] + stage3_1[8] + stage3_2[8])}[1]; // carry
+
+  assign stage4_0[10] = stage3_0[10] + stage3_1[10] + stage3_2[10];
+  assign stage4_1[10] = {2'(stage3_0[9] + stage3_1[9] + stage3_2[9])}[1]; // carry
+
+  assign stage4_0[11] = stage3_0[11] + stage3_1[11] + stage3_2[11];
+  assign stage4_1[11] = {2'(stage3_0[10] + stage3_1[10] + stage3_2[10])}[1]; // carry
+
+  assign stage4_0[12] = stage3_0[12] + stage3_1[12] + stage3_2[12];
+  assign stage4_1[12] = {2'(stage3_0[11] + stage3_1[11] + stage3_2[11])}[1]; // carry
+
+  assign stage4_0[13] = stage3_0[13] + stage3_1[13] + stage3_2[13];
+  assign stage4_1[13] = {2'(stage3_0[12] + stage3_1[12] + stage3_2[12])}[1]; // carry
+
+  assign stage4_0[14] = stage3_1[14] + stage3_2[14];
+  assign stage4_1[14] = {2'(stage3_0[13] + stage3_1[13] + stage3_2[13])}[1]; // carry
+
+  assign stage4_0[15] = {2'(stage3_1[14] + stage3_2[14])}[1]; // carry
+  assign stage4_1[15] = 1'b0; // carry
+
 
 
   assign result = product;
