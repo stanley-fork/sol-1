@@ -109,17 +109,16 @@ module fpu(
   logic        result_s_add_sub;
 
   // multiplication datapath
-  logic [47:0] product_pre_norm;
-  logic [48:0] product;
-  logic [48:0] product_norm;
-  logic [48:0] product_renorm;
-  logic [48:0] product_rounded;
-  logic [23:0] result_mantissa_mul;
-  logic [ 7:0] result_exp_mul;
-  logic        result_sign_mul;
-  logic [ 7:0] mul_exp;
-  logic [ 7:0] mul_exp_norm;
-  logic [ 7:0] mul_exp_renorm;
+  logic [47:0] product_pre_norm;     // result after multiplication
+  logic [48:0] product_norm;         // after first normalization
+  logic [48:0] product_renorm;       // after second normalization (after rounding)
+  logic [48:0] product_rounded;      // after rounding
+  logic [23:0] result_mantissa_mul;  // final value
+  logic [ 7:0] result_exp_mul;       // final exponent
+  logic        result_sign_mul;      // resulting sign
+  logic [ 7:0] mul_exp;              // exponent sum
+  logic [ 7:0] mul_exp_norm;         // normalized exponent
+  logic [ 7:0] mul_exp_renorm;       // exponent after renormalization
 
   // division datapath 
   logic [23:0] result_mantissa_div;
