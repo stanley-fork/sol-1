@@ -5,8 +5,7 @@ module wallace_mul(
 );
 
   logic [7:0][15:0] partial;
-  logic [15:0]      product;
-  logic [15:0]      carry;
+  logic      [15:0] product;
 
 /*
                         a3  a2  a1  a0
@@ -34,8 +33,8 @@ module wallace_mul(
   logic [14:0] stage3_1;
   logic [14:0] stage3_2;
 
-  logic [14:0] stage4_0;
-  logic [14:0] stage4_1;
+  logic [15:0] stage4_0;
+  logic [15:0] stage4_1;
 
 
   for(genvar i = 0; i < 8; i++) 
@@ -81,7 +80,7 @@ module wallace_mul(
   assign stage1_1[5] = partial[3][5] + partial[4][5] + partial[5][5];
   assign stage1_2[5] = {2'(partial[0][4] + partial[1][4] + partial[2][4])}[1]; // carry
   assign stage1_3[5] = {2'(partial[3][4] + partial[4][4])}[1]; // carry
-  assign stage1_4[5] = {2'(partial[0][4] + partial[1][4] + partial[2][4])}[1]; // carry
+  assign stage1_4[5] = 1'b0;
   assign stage1_5[5] = 1'b0;
 
   assign stage1_0[6] = partial[0][6] + partial[1][6] + partial[2][6];
@@ -148,7 +147,6 @@ module wallace_mul(
   assign stage1_5[14] = partial[7][14];
 
   // stage 2
-
   assign stage2_0[0] = stage1_0[0];
   assign stage2_1[0] = 1'b0;
   assign stage2_2[0] = 1'b0;
@@ -224,6 +222,7 @@ module wallace_mul(
   assign stage2_2[14] = stage1_5[14];
   assign stage2_3[14] = {2'(stage1_4[13] + stage1_5[13])}[1];
 
+  // continue checking code vs graph from here
   // stage 3
   assign stage3_0[0] = stage2_0[0];
   assign stage3_1[0] = 1'b0;
@@ -332,8 +331,25 @@ module wallace_mul(
   assign stage4_1[14] = {2'(stage3_0[13] + stage3_1[13] + stage3_2[13])}[1]; // carry
 
   assign stage4_0[15] = {2'(stage3_1[14] + stage3_2[14])}[1]; // carry
-  assign stage4_1[15] = 1'b0; // carry
+  assign stage4_1[15] = 1'b0; 
 
+  // final product
+  assign product[0] = stage4_0[0];
+  assign product[1] = stage4_0[1];
+  assign product[2] = stage4_0[2];
+  assign product[3] = stage4_0[3];
+  assign product[4] = stage4_0[4];
+  assign product[5] = stage4_0[5] + stage4_1[5];
+  assign product[6] = stage4_0[6] + stage4_1[6] + {2'(stage4_0[5] + stage4_1[5])}[1];
+  assign product[7] = stage4_0[7] + stage4_1[7] + {2'(stage4_0[6] + stage4_1[6])}[1];
+  assign product[8] = stage4_0[8] + stage4_1[8] + {2'(stage4_0[7] + stage4_1[7])}[1];
+  assign product[9] = stage4_0[9] + stage4_1[9] + {2'(stage4_0[8] + stage4_1[8])}[1];
+  assign product[10] = stage4_0[10] + stage4_1[10] + {2'(stage4_0[9] + stage4_1[9])}[1];
+  assign product[11] = stage4_0[11] + stage4_1[11] + {2'(stage4_0[10] + stage4_1[10])}[1];
+  assign product[12] = stage4_0[12] + stage4_1[12] + {2'(stage4_0[11] + stage4_1[11])}[1];
+  assign product[13] = stage4_0[13] + stage4_1[13] + {2'(stage4_0[12] + stage4_1[12])}[1];
+  assign product[14] = stage4_0[14] + stage4_1[14] + {2'(stage4_0[13] + stage4_1[13])}[1];
+  assign product[15] = stage4_0[15] + {2'(stage4_0[14] + stage4_1[14])}[1];
 
 
   assign result = product;
