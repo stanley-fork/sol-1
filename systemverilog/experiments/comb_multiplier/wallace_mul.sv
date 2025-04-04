@@ -151,7 +151,7 @@ module wallace_mul(
 
   assign stage2_0[0] = stage1_0[0];
   assign stage2_1[0] = 1'b0;
-  assign stage2_2[2] = 1'b0;
+  assign stage2_2[0] = 1'b0;
   assign stage2_3[0] = 1'b0;
 
   assign stage2_0[1] = stage1_0[1];
@@ -276,6 +276,10 @@ module wallace_mul(
   assign stage3_0[12] = stage2_1[12] + stage2_2[12];
   assign stage3_1[12] = {2'(stage2_1[11] + stage2_2[11])}[1]; // carry
   assign stage3_2[12] = stage2_3[12];
+
+  assign stage3_0[13] = {2'(stage2_1[12] + stage2_2[12])}[1];
+  assign stage3_1[13] = stage2_2[13];
+  assign stage3_2[13] = stage2_3[13];
 
   assign stage3_0[14] = 1'b0;
   assign stage3_1[14] = stage2_2[14];
