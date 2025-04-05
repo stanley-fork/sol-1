@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -voptargs="+acc=rtl" -work work comb_multiplier_tb 
-# Start time: 19:31:18 on Apr 05,2025
+# Start time: 21:02:06 on Apr 05,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
 # ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
@@ -36,5 +36,5 @@ run -all
 # ** Note: $stop    : comb_multiplier_tb.sv(12)
 #    Time: 10 us  Iteration: 0  Instance: /comb_multiplier_tb
 # Break in Module comb_multiplier_tb at comb_multiplier_tb.sv line 12
-# End time: 19:31:36 on Apr 05,2025, Elapsed time: 0:00:18
+# End time: 21:02:23 on Apr 05,2025, Elapsed time: 0:00:17
 # Errors: 0, Warnings: 1

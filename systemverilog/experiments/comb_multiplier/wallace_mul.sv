@@ -28,107 +28,105 @@ module wallace_mul(
     assign partial[i] = b[i] ? {{(8 - i){1'b0}},  a, {(i){1'b0}}} : 8'b0;
 
 
-  assign stage1[0][0] = partial[0][0];
-  assign stage1[1][0] = 1'b0;
-  assign stage1[2][0] = 1'b0;
+  assign stage1[0] = {
+                       5'b00000,
+                       partial[2][9],
+                       partial[1][8] + partial[2][8],
+                       partial[0][7] + partial[1][7] + partial[2][7],
+                       partial[0][6] + partial[1][6] + partial[2][6],
+                       partial[0][5] + partial[1][5] + partial[2][5],
+                       partial[0][4] + partial[1][4] + partial[2][4],
+                       partial[0][3] + partial[1][3] + partial[2][3],
+                       partial[0][2] + partial[1][2] + partial[2][2],
+                       partial[0][1] + partial[1][1],
+                       partial[0][0]
+                     };
+
+  assign stage1[1] = {
+                       5'b00000,
+                       partial[3][9] + partial[4][9] + partial[5][9],
+                       partial[3][8] + partial[4][8] + partial[5][8],
+                       partial[3][7] + partial[4][7] + partial[5][7],
+                       partial[3][6] + partial[4][6] + partial[5][6],
+                       partial[3][5] + partial[4][5] + partial[5][5],
+                       partial[3][4] + partial[4][4],
+                       {2'(partial[0][2] + partial[1][2] + partial[2][2])}[1],
+                       {2'(partial[0][1] + partial[1][1])}[1],
+                       2'b00
+                     };
+
+  assign stage1[2] = {
+                       2'b00,
+                       {2'(partial[4][11] + partial[5][11])}[1],
+                       partial[4][11] + partial[5][11],
+                       partial[3][10] + partial[4][10] + partial[5][10],
+                       {2'(partial[1][8] + partial[2][8])}[1],
+                       {2'(partial[0][7] + partial[1][7] + partial[2][7])}[1],
+                       {2'(partial[0][6] + partial[1][6] + partial[2][6])}[1],
+                       {2'(partial[0][5] + partial[1][5] + partial[2][5])}[1],
+                       {2'(partial[0][4] + partial[1][4] + partial[2][4])}[1],
+                       {2'(partial[0][3] + partial[1][3] + partial[2][3])}[1],
+                       partial[3][3],
+                       3'b000
+                     };
+
+
   assign stage1[3][0] = 1'b0;
   assign stage1[4][0] = 1'b0;
   assign stage1[5][0] = 1'b0;
 
-  assign stage1[0][1] = partial[0][1] + partial[1][1];
-  assign stage1[1][1] = 1'b0;
-  assign stage1[2][1] = 1'b0;
   assign stage1[3][1] = 1'b0;
   assign stage1[4][1] = 1'b0;
   assign stage1[5][1] = 1'b0;
 
-  assign stage1[0][2] = partial[0][2] + partial[1][2] + partial[2][2];
-  assign stage1[1][2] = {2'(partial[0][1] + partial[1][1])}[1]; // carry
-  assign stage1[2][2] = 1'b0;
   assign stage1[3][2] = 1'b0;
   assign stage1[4][2] = 1'b0;
   assign stage1[5][2] = 1'b0;
 
-  assign stage1[0][3] = partial[0][3] + partial[1][3] + partial[2][3];
-  assign stage1[1][3] = {2'(partial[0][2] + partial[1][2] + partial[2][2])}[1]; // carry
-  assign stage1[2][3] = partial[3][3];
   assign stage1[3][3] = 1'b0;
   assign stage1[4][3] = 1'b0;
   assign stage1[5][3] = 1'b0;
 
-  assign stage1[0][4] = partial[0][4] + partial[1][4] + partial[2][4];
-  assign stage1[1][4] = partial[3][4] + partial[4][4];
-  assign stage1[2][4] = {2'(partial[0][3] + partial[1][3] + partial[2][3])}[1]; // carry
   assign stage1[3][4] = 1'b0;
   assign stage1[4][4] = 1'b0;
   assign stage1[5][4] = 1'b0;
 
-  assign stage1[0][5] = partial[0][5] + partial[1][5] + partial[2][5];
-  assign stage1[1][5] = partial[3][5] + partial[4][5] + partial[5][5];
-  assign stage1[2][5] = {2'(partial[0][4] + partial[1][4] + partial[2][4])}[1]; // carry
   assign stage1[3][5] = {2'(partial[3][4] + partial[4][4])}[1]; // carry
   assign stage1[4][5] = 1'b0;
   assign stage1[5][5] = 1'b0;
 
-  assign stage1[0][6] = partial[0][6] + partial[1][6] + partial[2][6];
-  assign stage1[1][6] = partial[3][6] + partial[4][6] + partial[5][6];
-  assign stage1[2][6] = {2'(partial[0][5] + partial[1][5] + partial[2][5])}[1]; // carry
   assign stage1[3][6] = {2'(partial[3][5] + partial[4][5] + partial[5][5])}[1]; // carry
   assign stage1[4][6] = partial[6][6];
   assign stage1[5][6] = 1'b0;
 
-  assign stage1[0][7] = partial[0][7] + partial[1][7] + partial[2][7];
-  assign stage1[1][7] = partial[3][7] + partial[4][7] + partial[5][7];
-  assign stage1[2][7] = {2'(partial[0][6] + partial[1][6] + partial[2][6])}[1]; // carry
   assign stage1[3][7] = {2'(partial[3][6] + partial[4][6] + partial[5][6])}[1]; // carry
   assign stage1[4][7] = partial[6][7];
   assign stage1[5][7] = partial[7][7];
 
-  assign stage1[0][8] = partial[1][8] + partial[2][8];
-  assign stage1[1][8] = partial[3][8] + partial[4][8] + partial[5][8];
-  assign stage1[2][8] = {2'(partial[0][7] + partial[1][7] + partial[2][7])}[1]; // carry
   assign stage1[3][8] = {2'(partial[3][7] + partial[4][7] + partial[5][7])}[1]; // carry
   assign stage1[4][8] = partial[6][8];
   assign stage1[5][8] = partial[7][8];
 
-  assign stage1[0][9] = partial[2][9];
-  assign stage1[1][9] = partial[3][9] + partial[4][9] + partial[5][9];
-  assign stage1[2][9] = {2'(partial[1][8] + partial[2][8])}[1]; // carry
   assign stage1[3][9] = {2'(partial[3][8] + partial[4][8] + partial[5][8])}[1]; // carry
   assign stage1[4][9] = partial[6][9];
   assign stage1[5][9] = partial[7][9];
 
-  assign stage1[0][10] = 1'b0;
-  assign stage1[1][10] = 1'b0;
-  assign stage1[2][10] = partial[3][10] + partial[4][10] + partial[5][10];
   assign stage1[3][10] = {2'(partial[3][9] + partial[4][9] + partial[5][9])}[1]; // carry
   assign stage1[4][10] = partial[6][10];
   assign stage1[5][10] = partial[7][10];
 
-  assign stage1[0][11] = 1'b0;
-  assign stage1[1][11] = 1'b0;
-  assign stage1[2][11] = partial[4][11] + partial[5][11];
   assign stage1[3][11] = {2'(partial[3][10] + partial[4][10] + partial[5][10])}[1]; // carry
   assign stage1[4][11] = partial[6][11];
   assign stage1[5][11] = partial[7][11];
 
-  assign stage1[0][12] = 1'b0;
-  assign stage1[1][12] = 1'b0;
-  assign stage1[2][12] = {2'(partial[4][11] + partial[5][11])}[1]; // carry
   assign stage1[3][12] = partial[5][12];
   assign stage1[4][12] = partial[6][12];
   assign stage1[5][12] = partial[7][12];
 
-  assign stage1[0][13] = 1'b0;
-  assign stage1[1][13] = 1'b0;
-  assign stage1[2][13] = 1'b0;
   assign stage1[3][13] = 1'b0;
   assign stage1[4][13] = partial[6][13];
   assign stage1[5][13] = partial[7][13];
 
-  assign stage1[0][14] = 1'b0;
-  assign stage1[1][14] = 1'b0;
-  assign stage1[2][14] = 1'b0;
   assign stage1[3][14] = 1'b0;
   assign stage1[4][14] = 1'b0;
   assign stage1[5][14] = partial[7][14];
