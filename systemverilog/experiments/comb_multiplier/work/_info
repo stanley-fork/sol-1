@@ -12,10 +12,10 @@ Z0 !s99 nomlopt
 cModel Technology
 Z1 d/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_multiplier
 T_opt
-!s110 1743813240
-V0R0VbO7ffZToe6U:BBY;W2
+!s110 1743877878
+VZ13jX@47oDn`?YM3KO^ZH3
 04 18 4 work comb_multiplier_tb fast 0
-=1-000ae431a4f1-67f07a78-4c180-2ac9a
+=1-000ae431a4f1-67f176f6-cd62d-544e
 R0
 !s12f OEM100
 !s12b OEM100
@@ -27,7 +27,7 @@ OL;O;2024.1;79
 vcomb_multiplier
 Z3 2comb_multiplier_tb.sv|comb_multiplier.sv|wallace_mul.sv
 Z4 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
-Z5 !s110 1743813238
+Z5 !s110 1743877876
 !i10b 1
 !s100 ^JSL8_2F;^HSMdG2A;P>c2
 I<llhJNG^fG5TmPZnFYNKj0
@@ -43,7 +43,7 @@ Z7 OL;L;2024.1;79
 r1
 !s85 0
 31
-Z8 !s108 1743813238.000000
+Z8 !s108 1743877876.000000
 Z9 !s107 wallace_mul.sv|comb_multiplier.sv|comb_multiplier_tb.sv|
 Z10 !s90 -work|work|+acc|comb_multiplier_tb.sv|comb_multiplier.sv|wallace_mul.sv|
 !i113 0
@@ -83,7 +83,7 @@ R5
 Ij9n5[MA5CCIQo]oCbzXS[2
 S1
 R1
-w1743813235
+w1743877874
 8wallace_mul.sv
 Fwallace_mul.sv
 !i122 0
