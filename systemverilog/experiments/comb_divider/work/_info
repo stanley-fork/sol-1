@@ -12,14 +12,14 @@ Z0 !s99 nomlopt
 cModel Technology
 Z1 d/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider
 T_opt
-!s110 1740266241
-VaNomMQA0>A19AoOM30`nW2
+!s110 1743895438
+V9D:CLof>b=9_>3m8W9c231
 04 15 4 work comb_divider_tb fast 0
-=1-000ae431a4f1-67ba5b01-b7230-38f54
+=1-000ae431a4f1-67f1bb8d-e4303-b56a
 R0
 !s12f OEM100
 !s12b OEM100
-!s124 OEM10U1 
+!s124 OEM10U2 
 o-quiet -auto_acc_if_foreign -work work +acc=rtl
 Z2 tCvgOpt 0
 n@_opt
@@ -27,23 +27,23 @@ OL;O;2024.1;79
 vcomb_divider
 Z3 2comb_divider_tb.sv|comb_divider.sv
 Z4 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
-Z5 !s110 1740266236
+Z5 !s110 1743895432
 !i10b 1
-!s100 6;Fg]X0k>8^DJ9?i7E9Ka1
-IVGdeN?oDga;HeSWE=TNV=3
+!s100 ogcPOY?eeblo0nhjl7C@Y1
+IjFKFK4O2CHR`AY1naA6Ad1
 S1
 R1
-w1734384579
+w1743895424
 8comb_divider.sv
 Fcomb_divider.sv
 !i122 0
-L0 1 53
+L0 1 95
 Z6 VDg1SIo80bB@j0V0VzS_@n1
 Z7 OL;L;2024.1;79
 r1
 !s85 0
 31
-Z8 !s108 1740266236.000000
+Z8 !s108 1743895431.000000
 Z9 !s107 comb_divider.sv|comb_divider_tb.sv|
 Z10 !s90 -work|work|+acc|comb_divider_tb.sv|comb_divider.sv|
 !i113 0
@@ -54,15 +54,15 @@ R3
 R4
 R5
 !i10b 1
-!s100 AUfiEC@`^]XGl9WG5>VWA2
-IZ4`I1RFzIhJB074>m5=nh2
+!s100 `B;lgE=m@eZ@^5h`V@4V`2
+Ih`zk^Vk5kUn1lP;^JOgIL2
 S1
 R1
-w1740266234
+w1743890177
 8comb_divider_tb.sv
 Fcomb_divider_tb.sv
 !i122 0
-L0 3 31
+L0 3 26
 R6
 R7
 r1

@@ -19,15 +19,10 @@ module comb_divider_tb;
     $stop;
   end
 
-
-  assign c = (a)*(b); // 1111 * 2 = 30   00011110
-
-/*
   comb_divider div(
     .a(a),
     .b(b),
     .quotient(quotient),
     .remainder(remainder)
   );
-*/
 endmodule
