@@ -32,31 +32,11 @@ package pa_fpu;
     arith_sub_st,
     arith_mul_st,
     arith_div_st,
-    arith_div_done_st,
     arith_sqrt_st,
     arith_sqrt_done_st,
     arith_log2_st,
     arith_result_valid_st
   } e_arith_st;
-
-  typedef enum logic [2:0]{
-    mul_idle_st,
-    mul_start_st,
-    mul_product_add_st,
-    mul_product_shift_st,
-    mul_result_set_st,
-    mul_result_valid_st
-  } e_mul_st;
-
-  typedef enum logic [2:0]{
-    div_idle_st,
-    div_start_st,
-    div_shift_st,
-    div_sub_divisor_test_st,
-    div_set_q0_st,
-    div_check_counter_st,
-    div_result_valid_st
-  } e_div_st;
 
   typedef enum logic [3:0]{
     sqrt_idle_st,

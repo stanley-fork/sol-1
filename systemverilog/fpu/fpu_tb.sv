@@ -32,6 +32,7 @@ module fpu_tb;
     st_fpu_computation'{32'h41200000, 32'h0,        10,           0},
     st_fpu_computation'{32'h40490fda, 32'h402df854, 3.1415926,    2.7182818},
     st_fpu_computation'{32'h40490fda, 32'h402df854, 3.1415926,    2.7182818},
+    st_fpu_computation'{32'h3fffffff, 32'h402df854, 1.9999999,    2.7182818},
     st_fpu_computation'{32'h42168f5c, 32'h0,        37.64,        0}
   };
 
@@ -52,8 +53,8 @@ module fpu_tb;
     #500ns;
     arst = 0;
 
-    write_a_operand(32'h3fffffff); //  1.999999
-    write_b_operand(32'h40490fda); //  1.0
+    write_a_operand(computation_list[8].a); 
+    write_b_operand(computation_list[8].b); 
 
     ta_set_operation(pa_fpu::op_div);
     ta_start_operation();

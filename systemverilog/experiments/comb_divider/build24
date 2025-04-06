@@ -2,8 +2,8 @@
 export QUESTASIM_PATH="/home/pconst/intelFPGA_pro/24.2/questa_fse/bin"  # Adjust if your installation is different
 export PATH="$QUESTASIM_PATH:$PATH"
 export LIBRARY_NAME="work"
-export TOP_MODULE="comb_div_24_tb"  # Change to your top-level testbench module
-export SRC_FILES="comb_div_24_tb.sv comb_div_24.sv"  # Add all source files here
+export TOP_MODULE="comb_div24_frac_tb"  # Change to your top-level testbench module
+export SRC_FILES="comb_div24_frac_tb.sv comb_div24_frac.sv"  # Add all source files here
 
 # Clean previous work
 rm -rf $LIBRARY_NAME

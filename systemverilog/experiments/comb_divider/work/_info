@@ -1,62 +1,8 @@
 m255
 K4
 z2
-Z0 !s12c _opt
-Z1 !s99 nomlopt
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
+!s12c _opt
+Z0 !s99 nomlopt
 !s11f vlog 2024.1 2024.04, Apr 19 2024
 13
 !s112 1.1
@@ -64,67 +10,67 @@ R1
 !i10e 25
 !i10f 100
 cModel Technology
-Z2 d/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider
+Z1 d/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider
 T_opt
-!s110 1743964544
-VT[X1GoAF5jlG4jD;o7D]C2
-04 15 4 work comb_divider_tb fast 0
-=31-000ae431a4f1-67f2c980-5c315-52f5
-R1
+!s110 1743977302
+Vkh@HklETnj0M0C?PcFQKG0
+04 18 4 work comb_div24_frac_tb fast 0
+=1-000ae431a4f1-67f2fb56-c5716-10284
+R0
 !s12f OEM100
 !s12b OEM100
 !s124 OEM10U2 
 o-quiet -auto_acc_if_foreign -work work +acc=rtl
-Z3 tCvgOpt 0
+Z2 tCvgOpt 0
 n@_opt
 OL;O;2024.1;79
-vcomb_divider
-2/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider.sv
+vcomb_div24_frac
+Z3 2comb_div24_frac_tb.sv|comb_div24_frac.sv
 Z4 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
-!s110 1743964539
+Z5 !s110 1743977298
 !i10b 1
-!s100 mTmz@2gcbI>2e=Pl2g?C<0
-IcgFVjDI40kQ0D4@`eM:?22
+!s100 1_451JI9oKMP[dmkgn^ch2
+IJ]0VzE`Z0cVXlF7OOMZVz2
 S1
-R2
-w1743963532
-8/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider.sv
-F/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider.sv
-!i122 35
-L0 4 36
-Z5 VDg1SIo80bB@j0V0VzS_@n1
-Z6 OL;L;2024.1;79
+R1
+w1743977142
+8comb_div24_frac.sv
+Fcomb_div24_frac.sv
+!i122 0
+L0 5 34
+Z6 VDg1SIo80bB@j0V0VzS_@n1
+Z7 OL;L;2024.1;79
 r1
 !s85 0
 31
-!s108 1743964539.000000
-!s107 /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider.sv|
-!s90 -reportprogress|300|-work|work|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider.sv|
+Z8 !s108 1743977298.000000
+Z9 !s107 comb_div24_frac.sv|comb_div24_frac_tb.sv|
+Z10 !s90 -work|work|+acc|comb_div24_frac_tb.sv|comb_div24_frac.sv|
 !i113 0
-Z7 o-work work -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+Z11 o-work work +acc -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+R2
+vcomb_div24_frac_tb
 R3
-vcomb_divider_tb
-2/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider_tb.sv
 R4
-!s110 1743964540
-!i10b 1
-!s100 8Hk=VRB@oM^?Gd9Y3TIR:2
-IUBQ9^k7`?^65JUhTkNCWE2
-S1
-R2
-w1743964531
-8/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider_tb.sv
-F/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider_tb.sv
-!i122 36
-L0 3 22
 R5
+!i10b 1
+!s100 K95LRMfzzU1;JE7X[1ZZE3
+IzFVJOBhm^aEEJVUT@AJ3Z2
+S1
+R1
+w1743977284
+8comb_div24_frac_tb.sv
+Fcomb_div24_frac_tb.sv
+!i122 0
+L0 3 21
 R6
+R7
 r1
 !s85 0
 31
-!s108 1743964540.000000
-!s107 /home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider_tb.sv|
-!s90 -reportprogress|300|-work|work|/home/pconst/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_divider_tb.sv|
+R8
+R9
+R10
 !i113 0
-R7
-R3
+R11
+R2

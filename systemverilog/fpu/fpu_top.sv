@@ -121,6 +121,7 @@ module fpu(
   logic [ 7:0] mul_exp_renorm;       // exponent after renormalization
 
   // division datapath 
+  logic [23:0] quotient_pre_norm;
   logic [23:0] result_mantissa_div;
   logic [ 7:0] result_exp_div;
   logic        result_sign_div;
@@ -197,10 +198,6 @@ module fpu(
   pa_fpu::e_main_st  next_state_main_fsm;
   pa_fpu::e_arith_st curr_state_arith_fsm;
   pa_fpu::e_arith_st next_state_arith_fsm;
-  pa_fpu::e_mul_st   curr_state_mul_fsm;
-  pa_fpu::e_mul_st   next_state_mul_fsm;
-  pa_fpu::e_div_st   curr_state_div_fsm;
-  pa_fpu::e_div_st   next_state_div_fsm;
   pa_fpu::e_sqrt_st  curr_state_sqrt_fsm;
   pa_fpu::e_sqrt_st  next_state_sqrt_fsm;
 
@@ -516,9 +513,7 @@ module fpu(
         next_state_arith_fsm = pa_fpu::arith_result_valid_st;
 
       pa_fpu::arith_div_st:
-        if(operation_done_div_fsm == 1'b1) next_state_arith_fsm = pa_fpu::arith_div_done_st;
-      pa_fpu::arith_div_done_st:
-        if(operation_done_div_fsm == 1'b0) next_state_arith_fsm = pa_fpu::arith_result_valid_st;
+        next_state_arith_fsm = pa_fpu::arith_result_valid_st;
 
       pa_fpu::arith_sqrt_st:
         if(operation_done_sqrt_fsm == 1'b1) next_state_arith_fsm = pa_fpu::arith_sqrt_done_st;
@@ -574,11 +569,6 @@ module fpu(
         pa_fpu::arith_div_st: begin
           operation_done_ar_fsm <= 1'b0;
           start_operation_div_ar_fsm <= 1'b1;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_div_done_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_div_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end
         pa_fpu::arith_sqrt_st: begin
@@ -659,117 +649,22 @@ module fpu(
   assign result_mantissa_mul = product_renorm[47:24];
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
-  
+
   // DIVISION DATAPATH
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      remainder_dividend <= '0;
-      div_counter        <= '0;
-    end
-    else begin
-      if(next_state_div_fsm == pa_fpu::div_start_st) begin
-        div_counter <= '0;
-        remainder_dividend <= {2'b00, a_mantissa[23:0], 23'd0}; // dividend in lower half
-      end
-      if(div_shift) 
-        remainder_dividend <= remainder_dividend << 1;
-      if(div_set_q0) begin
-        remainder_dividend[0] <= 1'b1;
-        remainder_dividend[48:24] <= {1'b0, remainder_dividend[48:24]} + ~{2'b00, b_mantissa[23:0]} + 26'b1;
-      end
-      if(next_state_div_fsm == pa_fpu::div_sub_divisor_test_st)  
-        div_counter <= div_counter + 1'b1;
-      if(curr_state_div_fsm == pa_fpu::div_result_valid_st) begin
-        automatic logic  [7:0] e = (a_exp - b_exp) + 8'd127;
-        automatic logic [23:0] m = remainder_dividend[23:0];
-        automatic logic [4:0] zcount = lzc({2'b00, m}) - 2;
-        result_sign_div <= a_sign ^ b_sign;
-        m = m << zcount;
-        e = e - zcount;
-        result_exp_div <= e;
-        result_mantissa_div <= m;
-      end
-    end
-  end
-
-  // DIVIDE FSM
-  // next state assignments
+  comb_div24_frac div24_frac(
+    .a(a_mantissa[23:0]),
+    .b(b_mantissa[23:0]),
+    .quotient(quotient_pre_norm)
+  );
   always_comb begin
-    next_state_div_fsm = curr_state_div_fsm;
-
-    case(curr_state_div_fsm)
-      pa_fpu::div_idle_st: 
-        if(start_operation_div_fsm) next_state_div_fsm = pa_fpu::div_start_st;
-
-      pa_fpu::div_start_st:
-        next_state_div_fsm = pa_fpu::div_shift_st;
-      
-      pa_fpu::div_shift_st:
-        next_state_div_fsm = pa_fpu::div_sub_divisor_test_st;
-      
-      pa_fpu::div_sub_divisor_test_st: begin
-        automatic logic [25:0] intermediary = {1'b0, remainder_dividend[48:24]} + (~{2'b00, b_mantissa[23:0]} + 26'b1);
-        if(intermediary[25] == 1'b1) begin
-          if(div_counter == 5'd24) next_state_div_fsm = pa_fpu::div_result_valid_st;
-          else next_state_div_fsm = pa_fpu::div_shift_st;
-        end
-        else next_state_div_fsm = pa_fpu::div_set_q0_st; // result is positive
-      end
-      
-      pa_fpu::div_set_q0_st:
-        if(div_counter == 5'd24) next_state_div_fsm = pa_fpu::div_result_valid_st;
-        else next_state_div_fsm = pa_fpu::div_shift_st;
-
-      pa_fpu::div_result_valid_st:
-        if(start_operation_div_fsm == 1'b0) next_state_div_fsm = pa_fpu::div_idle_st;
-
-      default:
-        next_state_div_fsm = pa_fpu::div_idle_st;
-    endcase
-  end
-
-  // DIVIDE FSM
-  // output assignments
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      operation_done_div_fsm <= 1'b0;
-      div_shift              <= 1'b0;
-      div_set_q0           <= 1'b0;
-    end
-    else begin
-      case(next_state_div_fsm)
-        pa_fpu::div_idle_st: begin
-          operation_done_div_fsm <= 1'b0;
-          div_shift              <= 1'b0;
-          div_set_q0           <= 1'b0;
-        end
-        pa_fpu::div_start_st: begin
-          operation_done_div_fsm <= 1'b0;
-          div_shift              <= 1'b0;
-          div_set_q0           <= 1'b0;
-        end
-        pa_fpu::div_shift_st: begin
-          operation_done_div_fsm <= 1'b0;
-          div_shift              <= 1'b1;
-          div_set_q0           <= 1'b0;
-        end
-        pa_fpu::div_sub_divisor_test_st: begin
-          operation_done_div_fsm <= 1'b0;
-          div_shift              <= 1'b0;
-          div_set_q0           <= 1'b0;
-        end
-        pa_fpu::div_set_q0_st: begin
-          operation_done_div_fsm <= 1'b0;
-          div_shift              <= 1'b0;
-          div_set_q0           <= 1'b1;
-        end
-        pa_fpu::div_result_valid_st: begin
-          operation_done_div_fsm <= 1'b1;
-          div_shift              <= 1'b0;
-          div_set_q0           <= 1'b0;
-        end
-      endcase  
-    end
+    automatic logic  [7:0] e = (a_exp - b_exp) + 8'd127;
+    automatic logic [23:0] m = quotient_pre_norm[23:0];
+    automatic logic [4:0] zcount = lzc({2'b00, m}) - 2;
+    result_sign_div = a_sign ^ b_sign;
+    m = m << zcount;
+    e = e - zcount;
+    result_exp_div = e;
+    result_mantissa_div = m;
   end
 
   // SQRT DATAPATH
@@ -1015,15 +910,11 @@ module fpu(
     if(arst) begin
       curr_state_main_fsm  <= pa_fpu::main_idle_st;
       curr_state_arith_fsm <= pa_fpu::arith_idle_st;
-      curr_state_mul_fsm   <= pa_fpu::mul_idle_st;
-      curr_state_div_fsm   <= pa_fpu::div_idle_st;
       curr_state_sqrt_fsm  <= pa_fpu::sqrt_idle_st;
     end
     else begin
       curr_state_main_fsm  <= next_state_main_fsm;
       curr_state_arith_fsm <= next_state_arith_fsm;
-      curr_state_mul_fsm   <= next_state_mul_fsm;
-      curr_state_div_fsm   <= next_state_div_fsm;
       curr_state_sqrt_fsm  <= next_state_sqrt_fsm;
     end
   end
