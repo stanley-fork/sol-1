@@ -4,18 +4,14 @@ module comb_divider_tb;
 
   logic [3:0] a;
   logic [3:0] b;
-  logic [3:0] quotient;
-  logic [3:0] remainder;
-
-  logic [7:0] c;
-  logic [4:0] d;
+  logic [7:0] quotient;
+  logic [7:0] remainder;
 
   initial begin
-    a = 4'b1111; // 15 or -1
-    b = 4'b0010; // 2
+    a = 4'b1000; 
+    b = 4'b1111;
     #10us;
-
-    $display("%b", c);
+    $display("quotient: %b", quotient);
     $stop;
   end
 

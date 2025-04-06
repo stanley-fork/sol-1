@@ -55,7 +55,7 @@ module fpu_tb;
     write_a_operand(32'h3fffffff); //  1.999999
     write_b_operand(32'h40490fda); //  1.0
 
-    ta_set_operation(pa_fpu::op_mul);
+    ta_set_operation(pa_fpu::op_div);
     ta_start_operation();
     ta_read_result(result);
 

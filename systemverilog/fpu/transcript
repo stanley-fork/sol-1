@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 13:46:36 on Apr 04,2025
+# Start time: 19:45:58 on Apr 06,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
@@ -24,7 +24,7 @@
 # Loading work.pa_fpu(fast)
 # Loading work.fpu_tb(fast)
 # Loading work.fpu(fast)
-# Loading work.comb_multiplier(fast)
+# Loading work.comb_mul(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
 # ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/product_multiplier'.
 # Executing ONERROR command at macro ./wave.do line 31
@@ -37,7 +37,208 @@
 # ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/operation_done_mul_fsm'.
 # Executing ONERROR command at macro ./wave.do line 36
 run -all
-# Result: 0x40c90fda, 6.283185
+# Result: 0x3f000000, 0.500000
 # ** Note: $stop    : fpu_tb.sv(64)
-#    Time: 24 us  Iteration: 1  Instance: /fpu_tb
+#    Time: 50 us  Iteration: 1  Instance: /fpu_tb
 # Break in Module fpu_tb at fpu_tb.sv line 64
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 19:52:43 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv 
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# End time: 19:52:43 on Apr 06,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vsim-8611) Generating debug db.
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# ** Note: (vsim-8900) Creating design debug database vsim.dbg.
+run -all
+# Result: 0x3f000000, 0.500000
+# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(64)
+#    Time: 50 us  Iteration: 1  Instance: /fpu_tb
+# Break in Module fpu_tb at /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 64
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 19:53:27 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv 
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# End time: 19:53:27 on Apr 06,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 19:53:27 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv 
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# End time: 19:53:28 on Apr 06,2025, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 19:53:30 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv 
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# End time: 19:53:30 on Apr 06,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vsim-8611) Generating debug db.
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.comb_mul(fast)
+# ** Note: (vsim-8900) Creating design debug database vsim.dbg.
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/arst'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/clk'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/databus_in'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/addr'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/cs'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/rd'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/wr'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/end_ack'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/clk'. 
+# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/clk'. 
+run -all
+# Result: 0x3f000000, 0.500000
+# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(64)
+#    Time: 50 us  Iteration: 1  Instance: /fpu_tb
+# Break in Module fpu_tb at /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 64
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 20:02:43 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv 
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# End time: 20:02:43 on Apr 06,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 20:02:45 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv 
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# End time: 20:02:45 on Apr 06,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vsim-8611) Generating debug db.
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.comb_mul(fast)
+# ** Note: (vsim-8900) Creating design debug database vsim.dbg.
+run -all
+# Result: 0x3f7fffff, 1.000000
+# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(64)
+#    Time: 62 us  Iteration: 1  Instance: /fpu_tb
+# Break in Module fpu_tb at /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 64
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 20:03:32 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv 
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# End time: 20:03:32 on Apr 06,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 20:03:33 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv 
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# End time: 20:03:33 on Apr 06,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vsim-8611) Generating debug db.
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.comb_mul(fast)
+# ** Note: (vsim-8900) Creating design debug database vsim.dbg.
+run -all
+# Result: 0x3f22f983, 0.636620
+# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(64)
+#    Time: 56 us  Iteration: 1  Instance: /fpu_tb
+# Break in Module fpu_tb at /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 64
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 20:05:33 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv 
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# End time: 20:05:33 on Apr 06,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+# Start time: 20:05:34 on Apr 06,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv 
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# End time: 20:05:35 on Apr 06,2025, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vsim-8611) Generating debug db.
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.comb_mul(fast)
+# ** Note: (vsim-8900) Creating design debug database vsim.dbg.
+run -all
+# Result: 0x3f22f983, 0.636620
+# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(64)
+#    Time: 56 us  Iteration: 1  Instance: /fpu_tb
+# Break in Module fpu_tb at /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 64

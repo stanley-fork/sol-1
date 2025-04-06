@@ -630,7 +630,7 @@ module fpu(
   //   11110000 msb is 0 hence shift left
   //  100000000 rounding: bits after epsilon are all zero and adding epsilon to lsb results in even lsb, hence add epsilon, which creates a carry out
   //   10000000 finally, shift right to renormalize
-  comb_multiplier mantissa_multiplier(
+  comb_mul mantissa_mul(
     .a(a_mantissa[23:0]),
     .b(b_mantissa[23:0]),
     ._signed(1'b0),
@@ -659,7 +659,7 @@ module fpu(
   assign result_mantissa_mul = product_renorm[47:24];
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
-
+  
   // DIVISION DATAPATH
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
