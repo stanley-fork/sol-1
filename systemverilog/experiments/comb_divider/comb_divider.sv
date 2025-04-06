@@ -20,7 +20,6 @@ module comb_divider(
     end
 
     partial = $signed(partial) - $signed(b);
-
     quotient[2] = ~partial[4];
     if(quotient[2])
       partial = {1'b0, partial[2:0], a[1]};
@@ -30,7 +29,6 @@ module comb_divider(
     end
 
     partial = $signed(partial) - $signed(b);
-
     quotient[1] = ~partial[4];
     if(quotient[1])
       partial = {1'b0, partial[2:0], a[0]};
@@ -40,13 +38,11 @@ module comb_divider(
     end
 
     partial = $signed(partial) - $signed(b);
-
     quotient[0] = ~partial[4];
-
-    if(!quotient[0]) begin
+    if(~quotient[0]) 
       partial = partial + b;
-    end
-    remainder   = partial[3:0];
+
+    remainder = partial[3:0];
   end
 
 endmodule

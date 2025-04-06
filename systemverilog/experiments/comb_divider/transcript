@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -voptargs="+acc=rtl" -work work comb_divider_tb 
-# Start time: 00:23:57 on Apr 06,2025
+# Start time: 01:43:22 on Apr 06,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
 # ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
@@ -32,5 +32,5 @@ run -all
 # ** Note: $stop    : comb_divider_tb.sv(19)
 #    Time: 10 us  Iteration: 0  Instance: /comb_divider_tb
 # Break in Module comb_divider_tb at comb_divider_tb.sv line 19
-# End time: 00:24:13 on Apr 06,2025, Elapsed time: 0:00:16
+# End time: 01:43:36 on Apr 06,2025, Elapsed time: 0:00:14
 # Errors: 0, Warnings: 1
