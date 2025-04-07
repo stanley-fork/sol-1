@@ -68,18 +68,16 @@
 */
 
 module fpu(
-  input  logic arst,
-  input  logic clk,
-  input  logic [31:0] a_operand,
-  input  logic [31:0] b_operand,
+  input  logic           arst,
+  input  logic           clk,
+  input  logic    [31:0] a_operand,
+  input  logic    [31:0] b_operand,
   input pa_fpu::e_fpu_op operation, // arithmetic operation to be performed
-  input  logic start,
-  output  logic [31:0] y,
-  output logic cmd_end, // end of command / irq
-  output logic busy     // active high when an operation is in progress
+  input  logic           start,
+  output logic    [31:0] ieee_packet_out,
+  output logic           cmd_end, // end of command / irq
+  output logic           busy     // active high when an operation is in progress
 );
-
-  logic [31:0] ieee_packet;
 
   logic [25:0] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
   logic [25:0] a_mantissa_shifted;
@@ -157,7 +155,8 @@ module fpu(
 
   // logarithm
   logic [30:0] log2;       
-  logic [7:0]  log2_exp;       
+  logic  [7:0] log2_exp;       
+  logic  [5:0] log2_zcount;
   logic        log2_sign;
 
   // status
@@ -183,14 +182,14 @@ module fpu(
   pa_fpu::e_sqrt_st  next_state_sqrt_fsm;
 
   // counts number of leading zeroes
-  function logic [4 : 0] lzc(
-    input logic [25:0] a
+  function logic [5 : 0] lzc(
+    input logic [31:0] a
   );
-    for(int unsigned i = 0; i < 26; i++) begin
-      if(a[25 - i]) return (5)'(i);
+    for(int unsigned i = 0; i < 32; i++) begin
+      if(a[31 - i]) return (6)'(i);
     end
 
-    return (5)'(26);    
+    return (6)'(32);    
   endfunction
 
   assign a_nan     = a_operand[30:23] == 8'hff && |a_operand[22:0];
@@ -206,8 +205,6 @@ module fpu(
   assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. 
                                               // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
                                               // however for clarity, the operands are explicitly extended to 9 bits.
-
-  assign y = ieee_packet;
 
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -251,23 +248,23 @@ module fpu(
   end
 
   always_ff @(posedge clk, posedge arst) begin
-    if(arst) ieee_packet <= '0;
+    if(arst) ieee_packet_out <= '0;
     else if(curr_state_arith_fsm == pa_fpu::arith_result_valid_st) begin
       case(operation)
         pa_fpu::op_add: 
-          ieee_packet <= {result_s_add_sub, result_e_add_sub, result_m_add_sub[22:0]};
+          ieee_packet_out <= {result_s_add_sub, result_e_add_sub, result_m_add_sub[22:0]};
         pa_fpu::op_sub: 
-          ieee_packet <= {result_s_add_sub, result_e_add_sub, result_m_add_sub[22:0]};
+          ieee_packet_out <= {result_s_add_sub, result_e_add_sub, result_m_add_sub[22:0]};
         pa_fpu::op_mul: 
-          ieee_packet <= {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]};
+          ieee_packet_out <= {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]};
         pa_fpu::op_square: 
-          ieee_packet <= {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]};
+          ieee_packet_out <= {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]};
         pa_fpu::op_div: 
-          ieee_packet <= {result_sign_div, result_exp_div, result_mantissa_div[22:0]};
+          ieee_packet_out <= {result_sign_div, result_exp_div, result_mantissa_div[22:0]};
         pa_fpu::op_sqrt: 
-          ieee_packet <= {1'b0, sqrt_xn_exp, sqrt_xn_mantissa[22:0]};
+          ieee_packet_out <= {1'b0, sqrt_xn_exp, sqrt_xn_mantissa[22:0]};
         pa_fpu::op_log2: 
-          ieee_packet <= {log2_sign, log2_exp, log2[29:7]};
+          ieee_packet_out <= {log2_sign, log2_exp, log2[29:7]};
       endcase
     end
   end
@@ -277,16 +274,16 @@ module fpu(
     // aliasing the floating point number as a new number such that (exponent-127) is the integral part, and mantissa is the fractional part
     // then adding a fractional error term gives the approximate log2 of the floating point.
     log2 = {a_operand[30:23] - 8'd127, a_operand[22:0]} + {8'b0, 23'b00001011000001000110011};
-    log2_exp = 7;
+    log2_exp = 8'd7;
     log2_sign = 1'b0;
     if(log2[30]) begin
       log2 = -log2;
       log2_sign = 1'b1;
     end
-    while(log2[30] == 1'b0) begin
-      if(log2 == '0) break;
-      log2_exp = log2_exp - 1'b1;
-      log2 = log2 << 1;
+    else begin
+      log2_zcount = lzc({1'b0, log2}) - 1;
+      log2_exp = 8'(9'(log2_exp) - 9'(log2_zcount));
+      log2 = log2 << log2_zcount;
     end
     log2_exp = log2_exp + 8'd127;
   end
@@ -298,11 +295,9 @@ module fpu(
   // else, exponents are the same
 
   assign a_mantissa_shifted = a_exp < b_exp ? a_mantissa >> -ab_exp_diff : a_mantissa;
-  assign b_mantissa_shifted = a_exp < b_exp ? b_mantissa : 
-                              b_exp < a_exp ? b_mantissa >>  ab_exp_diff : b_mantissa;
+  assign b_mantissa_shifted = b_exp < a_exp ? b_mantissa >>  ab_exp_diff : b_mantissa;
   assign a_exp_adjusted     = a_exp < b_exp ? b_exp : a_exp;
-  assign b_exp_adjusted     = a_exp < b_exp ? b_exp : 
-                              b_exp < a_exp ? a_exp : b_exp;
+  assign b_exp_adjusted     = b_exp < a_exp ? a_exp : b_exp;
 
   assign a_mantissa_adjusted = a_sign ? ~a_mantissa_shifted + 1'b1 : a_mantissa_shifted;
   assign b_mantissa_adjusted = b_sign ? ~b_mantissa_shifted + 1'b1 : b_mantissa_shifted;
@@ -312,7 +307,7 @@ module fpu(
   // that always comes out of bit 23, since bit 23 is always 1 in both operands. 
   // addition/subtraction datapath
   always_comb begin
-    logic [4:0] zcount;
+    logic [5:0] zcount;
     if(operation == pa_fpu::op_add) 
       result_m_add_sub = a_mantissa_adjusted + b_mantissa_adjusted;
     else 
@@ -334,7 +329,7 @@ module fpu(
     end
     // normalize mantissa by shifting left according to number of leading zeroes
     else begin
-      zcount = lzc(result_m_add_sub);
+      zcount = lzc({6'b000000, result_m_add_sub}) - 6;
       result_m_add_sub = result_m_add_sub << zcount;
       result_e_add_sub = result_e_add_sub - 1'b1;
     end
@@ -567,7 +562,7 @@ module fpu(
   );
 
   assign exp_div_prenorm            = (a_exp - b_exp) + 8'd127;
-  assign zcount_div                 = lzc({2'b00, div_quotient_prenorm_out[23:0]}) - 2;
+  assign zcount_div                 = lzc({8'b00000000, div_quotient_prenorm_out[23:0]}) - 4'd8;
   assign result_sign_div            = a_sign ^ b_sign;
   assign quotient_mantissa_div_norm = div_quotient_prenorm_out << zcount_div;
   assign exp_div_norm               = exp_div_prenorm - zcount_div;
