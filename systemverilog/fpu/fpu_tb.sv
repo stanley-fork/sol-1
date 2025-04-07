@@ -4,17 +4,13 @@ module fpu_tb;
 
   logic arst;
   logic clk;
-  logic [7:0] databus_in;
-  logic [7:0] databus_out;
-  logic [3:0] addr; 
-  logic cs;
-  logic rd;
-  logic wr;
-  logic end_ack;      // acknowledge end
+  logic [31:0] a_operand;
+  logic [31:0] b_operand;
+  logic [31:0] y;
+  logic start;
+  pa_fpu::e_fpu_op operation; // arithmetic operation to be performed
   logic cmd_end;      // end of command / irq
   logic busy;   // active high when an operation is in progress
-
-  logic [31:0] result;
 
   typedef struct{
     logic [31:0] a;
@@ -43,24 +39,18 @@ module fpu_tb;
 
   initial begin
     arst = 1;
-    end_ack = 1'b0;
-    databus_in = '0;
-    addr = '0;
-    cs = 1'b1;
-    rd = 1'b1;
-    wr = 1'b1;
-    end_ack = 1'b0;
-    #500ns;
+    start = 1'b0;
+    #1us;
     arst = 0;
 
-    write_a_operand(computation_list[8].a); 
-    write_b_operand(computation_list[8].b); 
+    a_operand = computation_list[8].a; 
+    b_operand = computation_list[8].b; 
+    operation = pa_fpu::op_div;
+    start = 1'b1;
 
-    ta_set_operation(pa_fpu::op_div);
-    ta_start_operation();
-    ta_read_result(result);
-
-    $display("Result: 0x%x, %.6f", result, $bitstoshortreal(result));
+    @(cmd_end) start = 1'b0;
+    #1us;
+    $display("Result: 0x%x, %.6f", y, $bitstoshortreal(y));
 
     $stop;
   end
@@ -68,102 +58,13 @@ module fpu_tb;
   fpu fpu_top(
     .arst        (arst),
     .clk         (clk),
-    .databus_in  (databus_in),
-    .databus_out (databus_out),
-    .addr        (addr),
-    .cs          (cs),
-    .rd          (rd),
-    .wr          (wr),
-    .end_ack     (end_ack),
+    .start(start),
+    .a_operand(a_operand),
+    .b_operand(b_operand),
+    .y(y),
+    .operation(operation),
     .cmd_end     (cmd_end),
     .busy        (busy)
   );
-
-  task ta_start_operation;
-    @(posedge clk);
-    cs = 1'b0;
-    addr = 4'h9;
-    @(negedge clk);
-    wr = 1'b0;
-    @(negedge clk);
-    wr = 1'b1;
-    @(posedge clk);
-    cs = 1'b1;
-  endtask
-
-  task ta_set_operation(pa_fpu::e_fpu_op operation);
-    // write operation
-    @(posedge clk);
-    cs = 1'b0;
-    databus_in = {4'b0, operation};
-    addr = 4'h8;
-    @(negedge clk);
-    wr = 1'b0;
-    @(negedge clk);
-    wr = 1'b1;
-    @(posedge clk);
-    cs = 1'b1;
-  endtask
-
-  task ta_read_result(output logic [31:0] result);
-    // Wait for the command to execute and end before reading result
-    @(posedge cmd_end);
-    // Read result
-    @(posedge clk);
-    cs = 1'b0;
-    @(negedge clk);
-    rd = 1'b0;
-
-    for(bit [3:0] i = 0; i < 4; i++) begin
-      addr = 4'd9 + i;
-      @(negedge clk);
-      result[i*8+:8] = databus_out;
-      @(negedge clk);
-    end
-
-    rd = 1'b1;
-    @(negedge clk);
-    cs = 1'b1;
-
-    // send acknowledge signal
-    end_ack = 1'b1;
-    @(negedge cmd_end);
-    @(negedge clk);
-    end_ack = 1'b0;
-  endtask
-
-  task write_a_operand(
-    input logic [31:0] a_op
-  );
-    @(posedge clk);
-    cs = 1'b0;
-    for(bit [3:0] i = 0; i < 4; i++) begin
-      databus_in = a_op[i*8+:8];
-      addr = i;
-      @(negedge clk);
-      wr = 1'b0;
-      @(negedge clk);
-      wr = 1'b1;
-      @(negedge clk);
-    end
-    cs = 1'b1;
-  endtask
-
-  task write_b_operand(
-    input logic [31:0] b_op
-  );
-    @(posedge clk);
-    cs = 1'b0;
-    for(bit [3:0] i = 0; i < 4; i++) begin
-      databus_in = b_op[i*8+:8];
-      addr = 4'd4 + i;
-      @(negedge clk);
-      wr = 1'b0;
-      @(negedge clk);
-      wr = 1'b1;
-      @(negedge clk);
-    end
-    cs = 1'b1;
-  endtask
 
 endmodule

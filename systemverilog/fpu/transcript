@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 21:28:50 on Apr 07,2025
+# Start time: 23:33:50 on Apr 07,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
@@ -27,6 +27,20 @@
 # Loading work.comb_mul(fast)
 # Loading work.comb_div24_frac(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/databus_in'.
+# Executing ONERROR command at macro ./wave.do line 5
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/databus_out'.
+# Executing ONERROR command at macro ./wave.do line 6
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/addr'.
+# Executing ONERROR command at macro ./wave.do line 7
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/cs'.
+# Executing ONERROR command at macro ./wave.do line 8
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/rd'.
+# Executing ONERROR command at macro ./wave.do line 9
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/wr'.
+# Executing ONERROR command at macro ./wave.do line 10
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/end_ack'.
+# Executing ONERROR command at macro ./wave.do line 11
 # ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/product_multiplier'.
 # Executing ONERROR command at macro ./wave.do line 31
 # ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/product_add'.
@@ -47,6 +61,8 @@
 # Executing ONERROR command at macro ./wave.do line 43
 # ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/operation_done_div_fsm'.
 # Executing ONERROR command at macro ./wave.do line 44
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/start_operation'.
+# Executing ONERROR command at macro ./wave.do line 49
 # ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/operation_wrt'.
 # Executing ONERROR command at macro ./wave.do line 50
 # ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/new_operation'.
@@ -63,8 +79,8 @@
 # Executing ONERROR command at macro ./wave.do line 64
 run -all
 # Result: 0x3f3c5ab2, 0.735759
-# ** Note: $stop    : fpu_tb.sv(65)
-#    Time: 24 us  Iteration: 1  Instance: /fpu_tb
-# Break in Module fpu_tb at fpu_tb.sv line 65
-# End time: 21:29:11 on Apr 07,2025, Elapsed time: 0:00:21
+# ** Note: $stop    : fpu_tb.sv(55)
+#    Time: 5250 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at fpu_tb.sv line 55
+# End time: 23:34:15 on Apr 07,2025, Elapsed time: 0:00:25
 # Errors: 0, Warnings: 1

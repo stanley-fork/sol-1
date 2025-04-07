@@ -70,20 +70,17 @@
 module fpu(
   input  logic arst,
   input  logic clk,
-  input  logic [7:0] databus_in,
-  output logic [7:0] databus_out,
-  input  logic [3:0] addr, 
-  input  logic cs,
-  input  logic rd,
-  input  logic wr,
-  input  logic end_ack, // acknowledge end
+  input  logic [31:0] a_operand,
+  input  logic [31:0] b_operand,
+  input pa_fpu::e_fpu_op operation, // arithmetic operation to be performed
+  input  logic start,
+  output  logic [31:0] y,
   output logic cmd_end, // end of command / irq
   output logic busy     // active high when an operation is in progress
 );
 
   logic [31:0] ieee_packet;
 
-  logic [31:0] a_operand;
   logic [25:0] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
   logic [25:0] a_mantissa_shifted;
   logic [25:0] a_mantissa_adjusted;
@@ -91,7 +88,6 @@ module fpu(
   logic [ 7:0] a_exp_adjusted;
   logic        a_sign;
 
-  logic [31:0] b_operand;
   logic [25:0] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
   logic [25:0] b_mantissa_shifted;
   logic [25:0] b_mantissa_adjusted;
@@ -156,9 +152,6 @@ module fpu(
   // float2int
   logic [31:0] result_float2int;
 
-  pa_fpu::e_fpu_op operation; // arithmetic operation to be performed
-  logic start_operation;
-
   logic start_operation_ar_fsm;  // ...
   logic operation_done_ar_fsm;   // for handshake between main fsm and arithmetic fsm
 
@@ -213,6 +206,8 @@ module fpu(
   assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. 
                                               // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
                                               // however for clarity, the operands are explicitly extended to 9 bits.
+
+  assign y = ieee_packet;
 
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -275,67 +270,6 @@ module fpu(
           ieee_packet <= {log2_sign, log2_exp, log2[29:7]};
       endcase
     end
-  end
-
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      a_operand  <= {1'b0, 8'd127, 23'h0};
-      b_operand  <= {1'b0, 8'd127, 23'h0};
-      operation  <= pa_fpu::op_add;  
-      start_operation <= 1'b0;
-    end
-    else begin
-      if(cs == 1'b0 && wr == 1'b0) begin
-        case(addr)
-          4'h0: a_operand[7:0]   <= databus_in;
-          4'h1: a_operand[15:8]  <= databus_in;
-          4'h2: a_operand[23:16] <= databus_in;
-          4'h3: a_operand[31:24] <= databus_in;
-
-          4'h4: b_operand[7:0]   <= databus_in;
-          4'h5: b_operand[15:8]  <= databus_in;
-          4'h6: b_operand[23:16] <= databus_in;
-          4'h7: b_operand[31:24] <= databus_in;
-
-          4'h8: operation  <= pa_fpu::e_fpu_op'(databus_in[3:0]);
-          4'h9: start_operation <= 1'b1;
-        endcase      
-      end
-
-      if(next_state_main_fsm == pa_fpu::main_wait_st) 
-        start_operation <= 1'b0;
-
-      // set a_operand to latest result
-      if(next_state_main_fsm == pa_fpu::main_wait_ack_st) 
-        a_operand <= ieee_packet;
-    end
-  end
-
-  // output bus assignments
-  always_comb begin
-    if(cs == 1'b0 && rd == 1'b0) begin
-      case(addr)
-        4'h0: databus_out = a_operand[7:0];
-        4'h1: databus_out = a_operand[15:8];
-        4'h2: databus_out = a_operand[23:16];
-        4'h3: databus_out = a_operand[31:24];
-
-        4'h4: databus_out = b_operand[7:0];
-        4'h5: databus_out = b_operand[15:8];
-        4'h6: databus_out = b_operand[23:16];
-        4'h7: databus_out = b_operand[31:24];
-
-        4'h8: databus_out = operation;
-
-        4'h9: databus_out = ieee_packet[7:0];
-        4'hA: databus_out = ieee_packet[15:8];
-        4'hB: databus_out = ieee_packet[23:16];
-        4'hC: databus_out = ieee_packet[31:24];
-
-        default: databus_out = '0;
-      endcase      
-    end
-    else databus_out = 'z;
   end
 
   // logarithm to base 2
@@ -413,7 +347,7 @@ module fpu(
 
     case(curr_state_main_fsm)
       pa_fpu::main_idle_st: 
-        if(start_operation) next_state_main_fsm = pa_fpu::main_wait_st;
+        if(start) next_state_main_fsm = pa_fpu::main_wait_st;
       
       pa_fpu::main_wait_st: 
         if(operation_done_ar_fsm == 1'b1) next_state_main_fsm = pa_fpu::main_finish_st;
@@ -422,7 +356,7 @@ module fpu(
         if(operation_done_ar_fsm == 1'b0) next_state_main_fsm = pa_fpu::main_wait_ack_st;
 
       pa_fpu::main_wait_ack_st:
-        if(end_ack == 1'b1) next_state_main_fsm = pa_fpu::main_idle_st;
+        if(start == 1'b0) next_state_main_fsm = pa_fpu::main_idle_st;
 
       default:
         next_state_main_fsm = pa_fpu::main_idle_st;
