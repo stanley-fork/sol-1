@@ -25,14 +25,14 @@ module comb_div24_frac(
         partial = {1'b0, partial[23:0], a[i - 1]}; // form a new partial by using ever decreasing indexed bits of 'a'. after bit0, use 0 instead
       end
       else begin
-        partial = partial + b;
+        partial = partial + 26'(b);
         partial = {1'b0, partial[23:0], a[i - 1]};  // form a new partial by using ever decreasing indexed bits of 'a'. after bit0, use 0 instead
       end
     end
     partial = $signed(partial) - $signed($bits(partial)'(b));
     quotient[0] = ~partial[25];
     if(~quotient[0]) 
-      partial = partial + b;
+      partial = partial + 26'(b);
   end
 
 endmodule

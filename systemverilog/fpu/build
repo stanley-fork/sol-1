@@ -10,7 +10,7 @@ rm -rf $LIBRARY_NAME
 vlib $LIBRARY_NAME   # Create the work library
 
 # Compile Verilog/SystemVerilog files
-vlog -work $LIBRARY_NAME +acc -f $FILELIST
+vlog -lint -work $LIBRARY_NAME +acc -f $FILELIST
 if [[ $? -ne 0 ]]; then
     echo "Compilation failed!"
     exit 1

@@ -98,7 +98,7 @@ module fpu(
   logic [ 7:0] b_exp;
   logic [ 7:0] b_exp_adjusted;
   logic        b_sign;
-  logic [ 7:0] ab_exp_diff;
+  logic signed [8:0] ab_exp_diff;
 
   // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 which always carries
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
@@ -121,15 +121,14 @@ module fpu(
   logic [ 7:0] mul_exp_renorm;       // exponent after renormalization
 
   // division datapath 
-  logic [7:0] exp_div_prenorm;
-  logic [7:0] exp_div_norm;
+  logic [7:0]  exp_div_prenorm;
+  logic [7:0]  exp_div_norm;
   logic [23:0] div_quotient_prenorm_out;
   logic [23:0] quotient_mantissa_div_norm;
-  logic [4:0] zcount_div;
+  logic [4:0]  zcount_div;
   logic [23:0] result_mantissa_div;
   logic [ 7:0] result_exp_div;
   logic        result_sign_div;
-  logic [48:0] remainder_dividend; // 24 bits for quotient, 25 bits for the subtraction register (one more bit needed at MSB position for when dividend < divisor)
                                    // in such a case, the dividend is shifted left until it becomes larger than divisor and subtraction can happen (for fractional divisions)
 
   // sqrt datapath
@@ -160,17 +159,10 @@ module fpu(
   pa_fpu::e_fpu_op operation; // arithmetic operation to be performed
   logic start_operation;
 
-  // other datapath control signals
-  logic operation_wrt; // when needing to internally change the operator
-  pa_fpu::e_fpu_op new_operation; // arithmetic operation to be performed
-
   logic start_operation_ar_fsm;  // ...
   logic operation_done_ar_fsm;   // for handshake between main fsm and arithmetic fsm
 
   // logarithm
-  logic [30:0] log2_a_exp; 
-  logic [30:0] log2_m;     
-  logic [30:0] log2_sigma;
   logic [30:0] log2;       
   logic [7:0]  log2_exp;       
   logic        log2_sign;
@@ -179,14 +171,14 @@ module fpu(
   logic a_overflow;
   logic a_underflow;
   logic a_nan;
-  logic a_pos_infinity;
-  logic a_neg_infinity;
+  logic a_pos_inf;
+  logic a_neg_inf;
   logic a_zero;
   logic b_overflow;
   logic b_underflow;
   logic b_nan;
-  logic b_pos_infinity;
-  logic b_neg_infinity;
+  logic b_pos_inf;
+  logic b_neg_inf;
   logic b_zero;
 
   // fsm states
@@ -218,7 +210,9 @@ module fpu(
   assign b_pos_inf = b_operand[31]    == 1'b0  &&  b_operand[30:23] == 8'hff && b_operand[22:0] == 23'h0;
   assign b_neg_inf = b_operand[31]    == 1'b1  &&  b_operand[30:23] == 8'hff && b_operand[22:0] == 23'h0;
 
-  assign ab_exp_diff = a_exp - b_exp;
+  assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. 
+                                              // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
+                                              // however for clarity, the operands are explicitly extended to 9 bits.
 
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -314,9 +308,6 @@ module fpu(
       // set a_operand to latest result
       if(next_state_main_fsm == pa_fpu::main_wait_ack_st) 
         a_operand <= ieee_packet;
-
-      if(operation_wrt == 1'b1) 
-        operation <= new_operation;
     end
   end
 
@@ -351,8 +342,8 @@ module fpu(
   always_comb begin
     // aliasing the floating point number as a new number such that (exponent-127) is the integral part, and mantissa is the fractional part
     // then adding a fractional error term gives the approximate log2 of the floating point.
-    log2      = {a_operand[30:23] - 8'd127, a_operand[22:0]} + {8'b0, 23'b00001011000001000110011};
-    log2_exp  = 7;
+    log2 = {a_operand[30:23] - 8'd127, a_operand[22:0]} + {8'b0, 23'b00001011000001000110011};
+    log2_exp = 7;
     log2_sign = 1'b0;
     if(log2[30]) begin
       log2 = -log2;
@@ -411,7 +402,7 @@ module fpu(
     else begin
       zcount = lzc(result_m_add_sub);
       result_m_add_sub = result_m_add_sub << zcount;
-      result_m_add_sub = result_e_add_sub - 1'b1;
+      result_e_add_sub = result_e_add_sub - 1'b1;
     end
   end
 
@@ -613,7 +604,7 @@ module fpu(
   assign mul_exp = (a_exp - 8'd127) + b_exp;
   assign result_sign_mul = a_sign ^ b_sign;
   // normalize floating point result
-  assign mul_exp_norm = product_pre_norm[47] ? mul_exp + 1'b1 : mul_exp;                   // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp + 1'b1 : mul_exp;                   // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
   assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
                                                                                            // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
                                                                                            // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
@@ -640,13 +631,14 @@ module fpu(
     .b(b_mantissa[23:0]),
     .quotient(div_quotient_prenorm_out[23:0])
   );
-  assign exp_div_prenorm = (a_exp - b_exp) + 8'd127;
-  assign zcount_div = lzc({2'b00, div_quotient_prenorm_out[23:0]}) - 2;
-  assign result_sign_div = a_sign ^ b_sign;
+
+  assign exp_div_prenorm            = (a_exp - b_exp) + 8'd127;
+  assign zcount_div                 = lzc({2'b00, div_quotient_prenorm_out[23:0]}) - 2;
+  assign result_sign_div            = a_sign ^ b_sign;
   assign quotient_mantissa_div_norm = div_quotient_prenorm_out << zcount_div;
-  assign exp_div_norm = exp_div_prenorm - zcount_div;
-  assign result_exp_div = exp_div_norm;
-  assign result_mantissa_div = quotient_mantissa_div_norm;
+  assign exp_div_norm               = exp_div_prenorm - zcount_div;
+  assign result_exp_div             = exp_div_norm;
+  assign result_mantissa_div        = quotient_mantissa_div_norm;
 
   // SQRT DATAPATH
   always_ff @(posedge clk, posedge arst) begin

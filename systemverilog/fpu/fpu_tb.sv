@@ -61,7 +61,6 @@ module fpu_tb;
     ta_read_result(result);
 
     $display("Result: 0x%x, %.6f", result, $bitstoshortreal(result));
-    $display("$test: %b", 4'b1111 - 4'b1000);
 
     $stop;
   end
@@ -96,7 +95,7 @@ module fpu_tb;
     // write operation
     @(posedge clk);
     cs = 1'b0;
-    databus_in = operation;
+    databus_in = {4'b0, operation};
     addr = 4'h8;
     @(negedge clk);
     wr = 1'b0;
