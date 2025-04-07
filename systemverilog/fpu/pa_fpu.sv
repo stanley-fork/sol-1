@@ -22,7 +22,7 @@ package pa_fpu;
     main_idle_st,
     main_wait_st,
     main_finish_st,
-    main_wait_ack_st
+    main_wait_start_low_st
   } e_main_st;
 
   typedef enum logic[3:0]{

@@ -353,9 +353,9 @@ module fpu(
         if(operation_done_ar_fsm == 1'b1) next_state_main_fsm = pa_fpu::main_finish_st;
 
       pa_fpu::main_finish_st:
-        if(operation_done_ar_fsm == 1'b0) next_state_main_fsm = pa_fpu::main_wait_ack_st;
+        if(operation_done_ar_fsm == 1'b0) next_state_main_fsm = pa_fpu::main_wait_start_low_st;
 
-      pa_fpu::main_wait_ack_st:
+      pa_fpu::main_wait_start_low_st:
         if(start == 1'b0) next_state_main_fsm = pa_fpu::main_idle_st;
 
       default:
@@ -388,7 +388,7 @@ module fpu(
           cmd_end                <= 1'b0;             
           busy                   <= 1'b1;         
         end
-        pa_fpu::main_wait_ack_st: begin
+        pa_fpu::main_wait_start_low_st: begin
           start_operation_ar_fsm <= 1'b0;
           cmd_end                <= 1'b1;             
           busy                   <= 1'b1;         
