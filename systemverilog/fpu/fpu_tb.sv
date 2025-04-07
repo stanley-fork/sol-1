@@ -61,6 +61,7 @@ module fpu_tb;
     ta_read_result(result);
 
     $display("Result: 0x%x, %.6f", result, $bitstoshortreal(result));
+    $display("$test: %b", 4'b1111 - 4'b1000);
 
     $stop;
   end
