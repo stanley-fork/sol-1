@@ -269,25 +269,6 @@ module fpu(
     end
   end
 
-  // logarithm to base 2
-  always_comb begin
-    // aliasing the floating point number as a new number such that (exponent-127) is the integral part, and mantissa is the fractional part
-    // then adding a fractional error term gives the approximate log2 of the floating point.
-    log2 = {a_operand[30:23] - 8'd127, a_operand[22:0]} + {8'b0, 23'b00001011000001000110011};
-    log2_exp = 8'd7;
-    log2_sign = 1'b0;
-    if(log2[30]) begin
-      log2 = -log2;
-      log2_sign = 1'b1;
-    end
-    else begin
-      log2_zcount = lzc({1'b0, log2}) - 1;
-      log2_exp = 8'(9'(log2_exp) - 9'(log2_zcount));
-      log2 = log2 << log2_zcount;
-    end
-    log2_exp = log2_exp + 8'd127;
-  end
-
   // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
 
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
@@ -334,6 +315,164 @@ module fpu(
       result_e_add_sub = result_e_add_sub - 1'b1;
     end
   end
+
+  // MULTIPLICATION DATAPATH
+  // for multiplication an example follows:
+  //     1.00   minimum possible multiplication
+  //     1.00
+  //  01.0000   
+  //   1.00     normalized and truncated
+
+  //     1.11   maximum possible multiplication
+  //     1.11
+  //  11.0001
+  //   1.10     normalized and truncated
+
+  // rounding example with carry after rounding is performed: 
+  //  1.11101
+  //  1.11|101  bit after machine epsilon is 1, hence round up
+  // 10.00      rounding up causes a carry, hence it needs another normalization
+  //  1.00 * 2  hence exponent increases by 1
+
+  // rounding example:
+  //      1.111
+  //      1.000
+  //   01111000 multiplication result
+  //   11110000 msb is 0 hence shift left
+  //  100000000 rounding: bits after epsilon are all zero and adding epsilon to lsb results in even lsb, hence add epsilon, which creates a carry out
+  //   10000000 finally, shift right to renormalize
+  comb_mul mantissa_mul(
+    .a(a_mantissa[23:0]),
+    .b(b_mantissa[23:0]),
+    ._signed(1'b0),
+    .result(product_pre_norm)
+  );
+  assign mul_exp = (a_exp - 8'd127) + b_exp;
+  assign result_sign_mul = a_sign ^ b_sign;
+  // normalize floating point result
+  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp + 1'b1 : mul_exp;                   // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+  assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
+                                                                                           // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
+                                                                                           // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
+  // rounding: round to nearest ties to even
+  // if first bit after epsilon is 1, then round up (and account for possible carry out)
+  // if all bits after epsilon are 0, we have a tie
+  // if rounding up produces an even result, then round up (and account for possible carry out)
+  // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
+  assign product_rounded[48:24] = product_norm[23] || 
+                                 (product_norm[23:0] == '0 && ~{product_norm[47:24] + 1'b1}[0]) || 
+                                (~product_norm[23] && |product_norm[22:0]) ? product_norm[47:24] + 1'b1 : product_norm[47:24];
+  // now check whether there was a carry out after rounding up
+  // if there was a carry, then re-normalize
+  assign product_renorm = product_rounded[48] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
+  assign mul_exp_renorm = product_rounded[48] ? mul_exp_norm + 1'b1  : mul_exp_norm;    // and increase exponent
+  assign result_exp_mul = mul_exp_renorm;
+  assign result_mantissa_mul = product_renorm[47:24];
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+  // DIVISION DATAPATH
+  comb_div24_frac div24_frac(
+    .a(a_mantissa[23:0]),
+    .b(b_mantissa[23:0]),
+    .quotient(div_quotient_prenorm_out[23:0])
+  );
+
+  assign exp_div_prenorm            = (a_exp - b_exp) + 8'd127;
+  assign zcount_div                 = lzc({8'b00000000, div_quotient_prenorm_out[23:0]}) - 4'd8;
+  assign result_sign_div            = a_sign ^ b_sign;
+  assign quotient_mantissa_div_norm = div_quotient_prenorm_out << zcount_div;
+  assign exp_div_norm               = exp_div_prenorm - zcount_div;
+  assign result_exp_div             = exp_div_norm;
+  assign result_mantissa_div        = quotient_mantissa_div_norm;
+
+  // SQRT DATAPATH
+  always_ff @(posedge clk, posedge arst) begin
+    if(arst) begin
+      sqrt_xn_mantissa <= '0;
+      sqrt_xn_exp      <= '0;
+      sqrt_xn_sign     <= '0;
+      sqrt_A_mantissa  <= '0;
+      sqrt_A_exp       <= '0;
+      sqrt_A_sign      <= '0;
+      sqrt_counter     <= '0;
+    end
+    else begin
+      if(next_state_sqrt_fsm == pa_fpu::sqrt_start_st) begin
+        sqrt_counter <= 0;
+      end
+      else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_st) begin
+        sqrt_counter <= sqrt_counter + 4'd1;
+      end
+      if(sqrt_xn_A_wrt) begin
+        sqrt_xn_mantissa <= sqrt_A_mantissa;
+        sqrt_xn_exp      <= sqrt_A_exp;
+        sqrt_xn_sign     <= 1'b0;
+      end
+      else if(sqrt_xn_a_approx_wrt) begin
+        sqrt_xn_mantissa <= a_mantissa; 
+        //sqrt_xn_exp      <= a_exp - 8'd1;
+        // 9'b110000001 = -127 with 1 bit extended for signed arithmetic
+        //sqrt_xn_exp      <= (({1'b0, a_exp} + 9'b110000001) >> 1) + 9'd127 ; // divide a_exp by 2. hence initial approx to A = m*2^E  is  m*e^(E/2) which is very close to its square root.
+        // a_exp is biased. shifting it by 1 divides the bias 127 by 2 as well, hence add back 127/2 = 63
+        sqrt_xn_exp      <= (a_exp >> 1) + 9'd63 ; // divide a_exp by 2. hence initial approx to A = m*2^E  is  m*e^(E/2) which is very close to its square root.
+        sqrt_xn_sign     <= a_sign;
+      end
+      else if(sqrt_xn_a_wrt) begin
+        sqrt_xn_mantissa <= a_mantissa;
+        sqrt_xn_exp      <= a_exp;
+        sqrt_xn_sign     <= a_sign;
+      end
+      else if(sqrt_xn_add_wrt) begin
+        sqrt_xn_mantissa <= result_m_add_sub;
+        sqrt_xn_exp      <= result_e_add_sub - 8'd1;
+        sqrt_xn_sign     <= result_s_add_sub;
+      end
+      if(sqrt_A_a_wrt) begin
+        sqrt_A_mantissa <= a_mantissa;
+        sqrt_A_exp      <= a_exp;
+        sqrt_A_sign     <= a_sign;
+      end
+    end
+  end
+
+  // logarithm to base 2
+  always_comb begin
+    // aliasing the floating point number as a new number such that (exponent-127) is the integral part, and mantissa is the fractional part
+    // then adding a fractional error term gives the approximate log2 of the floating point.
+    log2 = {a_operand[30:23] - 8'd127, a_operand[22:0]} + {8'b0, 23'b00001011000001000110011};
+    log2_exp = 8'd7;
+    log2_sign = 1'b0;
+    if(log2[30]) begin
+      log2 = -log2;
+      log2_sign = 1'b1;
+    end
+    else begin
+      log2_zcount = lzc({1'b0, log2}) - 1;
+      log2_exp = 8'(9'(log2_exp) - 9'(log2_zcount));
+      log2 = log2 << log2_zcount;
+    end
+    log2_exp = log2_exp + 8'd127;
+  end
+
+  // todo
+  // float2int
+  // if exponent < 0, return 0
+  // else truncate the number 1.mantissa after #exponent places and that is the integer
+  // example: 1.1101010 * 2^3 = 1110. 
+  always_comb begin
+    logic [7:0] shift;
+    if(a_exp - 8'd127 < 0) result_float2int = 32'b0;
+    else begin
+      shift = a_exp - 8'd127;
+      result_float2int = {1'b1, a_mantissa};
+    end
+  end
+
+  // sin x
+  // x - x^3/6 + x^5/120 - x^7/5040
+  // 
+  // 
 
   // MAIN FSM
   // next state assignments
@@ -499,126 +638,6 @@ module fpu(
     end
   end
 
-  // MULTIPLICATION DATAPATH
-  // for multiplication an example follows:
-  //     1.00   minimum possible multiplication
-  //     1.00
-  //  01.0000   
-  //   1.00     normalized and truncated
-
-  //     1.11   maximum possible multiplication
-  //     1.11
-  //  11.0001
-  //   1.10     normalized and truncated
-
-  // rounding example with carry after rounding is performed: 
-  //  1.11101
-  //  1.11|101  bit after machine epsilon is 1, hence round up
-  // 10.00      rounding up causes a carry, hence it needs another normalization
-  //  1.00 * 2  hence exponent increases by 1
-
-  // rounding example:
-  //      1.111
-  //      1.000
-  //   01111000 multiplication result
-  //   11110000 msb is 0 hence shift left
-  //  100000000 rounding: bits after epsilon are all zero and adding epsilon to lsb results in even lsb, hence add epsilon, which creates a carry out
-  //   10000000 finally, shift right to renormalize
-  comb_mul mantissa_mul(
-    .a(a_mantissa[23:0]),
-    .b(b_mantissa[23:0]),
-    ._signed(1'b0),
-    .result(product_pre_norm)
-  );
-  assign mul_exp = (a_exp - 8'd127) + b_exp;
-  assign result_sign_mul = a_sign ^ b_sign;
-  // normalize floating point result
-  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp + 1'b1 : mul_exp;                   // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
-  assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-                                                                                           // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
-                                                                                           // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
-  // rounding: round to nearest ties to even
-  // if first bit after epsilon is 1, then round up (and account for possible carry out)
-  // if all bits after epsilon are 0, we have a tie
-  // if rounding up produces an even result, then round up (and account for possible carry out)
-  // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
-  assign product_rounded[48:24] = product_norm[23] || 
-                                 (product_norm[23:0] == '0 && ~{product_norm[47:24] + 1'b1}[0]) || 
-                                (~product_norm[23] && |product_norm[22:0]) ? product_norm[47:24] + 1'b1 : product_norm[47:24];
-  // now check whether there was a carry out after rounding up
-  // if there was a carry, then re-normalize
-  assign product_renorm = product_rounded[48] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
-  assign mul_exp_renorm = product_rounded[48] ? mul_exp_norm + 1'b1  : mul_exp_norm;    // and increase exponent
-  assign result_exp_mul = mul_exp_renorm;
-  assign result_mantissa_mul = product_renorm[47:24];
-
-  // ---------------------------------------------------------------------------------------------------------------------------------------------------
-
-  // DIVISION DATAPATH
-  comb_div24_frac div24_frac(
-    .a(a_mantissa[23:0]),
-    .b(b_mantissa[23:0]),
-    .quotient(div_quotient_prenorm_out[23:0])
-  );
-
-  assign exp_div_prenorm            = (a_exp - b_exp) + 8'd127;
-  assign zcount_div                 = lzc({8'b00000000, div_quotient_prenorm_out[23:0]}) - 4'd8;
-  assign result_sign_div            = a_sign ^ b_sign;
-  assign quotient_mantissa_div_norm = div_quotient_prenorm_out << zcount_div;
-  assign exp_div_norm               = exp_div_prenorm - zcount_div;
-  assign result_exp_div             = exp_div_norm;
-  assign result_mantissa_div        = quotient_mantissa_div_norm;
-
-  // SQRT DATAPATH
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      sqrt_xn_mantissa <= '0;
-      sqrt_xn_exp      <= '0;
-      sqrt_xn_sign     <= '0;
-      sqrt_A_mantissa  <= '0;
-      sqrt_A_exp       <= '0;
-      sqrt_A_sign      <= '0;
-      sqrt_counter     <= '0;
-    end
-    else begin
-      if(next_state_sqrt_fsm == pa_fpu::sqrt_start_st) begin
-        sqrt_counter <= 0;
-      end
-      else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_st) begin
-        sqrt_counter <= sqrt_counter + 4'd1;
-      end
-      if(sqrt_xn_A_wrt) begin
-        sqrt_xn_mantissa <= sqrt_A_mantissa;
-        sqrt_xn_exp      <= sqrt_A_exp;
-        sqrt_xn_sign     <= 1'b0;
-      end
-      else if(sqrt_xn_a_approx_wrt) begin
-        sqrt_xn_mantissa <= a_mantissa; 
-        //sqrt_xn_exp      <= a_exp - 8'd1;
-        // 9'b110000001 = -127 with 1 bit extended for signed arithmetic
-        //sqrt_xn_exp      <= (({1'b0, a_exp} + 9'b110000001) >> 1) + 9'd127 ; // divide a_exp by 2. hence initial approx to A = m*2^E  is  m*e^(E/2) which is very close to its square root.
-        // a_exp is biased. shifting it by 1 divides the bias 127 by 2 as well, hence add back 127/2 = 63
-        sqrt_xn_exp      <= (a_exp >> 1) + 9'd63 ; // divide a_exp by 2. hence initial approx to A = m*2^E  is  m*e^(E/2) which is very close to its square root.
-        sqrt_xn_sign     <= a_sign;
-      end
-      else if(sqrt_xn_a_wrt) begin
-        sqrt_xn_mantissa <= a_mantissa;
-        sqrt_xn_exp      <= a_exp;
-        sqrt_xn_sign     <= a_sign;
-      end
-      else if(sqrt_xn_add_wrt) begin
-        sqrt_xn_mantissa <= result_m_add_sub;
-        sqrt_xn_exp      <= result_e_add_sub - 8'd1;
-        sqrt_xn_sign     <= result_s_add_sub;
-      end
-      if(sqrt_A_a_wrt) begin
-        sqrt_A_mantissa <= a_mantissa;
-        sqrt_A_exp      <= a_exp;
-        sqrt_A_sign     <= a_sign;
-      end
-    end
-  end
-
   // SQRT FSM
   // next state assignments
   // xn = 0.5(xn + A/xn)
@@ -760,26 +779,6 @@ module fpu(
       endcase  
     end
   end
-
-  // todo
-  // float2int
-  // if exponent < 0, return 0
-  // else truncate the number 1.mantissa after #exponent places and that is the integer
-  // example: 1.1101010 * 2^3 = 1110. 
-  always_comb begin
-    logic [7:0] shift;
-    if(a_exp - 8'd127 < 0) result_float2int = 32'b0;
-    else begin
-      shift = a_exp - 8'd127;
-      result_float2int = {1'b1, a_mantissa};
-    end
-  end
-
-
-  // sin x
-  // x - x^3/6 + x^5/120 - x^7/5040
-  // 
-  // 
 
   // next state clocking
   always_ff @(posedge clk, posedge arst) begin
