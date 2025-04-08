@@ -158,8 +158,12 @@ module fpu(
   logic operation_done_ar_fsm;   // for handshake between main fsm and arithmetic fsm
 
   // logarithm
-  logic [30:0] log2;       
+  logic [30:0] log2_prenorm;       
+  logic [30:0] log2_norm;       
+  logic [30:0] log2_abs;       
   logic  [7:0] log2_exp;       
+  logic  [7:0] log2_exp_prenorm;       
+  logic  [7:0] log2_exp_norm;       
   logic  [5:0] log2_zcount;
   logic        log2_sign;
 
@@ -268,7 +272,7 @@ module fpu(
         pa_fpu::op_sqrt: 
           ieee_packet_out <= {1'b0, sqrt_xn_exp, sqrt_xn_mantissa[22:0]};
         pa_fpu::op_log2: 
-          ieee_packet_out <= {log2_sign, log2_exp, log2[29:7]};
+          ieee_packet_out <= {log2_sign, log2_exp_norm, log2_norm[29:7]};
       endcase
     end
   end
@@ -375,6 +379,19 @@ module fpu(
   assign result_exp_div             = exp_div_norm;
   assign result_mantissa_div        = quotient_mantissa_div_norm;
 
+  // logarithm to base 2
+  // aliasing the floating point number as a new number such that (exponent-127) is the integral part, and mantissa is the fractional part
+  // then adding a fractional error term gives the approximate log2 of the floating point.
+  assign log2_prenorm = {a_operand[30:23] - 8'd127, a_operand[22:0]} + {8'b0, 23'b00001011000001000110011};
+  assign log2_exp_prenorm = 8'd7;
+  assign log2_abs = log2_prenorm[30] ? -log2_prenorm : log2_prenorm;
+  assign log2_sign = log2_prenorm[30];
+  assign log2_zcount = lzc({1'b0, log2_abs}) - 1;
+  assign log2_norm = log2_abs << log2_zcount;
+  assign log2_exp_norm = 8'(9'(log2_exp_prenorm) - 9'(log2_zcount)) + 8'd127;
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
   // SQRT DATAPATH
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -423,25 +440,6 @@ module fpu(
         sqrt_A_sign     <= a_sign;
       end
     end
-  end
-
-  // logarithm to base 2
-  always_comb begin
-    // aliasing the floating point number as a new number such that (exponent-127) is the integral part, and mantissa is the fractional part
-    // then adding a fractional error term gives the approximate log2 of the floating point.
-    log2 = {a_operand[30:23] - 8'd127, a_operand[22:0]} + {8'b0, 23'b00001011000001000110011};
-    log2_exp = 8'd7;
-    log2_sign = 1'b0;
-    if(log2[30]) begin
-      log2 = -log2;
-      log2_sign = 1'b1;
-    end
-    else begin
-      log2_zcount = lzc({1'b0, log2}) - 1;
-      log2_exp = 8'(9'(log2_exp) - 9'(log2_zcount));
-      log2 = log2 << log2_zcount;
-    end
-    log2_exp = log2_exp + 8'd127;
   end
 
   // todo

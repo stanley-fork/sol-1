@@ -29,7 +29,9 @@ module fpu_tb;
     st_fpu_computation'{32'h40490fda, 32'h402df854, 3.1415926,    2.7182818},  // 6         
     st_fpu_computation'{32'h40490fda, 32'h402df854, 3.1415926,    2.7182818},  // 7        
     st_fpu_computation'{32'h3fffffff, 32'h402df854, 1.9999999,    2.7182818},  // 8         
-    st_fpu_computation'{32'h42168f5c, 32'h0,        37.64,        0}           // 9           
+    st_fpu_computation'{32'h42168f5c, 32'h0,        37.64,        0},          // 9           
+    st_fpu_computation'{32'h41800000, 32'h42000000, 16.0,         32.0},       // 10           
+    st_fpu_computation'{32'h3e800000, 32'h3f000000, 0.25,         0.5}         // 11           
   };
 
   initial begin
@@ -43,9 +45,9 @@ module fpu_tb;
     #1us;
     arst = 0;
 
-    a_operand = computation_list[8].a; 
+    a_operand = computation_list[11].b; 
     b_operand = computation_list[8].b; 
-    operation = pa_fpu::op_sub;
+    operation = pa_fpu::op_log2;
     start = 1'b1;
 
     @(cmd_end) start = 1'b0;

@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 17:59:10 on Apr 08,2025
+# Start time: 18:52:34 on Apr 08,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
@@ -28,7 +28,9 @@
 # Loading work.comb_div24_frac(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
 run -all
-# Result: 0xbf37e154, -0.718282
-# ** Note: $stop    : fpu_tb.sv(55)
+# Result: 0xbf74fb9a, -0.956964
+# ** Note: $stop    : fpu_tb.sv(57)
 #    Time: 5250 ns  Iteration: 0  Instance: /fpu_tb
-# Break in Module fpu_tb at fpu_tb.sv line 55
+# Break in Module fpu_tb at fpu_tb.sv line 57
+# End time: 18:52:37 on Apr 08,2025, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 1
