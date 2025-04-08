@@ -45,14 +45,15 @@ module fpu_tb;
     #1us;
     arst = 0;
 
-    a_operand = computation_list[11].b; 
+    a_operand = computation_list[2].a; 
     b_operand = computation_list[8].b; 
-    operation = pa_fpu::op_log2;
+    operation = pa_fpu::op_float_to_int;
     start = 1'b1;
 
     @(cmd_end) start = 1'b0;
     #1us;
     $display("Result: 0x%x, %.6f", ieee_packet_out, $bitstoshortreal(ieee_packet_out));
+    $display("Result int: %d, %b", ieee_packet_out, ieee_packet_out);
 
     $stop;
   end

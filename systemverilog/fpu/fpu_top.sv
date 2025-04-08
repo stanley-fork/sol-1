@@ -161,7 +161,6 @@ module fpu(
   logic [30:0] log2_prenorm;       
   logic [30:0] log2_norm;       
   logic [30:0] log2_abs;       
-  logic  [7:0] log2_exp;       
   logic  [7:0] log2_exp_prenorm;       
   logic  [7:0] log2_exp_norm;       
   logic  [5:0] log2_zcount;
@@ -255,28 +254,15 @@ module fpu(
     end
   end
 
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) ieee_packet_out <= '0;
-    else if(curr_state_arith_fsm == pa_fpu::arith_result_valid_st) begin
-      case(operation)
-        pa_fpu::op_add: 
-          ieee_packet_out <= {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]};
-        pa_fpu::op_sub: 
-          ieee_packet_out <= {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]};
-        pa_fpu::op_mul: 
-          ieee_packet_out <= {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]};
-        pa_fpu::op_square: 
-          ieee_packet_out <= {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]};
-        pa_fpu::op_div: 
-          ieee_packet_out <= {result_sign_div, result_exp_div, result_mantissa_div[22:0]};
-        pa_fpu::op_sqrt: 
-          ieee_packet_out <= {1'b0, sqrt_xn_exp, sqrt_xn_mantissa[22:0]};
-        pa_fpu::op_log2: 
-          ieee_packet_out <= {log2_sign, log2_exp_norm, log2_norm[29:7]};
-      endcase
-    end
-  end
-
+  assign ieee_packet_out = operation == pa_fpu::op_add          ? {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]} :
+                           operation == pa_fpu::op_sub          ? {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]} :
+                           operation == pa_fpu::op_mul          ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
+                           operation == pa_fpu::op_square       ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
+                           operation == pa_fpu::op_div          ? {result_sign_div, result_exp_div, result_mantissa_div[22:0]} :
+                           operation == pa_fpu::op_sqrt         ? {1'b0, sqrt_xn_exp, sqrt_xn_mantissa[22:0]} :
+                           operation == pa_fpu::op_float_to_int ? result_float2int :
+                           operation == pa_fpu::op_log2         ? {log2_sign, log2_exp_norm, log2_norm[29:7]} : '0;
+        
   // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
 
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
@@ -442,17 +428,24 @@ module fpu(
     end
   end
 
-  // todo
   // float2int
   // if exponent < 0, return 0
   // else truncate the number 1.mantissa after #exponent places and that is the integer
   // example: 1.1101010 * 2^3 = 1110. 
   always_comb begin
-    logic [7:0] shift;
-    if(a_exp - 8'd127 < 0) result_float2int = 32'b0;
+    logic [8:0] shift;
+    logic [31:0] intval;
+    intval = '0;
+    if(9'(a_exp) - 9'd127 < 0) result_float2int = 32'b0;
     else begin
-      shift = a_exp - 8'd127;
-      result_float2int = {1'b1, a_mantissa};
+      shift = 9'(a_exp) - 9'd127;
+      for(int i = 0; i <= shift; i++) begin
+        if(i > 23)
+          intval[shift - i] = 1'b0;
+        else
+          intval[shift - i] = a_mantissa[23 - i];
+      end
+      result_float2int = intval;
     end
   end
 
@@ -542,6 +535,8 @@ module fpu(
             next_state_arith_fsm = pa_fpu::arith_sqrt_st;
           pa_fpu::op_log2:
             next_state_arith_fsm = pa_fpu::arith_log2_st;
+          pa_fpu::op_float_to_int:
+            next_state_arith_fsm = pa_fpu::arith_float2int_st;
         endcase
 
       pa_fpu::arith_add_st:
@@ -562,6 +557,9 @@ module fpu(
         if(operation_done_sqrt_fsm == 1'b0) next_state_arith_fsm = pa_fpu::arith_result_valid_st;
 
       pa_fpu::arith_log2_st:
+        next_state_arith_fsm = pa_fpu::arith_result_valid_st;
+
+      pa_fpu::arith_float2int_st:
         next_state_arith_fsm = pa_fpu::arith_result_valid_st;
 
       pa_fpu::arith_result_valid_st:
@@ -614,6 +612,10 @@ module fpu(
           start_operation_sqrt_fsm <= 1'b0;
         end
         pa_fpu::arith_log2_st: begin
+          operation_done_ar_fsm <= 1'b0;
+          start_operation_sqrt_fsm <= 1'b0;
+        end
+        pa_fpu::arith_float2int_st: begin
           operation_done_ar_fsm <= 1'b0;
           start_operation_sqrt_fsm <= 1'b0;
         end

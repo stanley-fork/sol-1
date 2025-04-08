@@ -35,6 +35,7 @@ package pa_fpu;
     arith_sqrt_st,
     arith_sqrt_done_st,
     arith_log2_st,
+    arith_float2int_st,
     arith_result_valid_st
   } e_arith_st;
 
