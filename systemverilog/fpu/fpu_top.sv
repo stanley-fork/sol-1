@@ -94,9 +94,9 @@ module fpu(
   logic        b_sign;
   logic signed [8:0] ab_exp_diff;
 
-  // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 which always carries
+  // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
-  // that always comes out of bit 23, since bit 23 is always 1 in both operands. 
+  // that can come out of bit 23
   // addition/subtraction datapath
   logic [25:0] result_m_add_sub; // 24 bits plus carry
   logic [ 7:0] result_e_add_sub;
@@ -302,9 +302,9 @@ module fpu(
   assign a_mantissa_adjusted = a_sign ? ~a_mantissa_shifted + 1'b1 : a_mantissa_shifted;
   assign b_mantissa_adjusted = b_sign ? ~b_mantissa_shifted + 1'b1 : b_mantissa_shifted;
 
-  // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 which always carries
+  // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
-  // that always comes out of bit 23, since bit 23 is always 1 in both operands. 
+  // that can come out of bit 23
   // addition/subtraction datapath
   always_comb begin
     logic [5:0] zcount;
@@ -329,7 +329,7 @@ module fpu(
     end
     // normalize mantissa by shifting left according to number of leading zeroes
     else begin
-      zcount = lzc({6'b000000, result_m_add_sub}) - 6;
+      zcount = lzc({6'b000000, result_m_add_sub}) - 6'd6;
       result_m_add_sub = result_m_add_sub << zcount;
       result_e_add_sub = result_e_add_sub - 1'b1;
     end

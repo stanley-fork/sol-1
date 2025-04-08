@@ -45,7 +45,7 @@ module fpu_tb;
 
     a_operand = computation_list[8].a; 
     b_operand = computation_list[8].b; 
-    operation = pa_fpu::op_add;
+    operation = pa_fpu::op_sub;
     start = 1'b1;
 
     @(cmd_end) start = 1'b0;
