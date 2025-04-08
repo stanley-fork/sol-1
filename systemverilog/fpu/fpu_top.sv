@@ -94,13 +94,17 @@ module fpu(
   logic        b_sign;
   logic signed [8:0] ab_exp_diff;
 
-  // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
+  // sign bit for result_m_addsub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
   // that can come out of bit 23
   // addition/subtraction datapath
-  logic [25:0] result_m_add_sub; // 24 bits plus carry
-  logic [ 7:0] result_e_add_sub;
-  logic        result_s_add_sub;
+  logic [25:0] result_m_addsub_prenorm; // 24 bits plus carry
+  logic [25:0] result_m_addsub_norm; // 24 bits plus carry
+  logic [25:0] result_m_addsub_abs; // 24 bits plus carry
+  logic [ 7:0] result_e_addsub_prenorm;
+  logic [ 7:0] result_e_addsub_norm;
+  logic        result_s_addsub;
+  logic [ 5:0] zcount_addsub;
 
   // multiplication datapath
   logic [47:0] product_pre_norm;     // result after multiplication
@@ -252,9 +256,9 @@ module fpu(
     else if(curr_state_arith_fsm == pa_fpu::arith_result_valid_st) begin
       case(operation)
         pa_fpu::op_add: 
-          ieee_packet_out <= {result_s_add_sub, result_e_add_sub, result_m_add_sub[22:0]};
+          ieee_packet_out <= {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]};
         pa_fpu::op_sub: 
-          ieee_packet_out <= {result_s_add_sub, result_e_add_sub, result_m_add_sub[22:0]};
+          ieee_packet_out <= {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]};
         pa_fpu::op_mul: 
           ieee_packet_out <= {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]};
         pa_fpu::op_square: 
@@ -282,43 +286,25 @@ module fpu(
   assign a_mantissa_adjusted = a_sign ? ~a_mantissa_shifted + 1'b1 : a_mantissa_shifted;
   assign b_mantissa_adjusted = b_sign ? ~b_mantissa_shifted + 1'b1 : b_mantissa_shifted;
 
-  // sign bit for result_m_add_sub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
+  // sign bit for result_m_addsub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
   // that can come out of bit 23
   // addition/subtraction datapath
-  logic [25:0]test;
-  always_comb begin
-    logic [5:0] zcount;
-    if(operation == pa_fpu::op_add) 
-      result_m_add_sub = a_mantissa_adjusted + b_mantissa_adjusted;
-    else 
-      result_m_add_sub = a_mantissa_adjusted - b_mantissa_adjusted;
-    result_e_add_sub = b_exp_adjusted;
-    result_s_add_sub = result_m_add_sub[25];
-    test=result_m_add_sub;
-    if(result_s_add_sub) 
-      result_m_add_sub = -result_m_add_sub;
-
-    // normalize result
-    // check for zero
-    if(result_m_add_sub == '0) begin 
-      result_e_add_sub = '0; // set exponent to 0
-    end
-    // check for carry at position 24
-    else if(result_m_add_sub[24]) begin
-      result_m_add_sub = result_m_add_sub >> 1;
-      result_e_add_sub = result_e_add_sub + 1'b1;
-    end
-    // normalize mantissa by shifting left according to number of leading zeroes
-    else begin
-      zcount = lzc({6'b000000, result_m_add_sub}) - 6'd8; // lzc function is 32bit, hence need to add extra 6bits to left of the argument. 
-                                                          // also, the variable result_m_add_sub itself is 26bit not 24bit, so for counting leading zeroes we need to subtract the extra count of 2.
-                                                          // hence we subtract a total of 8 from the result.
-      result_m_add_sub = result_m_add_sub << zcount;
-      result_e_add_sub = result_e_add_sub - zcount;
-    end
-  end
-
+  assign result_m_addsub_prenorm = operation == pa_fpu::op_add ? a_mantissa_adjusted + b_mantissa_adjusted :
+                                                                 a_mantissa_adjusted - b_mantissa_adjusted;
+  assign result_s_addsub = result_m_addsub_prenorm[25];
+  assign result_e_addsub_prenorm = a_exp_adjusted;
+  assign result_m_addsub_abs = result_s_addsub ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
+  // lzc function is 32bit, hence need to add extra 6bits to left of the argument. 
+  // also, the variable result_m_addsub itself is 26bit not 24bit, so for counting leading zeroes we need to subtract the extra count of 2.
+  // hence we subtract a total of 8 from the result.
+  assign zcount_addsub = lzc({6'b000000, result_m_addsub_abs}) - 6'd8;
+  assign result_m_addsub_norm = result_m_addsub_abs == '0 ? result_m_addsub_abs :
+                                result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : 
+                                result_m_addsub_abs << zcount_addsub;
+  assign result_e_addsub_norm = result_m_addsub_abs == '0 ? '0 : 
+                                result_m_addsub_abs[24] ? result_e_addsub_prenorm + 1'b1 : result_e_addsub_prenorm  - zcount_addsub;
+                                 
   // MULTIPLICATION DATAPATH
   // for multiplication an example follows:
   //     1.00   minimum possible multiplication
@@ -427,9 +413,9 @@ module fpu(
         sqrt_xn_sign     <= a_sign;
       end
       else if(sqrt_xn_add_wrt) begin
-        sqrt_xn_mantissa <= result_m_add_sub;
-        sqrt_xn_exp      <= result_e_add_sub - 8'd1;
-        sqrt_xn_sign     <= result_s_add_sub;
+        sqrt_xn_mantissa <= result_m_addsub_norm;
+        sqrt_xn_exp      <= result_e_addsub_norm - 8'd1;
+        sqrt_xn_sign     <= result_s_addsub;
       end
       if(sqrt_A_a_wrt) begin
         sqrt_A_mantissa <= a_mantissa;
@@ -666,7 +652,7 @@ module fpu(
         next_state_sqrt_fsm = pa_fpu::sqrt_mov_xn_a_dec_exp_st;
       end
       // perform addition during this clock cycle
-      // set xn = result_m_add_sub, while decreasing xn_exp by 1
+      // set xn = result_m_addsub, while decreasing xn_exp by 1
       // dec sqrt_counter when entering this state
       // check sqrt_counter == 4
       pa_fpu::sqrt_mov_xn_a_dec_exp_st: begin
