@@ -441,7 +441,7 @@ module fpu(
       shift = 9'(a_exp) - 9'd127;
       for(int i = 0; i <= shift; i++) begin
         if(i > 23)
-          intval[shift - i] = 1'b0;
+          intval[shift - i] = 1'b0; // if exponent larger than 23, then the 2^shift factor moves the decimal point beyond bit 0 of mantissa, hence fill with 0's
         else
           intval[shift - i] = a_mantissa[23 - i];
       end
