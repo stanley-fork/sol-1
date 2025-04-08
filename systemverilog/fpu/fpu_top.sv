@@ -274,11 +274,10 @@ module fpu(
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
   // else if aexp > bexp, then increase bexp and right-shift b_mantissa by same number
   // else, exponents are the same
-
-  assign a_mantissa_shifted = a_exp < b_exp ? a_mantissa >> -ab_exp_diff : a_mantissa;
-  assign b_mantissa_shifted = b_exp < a_exp ? b_mantissa >>  ab_exp_diff : b_mantissa;
-  assign a_exp_adjusted     = a_exp < b_exp ? b_exp : a_exp;
-  assign b_exp_adjusted     = b_exp < a_exp ? a_exp : b_exp;
+  assign a_mantissa_shifted  = a_exp < b_exp ? a_mantissa >> -ab_exp_diff : a_mantissa;
+  assign b_mantissa_shifted  = b_exp < a_exp ? b_mantissa >>  ab_exp_diff : b_mantissa;
+  assign a_exp_adjusted      = a_exp < b_exp ? b_exp : a_exp;
+  assign b_exp_adjusted      = b_exp < a_exp ? a_exp : b_exp;
 
   assign a_mantissa_adjusted = a_sign ? ~a_mantissa_shifted + 1'b1 : a_mantissa_shifted;
   assign b_mantissa_adjusted = b_sign ? ~b_mantissa_shifted + 1'b1 : b_mantissa_shifted;
@@ -287,6 +286,7 @@ module fpu(
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
   // that can come out of bit 23
   // addition/subtraction datapath
+  logic [25:0]test;
   always_comb begin
     logic [5:0] zcount;
     if(operation == pa_fpu::op_add) 
@@ -295,6 +295,7 @@ module fpu(
       result_m_add_sub = a_mantissa_adjusted - b_mantissa_adjusted;
     result_e_add_sub = b_exp_adjusted;
     result_s_add_sub = result_m_add_sub[25];
+    test=result_m_add_sub;
     if(result_s_add_sub) 
       result_m_add_sub = -result_m_add_sub;
 
@@ -310,9 +311,11 @@ module fpu(
     end
     // normalize mantissa by shifting left according to number of leading zeroes
     else begin
-      zcount = lzc({6'b000000, result_m_add_sub}) - 6'd6;
+      zcount = lzc({6'b000000, result_m_add_sub}) - 6'd8; // lzc function is 32bit, hence need to add extra 6bits to left of the argument. 
+                                                          // also, the variable result_m_add_sub itself is 26bit not 24bit, so for counting leading zeroes we need to subtract the extra count of 2.
+                                                          // hence we subtract a total of 8 from the result.
       result_m_add_sub = result_m_add_sub << zcount;
-      result_e_add_sub = result_e_add_sub - 1'b1;
+      result_e_add_sub = result_e_add_sub - zcount;
     end
   end
 
