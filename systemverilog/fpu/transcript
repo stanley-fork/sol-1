@@ -1,6 +1,6 @@
 # Reading pref.tcl
 # //  Questa Intel Starter FPGA Edition-64
-# //  Version 2024.1 linux_x86_64 Apr 19 2024
+# //  Version 2024.3 linux_x86_64 Sep 10 2024
 # //
 # // Unpublished work. Copyright 2024 Siemens
 # //
@@ -14,10 +14,10 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 01:55:10 on Apr 09,2025
+# Start time: 00:48:56 on Apr 10,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
-# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
 # ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
 # ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
 # Loading sv_std.std
@@ -27,5 +27,44 @@
 # Loading work.comb_mul(fast)
 # Loading work.comb_div24_frac(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
-# End time: 01:55:12 on Apr 09,2025, Elapsed time: 0:00:02
-# Errors: 0, Warnings: 1
+run -all
+# a: 0.453567          , b: 0.000000          , result: 170141183460469231731687303715884105728.000000 (7f000000)
+# ** Note: $stop    : fpu_tb.sv(59)
+#    Time: 5250 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at fpu_tb.sv line 59
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/log2_exp'.
+# Executing ONERROR command at macro ./wave.do line 35
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/log2'.
+# Executing ONERROR command at macro ./wave.do line 36
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+# ** Note: (vsim-8716) Reusing existing debug database vsim.dbg.
+run -all
+# a: 0.453567          , b: 0.000000          , result: 170141183460469231731687303715884105728.000000 (7f000000)
+# ** Note: $stop    : fpu_tb.sv(59)
+#    Time: 5250 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at fpu_tb.sv line 59
+add wave -position insertpoint  \
+sim:/fpu_tb/fpu_top/ieee_packet_out
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+# ** Note: (vsim-8716) Reusing existing debug database vsim.dbg.
+run -all
+# a: 0.453567          , b: 0.000000          , result: 170141183460469231731687303715884105728.000000 (7f000000)
+# ** Note: $stop    : fpu_tb.sv(59)
+#    Time: 5250 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at fpu_tb.sv line 59

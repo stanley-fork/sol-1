@@ -1,45 +1,37 @@
-// FPU Prototype
+// FPU PROTOTYPE
 // This is an FPU unit that will perform addition, subtraction, multiplication, division, square root, and transcendental functions
 // Totally non-optimized and for prototyping and studying purposes only!
 
 /*
-  sqrt: newton-raphson
+  SQRT: NEWTON-RAPHSON
     xn = 0.5(xn + A/xn)
 
-  dot product:
+  DOT PRODUCT:
     a dot b 
     = a0b0 + a1b1 + ... + anbn 
     = |a||b|cos(arg(a,b))
 
-  cross product:
+  CROSS PRODUCT:
     a cross b 
     = (a2b3 - a3b2)i + (a3b1 - a1b3)j + (a1b2 - a2b1)k
     = |a||b|sin(arg(a,b))n where n is the unit vector normal to both a & b
 
-  Slow converging series. Look at chebyshev polynomials.
-    sin(x)    = x - x^3/3! + x^5/5! - x^7/7! + ...
-    cos(x)    = 1 - x^2/2 + x^4/4! - x^6/6! + ...
-    exp(x)    = 1 + x + x^2/2 + x^3/3! + x^4/4! + x^5/5! + ...
-    ln(1+x)   = x - x^2/2 + x^3/3 - x^4/4 + x^5/5 - ...  (|x| < 1)
-    arctan(x) = x - x^3/3 + x^5/5 - x^7/7 + ... (slow convergence)
-
-
-  approximating log2:
+  APPROXIMATING LOG2:
     take exponent - 127 as starting point. exponent is the approximate log2
     because mantissa is < 1, log of mantissa is approximately equal to the mantissa itself plus a constant sigma = 0.0430357.
     hence an aproximation is (exponent - 127) + mantissa + sigma.
     log(x) = log((1+m)2^e) = e + 1 + m = e + m + sigma
 
-  integer to float:
+  INTEGER TO FLOAT:
     exponent = 31 - #leading zeroes.
     mantissa placed on msb side with leading 1 removed
 
-  float to integer:
+  FLOAT TO INTEGER:
     if exponent < 0, return 0
     else truncate the number 1.mantissa after #exponent places and that is the integer
     example: 1.1101010 * 2^3 = 1110. 
 
-  operations:
+  OPERATIONS:
     add
     sub
     mul
@@ -50,6 +42,15 @@
     1/a
     int2float
     float2int
+
+  TRIGONOMETRIC FUNCTIONS:
+
+  Slow converging series. Look at chebyshev polynomials.
+    sin(x)    = x - x^3/3! + x^5/5! - x^7/7! + ...
+    cos(x)    = 1 - x^2/2 + x^4/4! - x^6/6! + ...
+    exp(x)    = 1 + x + x^2/2 + x^3/3! + x^4/4! + x^5/5! + ...
+    ln(1+x)   = x - x^2/2 + x^3/3 - x^4/4 + x^5/5 - ...  (|x| < 1)
+    arctan(x) = x - x^3/3 + x^5/5 - x^7/7 + ... (slow convergence)
 
   chebyshev polynomials:
     Tn   = cos(nx)
@@ -287,6 +288,7 @@ module fpu(
     ._signed(1'b0),
     .result(product_pre_norm)
   );
+  // TODO: deal with prolem when either operand is 0
   assign mul_exp = (a_exp - 8'd127) + b_exp;
   assign result_sign_mul = a_sign ^ b_sign;
   // normalize floating point result
@@ -318,6 +320,7 @@ module fpu(
     .quotient(div_quotient_prenorm_out[23:0])
   );
 
+  // TODO: deal with prolem when either operand is 0
   assign exp_div_prenorm            = (a_exp - b_exp) + 8'd127;
   assign zcount_div                 = lzc({8'b00000000, div_quotient_prenorm_out[23:0]}) - 4'd8;
   assign result_sign_div            = a_sign ^ b_sign;
