@@ -127,8 +127,7 @@ module fpu(
   logic [23:0] result_mantissa_div;
   logic [ 7:0] result_exp_div;
   logic        result_sign_div;
-                                   // in such a case, the dividend is shifted left until it becomes larger than divisor and subtraction can happen (for fractional divisions)
-
+  
   // sqrt datapath
   logic [23:0] sqrt_xn_mantissa;
   logic  [7:0] sqrt_xn_exp;
@@ -188,6 +187,8 @@ module fpu(
   pa_fpu::e_sqrt_st  curr_state_sqrt_fsm;
   pa_fpu::e_sqrt_st  next_state_sqrt_fsm;
 
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
   // counts number of leading zeroes
   function logic [5 : 0] lzc(
     input logic [31:0] a
@@ -213,46 +214,6 @@ module fpu(
                                               // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
                                               // however for clarity, the operands are explicitly extended to 9 bits.
 
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      a_mantissa <= '0;
-      a_exp      <= '0;
-      a_sign     <= '0;
-      b_mantissa <= '0;
-      b_exp      <= '0;
-      b_sign     <= '0;
-    end   
-    else begin
-      if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
-        a_mantissa <= {a_operand[30:23] != 8'd0, a_operand[22:0]};
-        a_exp      <= a_operand[30:23];
-        a_sign     <= a_operand[31];
-        b_mantissa <= {b_operand[30:23] != 8'd0, b_operand[22:0]};
-        b_exp      <= b_operand[30:23];
-        b_sign     <= b_operand[31];
-      end
-      if(sqrt_a_xn_wrt) begin
-        a_mantissa <= sqrt_xn_mantissa;
-        a_exp      <= sqrt_xn_exp;
-        a_sign     <= sqrt_xn_sign;
-      end
-      else if(sqrt_a_A_wrt) begin
-        a_mantissa <= sqrt_A_mantissa;
-        a_exp      <= sqrt_A_exp;
-        a_sign     <= sqrt_A_sign;
-      end
-      if(sqrt_b_xn_wrt) begin
-        b_mantissa <= sqrt_xn_mantissa;
-        b_exp      <= sqrt_xn_exp;
-        b_sign     <= sqrt_xn_sign;
-      end
-      else if(sqrt_b_div_wrt) begin
-        b_mantissa <= result_mantissa_div;
-        b_exp      <= result_exp_div;
-        b_sign     <= result_sign_div;
-      end
-    end
-  end
 
   assign ieee_packet_out = operation == pa_fpu::op_add          ? {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]} :
                            operation == pa_fpu::op_sub          ? {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]} :
@@ -378,6 +339,50 @@ module fpu(
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
+  // REGISTER LOADING
+  always_ff @(posedge clk, posedge arst) begin
+    if(arst) begin
+      a_mantissa <= '0;
+      a_exp      <= '0;
+      a_sign     <= '0;
+      b_mantissa <= '0;
+      b_exp      <= '0;
+      b_sign     <= '0;
+    end   
+    else begin
+      if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
+        a_mantissa <= {a_operand[30:23] != 8'd0, a_operand[22:0]};
+        a_exp      <= a_operand[30:23];
+        a_sign     <= a_operand[31];
+        b_mantissa <= {b_operand[30:23] != 8'd0, b_operand[22:0]};
+        b_exp      <= b_operand[30:23];
+        b_sign     <= b_operand[31];
+      end
+      if(sqrt_a_xn_wrt) begin
+        a_mantissa <= sqrt_xn_mantissa;
+        a_exp      <= sqrt_xn_exp;
+        a_sign     <= sqrt_xn_sign;
+      end
+      else if(sqrt_a_A_wrt) begin
+        a_mantissa <= sqrt_A_mantissa;
+        a_exp      <= sqrt_A_exp;
+        a_sign     <= sqrt_A_sign;
+      end
+      if(sqrt_b_xn_wrt) begin
+        b_mantissa <= sqrt_xn_mantissa;
+        b_exp      <= sqrt_xn_exp;
+        b_sign     <= sqrt_xn_sign;
+      end
+      else if(sqrt_b_div_wrt) begin
+        b_mantissa <= result_mantissa_div;
+        b_exp      <= result_exp_div;
+        b_sign     <= result_sign_div;
+      end
+    end
+  end
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
   // SQRT DATAPATH
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
@@ -428,7 +433,9 @@ module fpu(
     end
   end
 
-  // float2int
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+  // FLOAT2INT
   // if exponent < 0, return 0
   // else truncate the number 1.mantissa after #exponent places and that is the integer
   // example: 1.1101010 * 2^3 = 1110. 
@@ -453,6 +460,8 @@ module fpu(
   // x - x^3/6 + x^5/120 - x^7/5040
   // 
   // 
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
   // MAIN FSM
   // next state assignments
@@ -510,6 +519,8 @@ module fpu(
       endcase  
     end
   end
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
   // ARITHMETIC FSM
   // next state assignments
@@ -626,6 +637,8 @@ module fpu(
       endcase  
     end
   end
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
   // SQRT FSM
   // next state assignments
