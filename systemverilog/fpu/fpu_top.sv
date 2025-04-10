@@ -112,7 +112,7 @@ module fpu(
   logic [48:0] product_norm;         // after first normalization
   logic [48:0] product_renorm;       // after second normalization (after rounding)
   logic [48:0] product_rounded;      // after rounding
-  logic [23:0] result_mantissa_mul;  // final value
+  logic [22:0] result_mantissa_mul;  // final value
   logic [ 7:0] result_exp_mul;       // final exponent
   logic        result_sign_mul;      // resulting sign
   logic [ 7:0] mul_exp;              // exponent sum
@@ -167,18 +167,13 @@ module fpu(
   logic        log2_sign;
 
   // status
-  logic a_overflow;
-  logic a_underflow;
-  logic a_nan;
-  logic a_pos_inf;
-  logic a_neg_inf;
-  logic a_zero;
-  logic b_overflow;
-  logic b_underflow;
-  logic b_nan;
-  logic b_pos_inf;
-  logic b_neg_inf;
-  logic b_zero;
+  logic a_overflow, a_underflow;
+  logic b_overflow, b_underflow;
+  logic a_nan, a_inf, a_zero;
+  logic b_nan, b_inf, b_zero;
+  logic zero_or_zero, zero_nan_or_nan_zero, zero_inf_or_inf_zero;
+  logic nan_or_nan, nan_inf_or_inf_nan;
+  logic inf_or_inf;
 
   // fsm states
   pa_fpu::e_main_st  curr_state_main_fsm;
@@ -201,16 +196,21 @@ module fpu(
     return (6)'(32);    
   endfunction
 
-  assign a_nan     = a_operand[30:23] == 8'hff && |a_operand[22:0];
-  assign a_zero    = a_operand[30:23] == 8'h00 &&  a_operand[22:0]  == 23'h0;
-  assign a_pos_inf = a_operand[31]    == 1'b0  &&  a_operand[30:23] == 8'hff && a_operand[22:0] == 23'h0;
-  assign a_neg_inf = a_operand[31]    == 1'b1  &&  a_operand[30:23] == 8'hff && a_operand[22:0] == 23'h0;
+  assign a_nan  = a_operand[30:23] == 8'hff && |a_operand[22:0];
+  assign a_zero = a_operand[30:23] == 8'h00 &&  a_operand[22:0] == 23'h0;
+  assign a_inf  = a_operand[30:23] == 8'hff && a_operand[22:0]  == 23'h0;
 
-  assign b_nan     = b_operand[30:23] == 8'hff && |b_operand[22:0];
-  assign b_zero    = b_operand[30:23] == 8'h00 &&  b_operand[22:0]  == 23'h0;
-  assign b_pos_inf = b_operand[31]    == 1'b0  &&  b_operand[30:23] == 8'hff && b_operand[22:0] == 23'h0;
-  assign b_neg_inf = b_operand[31]    == 1'b1  &&  b_operand[30:23] == 8'hff && b_operand[22:0] == 23'h0;
+  assign b_nan  = b_operand[30:23] == 8'hff && |b_operand[22:0];
+  assign b_zero = b_operand[30:23] == 8'h00 &&  b_operand[22:0] == 23'h0;
+  assign b_inf  = b_operand[30:23] == 8'hff && b_operand[22:0]  == 23'h0;
 
+  assign zero_or_zero         = a_zero || b_zero;
+  assign zero_nan_or_nan_zero = a_zero && b_nan || a_nan && b_zero;
+  assign zero_inf_or_inf_zero = a_zero && b_inf || a_inf && b_zero;
+  assign nan_or_nan           = a_nan || b_nan;
+  assign nan_inf_or_inf_nan   = a_nan && b_inf || a_inf && b_nan;
+  assign inf_or_inf           = a_inf || b_inf;
+                     
   assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. 
                                               // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
                                               // however for clarity, the operands are explicitly extended to 9 bits.
@@ -288,11 +288,9 @@ module fpu(
     ._signed(1'b0),
     .result(product_pre_norm)
   );
-  // TODO: deal with prolem when either operand is 0
   assign mul_exp = (a_exp - 8'd127) + b_exp;
-  assign result_sign_mul = a_sign ^ b_sign;
   // normalize floating point result
-  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp + 1'b1 : mul_exp;                   // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp + 1'b1 : mul_exp;                  // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
   assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
                                                                                            // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
                                                                                            // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
@@ -308,8 +306,14 @@ module fpu(
   // if there was a carry, then re-normalize
   assign product_renorm = product_rounded[48] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
   assign mul_exp_renorm = product_rounded[48] ? mul_exp_norm + 1'b1  : mul_exp_norm;    // and increase exponent
-  assign result_exp_mul = mul_exp_renorm;
-  assign result_mantissa_mul = product_renorm[47:24];
+  // output result to final variables. but before that, test for special cases.
+  assign {result_sign_mul, 
+          result_exp_mul, 
+          result_mantissa_mul} = a_nan                ?  {a_sign, a_exp, a_mantissa[22:0]}  : // if a is NAN, then set to a
+                                 b_nan                ?  {b_sign, b_exp, b_mantissa[22:0]}  : // if b is NAN, then set to b
+                                 zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000} : // if infinity*zero or zero*infinity, set to NAN
+                                 inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // if any operand is infinity, set to infinity (all zeros)
+                                 zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : {a_sign ^ b_sign, mul_exp_renorm, product_renorm[46:24]};           
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -319,8 +323,6 @@ module fpu(
     .b(b_mantissa[23:0]),
     .quotient(div_quotient_prenorm_out[23:0])
   );
-
-  // TODO: deal with prolem when either operand is 0
   assign exp_div_prenorm            = (a_exp - b_exp) + 8'd127;
   assign zcount_div                 = lzc({8'b00000000, div_quotient_prenorm_out[23:0]}) - 4'd8;
   assign result_sign_div            = a_sign ^ b_sign;
