@@ -28,10 +28,15 @@ module fpu_tb;
     st_fpu_computation'{32'h7F800000, 32'h00000000},   // 4   inf,          0.0},               
     st_fpu_computation'{32'h00000000, 32'h7F800000},   // 5   0.0,          inf},             
 
-    st_fpu_computation'{32'hFF800000, 32'h41200000},   // 4   inf,          10.0},               
-    st_fpu_computation'{32'h41200000, 32'hFF800000},   // 5   10,           inf},             
-    st_fpu_computation'{32'hFF800000, 32'h00000000},   // 4   inf,          0.0},               
-    st_fpu_computation'{32'h00000000, 32'hFF800000},   // 5   0.0,          inf},             
+    st_fpu_computation'{32'hFF800000, 32'h41200000},   // 4   -inf,          10.0},               
+    st_fpu_computation'{32'h41200000, 32'hFF800000},   // 5   10,           -inf},             
+    st_fpu_computation'{32'hFF800000, 32'h00000000},   // 4   -inf,          0.0},               
+    st_fpu_computation'{32'h00000000, 32'hFF800000},   // 5   0.0,          -inf},             
+
+    st_fpu_computation'{32'hFF800000, 32'hFF800000},   // 5   -inf,         -inf},             
+    st_fpu_computation'{32'h7F800000, 32'h7F800000},   // 5    inf,          inf},             
+    st_fpu_computation'{32'hFF800000, 32'h7F800000},   // 5   -inf,          inf},             
+    st_fpu_computation'{32'h7F800000, 32'hFF800000},   // 5    inf,         -inf},             
 
     st_fpu_computation'{32'h7FC00000, 32'h402df854},   // 6   NAN,          2.7182818},      
     st_fpu_computation'{32'h402df854, 32'h7FC00000},   // 7   2.7182818,    NAN},     

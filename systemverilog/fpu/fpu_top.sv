@@ -66,6 +66,10 @@
     exp         [0,1]	       1.7534	    0.85039	    0.10521	     0.0087221	   0.00054344	    2.7075e-05
     (2/π)*atan  [-1,1]	     0	        0.5274	    0	          -0.030213	     0	            0.0034855
 
+  OBSERVATIONS:
+  if any number is NAN, then the result is also set to NAN, not only that, but it is set to be a copy of the first 
+  NAN operand. so if operand_a is NAN, the result is set to operand_a, and vice versa. this is done so that NAN information is kept and propagated.
+
 */
 
 module fpu(
@@ -269,15 +273,16 @@ module fpu(
 
   assign {result_s_addsub, 
           result_e_addsub_norm, 
-          result_m_addsub_norm[22:0]} = a_nan || b_nan ? {1'b0, 8'hFF, 23'h400000} : // NAN
-                                  a_pos_inf && b_neg_inf || a_neg_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h400000} : // NAN
-                                  a_pos_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h000000} : // pos inf
-                                  a_neg_inf && b_neg_inf ? {1'b1, 8'hFF, 23'h000000} : // neg inf
-                                  a_inf ? {a_sign, 8'hFF, 23'h000000} : // inf with same sign as a
-                                  b_inf ? {b_sign, 8'hFF, 23'h000000} : // inf with same sign as b
-                                  result_m_addsub_abs == '0 ? {result_m_addsub_prenorm[25], 8'h00, result_m_addsub_abs[22:0]} : 
-                                  result_m_addsub_abs[24]   ? {result_m_addsub_prenorm[25], result_e_addsub_prenorm + 1'b1, 23'(result_m_addsub_abs >> 1)} :
-                                  {result_m_addsub_prenorm[25], result_e_addsub_prenorm - zcount_addsub, 23'(result_m_addsub_abs << zcount_addsub)};
+          result_m_addsub_norm[22:0]} = a_nan ? {a_sign, a_exp, a_mantissa[22:0]} : // 'a' as NAN
+                                        b_nan ? {b_sign, b_exp, b_mantissa[22:0]} : // 'b' as NAN
+                                        a_pos_inf && b_neg_inf || a_neg_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h400000} : // NAN
+                                        a_pos_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h000000} : // pos inf
+                                        a_neg_inf && b_neg_inf ? {1'b1, 8'hFF, 23'h000000} : // neg inf
+                                        a_inf ? {a_sign, 8'hFF, 23'h000000} : // inf with same sign as a
+                                        b_inf ? {b_sign, 8'hFF, 23'h000000} : // inf with same sign as b
+                                        result_m_addsub_abs == '0 ? {result_m_addsub_prenorm[25], 8'h00, 23'h0} : // if mantissa result is '0, then set entire result to zero including exponents
+                                        result_m_addsub_abs[24]   ? {result_m_addsub_prenorm[25], result_e_addsub_prenorm + 1'b1, 23'(result_m_addsub_abs >> 1)} :
+                                        {result_m_addsub_prenorm[25], result_e_addsub_prenorm - zcount_addsub, 23'(result_m_addsub_abs << zcount_addsub)};
                                  
 
   // MULTIPLICATION DATAPATH
