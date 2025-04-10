@@ -169,11 +169,20 @@ module fpu(
   // status
   logic a_overflow, a_underflow;
   logic b_overflow, b_underflow;
-  logic a_nan, a_inf, a_zero;
-  logic b_nan, b_inf, b_zero;
-  logic zero_or_zero, zero_nan_or_nan_zero, zero_inf_or_inf_zero;
-  logic nan_or_nan, nan_inf_or_inf_nan;
+  logic a_nan, a_inf, a_pos_inf, a_neg_inf, a_zero;
+  logic b_nan, b_inf, b_pos_inf, b_neg_inf, b_zero;
+  // for multiplication
+  logic zero_inf_or_inf_zero;
   logic inf_or_inf;
+  logic zero_or_zero;
+  // for division
+  logic zero_and_zero;
+  logic zero_inf;
+  logic inf_zero;
+  // unused
+  logic nan_or_nan;
+  logic nan_inf_or_inf_nan;
+  logic zero_nan_or_nan_zero;
 
   // fsm states
   pa_fpu::e_main_st  curr_state_main_fsm;
@@ -199,17 +208,24 @@ module fpu(
   assign a_nan  = a_operand[30:23] == 8'hff && |a_operand[22:0];
   assign a_zero = a_operand[30:23] == 8'h00 &&  a_operand[22:0] == 23'h0;
   assign a_inf  = a_operand[30:23] == 8'hff && a_operand[22:0]  == 23'h0;
+  assign a_pos_inf = a_operand[31] == 1'b0 && a_inf;
+  assign a_neg_inf = a_operand[31] == 1'b1 && a_inf;
 
   assign b_nan  = b_operand[30:23] == 8'hff && |b_operand[22:0];
   assign b_zero = b_operand[30:23] == 8'h00 &&  b_operand[22:0] == 23'h0;
   assign b_inf  = b_operand[30:23] == 8'hff && b_operand[22:0]  == 23'h0;
+  assign b_pos_inf = b_operand[31] == 1'b0 && b_inf;
+  assign b_neg_inf = b_operand[31] == 1'b1 && b_inf;
 
   assign zero_or_zero         = a_zero || b_zero;
+  assign zero_and_zero        = a_zero && b_zero;
   assign zero_nan_or_nan_zero = a_zero && b_nan || a_nan && b_zero;
   assign zero_inf_or_inf_zero = a_zero && b_inf || a_inf && b_zero;
   assign nan_or_nan           = a_nan || b_nan;
   assign nan_inf_or_inf_nan   = a_nan && b_inf || a_inf && b_nan;
   assign inf_or_inf           = a_inf || b_inf;
+  assign zero_inf             = a_zero && b_inf;
+  assign inf_zero             = a_inf && b_zero;
                      
   assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. 
                                               // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
@@ -244,19 +260,26 @@ module fpu(
   // addition/subtraction datapath
   assign result_m_addsub_prenorm = operation == pa_fpu::op_add ? a_mantissa_adjusted + b_mantissa_adjusted :
                                                                  a_mantissa_adjusted - b_mantissa_adjusted;
-  assign result_s_addsub = result_m_addsub_prenorm[25];
+
   assign result_e_addsub_prenorm = a_exp_adjusted;
-  assign result_m_addsub_abs = result_s_addsub ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
+  assign result_m_addsub_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
   // lzc function is 32bit, hence need to add extra 6bits to left of the argument. 
-  // also, the variable result_m_addsub itself is 26bit not 24bit, so for counting leading zeroes we need to subtract the extra count of 2.
-  // hence we subtract a total of 8 from the result.
+  // also, the variable result_m_addsub itself is 26bit not 24bit, so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 8 from the result.
   assign zcount_addsub = lzc({6'b000000, result_m_addsub_abs}) - 6'd8;
-  assign result_m_addsub_norm = result_m_addsub_abs == '0 ? result_m_addsub_abs :
-                                result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : 
-                                result_m_addsub_abs << zcount_addsub;
-  assign result_e_addsub_norm = result_m_addsub_abs == '0 ? '0 : 
-                                result_m_addsub_abs[24] ? result_e_addsub_prenorm + 1'b1 : result_e_addsub_prenorm  - zcount_addsub;
+
+  assign {result_s_addsub, 
+          result_e_addsub_norm, 
+          result_m_addsub_norm[22:0]} = a_nan || b_nan ? {1'b0, 8'hFF, 23'h400000} : // NAN
+                                  a_pos_inf && b_neg_inf || a_neg_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h400000} : // NAN
+                                  a_pos_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h000000} : // pos inf
+                                  a_neg_inf && b_neg_inf ? {1'b1, 8'hFF, 23'h000000} : // neg inf
+                                  a_inf ? {a_sign, 8'hFF, 23'h000000} : // inf with same sign as a
+                                  b_inf ? {b_sign, 8'hFF, 23'h000000} : // inf with same sign as b
+                                  result_m_addsub_abs == '0 ? {result_m_addsub_prenorm[25], 8'h00, result_m_addsub_abs[22:0]} : 
+                                  result_m_addsub_abs[24]   ? {result_m_addsub_prenorm[25], result_e_addsub_prenorm + 1'b1, 23'(result_m_addsub_abs >> 1)} :
+                                  {result_m_addsub_prenorm[25], result_e_addsub_prenorm - zcount_addsub, 23'(result_m_addsub_abs << zcount_addsub)};
                                  
+
   // MULTIPLICATION DATAPATH
   // for multiplication an example follows:
   //     1.00   minimum possible multiplication
@@ -325,13 +348,23 @@ module fpu(
   );
   assign exp_div_prenorm            = (a_exp - b_exp) + 8'd127;
   assign zcount_div                 = lzc({8'b00000000, div_quotient_prenorm_out[23:0]}) - 4'd8;
-  assign result_sign_div            = a_sign ^ b_sign;
   assign quotient_mantissa_div_norm = div_quotient_prenorm_out << zcount_div;
   assign exp_div_norm               = exp_div_prenorm - zcount_div;
-  assign result_exp_div             = exp_div_norm;
-  assign result_mantissa_div        = quotient_mantissa_div_norm;
+  assign {result_sign_div, 
+          result_exp_div, 
+          result_mantissa_div[22:0]} = a_nan         ?  {a_sign, a_exp, a_mantissa[22:0]}  : // if a is NAN, then set to a
+                                       b_nan         ?  {b_sign, b_exp, b_mantissa[22:0]}  : // if b is NAN, then set to b
+                                       zero_inf      ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // if zero/infinity, set to 0
+                                       inf_zero      ?  {1'b0, 8'hFF, 23'h400000} : // if infinity/zero, set to NAN
+                                       a_inf         ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : 
+                                       b_inf         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : 
+                                       zero_and_zero ?  {1'b0, 8'hFF, 23'h400000} : // NAN
+                                       a_zero        ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : 
+                                       b_zero        ?  {1'b0, 8'hFF, 23'h000000} : {a_sign ^ b_sign, exp_div_norm, quotient_mantissa_div_norm[22:0]};           
 
-  // logarithm to base 2
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+  // LOGARITHM TO BASE 2
   // aliasing the floating point number as a new number such that (exponent-127) is the integral part, and mantissa is the fractional part
   // then adding a fractional error term gives the approximate log2 of the floating point.
   assign log2_prenorm = {a_operand[30:23] - 8'd127, a_operand[22:0]} + {8'b0, 23'b00001011000001000110011};
