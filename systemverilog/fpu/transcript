@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 14:59:48 on Apr 10,2025
+# Start time: 00:00:30 on Apr 11,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
@@ -28,30 +28,9 @@
 # Loading work.comb_div24_frac(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
 run -all
-# a: 315695520.000000  , b: 3219435.250000    , result: 318914944.000000   (4d98120c, 01001101100110000001001000001100)
-# a: 1.000000          , b: 1.100000          , result: 2.100000           (40066666, 01000000000001100110011001100110)
-# a: 0.000000          , b: 1.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
-# a: 1.000000          , b: 0.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
-# a: inf               , b: 10.000000         , result: inf                (7f800000, 01111111100000000000000000000000)
-# a: 10.000000         , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
-# a: inf               , b: 0.000000          , result: inf                (7f800000, 01111111100000000000000000000000)
-# a: 0.000000          , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
-# a: -inf              , b: 10.000000         , result: -inf               (ff800000, 11111111100000000000000000000000)
-# a: 10.000000         , b: -inf              , result: -inf               (ff800000, 11111111100000000000000000000000)
-# a: -inf              , b: 0.000000          , result: -inf               (ff800000, 11111111100000000000000000000000)
-# a: 0.000000          , b: -inf              , result: -inf               (ff800000, 11111111100000000000000000000000)
-# a: -inf              , b: -inf              , result: -inf               (ff800000, 11111111100000000000000000000000)
-# a: inf               , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
-# a: -inf              , b: inf               , result: nan                (7fc00000, 01111111110000000000000000000000)
-# a: inf               , b: -inf              , result: nan                (7fc00000, 01111111110000000000000000000000)
-# a: nan               , b: 2.718282          , result: nan                (7fc00000, 01111111110000000000000000000000)
-# a: 2.718282          , b: nan               , result: nan                (7fc00000, 01111111110000000000000000000000)
-# a: 2.000000          , b: 2.718282          , result: 4.718281           (4096fc29, 01000000100101101111110000101001)
-# a: 37.639999         , b: 0.000000          , result: 37.639999          (42168f5c, 01000010000101101000111101011100)
-# a: 16.000000         , b: 32.000000         , result: 48.000000          (42400000, 01000010010000000000000000000000)
-# a: 0.250000          , b: 0.500000          , result: 0.750000           (3f400000, 00111111010000000000000000000000)
-# ** Note: $stop    : fpu_tb.sv(72)
-#    Time: 99750 ns  Iteration: 0  Instance: /fpu_tb
-# Break in Module fpu_tb at fpu_tb.sv line 72
-# End time: 15:00:04 on Apr 10,2025, Elapsed time: 0:00:16
+# a: 10.873127         , b: 347.940063        , result: 0.000000           (25000000, 00100101000000000000000000000000)
+# ** Note: $stop    : fpu_tb.sv(46)
+#    Time: 5250 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at fpu_tb.sv line 46
+# End time: 00:00:41 on Apr 11,2025, Elapsed time: 0:00:11
 # Errors: 0, Warnings: 1

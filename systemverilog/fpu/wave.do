@@ -15,6 +15,14 @@ add wave -noupdate /fpu_tb/fpu_top/b_sign
 add wave -noupdate -radix decimal /fpu_tb/fpu_top/ab_exp_diff
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/a_exp_adjusted
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/b_exp_adjusted
+add wave -noupdate -radix binary /fpu_tb/fpu_top/a_mantissa_shifted
+add wave -noupdate -radix binary /fpu_tb/fpu_top/a_mantissa_adjusted
+add wave -noupdate -radix binary /fpu_tb/fpu_top/a_sticky_bit
+add wave -noupdate -radix binary /fpu_tb/fpu_top/b_mantissa_shifted
+add wave -noupdate -radix binary /fpu_tb/fpu_top/b_mantissa_adjusted
+add wave -noupdate -radix binary /fpu_tb/fpu_top/b_sticky_bit
+add wave -noupdate -radix decimal /fpu_tb/fpu_top/ab_exp_diff
+add wave -noupdate -radix unsigned /fpu_tb/fpu_top/ab_shift_amount
 add wave -noupdate -radix binary /fpu_tb/fpu_top/result_mantissa_mul
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/result_exp_mul
 add wave -noupdate /fpu_tb/fpu_top/result_sign_mul
@@ -32,10 +40,8 @@ add wave -noupdate /fpu_tb/fpu_top/clk
 add wave -noupdate /fpu_tb/fpu_top/curr_state_main_fsm
 add wave -noupdate /fpu_tb/fpu_top/curr_state_arith_fsm
 add wave -noupdate /fpu_tb/fpu_top/curr_state_sqrt_fsm
-add wave -noupdate /fpu_tb/fpu_top/log2_exp
-add wave -noupdate -radix binary /fpu_tb/fpu_top/log2
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 3} {2540 ns} 0}
+WaveRestoreCursors {{Cursor 3} {38750 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 245
 configure wave -valuecolwidth 331
@@ -51,4 +57,4 @@ configure wave -griddelta 45
 configure wave -timeline 0
 configure wave -timelineunits us
 update
-WaveRestoreZoom {0 ns} {5513 ns}
+WaveRestoreZoom {0 ns} {104738 ns}
