@@ -90,7 +90,6 @@ module fpu(
   logic [ 7:0] a_exp;
   logic [ 7:0] a_exp_adjusted;
   logic        a_sign;
-  logic        a_sticky_bit;
 
   logic [25:0] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
   logic [25:-3] b_mantissa_shifted;  // 24 mantissa, 2 upper guards for signed arithmetic, 3 lower rounding guard bits
@@ -98,8 +97,8 @@ module fpu(
   logic [ 7:0] b_exp;
   logic [ 7:0] b_exp_adjusted;
   logic        b_sign;
-  logic        b_sticky_bit;
 
+  logic        sticky_bit; // sticky bit is used for whichever number has the smallest exponent and is shifted right for alignment during add or sub operations
   logic signed [8:0] ab_exp_diff;
   logic [8:0] ab_shift_amount;
 
@@ -108,10 +107,10 @@ module fpu(
   // that can come out of bit 23
   // addition/subtraction datapath
   logic [25:-3] result_m_addsub_prenorm; // 24 bits plus carry plus 3 guard bits
-  logic [25:-3] result_m_addsub_norm; // 24 bits plus carry plus 3 guard bits
   logic [25:-3] result_m_addsub_abs; // 24 bits plus carry plus 3 guard bits
+  logic [22:0] result_m_addsub; // 23 bits for final mantissa
   logic [ 7:0] result_e_addsub_prenorm;
-  logic [ 7:0] result_e_addsub_norm;
+  logic [ 7:0] result_e_addsub;
   logic        result_s_addsub;
   logic [ 5:0] zcount_addsub;
 
@@ -243,8 +242,8 @@ module fpu(
                                               // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
                                               // however for clarity, the operands are explicitly extended to 9 bits.
 
-  assign ieee_packet_out = operation == pa_fpu::op_add          ? {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]} :
-                           operation == pa_fpu::op_sub          ? {result_s_addsub, result_e_addsub_norm, result_m_addsub_norm[22:0]} :
+  assign ieee_packet_out = operation == pa_fpu::op_add          ? {result_s_addsub, result_e_addsub, result_m_addsub[22:0]} :
+                           operation == pa_fpu::op_sub          ? {result_s_addsub, result_e_addsub, result_m_addsub[22:0]} :
                            operation == pa_fpu::op_mul          ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
                            operation == pa_fpu::op_square       ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
                            operation == pa_fpu::op_div          ? {result_sign_div, result_exp_div, result_mantissa_div[22:0]} :
@@ -254,68 +253,42 @@ module fpu(
 
   assign ab_shift_amount = 9'(abs(ab_exp_diff));
   // Sticky bit (guard -3) = OR of all bits from index (s-3) down to 0
-  assign a_sticky_bit = (ab_shift_amount <  3) ? 1'b0 :
-                      (ab_shift_amount == 3) ? a_mantissa[0] :
-                      (ab_shift_amount == 4) ? |a_mantissa[1:0] :
-                      (ab_shift_amount == 5) ? |a_mantissa[2:0] :
-                      (ab_shift_amount == 6) ? |a_mantissa[3:0] :
-                      (ab_shift_amount == 7) ? |a_mantissa[4:0] :
-                      (ab_shift_amount == 8) ? |a_mantissa[5:0] :
-                      (ab_shift_amount == 9) ? |a_mantissa[6:0] :
-                      (ab_shift_amount == 10) ? |a_mantissa[7:0] :
-                      (ab_shift_amount == 11) ? |a_mantissa[8:0] :
-                      (ab_shift_amount == 12) ? |a_mantissa[9:0] :
-                      (ab_shift_amount == 13) ? |a_mantissa[10:0] :
-                      (ab_shift_amount == 14) ? |a_mantissa[11:0] :
-                      (ab_shift_amount == 15) ? |a_mantissa[12:0] :
-                      (ab_shift_amount == 16) ? |a_mantissa[13:0] :
-                      (ab_shift_amount == 17) ? |a_mantissa[14:0] :
-                      (ab_shift_amount == 18) ? |a_mantissa[15:0] :
-                      (ab_shift_amount == 19) ? |a_mantissa[16:0] :
-                      (ab_shift_amount == 20) ? |a_mantissa[17:0] :
-                      (ab_shift_amount == 21) ? |a_mantissa[18:0] :
-                      (ab_shift_amount == 22) ? |a_mantissa[19:0] :
-                      (ab_shift_amount == 23) ? |a_mantissa[20:0] :
-                      (ab_shift_amount == 24) ? |a_mantissa[21:0] :
-                      (ab_shift_amount == 25) ? |a_mantissa[22:0] :
-                      (ab_shift_amount == 26) ? |a_mantissa[23:0] :
-                      (ab_shift_amount == 27) ? |a_mantissa[24:0] :
-                      (ab_shift_amount >= 28) ? |a_mantissa[25:0] : 1'b0;
-  assign b_sticky_bit = (ab_shift_amount <  3) ? 1'b0 :
-                      (ab_shift_amount == 3) ? b_mantissa[0] :
-                      (ab_shift_amount == 4) ? |b_mantissa[1:0] :
-                      (ab_shift_amount == 5) ? |b_mantissa[2:0] :
-                      (ab_shift_amount == 6) ? |b_mantissa[3:0] :
-                      (ab_shift_amount == 7) ? |b_mantissa[4:0] :
-                      (ab_shift_amount == 8) ? |b_mantissa[5:0] :
-                      (ab_shift_amount == 9) ? |b_mantissa[6:0] :
-                      (ab_shift_amount == 10) ? |b_mantissa[7:0] :
-                      (ab_shift_amount == 11) ? |b_mantissa[8:0] :
-                      (ab_shift_amount == 12) ? |b_mantissa[9:0] :
-                      (ab_shift_amount == 13) ? |b_mantissa[10:0] :
-                      (ab_shift_amount == 14) ? |b_mantissa[11:0] :
-                      (ab_shift_amount == 15) ? |b_mantissa[12:0] :
-                      (ab_shift_amount == 16) ? |b_mantissa[13:0] :
-                      (ab_shift_amount == 17) ? |b_mantissa[14:0] :
-                      (ab_shift_amount == 18) ? |b_mantissa[15:0] :
-                      (ab_shift_amount == 19) ? |b_mantissa[16:0] :
-                      (ab_shift_amount == 20) ? |b_mantissa[17:0] :
-                      (ab_shift_amount == 21) ? |b_mantissa[18:0] :
-                      (ab_shift_amount == 22) ? |b_mantissa[19:0] :
-                      (ab_shift_amount == 23) ? |b_mantissa[20:0] :
-                      (ab_shift_amount == 24) ? |b_mantissa[21:0] :
-                      (ab_shift_amount == 25) ? |b_mantissa[22:0] :
-                      (ab_shift_amount == 26) ? |b_mantissa[23:0] :
-                      (ab_shift_amount == 27) ? |b_mantissa[24:0] :
-                      (ab_shift_amount >= 28) ? |b_mantissa[25:0] : 1'b0;
+  assign sticky_bit = ab_shift_amount <   3 ? 1'b0 :
+                      ab_shift_amount ==  3 ? a_exp < b_exp ?  a_mantissa[0]    :  b_mantissa[0]    :
+                      ab_shift_amount ==  4 ? a_exp < b_exp ? |a_mantissa[1:0]  : |b_mantissa[1:0]  :
+                      ab_shift_amount ==  5 ? a_exp < b_exp ? |a_mantissa[2:0]  : |b_mantissa[2:0]  :
+                      ab_shift_amount ==  6 ? a_exp < b_exp ? |a_mantissa[3:0]  : |b_mantissa[3:0]  :
+                      ab_shift_amount ==  7 ? a_exp < b_exp ? |a_mantissa[4:0]  : |b_mantissa[4:0]  :
+                      ab_shift_amount ==  8 ? a_exp < b_exp ? |a_mantissa[5:0]  : |b_mantissa[5:0]  :
+                      ab_shift_amount ==  9 ? a_exp < b_exp ? |a_mantissa[6:0]  : |b_mantissa[6:0]  :
+                      ab_shift_amount == 10 ? a_exp < b_exp ? |a_mantissa[7:0]  : |b_mantissa[7:0]  :
+                      ab_shift_amount == 11 ? a_exp < b_exp ? |a_mantissa[8:0]  : |b_mantissa[8:0]  :
+                      ab_shift_amount == 12 ? a_exp < b_exp ? |a_mantissa[9:0]  : |b_mantissa[9:0]  :
+                      ab_shift_amount == 13 ? a_exp < b_exp ? |a_mantissa[10:0] : |b_mantissa[10:0] :
+                      ab_shift_amount == 14 ? a_exp < b_exp ? |a_mantissa[11:0] : |b_mantissa[11:0] :
+                      ab_shift_amount == 15 ? a_exp < b_exp ? |a_mantissa[12:0] : |b_mantissa[12:0] :
+                      ab_shift_amount == 16 ? a_exp < b_exp ? |a_mantissa[13:0] : |b_mantissa[13:0] :
+                      ab_shift_amount == 17 ? a_exp < b_exp ? |a_mantissa[14:0] : |b_mantissa[14:0] :
+                      ab_shift_amount == 18 ? a_exp < b_exp ? |a_mantissa[15:0] : |b_mantissa[15:0] :
+                      ab_shift_amount == 19 ? a_exp < b_exp ? |a_mantissa[16:0] : |b_mantissa[16:0] :
+                      ab_shift_amount == 20 ? a_exp < b_exp ? |a_mantissa[17:0] : |b_mantissa[17:0] :
+                      ab_shift_amount == 21 ? a_exp < b_exp ? |a_mantissa[18:0] : |b_mantissa[18:0] :
+                      ab_shift_amount == 22 ? a_exp < b_exp ? |a_mantissa[19:0] : |b_mantissa[19:0] :
+                      ab_shift_amount == 23 ? a_exp < b_exp ? |a_mantissa[20:0] : |b_mantissa[20:0] :
+                      ab_shift_amount == 24 ? a_exp < b_exp ? |a_mantissa[21:0] : |b_mantissa[21:0] :
+                      ab_shift_amount == 25 ? a_exp < b_exp ? |a_mantissa[22:0] : |b_mantissa[22:0] :
+                      ab_shift_amount == 26 ? a_exp < b_exp ? |a_mantissa[23:0] : |b_mantissa[23:0] :
+                      ab_shift_amount == 27 ? a_exp < b_exp ? |a_mantissa[24:0] : |b_mantissa[24:0] :
+                      ab_shift_amount >= 28 ? a_exp < b_exp ? |a_mantissa[25:0] : |b_mantissa[25:0] : 1'b0;
+
   // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
   // else if aexp > bexp, then increase bexp and right-shift b_mantissa by same number
   // else, exponents are the same
-  assign a_mantissa_shifted[25:-3] = a_exp < b_exp ? {{a_mantissa, 2'b00} >> ab_shift_amount, a_sticky_bit} : {a_mantissa, 3'b000};
-  assign b_mantissa_shifted[25:-3] = b_exp < a_exp ? {{b_mantissa, 2'b00} >> ab_shift_amount, b_sticky_bit} : {b_mantissa, 3'b000};
-  assign a_exp_adjusted      = a_exp < b_exp ? b_exp : a_exp;
-  assign b_exp_adjusted      = b_exp < a_exp ? a_exp : b_exp;
+  assign a_mantissa_shifted[25:-3] = a_exp < b_exp ? {{a_mantissa, 2'b00} >> ab_shift_amount, sticky_bit} : {a_mantissa, 3'b000};
+  assign b_mantissa_shifted[25:-3] = b_exp < a_exp ? {{b_mantissa, 2'b00} >> ab_shift_amount, sticky_bit} : {b_mantissa, 3'b000};
+  assign a_exp_adjusted = a_exp < b_exp ? b_exp : a_exp;
+  assign b_exp_adjusted = b_exp < a_exp ? a_exp : b_exp;
   assign a_mantissa_adjusted = a_sign ? ~a_mantissa_shifted + 1'b1 : a_mantissa_shifted;
   assign b_mantissa_adjusted = b_sign ? ~b_mantissa_shifted + 1'b1 : b_mantissa_shifted;
   // sign bit for result_m_addsub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
@@ -326,22 +299,56 @@ module fpu(
   assign result_e_addsub_prenorm = a_exp_adjusted;
   assign result_m_addsub_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
   // lzc function is 32bit, hence need to add extra 3bits to left of the argument. 
-  // also, the variable result_m_addsub_abs itself has an extra 2 bits (the sign bit + carry bit), so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 8 from the result.
-  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd8; // result_m_addsub_abs is 19bits wide, so add 3 extra bits to make 32 to satisfy lzc function
-  // TODO DEAL WITH GUARD BITS AND ADD ROUNDING
+  // also, the variable result_m_addsub_abs itself has an extra 2 bits (the sign bit + carry bit), so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 5 from the result.
+  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd5; // result_m_addsub_abs is 29bits wide, so add 3 extra bits to make 32 to satisfy lzc function
+  
+  // Normalize before rounding
+  logic [25:-3] result_m_addsub_normalized;  // Normalized result before rounding
+  logic [7:0] result_e_addsub_normalized;    // Normalized exponent before rounding
+  
+  // Normalize the result
+  assign result_m_addsub_normalized = result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : result_m_addsub_abs << zcount_addsub;
+  assign result_e_addsub_normalized = result_m_addsub_abs[24] ? result_e_addsub_prenorm + 1'b1 : result_e_addsub_prenorm - zcount_addsub;
+  
+  // Rounding logic for addition/subtraction
+  logic [25:0] result_m_addsub_rounded;  // Temporary rounded result
+  logic [25:0] result_m_addsub_renorm;  // renormalized after rounding
+  logic [7:0] result_e_addsub_renorm;    // Temporary rounded exponent
+  
+  // Get the guard bits and sticky bit after normalization
+  logic [-1:-3] guard_bits;  // GRS bits (Guard, Round, Sticky)
+  assign guard_bits = result_m_addsub_normalized[-1:-3];  // Bits after the 23-bit mantissa
+  
+  // Round to nearest ties to even
+  // If G=1 and (R=1 or S=1 or L=1), round up
+  // If G=1 and R=0 and S=0 and L=0, round to even (L is the LSB of the mantissa)
+  assign result_m_addsub_rounded = (guard_bits[-1] && (guard_bits[-2] || guard_bits[-3])) || 
+                                  (guard_bits[-1] && ~guard_bits[-2] && ~guard_bits[-3] && result_m_addsub_normalized[0]) ? 
+                                  result_m_addsub_normalized[25:0] + 1'b1 : result_m_addsub_normalized[25:0];
+
+//  if first bit after L is 0, round down
+//  else if first bit after L is 1 and at least one bit after G is 1 then round up
+//  else if first bit after L is 1 and all bits after that are 0 then tie: if L = 0 round down
+//                                                                         else if L = 1 round up
+//  up: G && (R || S) || G && (~R && ~S && L)
+
+  // Adjust exponent if rounding caused a carry
+  assign result_e_addsub_renorm = result_m_addsub_rounded[24] ? result_e_addsub_normalized + 1'b1 : result_e_addsub_normalized;
+  assign result_m_addsub_renorm = result_m_addsub_rounded[24] ? result_m_addsub_rounded >> 1 : result_m_addsub_rounded;
+  
+  // Final result with rounding
   assign {result_s_addsub, 
-          result_e_addsub_norm, 
-          result_m_addsub_norm[22:0]} = a_nan ? {a_sign, a_exp, a_mantissa[22:0]} : // 'a' as NAN
-                                        b_nan ? {b_sign, b_exp, b_mantissa[22:0]} : // 'b' as NAN
-                                        a_pos_inf && b_neg_inf || a_neg_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h400000} : // NAN
-                                        a_pos_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h000000} : // pos inf
-                                        a_neg_inf && b_neg_inf ? {1'b1, 8'hFF, 23'h000000} : // neg inf
-                                        a_inf ? {a_sign, 8'hFF, 23'h000000} : // inf with same sign as a
-                                        b_inf ? {b_sign, 8'hFF, 23'h000000} : // inf with same sign as b
-                                        result_m_addsub_abs == '0 ? {result_m_addsub_prenorm[25], 8'h00, 23'h0} : // if mantissa result is '0, then set entire result to zero including exponents
-                                        result_m_addsub_abs[24]   ? {result_m_addsub_prenorm[25], result_e_addsub_prenorm + 1'b1, 23'(result_m_addsub_abs >> 1)} :
-                                        {result_m_addsub_prenorm[25], result_e_addsub_prenorm - zcount_addsub, 23'(result_m_addsub_abs << zcount_addsub)};
-                                 
+          result_e_addsub, 
+          result_m_addsub[22:0]} = a_nan ? {a_sign, a_exp, a_mantissa[22:0]} : // 'a' as NAN
+                                   b_nan ? {b_sign, b_exp, b_mantissa[22:0]} : // 'b' as NAN
+                                   a_pos_inf && b_neg_inf || a_neg_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h400000} : // NAN
+                                   a_pos_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h000000} : // pos inf
+                                   a_neg_inf && b_neg_inf ? {1'b1, 8'hFF, 23'h000000} : // neg inf
+                                   a_inf ? {a_sign, 8'hFF, 23'h000000} : // inf with same sign as a
+                                   b_inf ? {b_sign, 8'hFF, 23'h000000} : // inf with same sign as b
+                                   result_m_addsub_abs == '0 ? {result_m_addsub_prenorm[25], 8'h00, 23'h0} : // if mantissa result is '0, then set entire result to zero including exponents
+                                   {result_m_addsub_prenorm[25], result_e_addsub_renorm, result_m_addsub_renorm[22:0]};
+
   // MULTIPLICATION DATAPATH
   // for multiplication an example follows:
   //     1.00   minimum possible multiplication
@@ -521,8 +528,8 @@ module fpu(
         sqrt_xn_sign     <= a_sign;
       end
       else if(sqrt_xn_add_wrt) begin
-        sqrt_xn_mantissa <= result_m_addsub_norm;
-        sqrt_xn_exp      <= result_e_addsub_norm - 8'd1;
+        sqrt_xn_mantissa <= result_m_addsub[22:0];
+        sqrt_xn_exp      <= result_e_addsub - 8'd1;
         sqrt_xn_sign     <= result_s_addsub;
       end
       if(sqrt_A_a_wrt) begin

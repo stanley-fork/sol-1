@@ -40,8 +40,21 @@ add wave -noupdate /fpu_tb/fpu_top/clk
 add wave -noupdate /fpu_tb/fpu_top/curr_state_main_fsm
 add wave -noupdate /fpu_tb/fpu_top/curr_state_arith_fsm
 add wave -noupdate /fpu_tb/fpu_top/curr_state_sqrt_fsm
+add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_prenorm
+add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_abs
+add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub
+add wave -noupdate -radix unsigned /fpu_tb/fpu_top/result_e_addsub_prenorm
+add wave -noupdate -radix unsigned /fpu_tb/fpu_top/result_e_addsub
+add wave -noupdate /fpu_tb/fpu_top/result_s_addsub
+add wave -noupdate /fpu_tb/fpu_top/zcount_addsub
+add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_normalized
+add wave -noupdate -radix unsigned /fpu_tb/fpu_top/result_e_addsub_normalized
+add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_rounded
+add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_renorm
+add wave -noupdate -radix unsigned /fpu_tb/fpu_top/result_e_addsub_renorm
+add wave -noupdate /fpu_tb/fpu_top/guard_bits
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 3} {38750 ns} 0}
+WaveRestoreCursors {{Cursor 3} {3334 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 245
 configure wave -valuecolwidth 331
@@ -57,4 +70,4 @@ configure wave -griddelta 45
 configure wave -timeline 0
 configure wave -timelineunits us
 update
-WaveRestoreZoom {0 ns} {104738 ns}
+WaveRestoreZoom {0 ns} {5513 ns}
