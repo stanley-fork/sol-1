@@ -18,7 +18,7 @@ module fpu_tb;
   } st_fpu_computation;
 
   st_fpu_computation computation_list[] = {
-    st_fpu_computation'{32'h412df854, 32'h43adf854}   // 8   1.9999999,    10.87},      
+    st_fpu_computation'{32'h4d96890d, 32'h4a447fad}   // 0   315695520.0,  3219435.3},
   };
 
   initial begin
