@@ -140,7 +140,7 @@ module fpu(
   logic [23:0] div_quotient_prenorm_out;
   logic [23:0] quotient_mantissa_div_norm;
   logic [4:0]  zcount_div;
-  logic [23:0] result_mantissa_div;
+  logic [22:0] result_mantissa_div;
   logic [ 7:0] result_exp_div;
   logic        result_sign_div;
   
