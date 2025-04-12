@@ -302,8 +302,12 @@ module fpu(
   // sign bit for result_m_addsub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
   // that can come out of bit 23
-  assign result_m_addsub_prenorm = operation == pa_fpu::op_add ? a_mantissa_adjusted + b_mantissa_adjusted :
-                                                                 a_mantissa_adjusted - b_mantissa_adjusted;
+
+  // here we need to be careful, because some other operations make use of the internal add/sub circuit, for example op_sqrt makes use
+  // of the addition operation. so here we make it such that if the current operation is sqrt, then we select addition instead of
+  // subtraction. 
+  assign result_m_addsub_prenorm = operation == pa_fpu::op_add || operation == pa_fpu::op_sqrt ? a_mantissa_adjusted + b_mantissa_adjusted :
+                                                                                                 a_mantissa_adjusted - b_mantissa_adjusted;
   assign result_e_addsub_prenorm = a_exp_adjusted;
   assign result_m_addsub_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
   // lzc function is 32bit, hence need to add extra 3bits to left of the argument. 
