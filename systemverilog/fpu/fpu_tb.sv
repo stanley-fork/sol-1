@@ -62,7 +62,7 @@ module fpu_tb;
     //for(int i = 3; i < 4; i++) begin
       a_operand = computation_list[i].a; 
       b_operand = computation_list[i].b; 
-      operation = pa_fpu::op_add;
+      operation = pa_fpu::op_sqrt;
       start = 1'b1;
       @(cmd_end) start = 1'b0;
       #1us;

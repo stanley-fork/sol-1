@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 12:38:19 on Apr 12,2025
+# Start time: 14:28:36 on Apr 12,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
@@ -27,71 +27,180 @@
 # Loading work.comb_mul(fast)
 # Loading work.comb_div24_frac(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
+# Load canceled
 do /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 2
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 3
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 4
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 6
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 7
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 8
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 9
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 10
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 11
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 12
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 13
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 14
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 15
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 16
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 17
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 18
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 19
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/afloat'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 23
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/amant'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 24
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/bfloat'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 29
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/bmant'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 30
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/div_float'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 44
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/addsub_float'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 56
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/xn_float'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 69
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/mant001'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 70
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/sqrtAfloat'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 74
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/sqrtamant'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 75
 run -all
-# a: 16.000000         , b: 32.000000         , result: 1.861763           (3fee4e42, 00111111111011100100111001000010)
-# ** Note: $stop    : fpu_tb.sv(46)
-#    Time: 13250 ns  Iteration: 0  Instance: /fpu_tb
-# Break in Module fpu_tb at fpu_tb.sv line 46
-add wave -position insertpoint  \
-sim:/fpu_tb/fpu_top/a_operand \
-sim:/fpu_tb/fpu_top/b_operand
-write format wave -window .main_pane.wave.interior.cs.body.pw.wf /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
-restart
+# a: 315695520.000000  , b: 3219435.250000    , result: 17767.822266       (468acfa5, 01000110100010101100111110100101)
+# a: 2.718282          , b: nan               , result: 0.084946           (3dadf854, 00111101101011011111100001010100)
+# a: 2.000000          , b: 2.718282          , result: 1.414214           (3fb504f3, 00111111101101010000010011110011)
+# a: 37.639999         , b: 0.000000          , result: 319014718988379809496913694467282698240.000000 (7f700000, 01111111011100000000000000000000)
+# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
+# a: 0.250000          , b: 0.500000          , result: 0.500000           (3f000000, 00111111000000000000000000000000)
+# ** Note: $stop    : fpu_tb.sv(52)
+#    Time: 75750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at fpu_tb.sv line 52
+vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# Start time: 14:34:03 on Apr 12,2025
+# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv 
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# End time: 14:34:03 on Apr 12,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+restart -f
 # ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
-# ** Note: (vsim-8009) Loading existing optimized design _opt
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vsim-8611) Generating debug db.
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
 # ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
 # Loading work.pa_fpu(fast)
 # Loading work.fpu_tb(fast)
 # Loading work.fpu(fast)
 # Loading work.comb_mul(fast)
 # Loading work.comb_div24_frac(fast)
-# ** Note: (vsim-8716) Reusing existing debug database vsim.dbg.
+# ** Note: (vsim-8900) Creating design debug database vsim.dbg.
 run -all
-# a: 16.000000         , b: 32.000000         , result: 1.861763           (3fee4e42, 00111111111011100100111001000010)
-# ** Note: $stop    : fpu_tb.sv(46)
+# a: 2.718282          , b: nan               , result: 0.084946           (3dadf854, 00111101101011011111100001010100)
+# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(47)
 #    Time: 13250 ns  Iteration: 0  Instance: /fpu_tb
-# Break in Module fpu_tb at fpu_tb.sv line 46
-write format wave -window .main_pane.wave.interior.cs.body.pw.wf /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
-write format wave -window .main_pane.wave.interior.cs.body.pw.wf /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
-write format wave -window .main_pane.wave.interior.cs.body.pw.wf /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
-write format wave -window .main_pane.wave.interior.cs.body.pw.wf /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
-add wave -position insertpoint  \
-sim:/fpu_tb/clk
-restart
-# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
-# ** Note: (vsim-8009) Loading existing optimized design _opt
-# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
-# Loading work.pa_fpu(fast)
-# Loading work.fpu_tb(fast)
-# Loading work.fpu(fast)
-# Loading work.comb_mul(fast)
-# Loading work.comb_div24_frac(fast)
-# ** Note: (vsim-8716) Reusing existing debug database vsim.dbg.
-run -all
-# a: 16.000000         , b: 32.000000         , result: 1.861763           (3fee4e42, 00111111111011100100111001000010)
-# ** Note: $stop    : fpu_tb.sv(46)
-#    Time: 13250 ns  Iteration: 0  Instance: /fpu_tb
-# Break in Module fpu_tb at fpu_tb.sv line 46
-write format wave -window .main_pane.wave.interior.cs.body.pw.wf /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
-write format wave -window .main_pane.wave.interior.cs.body.pw.wf /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
+# Break in Module fpu_tb at /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 47
+do /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 2
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 3
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 4
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 6
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 7
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 8
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 9
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 10
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 11
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 12
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 13
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 14
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 15
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 16
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 17
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 18
+# ** Error: Missing or invalid env path
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 19
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/afloat'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 23
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/amant'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 24
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/bfloat'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 29
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/bmant'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 30
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/div_float'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 44
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/addsub_float'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 56
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/xn_float'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 69
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/mant001'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 70
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/sqrtAfloat'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 74
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/sqrtamant'.
+# Executing ONERROR command at macro /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do line 75
+find drivers -source -time {4.448 us} -cause sim:/fpu_tb/fpu_top/b_exp_adjusted
+# 
+# ==================================================================================
+# *PARTIAL* causality trace results for signal "sim:/fpu_tb/fpu_top/b_exp_adjusted":
+# 
+#    Time | Type | Scope           | Signal     | Source File
+# ------- | ---- | --------------- | ---------- | --------------------------------------------------------------------------------
+# 4250 ns | Mux  | /fpu_tb/fpu_top | b_exp[7:0] | fpu_top.sv:299
 vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
 # Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
-# Start time: 13:13:10 on Apr 12,2025
+# Start time: 14:43:02 on Apr 12,2025
 # vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv 
 # -- Compiling module fpu
 # -- Importing package pa_fpu
 # 
 # Top level modules:
 # 	fpu
-# End time: 13:13:10 on Apr 12,2025, Elapsed time: 0:00:00
+# End time: 14:43:02 on Apr 12,2025, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 restart
 # ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
 # ** Note: (vsim-3813) Design is being optimized due to module recompilation...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
-# ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
 # ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
 # Loading sv_std.std
 # Loading work.pa_fpu(fast)
@@ -99,13 +208,10 @@ restart
 # Loading work.comb_mul(fast)
 # Loading work.comb_div24_frac(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
-# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/a_operand'. 
-# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/b_operand'. 
 run -all
-# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
-# ** Note: $stop    : fpu_tb.sv(46)
+# a: 2.718282          , b: nan               , result: 1.648721           (3fd3094c, 00111111110100110000100101001100)
+# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(47)
 #    Time: 13250 ns  Iteration: 0  Instance: /fpu_tb
-# Break in Module fpu_tb at fpu_tb.sv line 46
-write format wave -window .main_pane.wave.interior.cs.body.pw.wf /home/pconst/Desktop/sol-1/systemverilog/fpu/sqrt.do
-# End time: 14:27:07 on Apr 12,2025, Elapsed time: 1:48:48
+# Break in Module fpu_tb at /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 47
+# End time: 14:44:36 on Apr 12,2025, Elapsed time: 0:16:00
 # Errors: 0, Warnings: 1

@@ -224,17 +224,17 @@ module fpu(
     return (6)'(32);    
   endfunction
 
-  assign a_nan     = a_operand[30:23] == 8'hff && |a_operand[22:0];
-  assign a_zero    = a_operand[30:23] == 8'h00 &&  a_operand[22:0] == 23'h0;
-  assign a_inf     = a_operand[30:23] == 8'hff &&  a_operand[22:0] == 23'h0;
-  assign a_pos_inf = a_operand[31]    == 1'b0  &&  a_inf;
-  assign a_neg_inf = a_operand[31]    == 1'b1  &&  a_inf;
+  assign a_nan     = a_exp == 8'hff && |a_mantissa[22:0];
+  assign a_zero    = a_exp == 8'h00 &&  a_mantissa[22:0] == 23'h0;
+  assign a_inf     = a_exp == 8'hff &&  a_mantissa[22:0] == 23'h0;
+  assign a_pos_inf = a_sign == 1'b0 &&  a_inf;
+  assign a_neg_inf = a_sign == 1'b1 &&  a_inf;
 
-  assign b_nan     = b_operand[30:23] == 8'hff && |b_operand[22:0];
-  assign b_zero    = b_operand[30:23] == 8'h00 &&  b_operand[22:0] == 23'h0;
-  assign b_inf     = b_operand[30:23] == 8'hff &&  b_operand[22:0] == 23'h0;
-  assign b_pos_inf = b_operand[31]    == 1'b0  &&  b_inf;
-  assign b_neg_inf = b_operand[31]    == 1'b1  &&  b_inf;
+  assign b_nan     = b_exp == 8'hff && |b_mantissa[22:0];
+  assign b_zero    = b_exp == 8'h00 &&  b_mantissa[22:0] == 23'h0;
+  assign b_inf     = b_exp == 8'hff &&  b_mantissa[22:0] == 23'h0;
+  assign b_pos_inf = b_sign == 1'b0 &&  b_inf;
+  assign b_neg_inf = b_sign == 1'b1 &&  b_inf;
 
   assign zero_or_zero         = a_zero || b_zero;
   assign zero_and_zero        = a_zero && b_zero;
