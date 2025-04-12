@@ -18,7 +18,7 @@ module fpu_tb;
   } st_fpu_computation;
 
   st_fpu_computation computation_list[] = {
-    st_fpu_computation'{32'h4d96890d, 32'h4a447fad}   // 0   315695520.0,  3219435.3},
+    st_fpu_computation'{32'h41800000, 32'h42000000}   // 10  16.0,         32.0},              
   };
 
   initial begin
@@ -36,7 +36,7 @@ module fpu_tb;
     //for(int i = 3; i < 4; i++) begin
       a_operand = computation_list[i].a; 
       b_operand = computation_list[i].b; 
-      operation = pa_fpu::op_add;
+      operation = pa_fpu::op_sqrt;
       start = 1'b1;
       @(cmd_end) start = 1'b0;
       #1us;

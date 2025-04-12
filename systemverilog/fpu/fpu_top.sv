@@ -453,30 +453,30 @@ module fpu(
     end   
     else begin
       if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
-        a_mantissa <= {a_operand[30:23] != 8'd0, a_operand[22:0]};
+        a_mantissa <= {2'b00, 1'b1, a_operand[22:0]};
         a_exp      <= a_operand[30:23];
         a_sign     <= a_operand[31];
-        b_mantissa <= {b_operand[30:23] != 8'd0, b_operand[22:0]};
+        b_mantissa <= {2'b00, 1'b1, b_operand[22:0]};
         b_exp      <= b_operand[30:23];
         b_sign     <= b_operand[31];
       end
       if(sqrt_a_xn_wrt) begin
-        a_mantissa <= sqrt_xn_mantissa;
+        a_mantissa <= {2'b00, sqrt_xn_mantissa};
         a_exp      <= sqrt_xn_exp;
         a_sign     <= sqrt_xn_sign;
       end
       else if(sqrt_a_A_wrt) begin
-        a_mantissa <= sqrt_A_mantissa;
+        a_mantissa <= {2'b00, sqrt_A_mantissa};
         a_exp      <= sqrt_A_exp;
         a_sign     <= sqrt_A_sign;
       end
       if(sqrt_b_xn_wrt) begin
-        b_mantissa <= sqrt_xn_mantissa;
+        b_mantissa <= {2'b00, sqrt_xn_mantissa};
         b_exp      <= sqrt_xn_exp;
         b_sign     <= sqrt_xn_sign;
       end
       else if(sqrt_b_div_wrt) begin
-        b_mantissa <= result_mantissa_div;
+        b_mantissa <= {2'b00, 1'b1, result_mantissa_div};
         b_exp      <= result_exp_div;
         b_sign     <= result_sign_div;
       end
@@ -523,7 +523,7 @@ module fpu(
         sqrt_xn_sign     <= a_sign;
       end
       else if(sqrt_xn_add_wrt) begin
-        sqrt_xn_mantissa <= result_m_addsub[22:0];
+        sqrt_xn_mantissa <= {1'b1, result_m_addsub[22:0]};
         sqrt_xn_exp      <= result_e_addsub - 8'd1;
         sqrt_xn_sign     <= result_s_addsub;
       end

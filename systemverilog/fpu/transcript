@@ -14,7 +14,7 @@
 # // and may not be used in any way not expressly authorized by SISW.
 # //
 # vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 23:16:06 on Apr 11,2025
+# Start time: 01:05:44 on Apr 12,2025
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
@@ -31,75 +31,16 @@
 # Executing ONERROR command at macro ./wave.do line 20
 # ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/b_sticky_bit'.
 # Executing ONERROR command at macro ./wave.do line 23
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_m_addsub_normalized'.
+# Executing ONERROR command at macro ./wave.do line 50
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_e_addsub_normalized'.
+# Executing ONERROR command at macro ./wave.do line 51
+# ** UI-Msg (Warning): (vish-4014) No objects found matching '/fpu_tb/fpu_top/guard_bits'.
+# Executing ONERROR command at macro ./wave.do line 55
 run -all
-# a: 315695520.000000  , b: 3219435.250000    , result: 318914944.000000   (4d98120c, 01001101100110000001001000001100)
+# a: 16.000000         , b: 32.000000         , result: 0.000000           (Xxxxxxxx, 0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
 # ** Note: $stop    : fpu_tb.sv(46)
-#    Time: 5250 ns  Iteration: 0  Instance: /fpu_tb
+#    Time: 15250 ns  Iteration: 0  Instance: /fpu_tb
 # Break in Module fpu_tb at fpu_tb.sv line 46
-# Saving layout as "Simulate"
-# Saving layout as "Simulate"
-do /home/pconst/Desktop/sol-1/systemverilog/fpu/addsub.do
-vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
-# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
-# Start time: 23:45:18 on Apr 11,2025
-# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv 
-# -- Compiling module fpu_tb
-# -- Importing package pa_fpu
-# 
-# Top level modules:
-# 	fpu_tb
-# End time: 23:45:18 on Apr 11,2025, Elapsed time: 0:00:00
-# Errors: 0, Warnings: 0
-vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
-vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
-# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
-# Start time: 23:45:50 on Apr 11,2025
-# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv 
-# -- Compiling module fpu
-# -- Importing package pa_fpu
-# 
-# Top level modules:
-# 	fpu
-# End time: 23:45:50 on Apr 11,2025, Elapsed time: 0:00:00
-# Errors: 0, Warnings: 0
-# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
-# Start time: 23:45:50 on Apr 11,2025
-# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv 
-# -- Compiling module fpu
-# -- Importing package pa_fpu
-# 
-# Top level modules:
-# 	fpu
-# End time: 23:45:50 on Apr 11,2025, Elapsed time: 0:00:00
-# Errors: 0, Warnings: 0
-vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
-# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
-# Start time: 23:46:18 on Apr 11,2025
-# vlog -reportprogress 300 -work work /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv 
-# -- Compiling module fpu
-# -- Importing package pa_fpu
-# 
-# Top level modules:
-# 	fpu
-# End time: 23:46:19 on Apr 11,2025, Elapsed time: 0:00:01
-# Errors: 0, Warnings: 0
-restart -f
-# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
-# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
-# ** Note: (vsim-8611) Generating debug db.
-# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
-# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
-# Loading sv_std.std
-# Loading work.pa_fpu(fast)
-# Loading work.fpu_tb(fast)
-# Loading work.comb_mul(fast)
-# Loading work.comb_div24_frac(fast)
-# ** Note: (vsim-8900) Creating design debug database vsim.dbg.
-# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_m_addsub_normalized'. 
-# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/result_e_addsub_normalized'. 
-# Warning in wave window restart: (vish-4014) No objects found matching '/fpu_tb/fpu_top/guard_bits'. 
-run -all
-# a: 315695520.000000  , b: 3219435.250000    , result: 318914944.000000   (4d98120c, 01001101100110000001001000001100)
-# ** Note: $stop    : /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(46)
-#    Time: 5250 ns  Iteration: 0  Instance: /fpu_tb
-# Break in Module fpu_tb at /home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 46
+# End time: 01:06:25 on Apr 12,2025, Elapsed time: 0:00:41
+# Errors: 0, Warnings: 1
