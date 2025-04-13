@@ -508,6 +508,7 @@ module fpu(
       else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_st) begin
         sqrt_counter <= sqrt_counter + 4'd1;
       end
+      // in exceptional_st, next state is sqrt_result_valid_st
       if(curr_state_sqrt_fsm == pa_fpu::sqrt_exceptional_st) begin
         if(a_nan || a_pos_inf || a_zero) 
           {sqrt_xn_sign, sqrt_xn_exp, sqrt_xn_mantissa[22:0]} = {a_sign, a_exp, a_mantissa[22:0]}; // a
