@@ -1,23 +1,35 @@
-# Failed to obtain lock: couldn't open "/home/pconst/.modelsim_lock": file already exists
-# Reading pref.tcl
-# //  Questa Intel Starter FPGA Edition-64
-# //  Version 2024.3 linux_x86_64 Sep 10 2024
-# //
-# // Unpublished work. Copyright 2024 Siemens
-# //
-# // This material contains trade secrets or otherwise confidential information
-# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
-# // "SISW"), or its licensors. Access to and use of this information is strictly
-# // limited as set forth in the Customer's applicable agreements with SISW.
-# //
-# // This material may not be copied, distributed, or otherwise disclosed outside
-# // of the Customer's facilities without the express written permission of SISW,
-# // and may not be used in any way not expressly authorized by SISW.
-# //
-# vsim -gui -debugDB -voptargs="+acc=rtl" -work work fpu_tb 
-# Start time: 22:20:09 on Apr 12,2025
+# 0 compiles, 3 failed with no errors.
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 0 failed with no errors.
+vsim -gui -voptargs=+acc work.fpu_tb
+# vsim -gui -voptargs="+acc" work.fpu_tb 
+# Start time: 21:16:13 on Apr 13,2025
 # ** Note: (vsim-3812) Design is being optimized...
-# ** Note: (vsim-8611) Generating debug db.
 # ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
 # ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
 # ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
@@ -27,6 +39,695 @@
 # Loading work.fpu(fast)
 # Loading work.comb_mul(fast)
 # Loading work.comb_div24_frac(fast)
-# ** Note: (vsim-8900) Creating design debug database vsim.dbg.
-# End time: 22:20:12 on Apr 12,2025, Elapsed time: 0:00:03
-# Errors: 0, Warnings: 1
+run -all
+# a: 315695520.000000  , b: 3219435.250000    , result: 0.000000           (xxxxxxxx, xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
+# a: 1.000000          , b: 1.100000          , result: 0.000000           (xxxxxxxx, xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
+# a: 0.000000          , b: 1.000000          , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: 1.000000          , b: 0.000000          , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: inf               , b: 10.000000         , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 10.000000         , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: inf               , b: 0.000000          , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 0.000000          , b: inf               , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: 10.000000         , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 10.000000         , b: -inf              , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: -inf              , b: 0.000000          , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 0.000000          , b: -inf              , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: -inf              , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: inf               , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: -inf              , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: inf               , b: -inf              , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: nan               , b: 2.718282          , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: 2.718282          , b: nan               , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: 2.000000          , b: 2.718282          , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: 37.639999         , b: 0.000000          , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: 16.000000         , b: 32.000000         , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: 0.250000          , b: 0.500000          , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# ** Note: $stop    : //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(72)
+#    Time: 214750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 72
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 0 failed with no errors.
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+run -all
+# a: 315695520.000000  , b: 3219435.250000    , result: 17767.822266       (468acfa5, 01000110100010101100111110100101)
+# a: 1.000000          , b: 1.100000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: 0.000000          , b: 1.000000          , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: 1.000000          , b: 0.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: inf               , b: 10.000000         , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 10.000000         , b: inf               , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: inf               , b: 0.000000          , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 0.000000          , b: inf               , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: 10.000000         , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 10.000000         , b: -inf              , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: -inf              , b: 0.000000          , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 0.000000          , b: -inf              , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: -inf              , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: inf               , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: -inf              , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: inf               , b: -inf              , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: nan               , b: 2.718282          , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: 2.718282          , b: nan               , result: 1.648721           (3fd3094c, 00111111110100110000100101001100)
+# a: 2.000000          , b: 2.718282          , result: 1.414214           (3fb504f3, 00111111101101010000010011110011)
+# a: 37.639999         , b: 0.000000          , result: 6.135144           (40c4531a, 01000000110001000101001100011010)
+# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
+# a: 0.250000          , b: 0.500000          , result: 0.500000           (3f000000, 00111111000000000000000000000000)
+# ** Note: $stop    : //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(72)
+#    Time: 214750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 72
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 0 failed with no errors.
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+run -all
+# a: 315695520.000000  , b: 3219435.250000    , result: 17767.822266       (468acfa5, 01000110100010101100111110100101)
+# a: 1.000000          , b: 1.100000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: 0.000000          , b: 1.000000          , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: 1.000000          , b: 0.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: inf               , b: 10.000000         , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 10.000000         , b: inf               , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: inf               , b: 0.000000          , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 0.000000          , b: inf               , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: 10.000000         , result: -inf               (ff800000, 11111111100000000000000000000000)
+# a: 10.000000         , b: -inf              , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: -inf              , b: 0.000000          , result: -inf               (ff800000, 11111111100000000000000000000000)
+# a: 0.000000          , b: -inf              , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: -inf              , result: -inf               (ff800000, 11111111100000000000000000000000)
+# a: inf               , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: -inf              , b: inf               , result: -inf               (ff800000, 11111111100000000000000000000000)
+# a: inf               , b: -inf              , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: nan               , b: 2.718282          , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 2.718282          , b: nan               , result: 1.648721           (3fd3094c, 00111111110100110000100101001100)
+# a: 2.000000          , b: 2.718282          , result: 1.414214           (3fb504f3, 00111111101101010000010011110011)
+# a: 37.639999         , b: 0.000000          , result: 6.135144           (40c4531a, 01000000110001000101001100011010)
+# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
+# a: 0.250000          , b: 0.500000          , result: 0.500000           (3f000000, 00111111000000000000000000000000)
+# ** Note: $stop    : //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(72)
+#    Time: 214750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 72
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 0 failed with no errors.
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+run -all
+# a: 315695520.000000  , b: 3219435.250000    , result: 17767.822266       (468acfa5, 01000110100010101100111110100101)
+# a: 1.000000          , b: 1.100000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: 0.000000          , b: 1.000000          , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: 1.000000          , b: 0.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: inf               , b: 10.000000         , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 10.000000         , b: inf               , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: inf               , b: 0.000000          , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 0.000000          , b: inf               , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: 10.000000         , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 10.000000         , b: -inf              , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: -inf              , b: 0.000000          , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 0.000000          , b: -inf              , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: -inf              , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: inf               , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: -inf              , b: inf               , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: inf               , b: -inf              , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: nan               , b: 2.718282          , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 2.718282          , b: nan               , result: 1.648721           (3fd3094c, 00111111110100110000100101001100)
+# a: 2.000000          , b: 2.718282          , result: 1.414214           (3fb504f3, 00111111101101010000010011110011)
+# a: 37.639999         , b: 0.000000          , result: 6.135144           (40c4531a, 01000000110001000101001100011010)
+# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
+# a: 0.250000          , b: 0.500000          , result: 0.500000           (3f000000, 00111111000000000000000000000000)
+# ** Note: $stop    : //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(72)
+#    Time: 214750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 72
+# Saving layout as "Simulate"
+# Optimization canceled
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 0 failed with no errors.
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+run -all
+# a: 315695520.000000  , b: 3219435.250000    , result: 17767.822266       (468acfa5, 01000110100010101100111110100101)
+# a: 1.000000          , b: 1.100000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: 0.000000          , b: 1.000000          , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: 1.000000          , b: 0.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: inf               , b: 10.000000         , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 10.000000         , b: inf               , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: inf               , b: 0.000000          , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 0.000000          , b: inf               , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: 10.000000         , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 10.000000         , b: -inf              , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: -inf              , b: 0.000000          , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 0.000000          , b: -inf              , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: -inf              , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: inf               , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: -inf              , b: inf               , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: inf               , b: -inf              , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: nan               , b: 2.718282          , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 2.718282          , b: nan               , result: 1.648721           (3fd3094c, 00111111110100110000100101001100)
+# a: 2.000000          , b: 2.718282          , result: 1.414214           (3fb504f3, 00111111101101010000010011110011)
+# a: 37.639999         , b: 0.000000          , result: 6.135144           (40c4531a, 01000000110001000101001100011010)
+# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
+# a: 0.250000          , b: 0.500000          , result: 0.500000           (3f000000, 00111111000000000000000000000000)
+# ** Note: $stop    : //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(72)
+#    Time: 214750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 72
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 0 failed with no errors.
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+run -all
+# a: 315695520.000000  , b: 3219435.250000    , result: 17767.822266       (468acfa5, 01000110100010101100111110100101)
+# a: 1.000000          , b: 1.100000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: 0.000000          , b: 1.000000          , result: 0.000000           (1d800000, 00011101100000000000000000000000)
+# a: 1.000000          , b: 0.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: inf               , b: 10.000000         , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: 10.000000         , b: inf               , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: inf               , b: 0.000000          , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: 0.000000          , b: inf               , result: 0.000000           (1d800000, 00011101100000000000000000000000)
+# a: -inf              , b: 10.000000         , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: 10.000000         , b: -inf              , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: -inf              , b: 0.000000          , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: 0.000000          , b: -inf              , result: 0.000000           (1d800000, 00011101100000000000000000000000)
+# a: -inf              , b: -inf              , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: inf               , b: inf               , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: -inf              , b: inf               , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: inf               , b: -inf              , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: nan               , b: 2.718282          , result: 255211775190703847597530955573826158592.000000 (7f400000, 01111111010000000000000000000000)
+# a: 2.718282          , b: nan               , result: 1.648721           (3fd3094c, 00111111110100110000100101001100)
+# a: 2.000000          , b: 2.718282          , result: 1.414214           (3fb504f3, 00111111101101010000010011110011)
+# a: 37.639999         , b: 0.000000          , result: 6.135144           (40c4531a, 01000000110001000101001100011010)
+# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
+# a: 0.250000          , b: 0.500000          , result: 0.500000           (3f000000, 00111111000000000000000000000000)
+# ** Note: $stop    : //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(72)
+#    Time: 275750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 72
+add wave -position insertpoint  \
+sim:/fpu_tb/fpu_top/arst \
+sim:/fpu_tb/fpu_top/clk \
+sim:/fpu_tb/fpu_top/a_operand \
+sim:/fpu_tb/fpu_top/b_operand \
+sim:/fpu_tb/fpu_top/operation \
+sim:/fpu_tb/fpu_top/start \
+sim:/fpu_tb/fpu_top/ieee_packet_out \
+sim:/fpu_tb/fpu_top/cmd_end \
+sim:/fpu_tb/fpu_top/busy \
+sim:/fpu_tb/fpu_top/a_mantissa \
+sim:/fpu_tb/fpu_top/a_mantissa_shifted \
+sim:/fpu_tb/fpu_top/a_mantissa_adjusted \
+sim:/fpu_tb/fpu_top/a_exp \
+sim:/fpu_tb/fpu_top/a_exp_adjusted \
+sim:/fpu_tb/fpu_top/a_sign \
+sim:/fpu_tb/fpu_top/b_mantissa \
+sim:/fpu_tb/fpu_top/b_mantissa_shifted \
+sim:/fpu_tb/fpu_top/b_mantissa_adjusted \
+sim:/fpu_tb/fpu_top/b_exp \
+sim:/fpu_tb/fpu_top/b_exp_adjusted \
+sim:/fpu_tb/fpu_top/b_sign \
+sim:/fpu_tb/fpu_top/sticky_bit \
+sim:/fpu_tb/fpu_top/ab_exp_diff \
+sim:/fpu_tb/fpu_top/ab_shift_amount \
+sim:/fpu_tb/fpu_top/result_m_addsub_prenorm \
+sim:/fpu_tb/fpu_top/result_m_addsub_abs \
+sim:/fpu_tb/fpu_top/result_m_addsub_norm \
+sim:/fpu_tb/fpu_top/result_m_addsub_rounded \
+sim:/fpu_tb/fpu_top/result_m_addsub_renorm \
+sim:/fpu_tb/fpu_top/result_m_addsub \
+sim:/fpu_tb/fpu_top/result_e_addsub_prenorm \
+sim:/fpu_tb/fpu_top/result_e_addsub_norm \
+sim:/fpu_tb/fpu_top/result_e_addsub_renorm \
+sim:/fpu_tb/fpu_top/result_e_addsub \
+sim:/fpu_tb/fpu_top/result_s_addsub \
+sim:/fpu_tb/fpu_top/zcount_addsub \
+sim:/fpu_tb/fpu_top/addsub_guard \
+sim:/fpu_tb/fpu_top/addsub_round \
+sim:/fpu_tb/fpu_top/addsub_sticky \
+sim:/fpu_tb/fpu_top/product_pre_norm \
+sim:/fpu_tb/fpu_top/product_norm \
+sim:/fpu_tb/fpu_top/product_renorm \
+sim:/fpu_tb/fpu_top/product_rounded \
+sim:/fpu_tb/fpu_top/result_mantissa_mul \
+sim:/fpu_tb/fpu_top/result_exp_mul \
+sim:/fpu_tb/fpu_top/result_sign_mul \
+sim:/fpu_tb/fpu_top/mul_exp \
+sim:/fpu_tb/fpu_top/mul_exp_norm \
+sim:/fpu_tb/fpu_top/mul_exp_renorm \
+sim:/fpu_tb/fpu_top/exp_div_prenorm \
+sim:/fpu_tb/fpu_top/exp_div_norm \
+sim:/fpu_tb/fpu_top/div_quotient_prenorm_out \
+sim:/fpu_tb/fpu_top/quotient_mantissa_div_norm \
+sim:/fpu_tb/fpu_top/zcount_div \
+sim:/fpu_tb/fpu_top/result_mantissa_div \
+sim:/fpu_tb/fpu_top/result_exp_div \
+sim:/fpu_tb/fpu_top/result_sign_div \
+sim:/fpu_tb/fpu_top/sqrt_xn_mantissa \
+sim:/fpu_tb/fpu_top/sqrt_xn_exp \
+sim:/fpu_tb/fpu_top/sqrt_xn_sign \
+sim:/fpu_tb/fpu_top/sqrt_A_mantissa \
+sim:/fpu_tb/fpu_top/sqrt_A_exp \
+sim:/fpu_tb/fpu_top/sqrt_A_sign \
+sim:/fpu_tb/fpu_top/sqrt_result_mantissa \
+sim:/fpu_tb/fpu_top/sqrt_result_exp \
+sim:/fpu_tb/fpu_top/sqrt_result_sign \
+sim:/fpu_tb/fpu_top/sqrt_counter \
+sim:/fpu_tb/fpu_top/start_operation_sqrt_fsm \
+sim:/fpu_tb/fpu_top/operation_done_sqrt_fsm \
+sim:/fpu_tb/fpu_top/sqrt_mov_xn_A \
+sim:/fpu_tb/fpu_top/sqrt_mov_xn_a_approx \
+sim:/fpu_tb/fpu_top/sqrt_mov_xn_a \
+sim:/fpu_tb/fpu_top/sqrt_mov_xn_add \
+sim:/fpu_tb/fpu_top/sqrt_mov_A_a \
+sim:/fpu_tb/fpu_top/sqrt_mov_a_xn \
+sim:/fpu_tb/fpu_top/sqrt_mov_a_A \
+sim:/fpu_tb/fpu_top/sqrt_mov_b_xn \
+sim:/fpu_tb/fpu_top/sqrt_mov_b_div \
+sim:/fpu_tb/fpu_top/result_float2int \
+sim:/fpu_tb/fpu_top/start_operation_ar_fsm \
+sim:/fpu_tb/fpu_top/operation_done_ar_fsm \
+sim:/fpu_tb/fpu_top/log2_prenorm \
+sim:/fpu_tb/fpu_top/log2_norm \
+sim:/fpu_tb/fpu_top/log2_abs \
+sim:/fpu_tb/fpu_top/log2_exp_prenorm \
+sim:/fpu_tb/fpu_top/log2_exp_norm \
+sim:/fpu_tb/fpu_top/log2_zcount \
+sim:/fpu_tb/fpu_top/log2_sign \
+sim:/fpu_tb/fpu_top/a_neg \
+sim:/fpu_tb/fpu_top/a_overflow \
+sim:/fpu_tb/fpu_top/a_underflow \
+sim:/fpu_tb/fpu_top/b_overflow \
+sim:/fpu_tb/fpu_top/b_underflow \
+sim:/fpu_tb/fpu_top/a_nan \
+sim:/fpu_tb/fpu_top/a_inf \
+sim:/fpu_tb/fpu_top/a_pos_inf \
+sim:/fpu_tb/fpu_top/a_neg_inf \
+sim:/fpu_tb/fpu_top/a_zero \
+sim:/fpu_tb/fpu_top/b_nan \
+sim:/fpu_tb/fpu_top/b_inf \
+sim:/fpu_tb/fpu_top/b_pos_inf \
+sim:/fpu_tb/fpu_top/b_neg_inf \
+sim:/fpu_tb/fpu_top/b_zero \
+sim:/fpu_tb/fpu_top/zero_inf_or_inf_zero \
+sim:/fpu_tb/fpu_top/inf_or_inf \
+sim:/fpu_tb/fpu_top/zero_or_zero \
+sim:/fpu_tb/fpu_top/zero_and_zero \
+sim:/fpu_tb/fpu_top/zero_inf \
+sim:/fpu_tb/fpu_top/inf_zero \
+sim:/fpu_tb/fpu_top/nan_or_nan \
+sim:/fpu_tb/fpu_top/nan_inf_or_inf_nan \
+sim:/fpu_tb/fpu_top/zero_nan_or_nan_zero \
+sim:/fpu_tb/fpu_top/curr_state_main_fsm \
+sim:/fpu_tb/fpu_top/next_state_main_fsm \
+sim:/fpu_tb/fpu_top/curr_state_arith_fsm \
+sim:/fpu_tb/fpu_top/next_state_arith_fsm \
+sim:/fpu_tb/fpu_top/curr_state_sqrt_fsm \
+sim:/fpu_tb/fpu_top/next_state_sqrt_fsm
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-8009) Loading existing optimized design _opt1
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+run -all
+# a: 315695520.000000  , b: 3219435.250000    , result: 17767.822266       (468acfa5, 01000110100010101100111110100101)
+# a: 1.000000          , b: 1.100000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: 0.000000          , b: 1.000000          , result: 0.000000           (1d800000, 00011101100000000000000000000000)
+# a: 1.000000          , b: 0.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: inf               , b: 10.000000         , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: 10.000000         , b: inf               , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: inf               , b: 0.000000          , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: 0.000000          , b: inf               , result: 0.000000           (1d800000, 00011101100000000000000000000000)
+# a: -inf              , b: 10.000000         , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: 10.000000         , b: -inf              , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: -inf              , b: 0.000000          , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: 0.000000          , b: -inf              , result: 0.000000           (1d800000, 00011101100000000000000000000000)
+# a: -inf              , b: -inf              , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: inf               , b: inf               , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: -inf              , b: inf               , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: inf               , b: -inf              , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: nan               , b: 2.718282          , result: 255211775190703847597530955573826158592.000000 (7f400000, 01111111010000000000000000000000)
+# a: 2.718282          , b: nan               , result: 1.648721           (3fd3094c, 00111111110100110000100101001100)
+# a: 2.000000          , b: 2.718282          , result: 1.414214           (3fb504f3, 00111111101101010000010011110011)
+# a: 37.639999         , b: 0.000000          , result: 6.135144           (40c4531a, 01000000110001000101001100011010)
+# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
+# a: 0.250000          , b: 0.500000          , result: 0.500000           (3f000000, 00111111000000000000000000000000)
+# ** Note: $stop    : //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(72)
+#    Time: 275750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 72
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# ** Error: //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv(768): (vlog-13530) Failed to find the name 'sqrt_check_exceptional_st' in scope 'pa_fpu' at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv(1).
+# ** Error: //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv(770): (vlog-13530) Failed to find the name 'sqrt_check_exceptional_st' in scope 'pa_fpu' at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv(1).
+# ** Error: //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv(771): (vlog-13530) Failed to find the name 'sqrt_exceptional_st' in scope 'pa_fpu' at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv(1).
+# ** Error: //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv(797): (vlog-13530) Failed to find the name 'sqrt_exceptional_st' in scope 'pa_fpu' at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv(1).
+# ** Error: //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv(835): (vlog-13530) Failed to find the name 'sqrt_check_exceptional_st' in scope 'pa_fpu' at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv(1).
+# ** Error: //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv(905): (vlog-13530) Failed to find the name 'sqrt_exceptional_st' in scope 'pa_fpu' at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv(1).
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 1 failed with 6 errors.
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 0 failed with no errors.
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+run -all
+# a: 315695520.000000  , b: 3219435.250000    , result: 17767.822266       (468acfa5, 01000110100010101100111110100101)
+# a: 1.000000          , b: 1.100000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: 0.000000          , b: 1.000000          , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: 1.000000          , b: 0.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: inf               , b: 10.000000         , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 10.000000         , b: inf               , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: inf               , b: 0.000000          , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: 0.000000          , b: inf               , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: 10.000000         , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 10.000000         , b: -inf              , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: -inf              , b: 0.000000          , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 0.000000          , b: -inf              , result: 0.000000           (00000000, 00000000000000000000000000000000)
+# a: -inf              , b: -inf              , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: inf               , b: inf               , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: -inf              , b: inf               , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: inf               , b: -inf              , result: inf                (7f800000, 01111111100000000000000000000000)
+# a: nan               , b: 2.718282          , result: nan                (7fc00000, 01111111110000000000000000000000)
+# a: 2.718282          , b: nan               , result: 1.648721           (3fd3094c, 00111111110100110000100101001100)
+# a: 2.000000          , b: 2.718282          , result: 1.414214           (3fb504f3, 00111111101101010000010011110011)
+# a: 37.639999         , b: 0.000000          , result: 6.135144           (40c4531a, 01000000110001000101001100011010)
+# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
+# a: 0.250000          , b: 0.500000          , result: 0.500000           (3f000000, 00111111000000000000000000000000)
+# ** Note: $stop    : //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(72)
+#    Time: 214750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 72
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# ** Error: (vlog-13069) //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv(770): near "pa_fpu": syntax error, unexpected TYPE_IDENTIFIER, expecting ';'.
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 1 failed with 1 error.
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu_tb
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu_tb
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module fpu
+# -- Importing package pa_fpu
+# 
+# Top level modules:
+# 	fpu
+# 
+# 
+# vlog -work work -vopt -sv -stats=none //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling package pa_fpu
+# 
+# Top level modules:
+# 	--none--
+# 
+# 
+# 3 compiles, 0 failed with no errors.
+restart
+# ** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# ** Note: (vopt-143) Recognized 3 FSMs in module "fpu(fast)".
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.pa_fpu(fast)
+# Loading work.fpu_tb(fast)
+# Loading work.fpu(fast)
+# Loading work.comb_mul(fast)
+# Loading work.comb_div24_frac(fast)
+run -all
+# a: 315695520.000000  , b: 3219435.250000    , result: 17767.822266       (468acfa5, 01000110100010101100111110100101)
+# a: 1.000000          , b: 1.100000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: 0.000000          , b: 1.000000          , result: 0.000000           (1d800000, 00011101100000000000000000000000)
+# a: 1.000000          , b: 0.000000          , result: 1.000000           (3f800000, 00111111100000000000000000000000)
+# a: inf               , b: 10.000000         , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: 10.000000         , b: inf               , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: inf               , b: 0.000000          , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: 0.000000          , b: inf               , result: 0.000000           (1d800000, 00011101100000000000000000000000)
+# a: -inf              , b: 10.000000         , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: 10.000000         , b: -inf              , result: 3.162277           (404a62c1, 01000000010010100110001011000001)
+# a: -inf              , b: 0.000000          , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: 0.000000          , b: -inf              , result: 0.000000           (1d800000, 00011101100000000000000000000000)
+# a: -inf              , b: -inf              , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: inf               , b: inf               , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: -inf              , b: inf               , result: -170141183460469231731687303715884105728.000000 (ff000000, 11111111000000000000000000000000)
+# a: inf               , b: -inf              , result: 170141183460469231731687303715884105728.000000 (7f000000, 01111111000000000000000000000000)
+# a: nan               , b: 2.718282          , result: 255211775190703847597530955573826158592.000000 (7f400000, 01111111010000000000000000000000)
+# a: 2.718282          , b: nan               , result: 1.648721           (3fd3094c, 00111111110100110000100101001100)
+# a: 2.000000          , b: 2.718282          , result: 1.414214           (3fb504f3, 00111111101101010000010011110011)
+# a: 37.639999         , b: 0.000000          , result: 6.135144           (40c4531a, 01000000110001000101001100011010)
+# a: 16.000000         , b: 32.000000         , result: 4.000000           (40800000, 01000000100000000000000000000000)
+# a: 0.250000          , b: 0.500000          , result: 0.500000           (3f000000, 00111111000000000000000000000000)
+# ** Note: $stop    : //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv(72)
+#    Time: 275750 ns  Iteration: 0  Instance: /fpu_tb
+# Break in Module fpu_tb at //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv line 72

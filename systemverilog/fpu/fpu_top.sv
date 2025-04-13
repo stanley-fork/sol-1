@@ -151,20 +151,23 @@ module fpu(
   logic [23:0] sqrt_A_mantissa;
   logic  [7:0] sqrt_A_exp;
   logic        sqrt_A_sign;
+  logic [23:0] sqrt_result_mantissa;
+  logic  [7:0] sqrt_result_exp;
+  logic        sqrt_result_sign;
   logic  [3:0] sqrt_counter;
 
   // fsm control
   logic start_operation_sqrt_fsm;  
   logic operation_done_sqrt_fsm;   
-  logic sqrt_xn_A_wrt;
-  logic sqrt_xn_a_approx_wrt;
-  logic sqrt_xn_a_wrt;
-  logic sqrt_xn_add_wrt;
-  logic sqrt_A_a_wrt;
-  logic sqrt_a_xn_wrt;
-  logic sqrt_a_A_wrt;
-  logic sqrt_b_xn_wrt;
-  logic sqrt_b_div_wrt;
+  logic sqrt_mov_xn_A;
+  logic sqrt_mov_xn_a_approx;
+  logic sqrt_mov_xn_a;
+  logic sqrt_mov_xn_add;
+  logic sqrt_mov_A_a;
+  logic sqrt_mov_a_xn;
+  logic sqrt_mov_a_A;
+  logic sqrt_mov_b_xn;
+  logic sqrt_mov_b_div;
 
   // float2int
   logic [31:0] result_float2int;
@@ -182,6 +185,7 @@ module fpu(
   logic        log2_sign;
 
   // status
+  logic a_neg;
   logic a_overflow, a_underflow;
   logic b_overflow, b_underflow;
   logic a_nan, a_inf, a_pos_inf, a_neg_inf, a_zero;
@@ -255,7 +259,7 @@ module fpu(
                            operation == pa_fpu::op_mul          ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
                            operation == pa_fpu::op_square       ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
                            operation == pa_fpu::op_div          ? {result_sign_div, result_exp_div, result_mantissa_div[22:0]} :
-                           operation == pa_fpu::op_sqrt         ? {1'b0, sqrt_xn_exp, sqrt_xn_mantissa[22:0]} :
+                           operation == pa_fpu::op_sqrt         ? {sqrt_result_sign, sqrt_result_exp, sqrt_result_mantissa[22:0]} :
                            operation == pa_fpu::op_float_to_int ? result_float2int :
                            operation == pa_fpu::op_log2         ? {log2_sign, log2_exp_norm, log2_norm[29:7]} : '0;
 
@@ -464,22 +468,22 @@ module fpu(
         b_exp      <= b_operand[30:23];
         b_sign     <= b_operand[31];
       end
-      if(sqrt_a_xn_wrt) begin
+      if(sqrt_mov_a_xn) begin
         a_mantissa <= {2'b00, sqrt_xn_mantissa};
         a_exp      <= sqrt_xn_exp;
         a_sign     <= sqrt_xn_sign;
       end
-      else if(sqrt_a_A_wrt) begin
+      else if(sqrt_mov_a_A) begin
         a_mantissa <= {2'b00, sqrt_A_mantissa};
         a_exp      <= sqrt_A_exp;
         a_sign     <= sqrt_A_sign;
       end
-      if(sqrt_b_xn_wrt) begin
+      if(sqrt_mov_b_xn) begin
         b_mantissa <= {2'b00, sqrt_xn_mantissa};
         b_exp      <= sqrt_xn_exp;
         b_sign     <= sqrt_xn_sign;
       end
-      else if(sqrt_b_div_wrt) begin
+      else if(sqrt_mov_b_div) begin
         b_mantissa <= {2'b00, 1'b1, result_mantissa_div};
         b_exp      <= result_exp_div;
         b_sign     <= result_sign_div;
@@ -507,12 +511,19 @@ module fpu(
       else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_st) begin
         sqrt_counter <= sqrt_counter + 4'd1;
       end
-      if(sqrt_xn_A_wrt) begin
+      if(curr_state_sqrt_fsm == pa_fpu::sqrt_result_valid_st) begin
+        {sqrt_result_sign, 
+         sqrt_result_exp, 
+         sqrt_result_mantissa[22:0]} = a_nan || a_pos_inf || a_zero ? {a_sign,  a_exp, a_mantissa[22:0]} : // a
+                                       a_sign ? {1'b0, 8'hFF, 23'h400000} : // NAN
+                                      {sqrt_xn_sign, sqrt_xn_exp, sqrt_xn_mantissa[22:0]};           
+      end
+      if(sqrt_mov_xn_A) begin
         sqrt_xn_mantissa <= sqrt_A_mantissa;
         sqrt_xn_exp      <= sqrt_A_exp;
         sqrt_xn_sign     <= 1'b0;
       end
-      else if(sqrt_xn_a_approx_wrt) begin
+      else if(sqrt_mov_xn_a_approx) begin
         sqrt_xn_mantissa <= a_mantissa; 
         //sqrt_xn_exp      <= a_exp - 8'd1;
         // 9'b110000001 = -127 with 1 bit extended for signed arithmetic
@@ -521,17 +532,17 @@ module fpu(
         sqrt_xn_exp      <= (a_exp >> 1) + 9'd63 ; // divide a_exp by 2. hence initial approx to A = m*2^E  is  m*e^(E/2) which is very close to its square root.
         sqrt_xn_sign     <= a_sign;
       end
-      else if(sqrt_xn_a_wrt) begin
+      else if(sqrt_mov_xn_a) begin
         sqrt_xn_mantissa <= a_mantissa;
         sqrt_xn_exp      <= a_exp;
         sqrt_xn_sign     <= a_sign;
       end
-      else if(sqrt_xn_add_wrt) begin
+      else if(sqrt_mov_xn_add) begin
         sqrt_xn_mantissa <= {1'b1, result_m_addsub[22:0]};
         sqrt_xn_exp      <= result_e_addsub - 8'd1;
         sqrt_xn_sign     <= result_s_addsub;
       end
-      if(sqrt_A_a_wrt) begin
+      if(sqrt_mov_A_a) begin
         sqrt_A_mantissa <= a_mantissa;
         sqrt_A_exp      <= a_exp;
         sqrt_A_sign     <= a_sign;
@@ -754,7 +765,7 @@ module fpu(
 
     case(curr_state_sqrt_fsm)
       pa_fpu::sqrt_idle_st: 
-        if(start_operation_sqrt_fsm) next_state_sqrt_fsm = pa_fpu::sqrt_check_exceptional_st;
+        if(start_operation_sqrt_fsm) next_state_sqrt_fsm = pa_fpu::sqrt_check_exceptional_st; // NOTE: exceptional states added because then the sqrt FSM will jump any computation states that make changes to a_sign/a_exp/a_mantissa, as making changes to those when we are trying to check for nan/inf etc will change the final result assigned to the result regiters.
       // check if 'a' is a special value
       pa_fpu::sqrt_check_exceptional_st:
         if(a_nan || a_inf || a_zero) next_state_sqrt_fsm = pa_fpu::sqrt_exceptional_st;
@@ -797,123 +808,123 @@ module fpu(
   always_ff @(posedge clk, posedge arst) begin
     if(arst) begin
       operation_done_sqrt_fsm <= 1'b0;
-      sqrt_xn_A_wrt           <= 1'b0;
-      sqrt_xn_a_approx_wrt    <= 1'b0;
-      sqrt_xn_a_wrt           <= 1'b0;
-      sqrt_xn_add_wrt         <= 1'b0;
-      sqrt_A_a_wrt            <= 1'b0;
-      sqrt_a_xn_wrt           <= 1'b0;
-      sqrt_a_A_wrt            <= 1'b0;
-      sqrt_b_xn_wrt           <= 1'b0;
-      sqrt_b_div_wrt          <= 1'b0;
+      sqrt_mov_xn_A           <= 1'b0;
+      sqrt_mov_xn_a_approx    <= 1'b0;
+      sqrt_mov_xn_a           <= 1'b0;
+      sqrt_mov_xn_add         <= 1'b0;
+      sqrt_mov_A_a            <= 1'b0;
+      sqrt_mov_a_xn           <= 1'b0;
+      sqrt_mov_a_A            <= 1'b0;
+      sqrt_mov_b_xn           <= 1'b0;
+      sqrt_mov_b_div          <= 1'b0;
     end
     else begin
       case(next_state_sqrt_fsm)
         pa_fpu::sqrt_idle_st: begin
           operation_done_sqrt_fsm <= 1'b0;
-          sqrt_xn_A_wrt           <= 1'b0;
-          sqrt_xn_a_approx_wrt    <= 1'b0;
-          sqrt_xn_a_wrt           <= 1'b0;
-          sqrt_xn_add_wrt         <= 1'b0;
-          sqrt_A_a_wrt            <= 1'b0;
-          sqrt_a_xn_wrt           <= 1'b0;
-          sqrt_a_A_wrt            <= 1'b0;
-          sqrt_b_xn_wrt           <= 1'b0;
-          sqrt_b_div_wrt          <= 1'b0;
+          sqrt_mov_xn_A           <= 1'b0;
+          sqrt_mov_xn_a_approx    <= 1'b0;
+          sqrt_mov_xn_a           <= 1'b0;
+          sqrt_mov_xn_add         <= 1'b0;
+          sqrt_mov_A_a            <= 1'b0;
+          sqrt_mov_a_xn           <= 1'b0;
+          sqrt_mov_a_A            <= 1'b0;
+          sqrt_mov_b_xn           <= 1'b0;
+          sqrt_mov_b_div          <= 1'b0;
         end
         pa_fpu::sqrt_check_exceptional_st: begin
           operation_done_sqrt_fsm <= 1'b0;
-          sqrt_xn_A_wrt           <= 1'b0;
-          sqrt_xn_a_wrt           <= 1'b0;
-          sqrt_xn_a_approx_wrt    <= 1'b0;
-          sqrt_xn_add_wrt         <= 1'b0;
-          sqrt_A_a_wrt            <= 1'b0;
-          sqrt_a_xn_wrt           <= 1'b0;
-          sqrt_a_A_wrt            <= 1'b0;
-          sqrt_b_xn_wrt           <= 1'b0;
-          sqrt_b_div_wrt          <= 1'b0;
+          sqrt_mov_xn_A           <= 1'b0;
+          sqrt_mov_xn_a           <= 1'b0;
+          sqrt_mov_xn_a_approx    <= 1'b0;
+          sqrt_mov_xn_add         <= 1'b0;
+          sqrt_mov_A_a            <= 1'b0;
+          sqrt_mov_a_xn           <= 1'b0;
+          sqrt_mov_a_A            <= 1'b0;
+          sqrt_mov_b_xn           <= 1'b0;
+          sqrt_mov_b_div          <= 1'b0;
         end
         // set A = a_mantissa (A = number whose sqrt is requested)
         // set xn to initial guess
         // set counter for number of steps
         pa_fpu::sqrt_start_st: begin
           operation_done_sqrt_fsm <= 1'b0;
-          sqrt_xn_A_wrt           <= 1'b0;
-          sqrt_xn_a_wrt           <= 1'b0;
-          sqrt_xn_a_approx_wrt    <= 1'b1;
-          sqrt_xn_add_wrt         <= 1'b0;
-          sqrt_A_a_wrt            <= 1'b1;
-          sqrt_a_xn_wrt           <= 1'b0;
-          sqrt_a_A_wrt            <= 1'b0;
-          sqrt_b_xn_wrt           <= 1'b0;
-          sqrt_b_div_wrt          <= 1'b0;
+          sqrt_mov_xn_A           <= 1'b0;
+          sqrt_mov_xn_a           <= 1'b0;
+          sqrt_mov_xn_a_approx    <= 1'b1;
+          sqrt_mov_xn_add         <= 1'b0;
+          sqrt_mov_A_a            <= 1'b1;
+          sqrt_mov_a_xn           <= 1'b0;
+          sqrt_mov_a_A            <= 1'b0;
+          sqrt_mov_b_xn           <= 1'b0;
+          sqrt_mov_b_div          <= 1'b0;
         end
         // set a_mantissa = A, a_exp = A_exp
         // set b_mantissa = xn, b_exp = xn_exp
         pa_fpu::sqrt_div_setup_st: begin
           operation_done_sqrt_fsm <= 1'b0;
-          sqrt_xn_A_wrt           <= 1'b0;
-          sqrt_xn_a_wrt           <= 1'b0;
-          sqrt_xn_a_approx_wrt    <= 1'b0;
-          sqrt_xn_add_wrt         <= 1'b0;
-          sqrt_A_a_wrt            <= 1'b0;
-          sqrt_a_xn_wrt           <= 1'b0;
-          sqrt_a_A_wrt            <= 1'b1;
-          sqrt_b_xn_wrt           <= 1'b1;
-          sqrt_b_div_wrt          <= 1'b0;
+          sqrt_mov_xn_A           <= 1'b0;
+          sqrt_mov_xn_a           <= 1'b0;
+          sqrt_mov_xn_a_approx    <= 1'b0;
+          sqrt_mov_xn_add         <= 1'b0;
+          sqrt_mov_A_a            <= 1'b0;
+          sqrt_mov_a_xn           <= 1'b0;
+          sqrt_mov_a_A            <= 1'b1;
+          sqrt_mov_b_xn           <= 1'b1;
+          sqrt_mov_b_div          <= 1'b0;
         end
         // set a_mantissa <= xn, a_exp = xn_exp
         // set b_mantissa <= result_mantissa_div, b_exp = result_exp_div
         // perform addition during this clock cycle
         pa_fpu::sqrt_addition_st: begin
           operation_done_sqrt_fsm <= 1'b0;
-          sqrt_xn_A_wrt           <= 1'b0;
-          sqrt_xn_a_wrt           <= 1'b0;
-          sqrt_xn_a_approx_wrt    <= 1'b0;
-          sqrt_xn_add_wrt         <= 1'b0;
-          sqrt_A_a_wrt            <= 1'b0;
-          sqrt_a_xn_wrt           <= 1'b1;
-          sqrt_a_A_wrt            <= 1'b0;
-          sqrt_b_xn_wrt           <= 1'b0;
-          sqrt_b_div_wrt          <= 1'b1;
+          sqrt_mov_xn_A           <= 1'b0;
+          sqrt_mov_xn_a           <= 1'b0;
+          sqrt_mov_xn_a_approx    <= 1'b0;
+          sqrt_mov_xn_add         <= 1'b0;
+          sqrt_mov_A_a            <= 1'b0;
+          sqrt_mov_a_xn           <= 1'b1;
+          sqrt_mov_a_A            <= 1'b0;
+          sqrt_mov_b_xn           <= 1'b0;
+          sqrt_mov_b_div          <= 1'b1;
         end
         // transfer addition result to xn, while decreasing xn_exp by 1
         // inc sqrt_counter
         pa_fpu::sqrt_mov_xn_a_dec_exp_st: begin
           operation_done_sqrt_fsm <= 1'b0;
-          sqrt_xn_A_wrt           <= 1'b0;
-          sqrt_xn_a_wrt           <= 1'b0;
-          sqrt_xn_a_approx_wrt    <= 1'b0;
-          sqrt_xn_add_wrt         <= 1'b1;
-          sqrt_A_a_wrt            <= 1'b0;
-          sqrt_a_xn_wrt           <= 1'b0;
-          sqrt_a_A_wrt            <= 1'b0;
-          sqrt_b_xn_wrt           <= 1'b0;
-          sqrt_b_div_wrt          <= 1'b0;
+          sqrt_mov_xn_A           <= 1'b0;
+          sqrt_mov_xn_a           <= 1'b0;
+          sqrt_mov_xn_a_approx    <= 1'b0;
+          sqrt_mov_xn_add         <= 1'b1;
+          sqrt_mov_A_a            <= 1'b0;
+          sqrt_mov_a_xn           <= 1'b0;
+          sqrt_mov_a_A            <= 1'b0;
+          sqrt_mov_b_xn           <= 1'b0;
+          sqrt_mov_b_div          <= 1'b0;
         end
         pa_fpu::sqrt_exceptional_st: begin
           operation_done_sqrt_fsm <= 1'b0;
-          sqrt_xn_A_wrt           <= 1'b0;
-          sqrt_xn_a_wrt           <= 1'b0;
-          sqrt_xn_a_approx_wrt    <= 1'b0;
-          sqrt_xn_add_wrt         <= 1'b0;
-          sqrt_A_a_wrt            <= 1'b0;
-          sqrt_a_xn_wrt           <= 1'b0;
-          sqrt_a_A_wrt            <= 1'b0;
-          sqrt_b_xn_wrt           <= 1'b0;
-          sqrt_b_div_wrt          <= 1'b0;
+          sqrt_mov_xn_A           <= 1'b0;
+          sqrt_mov_xn_a           <= 1'b0;
+          sqrt_mov_xn_a_approx    <= 1'b0;
+          sqrt_mov_xn_add         <= 1'b0;
+          sqrt_mov_A_a            <= 1'b0;
+          sqrt_mov_a_xn           <= 1'b0;
+          sqrt_mov_a_A            <= 1'b0;
+          sqrt_mov_b_xn           <= 1'b0;
+          sqrt_mov_b_div          <= 1'b0;
         end
         pa_fpu::sqrt_result_valid_st: begin
           operation_done_sqrt_fsm <= 1'b1;
-          sqrt_xn_A_wrt           <= 1'b0;
-          sqrt_xn_a_wrt           <= 1'b0;
-          sqrt_xn_a_approx_wrt    <= 1'b0;
-          sqrt_xn_add_wrt         <= 1'b0;
-          sqrt_A_a_wrt            <= 1'b0;
-          sqrt_a_xn_wrt           <= 1'b0;
-          sqrt_a_A_wrt            <= 1'b0;
-          sqrt_b_xn_wrt           <= 1'b0;
-          sqrt_b_div_wrt          <= 1'b0;
+          sqrt_mov_xn_A           <= 1'b0;
+          sqrt_mov_xn_a           <= 1'b0;
+          sqrt_mov_xn_a_approx    <= 1'b0;
+          sqrt_mov_xn_add         <= 1'b0;
+          sqrt_mov_A_a            <= 1'b0;
+          sqrt_mov_a_xn           <= 1'b0;
+          sqrt_mov_a_A            <= 1'b0;
+          sqrt_mov_b_xn           <= 1'b0;
+          sqrt_mov_b_div          <= 1'b0;
         end
       endcase  
     end
