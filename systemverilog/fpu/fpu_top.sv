@@ -151,9 +151,6 @@ module fpu(
   logic [23:0] sqrt_A_mantissa;
   logic  [7:0] sqrt_A_exp;
   logic        sqrt_A_sign;
-  logic [23:0] sqrt_result_mantissa;
-  logic  [7:0] sqrt_result_exp;
-  logic        sqrt_result_sign;
   logic  [3:0] sqrt_counter;
 
   // fsm control
@@ -259,7 +256,7 @@ module fpu(
                            operation == pa_fpu::op_mul          ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
                            operation == pa_fpu::op_square       ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
                            operation == pa_fpu::op_div          ? {result_sign_div, result_exp_div, result_mantissa_div[22:0]} :
-                           operation == pa_fpu::op_sqrt         ? {sqrt_result_sign, sqrt_result_exp, sqrt_result_mantissa[22:0]} :
+                           operation == pa_fpu::op_sqrt         ? {sqrt_xn_sign, sqrt_xn_exp, sqrt_xn_mantissa[22:0]} :
                            operation == pa_fpu::op_float_to_int ? result_float2int :
                            operation == pa_fpu::op_log2         ? {log2_sign, log2_exp_norm, log2_norm[29:7]} : '0;
 
@@ -511,12 +508,11 @@ module fpu(
       else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_st) begin
         sqrt_counter <= sqrt_counter + 4'd1;
       end
-      if(curr_state_sqrt_fsm == pa_fpu::sqrt_result_valid_st) begin
-        {sqrt_result_sign, 
-         sqrt_result_exp, 
-         sqrt_result_mantissa[22:0]} = a_nan || a_pos_inf || a_zero ? {a_sign,  a_exp, a_mantissa[22:0]} : // a
-                                       a_sign ? {1'b0, 8'hFF, 23'h400000} : // NAN
-                                      {sqrt_xn_sign, sqrt_xn_exp, sqrt_xn_mantissa[22:0]};           
+      if(curr_state_sqrt_fsm == pa_fpu::sqrt_exceptional_st) begin
+        if(a_nan || a_pos_inf || a_zero) 
+          {sqrt_xn_sign, sqrt_xn_exp, sqrt_xn_mantissa[22:0]} = {a_sign, a_exp, a_mantissa[22:0]}; // a
+        else if(a_sign) 
+          {sqrt_xn_sign, sqrt_xn_exp, sqrt_xn_mantissa[22:0]} = {1'b0, 8'hFF, 23'h400000}; // NAN
       end
       if(sqrt_mov_xn_A) begin
         sqrt_xn_mantissa <= sqrt_A_mantissa;
