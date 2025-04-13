@@ -754,7 +754,11 @@ module fpu(
 
     case(curr_state_sqrt_fsm)
       pa_fpu::sqrt_idle_st: 
-        if(start_operation_sqrt_fsm) next_state_sqrt_fsm = pa_fpu::sqrt_start_st;
+        if(start_operation_sqrt_fsm) next_state_sqrt_fsm = pa_fpu::sqrt_check_exceptional_st;
+      // check if 'a' is a special value
+      pa_fpu::sqrt_check_exceptional_st:
+        if(a_nan || a_inf || a_zero) next_state_sqrt_fsm = pa_fpu::sqrt_exceptional_st;
+        else next_state_sqrt_fsm = pa_fpu::sqrt_start_st;
       // set A = a_mantissa (A = number whose sqrt is requested)
       // set xn to initial guess 
       // set counter for number of steps
@@ -778,6 +782,9 @@ module fpu(
         if(sqrt_counter == 4'd4) next_state_sqrt_fsm = pa_fpu::sqrt_result_valid_st;
         else next_state_sqrt_fsm = pa_fpu::sqrt_div_setup_st;
       end
+      // if 'a' was a exceptional value then set final result to exceptionl value
+      pa_fpu::sqrt_exceptional_st:
+        next_state_sqrt_fsm = pa_fpu::sqrt_result_valid_st;
       pa_fpu::sqrt_result_valid_st:
         if(start_operation_sqrt_fsm == 1'b0) next_state_sqrt_fsm = pa_fpu::sqrt_idle_st;
       default:
@@ -807,6 +814,18 @@ module fpu(
           sqrt_xn_A_wrt           <= 1'b0;
           sqrt_xn_a_approx_wrt    <= 1'b0;
           sqrt_xn_a_wrt           <= 1'b0;
+          sqrt_xn_add_wrt         <= 1'b0;
+          sqrt_A_a_wrt            <= 1'b0;
+          sqrt_a_xn_wrt           <= 1'b0;
+          sqrt_a_A_wrt            <= 1'b0;
+          sqrt_b_xn_wrt           <= 1'b0;
+          sqrt_b_div_wrt          <= 1'b0;
+        end
+        pa_fpu::sqrt_check_exceptional_st: begin
+          operation_done_sqrt_fsm <= 1'b0;
+          sqrt_xn_A_wrt           <= 1'b0;
+          sqrt_xn_a_wrt           <= 1'b0;
+          sqrt_xn_a_approx_wrt    <= 1'b0;
           sqrt_xn_add_wrt         <= 1'b0;
           sqrt_A_a_wrt            <= 1'b0;
           sqrt_a_xn_wrt           <= 1'b0;
@@ -866,6 +885,18 @@ module fpu(
           sqrt_xn_a_wrt           <= 1'b0;
           sqrt_xn_a_approx_wrt    <= 1'b0;
           sqrt_xn_add_wrt         <= 1'b1;
+          sqrt_A_a_wrt            <= 1'b0;
+          sqrt_a_xn_wrt           <= 1'b0;
+          sqrt_a_A_wrt            <= 1'b0;
+          sqrt_b_xn_wrt           <= 1'b0;
+          sqrt_b_div_wrt          <= 1'b0;
+        end
+        pa_fpu::sqrt_exceptional_st: begin
+          operation_done_sqrt_fsm <= 1'b0;
+          sqrt_xn_A_wrt           <= 1'b0;
+          sqrt_xn_a_wrt           <= 1'b0;
+          sqrt_xn_a_approx_wrt    <= 1'b0;
+          sqrt_xn_add_wrt         <= 1'b0;
           sqrt_A_a_wrt            <= 1'b0;
           sqrt_a_xn_wrt           <= 1'b0;
           sqrt_a_A_wrt            <= 1'b0;

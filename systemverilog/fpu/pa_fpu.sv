@@ -41,11 +41,13 @@ package pa_fpu;
 
   typedef enum logic [3:0]{
     sqrt_idle_st,
+    sqrt_check_exceptional_st,
     sqrt_start_st,
     sqrt_div_setup_st,
     sqrt_wait_div_done_st,
     sqrt_addition_st,
     sqrt_mov_xn_a_dec_exp_st,
+    sqrt_exceptional_st,
     sqrt_result_valid_st
   } e_sqrt_st;
 
