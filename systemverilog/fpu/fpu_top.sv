@@ -505,7 +505,7 @@ module fpu(
       if(next_state_sqrt_fsm == pa_fpu::sqrt_start_st) begin
         sqrt_counter <= 0;
       end
-      else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_st) begin
+      else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st) begin
         sqrt_counter <= sqrt_counter + 4'd1;
       end
       // in exceptional_st, next state is sqrt_result_valid_st
@@ -762,7 +762,9 @@ module fpu(
 
     case(curr_state_sqrt_fsm)
       pa_fpu::sqrt_idle_st: 
-        if(start_operation_sqrt_fsm) next_state_sqrt_fsm = pa_fpu::sqrt_check_exceptional_st; // NOTE: exceptional states added because then the sqrt FSM will jump any computation states that make changes to a_sign/a_exp/a_mantissa, as making changes to those when we are trying to check for nan/inf etc will change the final result assigned to the result regiters.
+        // NOTE: exceptional states added because then the sqrt FSM will jump any computation states that make changes to a_sign/a_exp/a_mantissa, 
+        // as making changes to those when we are trying to check for nan/inf etc will change the final result assigned to the result regiters.
+        if(start_operation_sqrt_fsm) next_state_sqrt_fsm = pa_fpu::sqrt_check_exceptional_st; 
       // check if 'a' is a special value
       pa_fpu::sqrt_check_exceptional_st:
         if(a_nan || a_inf || a_zero) next_state_sqrt_fsm = pa_fpu::sqrt_exceptional_st;
@@ -771,24 +773,24 @@ module fpu(
       // set xn to initial guess 
       // set counter for number of steps
       pa_fpu::sqrt_start_st: 
-        next_state_sqrt_fsm = pa_fpu::sqrt_div_setup_st;
+        next_state_sqrt_fsm = pa_fpu::sqrt_div_st;
       // set a_mantissa = A, a_exp = A_exp
       // set b_mantissa = xn, b_exp = xn_exp
-      pa_fpu::sqrt_div_setup_st: begin
-        next_state_sqrt_fsm = pa_fpu::sqrt_addition_st;
+      pa_fpu::sqrt_div_st: begin
+        next_state_sqrt_fsm = pa_fpu::sqrt_add_st;
       end
       // set a_mantissa <= xn, a_exp = xn_exp
       // set b_mantissa <= result_mantissa_div, b_exp = result_exp_div
-      pa_fpu::sqrt_addition_st: begin
-        next_state_sqrt_fsm = pa_fpu::sqrt_mov_xn_a_dec_exp_st;
+      pa_fpu::sqrt_add_st: begin
+        next_state_sqrt_fsm = pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st;
       end
       // perform addition during this clock cycle
       // set xn = result_m_addsub, while decreasing xn_exp by 1
       // dec sqrt_counter when entering this state
       // check sqrt_counter == 4
-      pa_fpu::sqrt_mov_xn_a_dec_exp_st: begin
+      pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st: begin
         if(sqrt_counter == 4'd4) next_state_sqrt_fsm = pa_fpu::sqrt_result_valid_st;
-        else next_state_sqrt_fsm = pa_fpu::sqrt_div_setup_st;
+        else next_state_sqrt_fsm = pa_fpu::sqrt_div_st;
       end
       // if 'a' was a exceptional value then set final result to exceptionl value
       pa_fpu::sqrt_exceptional_st:
@@ -858,7 +860,7 @@ module fpu(
         end
         // set a_mantissa = A, a_exp = A_exp
         // set b_mantissa = xn, b_exp = xn_exp
-        pa_fpu::sqrt_div_setup_st: begin
+        pa_fpu::sqrt_div_st: begin
           operation_done_sqrt_fsm <= 1'b0;
           sqrt_mov_xn_A           <= 1'b0;
           sqrt_mov_xn_a           <= 1'b0;
@@ -873,7 +875,7 @@ module fpu(
         // set a_mantissa <= xn, a_exp = xn_exp
         // set b_mantissa <= result_mantissa_div, b_exp = result_exp_div
         // perform addition during this clock cycle
-        pa_fpu::sqrt_addition_st: begin
+        pa_fpu::sqrt_add_st: begin
           operation_done_sqrt_fsm <= 1'b0;
           sqrt_mov_xn_A           <= 1'b0;
           sqrt_mov_xn_a           <= 1'b0;
@@ -887,7 +889,7 @@ module fpu(
         end
         // transfer addition result to xn, while decreasing xn_exp by 1
         // inc sqrt_counter
-        pa_fpu::sqrt_mov_xn_a_dec_exp_st: begin
+        pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st: begin
           operation_done_sqrt_fsm <= 1'b0;
           sqrt_mov_xn_A           <= 1'b0;
           sqrt_mov_xn_a           <= 1'b0;
