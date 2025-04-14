@@ -1,8 +1,8 @@
-// FPU PROTOTYPE
-// This is an FPU unit that will perform addition, subtraction, multiplication, division, square root, and transcendental functions
-// Totally non-optimized and for prototyping and studying purposes only!
-
 /*
+  FPU PROTOTYPE
+  This is an FPU unit that will perform addition, subtraction, multiplication, division, square root, and transcendental functions
+  Totally non-optimized and for prototyping and studying purposes only!
+
   SQRT: NEWTON-RAPHSON
     xn = 0.5(xn + A/xn)
 
@@ -69,7 +69,6 @@
   OBSERVATIONS:
   if any number is NAN, then the result is also set to NAN, not only that, but it is set to be a copy of the first 
   NAN operand. so if operand_a is NAN, the result is set to operand_a, and vice versa. this is done so that NAN information is kept and propagated.
-
 */
 
 module fpu(
@@ -505,7 +504,7 @@ module fpu(
       if(next_state_sqrt_fsm == pa_fpu::sqrt_start_st) begin
         sqrt_counter <= 0;
       end
-      else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st) begin
+      else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_st) begin
         sqrt_counter <= sqrt_counter + 4'd1;
       end
       // in exceptional_st, next state is sqrt_result_valid_st
@@ -777,18 +776,18 @@ module fpu(
       // set a_mantissa = A, a_exp = A_exp
       // set b_mantissa = xn, b_exp = xn_exp
       pa_fpu::sqrt_div_st: begin
-        next_state_sqrt_fsm = pa_fpu::sqrt_add_st;
+        next_state_sqrt_fsm = pa_fpu::sqrt_addition_st;
       end
       // set a_mantissa <= xn, a_exp = xn_exp
       // set b_mantissa <= result_mantissa_div, b_exp = result_exp_div
       pa_fpu::sqrt_add_st: begin
-        next_state_sqrt_fsm = pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st;
+        next_state_sqrt_fsm = pa_fpu::sqrt_mov_xn_a_dec_exp_st;
       end
       // perform addition during this clock cycle
       // set xn = result_m_addsub, while decreasing xn_exp by 1
       // dec sqrt_counter when entering this state
       // check sqrt_counter == 4
-      pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st: begin
+      pa_fpu::sqrt_mov_xn_a_dec_exp_st: begin
         if(sqrt_counter == 4'd4) next_state_sqrt_fsm = pa_fpu::sqrt_result_valid_st;
         else next_state_sqrt_fsm = pa_fpu::sqrt_div_st;
       end
@@ -875,7 +874,7 @@ module fpu(
         // set a_mantissa <= xn, a_exp = xn_exp
         // set b_mantissa <= result_mantissa_div, b_exp = result_exp_div
         // perform addition during this clock cycle
-        pa_fpu::sqrt_add_st: begin
+        pa_fpu::sqrt_addition_st: begin
           operation_done_sqrt_fsm <= 1'b0;
           sqrt_mov_xn_A           <= 1'b0;
           sqrt_mov_xn_a           <= 1'b0;
@@ -889,7 +888,7 @@ module fpu(
         end
         // transfer addition result to xn, while decreasing xn_exp by 1
         // inc sqrt_counter
-        pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st: begin
+        pa_fpu::sqrt_mov_xn_a_dec_exp_st: begin
           operation_done_sqrt_fsm <= 1'b0;
           sqrt_mov_xn_A           <= 1'b0;
           sqrt_mov_xn_a           <= 1'b0;
