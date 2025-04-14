@@ -311,9 +311,9 @@ module fpu(
   assign result_e_addsub_prenorm = a_exp_adjusted;
   assign result_m_addsub_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
   // lzc function is 32bit, hence need to add extra 3bits to left of the argument. 
-  // also, the variable result_m_addsub_abs itself has an extra 2 bits (the sign bit + carry bit), 
-  // so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 5 from the result.
-  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd5; // result_m_addsub_abs is 29bits wide, so add 3 extra bits to make 32 to satisfy lzc function
+  // also, the variable result_m_addsub_abs itself has the extra sign bit, 
+  // so for counting leading zeroes we need to subtract the extra count of 1. hence we subtract a total of 4 from the result.
+  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd4; // result_m_addsub_abs is 29bits wide, so add 3 extra bits to make 32 to satisfy lzc function
   
   // normalize the result
   assign result_m_addsub_norm = result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : result_m_addsub_abs << zcount_addsub; // if there was a carry bit after the addition then shift right
@@ -504,7 +504,7 @@ module fpu(
       if(next_state_sqrt_fsm == pa_fpu::sqrt_start_st) begin
         sqrt_counter <= 0;
       end
-      else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_st) begin
+      else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st) begin
         sqrt_counter <= sqrt_counter + 4'd1;
       end
       // in exceptional_st, next state is sqrt_result_valid_st
@@ -777,18 +777,18 @@ module fpu(
       // set a_mantissa = A, a_exp = A_exp
       // set b_mantissa = xn, b_exp = xn_exp
       pa_fpu::sqrt_div_st: begin
-        next_state_sqrt_fsm = pa_fpu::sqrt_addition_st;
+        next_state_sqrt_fsm = pa_fpu::sqrt_add_st;
       end
       // set a_mantissa <= xn, a_exp = xn_exp
       // set b_mantissa <= result_mantissa_div, b_exp = result_exp_div
       pa_fpu::sqrt_add_st: begin
-        next_state_sqrt_fsm = pa_fpu::sqrt_mov_xn_a_dec_exp_st;
+        next_state_sqrt_fsm = pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st;
       end
       // perform addition during this clock cycle
       // set xn = result_m_addsub, while decreasing xn_exp by 1
       // dec sqrt_counter when entering this state
       // check sqrt_counter == 4
-      pa_fpu::sqrt_mov_xn_a_dec_exp_st: begin
+      pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st: begin
         if(sqrt_counter == 4'd4) next_state_sqrt_fsm = pa_fpu::sqrt_result_valid_st;
         else next_state_sqrt_fsm = pa_fpu::sqrt_div_st;
       end
@@ -875,7 +875,7 @@ module fpu(
         // set a_mantissa <= xn, a_exp = xn_exp
         // set b_mantissa <= result_mantissa_div, b_exp = result_exp_div
         // perform addition during this clock cycle
-        pa_fpu::sqrt_addition_st: begin
+        pa_fpu::sqrt_add_st: begin
           operation_done_sqrt_fsm <= 1'b0;
           sqrt_mov_xn_A           <= 1'b0;
           sqrt_mov_xn_a           <= 1'b0;
@@ -889,7 +889,7 @@ module fpu(
         end
         // transfer addition result to xn, while decreasing xn_exp by 1
         // inc sqrt_counter
-        pa_fpu::sqrt_mov_xn_a_dec_exp_st: begin
+        pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st: begin
           operation_done_sqrt_fsm <= 1'b0;
           sqrt_mov_xn_A           <= 1'b0;
           sqrt_mov_xn_a           <= 1'b0;

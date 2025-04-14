@@ -1,32 +1,8 @@
 m255
 K4
 z2
-Z0 !s12c _opt1
-Z1 !s99 nomlopt
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
-R0
-R1
 !s12c _opt
-R1
+Z0 !s99 nomlopt
 !s11f vlog 2024.3 2024.09, Sep 10 2024
 13
 !s112 1.1
@@ -34,161 +10,145 @@ R1
 !i10e 25
 !i10f 100
 cModel Technology
-Z2 d/home/pconst/Desktop/sol-1/systemverilog/fpu
+Z1 d/home/pconst/Desktop/sol-1/systemverilog/fpu
 T_opt
-!s110 1744492809
-VX]m^nPI:5AY`N7R293>HT0
-Z3 04 6 4 work fpu_tb fast 0
-=1-000ae431a4f1-67fad909-c37cc-ae0d
-R1
-Z4 !s12f OEM100
-Z5 !s12b OEM100
-Z6 !s124 OEM10U4 
-Z7 !s135 nogc
+!s110 1744664973
+VgnF6a?`3PX9[AWHOlHgRP0
+04 6 4 work fpu_tb fast 0
+=1-000ae431a4f1-67fd798d-a42c2-8ad5
+R0
+!s12f OEM100
+!s12b OEM100
+!s124 OEM10U4 
+!s135 nogc
 o-quiet -auto_acc_if_foreign -work work -debugdb +acc=rtl
-Z8 tCvgOpt 0
+Z2 tCvgOpt 0
 n@_opt
-Z9 OL;O;2024.3;79
-R2
-T_opt1
-!s110 1744591986
-VHAR`6?g2A>ZS3<z?IOAlk0
-R3
-=2-e00af669c28d-67fc5c70-1ed-41b4
-R1
-R4
-R5
-R6
-R7
-o-quiet -auto_acc_if_foreign -work work +acc
-R8
-n@_opt1
-R9
-R2
+OL;O;2024.3;79
 vcomb_div24_frac
-Z10 2pa_fpu.sv|comb_mul.sv|comb_div24_frac.sv|fpu_top.sv|fpu_tb.sv
-Z11 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
-Z12 !s110 1744492782
+Z3 2pa_fpu.sv|comb_mul.sv|comb_div24_frac.sv|fpu_top.sv|fpu_tb.sv
+Z4 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
+Z5 !s110 1744664972
 !i10b 1
 !s100 b_VAd5c^g^1>4ngJ?BBaa1
 I83@a<JN]05eY7l70haEVg0
 S1
-R2
-Z13 w1744201168
+R1
+Z6 w1744625113
 8comb_div24_frac.sv
 Fcomb_div24_frac.sv
 !i122 0
 L0 5 34
-Z14 VDg1SIo80bB@j0V0VzS_@n1
-Z15 OL;L;2024.3;79
+Z7 VDg1SIo80bB@j0V0VzS_@n1
+Z8 OL;L;2024.3;79
 r1
 !s85 0
 31
-Z16 !s108 1744492782.000000
-Z17 !s107 fpu_tb.sv|fpu_top.sv|comb_div24_frac.sv|comb_mul.sv|pa_fpu.sv|
-Z18 !s90 -lint|-work|work|+acc|-f|fpu.f|
+Z9 !s108 1744664972.000000
+Z10 !s107 fpu_tb.sv|fpu_top.sv|comb_div24_frac.sv|comb_mul.sv|pa_fpu.sv|
+Z11 !s90 -lint|-work|work|+acc|-f|fpu.f|
 !i113 0
-Z19 o-lint -work work +acc -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
-R8
+Z12 o-lint -work work +acc -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+R2
 vcomb_mul
-R10
-R11
-R12
+R3
+R4
+R5
 !i10b 1
 !s100 6dG]Bl`32O`AXi;^^dEC00
 I3dCk<dm?RO0>7PH9f9Dl41
 S1
-R2
-R13
+R1
+R6
 8comb_mul.sv
 Fcomb_mul.sv
 !i122 0
 L0 1 94
-R14
-R15
+R7
+R8
 r1
 !s85 0
 31
-R16
-R17
-R18
+R9
+R10
+R11
 !i113 0
-R19
-R8
+R12
+R2
 vfpu
-2//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
-R11
-Z20 DXx4 work 6 pa_fpu 0 22 Dc4U1U[ncdNMa9m53f<2^2
-!s110 1744592210
+R3
+R4
+Z13 DXx4 work 6 pa_fpu 0 22 _cHMGA>bWze6Yo^SYiEz]3
+R5
 !i10b 1
-!s100 LWzZgOaQaco@3^_h_DDZo2
-IWTG<:i02SVoNR?Dj^4YY83
+!s100 d84gHRE2ceYm:5S`]@UFj0
+IOj79b:_]]=ZKh>^Pfb8990
 S1
-Z21 d//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu
-Z22 w1744591546
-8//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
-F//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
-!i122 61
-L0 75 872
-R14
-R15
+R1
+w1744664764
+8fpu_top.sv
+Ffpu_top.sv
+!i122 0
+L0 74 873
+R7
+R8
 r1
 !s85 0
 31
-Z23 !s108 1744592209.000000
-!s107 //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv|
-!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_top.sv|
+R9
+R10
+R11
 !i113 0
-Z24 o-work work -sv -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
-R8
+R12
+R2
 vfpu_tb
-2//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
-R11
-R20
-!s110 1744592208
+R3
+R4
+R13
+R5
 !i10b 1
-!s100 S]@oX8jo5dM:K5cgb7ZUX0
-IXJIE`G<?feJa8lgI:L?fB2
+!s100 GlP1zPbeP3HVHd^CV2A[_2
+IM2F]0HUQm[miZHXIBUm:S3
 S1
-R21
-w1744563130
-8//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
-F//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
-!i122 59
+R1
+w1744664969
+8fpu_tb.sv
+Ffpu_tb.sv
+!i122 0
 L0 3 85
-R14
-R15
+R7
+R8
 r1
 !s85 0
 31
-!s108 1744592208.000000
-!s107 //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv|
-!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv|
-!i113 0
-R24
-R8
-Xpa_fpu
-2//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
+R9
+R10
 R11
-!s110 1744592209
+!i113 0
+R12
+R2
+Xpa_fpu
+R3
+R4
+R5
 !i10b 1
-!s100 0`^]B4>SNhBR<8lilf28<0
-IDc4U1U[ncdNMa9m53f<2^2
+!s100 :VCke`hoHQb^Hd[KczP<53
+I_cHMGA>bWze6Yo^SYiEz]3
 S1
-R21
-R22
-8//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
-F//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
-!i122 60
+R1
+w1744626885
+8pa_fpu.sv
+Fpa_fpu.sv
+!i122 0
 L0 1 0
-VDc4U1U[ncdNMa9m53f<2^2
-R15
+V_cHMGA>bWze6Yo^SYiEz]3
+R8
 r1
 !s85 0
 31
-R23
-!s107 //wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv|
-!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|//wsl.localhost/Ubuntu-22.04/home/pconst/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv|
+R9
+R10
+R11
 !i113 0
-R24
-R8
+R12
+R2
