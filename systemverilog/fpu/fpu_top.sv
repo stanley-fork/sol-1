@@ -261,7 +261,7 @@ module fpu(
 
   assign ab_shift_amount = 9'(abs(ab_exp_diff));
   // sticky bit (guard -3) = OR of all bits from index (s-3) down to 0
-  assign sticky_bit = ab_shift_amount inside {0, 1, 2} ? 1'b0 :
+  assign sticky_bit = ab_shift_amount < 3   ? 1'b0                                                    :
                       ab_shift_amount ==  3 ? (a_exp < b_exp ?  a_mantissa[0]    :  b_mantissa[0]   ) :
                       ab_shift_amount ==  4 ? (a_exp < b_exp ? |a_mantissa[1:0]  : |b_mantissa[1:0] ) :
                       ab_shift_amount ==  5 ? (a_exp < b_exp ? |a_mantissa[2:0]  : |b_mantissa[2:0] ) :
