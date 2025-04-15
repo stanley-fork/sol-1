@@ -70,14 +70,27 @@
   if any number is NAN, then the result is also set to NAN, not only that, but it is set to be a copy of the first 
   NAN operand. so if operand_a is NAN, the result is set to operand_a, and vice versa. this is done so that NAN information is kept and propagated.
 
-  SUBNORMALS:
-    addition:
+  SUBNORMAL ADDITION/SUBTRACTION:
+    - addition:
       normal    + normal    : can be normal, subnormal, zero, or infinity.
       normal    + subnormal : can be normal or subnormal.
       subnormal + subnormal : can be normal or subnormal (or zero).
       normal    - normal    : can be normal, subnormal, or zero.
       normal    - subnormal : can be normal or subnormal.
       subnormal - subnormal : can be subnormal or zero.
+    - process
+      1) check for either operand being subnormal
+      2) if subnormal set effective exponent to -126
+      3) perform operation
+      4) check if normalization would generate a subnormal
+      5) if so, generate the subnormal and finish
+      6) if not, then normalize as is normally done
+
+
+  SUBNORMAL MULTIPLICATION:
+
+  SUBNORMAL DIVISION:
+
 
 
   TODO:
