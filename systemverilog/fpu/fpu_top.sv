@@ -81,7 +81,7 @@
 
 
   TODO:
-    check for infinity when adding or multiplying two numbers
+    check for infinity when adding or multiplying two normal numbers
 */
 
 module fpu(
