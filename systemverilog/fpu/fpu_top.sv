@@ -81,6 +81,9 @@
     - process
       1) check for either operand being subnormal
       2) if subnormal set effective exponent to -126
+      3) adjust subnormals exponent by shifting subnormal's mantissa right, and increaing its exponent 
+        (as is usually done, the smaller exponent gets incremented by the difference, and since a subnormal has the
+        smallest possible exponent, ITS exponent gets incremented as opposed to the normal number's)
       3) perform operation
       4) check if normalization would generate a subnormal
       5) if so, generate the subnormal and finish
