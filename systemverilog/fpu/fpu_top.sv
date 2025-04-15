@@ -52,12 +52,12 @@
     ln(1+x)   = x - x^2/2 + x^3/3 - x^4/4 + x^5/5 - ...  (|x| < 1)
     arctan(x) = x - x^3/3 + x^5/5 - x^7/7 + ... (slow convergence)
 
-  chebyshev polynomials:
+  CHEBYSHEV POLYNOMIALS:
     Tn   = cos(nx)
     Tn+1 = 2xTn - Tn-1
     T0 = 1, T1 = x, T2 = 2x^2-1, T3 = 4x^3 - 3x, T4 = 8x^4 - 8x^2 + 1
 
-  Chebyshev approximations
+  CHEBYSHEV APPROXIMATIONS
     f           range        c0         c1          c2           c3            c4             c5
     sinπx       [-0.5,0.5]   0	        1.1336	    0           -0.13807	     0	            0.0045584
     cosπx       [-0.5,0.5]   0.472	    0	         -0.4994	     0	           0.027985	      0
@@ -69,6 +69,19 @@
   OBSERVATIONS:
   if any number is NAN, then the result is also set to NAN, not only that, but it is set to be a copy of the first 
   NAN operand. so if operand_a is NAN, the result is set to operand_a, and vice versa. this is done so that NAN information is kept and propagated.
+
+  SUBNORMALS:
+    addition:
+      normal    + normal    : can be normal, subnormal, zero, or infinity.
+      normal    + subnormal : can be normal or subnormal.
+      subnormal + subnormal : can be normal or subnormal (or zero).
+      normal    - normal    : can be normal, subnormal, or zero.
+      normal    - subnormal : can be normal or subnormal.
+      subnormal - subnormal : can be subnormal or zero.
+
+
+  TODO:
+    check for infinity when adding or multiplying two numbers
 */
 
 module fpu(
@@ -310,10 +323,10 @@ module fpu(
                                                                                                  a_mantissa_adjusted - b_mantissa_adjusted;
   assign result_e_addsub_prenorm = a_exp_adjusted;
   assign result_m_addsub_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
-  // lzc function is 32bit, hence need to add extra 3bits to left of the argument. 
+  // lzc function is 32bit and result_m_addsub_abs is 29 wide, hence need to add extra 3bits to left of the argument. 
   // also, the variable result_m_addsub_abs itself has the extra sign bit, 
   // so for counting leading zeroes we need to subtract the extra count of 1. hence we subtract a total of 4 from the result.
-  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd4; // result_m_addsub_abs is 29bits wide, so add 3 extra bits to make 32 to satisfy lzc function
+  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd4;
   
   // normalize the result
   assign result_m_addsub_norm = result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : result_m_addsub_abs << zcount_addsub; // if there was a carry bit after the addition then shift right
@@ -422,7 +435,7 @@ module fpu(
           result_mantissa_div[22:0]} = a_nan         ?  {a_sign, a_exp, a_mantissa[22:0]}    : // a
                                        b_nan         ?  {b_sign, b_exp, b_mantissa[22:0]}    : // b
                                        zero_inf      ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                       inf_zero      ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
+                                       inf_zero      ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                        a_inf         ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                        b_inf         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
                                        zero_and_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
