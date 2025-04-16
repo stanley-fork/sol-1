@@ -98,6 +98,7 @@
 
   TODO:
     check for infinity when adding or multiplying two normal numbers
+    check for subnormal result when adding/subbin etc
 */
 
 module fpu(
