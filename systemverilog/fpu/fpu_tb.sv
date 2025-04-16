@@ -44,7 +44,9 @@ module fpu_tb;
     st_fpu_computation'{32'h3fffffff, 32'h402df854},   // 8   1.9999999,    2.7182818},      
     st_fpu_computation'{32'h42168f5c, 32'h0},          // 9   37.64,        0},                
     st_fpu_computation'{32'h41800000, 32'h42000000},   // 10  16.0,         32.0},              
-    st_fpu_computation'{32'h3e800000, 32'h3f000000}    // 11  0.25,         0.5}                
+    st_fpu_computation'{32'h3e800000, 32'h3f000000},   // 11  0.25,         0.5}                
+
+    st_fpu_computation'{32'h00555555, 32'h00555555}   // 12   7.836629e-39  7.836629e-39   SUBNORMAL
   };
 
   initial begin
@@ -62,11 +64,19 @@ module fpu_tb;
     //for(int i = 3; i < 4; i++) begin
       a_operand = computation_list[i].a; 
       b_operand = computation_list[i].b; 
-      operation = pa_fpu::op_div;
+      operation = pa_fpu::op_add;
       start = 1'b1;
       @(cmd_end) start = 1'b0;
       #1us;
-      $display("a: %-18.6f, b: %-18.6f, result: %-18.6f (%h, %b)", $bitstoshortreal(a_operand), $bitstoshortreal(b_operand), $bitstoshortreal(ieee_packet_out), ieee_packet_out, ieee_packet_out);
+      $display("a: %-18.6f, b: %-18.6f, result: %-18.6f (%h, %b %b %b)", 
+               $bitstoshortreal(a_operand), 
+               $bitstoshortreal(b_operand), 
+               $bitstoshortreal(ieee_packet_out), 
+               ieee_packet_out, 
+               ieee_packet_out[31], 
+               ieee_packet_out[30:23], 
+               ieee_packet_out[22:0]
+      );
     end
 
     $stop;

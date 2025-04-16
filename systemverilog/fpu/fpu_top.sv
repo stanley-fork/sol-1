@@ -341,9 +341,10 @@ module fpu(
   assign result_e_addsub_prenorm = a_exp_adjusted;
   assign result_m_addsub_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
   // lzc function is 32bit and result_m_addsub_abs is 29 wide, hence need to add extra 3bits to left of the argument. 
-  // also, the variable result_m_addsub_abs itself has the extra sign bit, 
-  // so for counting leading zeroes we need to subtract the extra count of 1. hence we subtract a total of 4 from the result.
-  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd4;
+  // also, the variable result_m_addsub_abs itself has the extra sign bit and the possible carry bit, however if the carry bit is 1, we shift right and not left
+  // and the value of zcount_addsub is not used, hence we can subtract 5 from the total of zcount_addsub
+  // so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 5 from the result.
+  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd5;
   
   // normalize the result
   assign result_m_addsub_norm = result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : result_m_addsub_abs << zcount_addsub; // if there was a carry bit after the addition then shift right
@@ -488,7 +489,7 @@ module fpu(
     else begin
       if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
         // subnormal detection
-        if(operand_a[30:23] == 8'h00 && |operand_a[22:0]) begin // subnormal
+        if(a_operand[30:23] == 8'h00 && |a_operand[22:0]) begin // subnormal
           a_mantissa <= {2'b00, 1'b0, a_operand[22:0]};
           a_exp      <= 8'h01; // set exponent to -126 (1 - 127)
           a_sign     <= a_operand[31];
@@ -499,7 +500,7 @@ module fpu(
           a_sign     <= a_operand[31];
         end
         // subnormal detection
-        if(operand_b[30:23] == 8'h00 && |operand_b[22:0]) begin // subnormal
+        if(b_operand[30:23] == 8'h00 && |b_operand[22:0]) begin // subnormal
           b_mantissa <= {2'b00, 1'b0, b_operand[22:0]};
           b_exp      <= 8'h01; // set exponent to -126 (1 - 127)
           b_sign     <= b_operand[31];
