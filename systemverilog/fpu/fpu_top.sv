@@ -289,6 +289,10 @@ module fpu(
                            operation == pa_fpu::op_float_to_int ? result_float2int : 
                                                                   32'h00000000;
 
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+  // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
+  // exponent difference between 'a' and 'b'
   assign ab_shift_amount = 9'(abs(ab_exp_diff));
   // sticky bit (guard -3) = OR of all bits from index (s-3) down to 0
   assign sticky_bit = ab_shift_amount <   3 ? 1'b0                                                    :
@@ -317,9 +321,8 @@ module fpu(
                       ab_shift_amount == 25 ? (a_exp < b_exp ? |a_mantissa[22:0] : |b_mantissa[22:0]) :
                       ab_shift_amount == 26 ? (a_exp < b_exp ? |a_mantissa[23:0] : |b_mantissa[23:0]) :
                       ab_shift_amount == 27 ? (a_exp < b_exp ? |a_mantissa[24:0] : |b_mantissa[24:0]) :
-                      ab_shift_amount >= 28 ? (a_exp < b_exp ? |a_mantissa[25:0] : |b_mantissa[25:0]) : 1'b0;
-
-  // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
+                      ab_shift_amount >= 28 ? (a_exp < b_exp ? |a_mantissa[25:0] : |b_mantissa[25:0]) : 
+                                              1'b0;
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
   // else if aexp > bexp, then increase bexp and right-shift b_mantissa by same number
   // else, exponents are the same
@@ -332,12 +335,10 @@ module fpu(
   // sign bit for result_m_addsub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
   // that can come out of bit 23
-
   // here we need to be careful, because some other operations make use of the internal add/sub circuit, for example op_sqrt makes use
   // of the addition operation. so here we make it such that if the current operation is sqrt, then we select addition instead of
   // subtraction. 
   assign result_m_addsub_prenorm = operation == pa_fpu::op_add || operation == pa_fpu::op_sqrt ? a_mantissa_adjusted + b_mantissa_adjusted :
-                                                                                                 a_mantissa_adjusted - b_mantissa_adjusted;
   assign result_e_addsub_prenorm = a_exp_adjusted;
   assign result_m_addsub_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
   // lzc function is 32bit and result_m_addsub_abs is 29 wide, hence need to add extra 3bits to left of the argument. 
@@ -345,25 +346,20 @@ module fpu(
   // and the value of zcount_addsub is not used, hence we can subtract 5 from the total of zcount_addsub
   // so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 5 from the result.
   assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd5;
-  
   // normalize the result
   assign result_m_addsub_norm = result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : result_m_addsub_abs << zcount_addsub; // if there was a carry bit after the addition then shift right
   assign result_e_addsub_norm = result_m_addsub_abs[24] ? result_e_addsub_prenorm + 1'b1 : result_e_addsub_prenorm - zcount_addsub;
-  
   // set the guard bits
   assign {addsub_guard, addsub_round, addsub_sticky} = result_m_addsub_norm[-1:-3];
-  
   // ROUND TO NEAREST TIES TO EVEN
   // if G is 0, round down
   // else if G is 1 and at least one bit after G is 1 then round up
   // else if G is 1 and all bits after that are 0 then there's a tie: if L = 0 round down else if L = 1 round up
   assign result_m_addsub_rounded = (addsub_guard && (addsub_round || addsub_sticky)) || 
                                    (addsub_guard && ~addsub_round && ~addsub_sticky && result_m_addsub_norm[0]) ? result_m_addsub_norm[25:0] + 1'b1 : result_m_addsub_norm[25:0];
-
   // renormalize if rounding caused a carry
   assign result_m_addsub_renorm = result_m_addsub_rounded[24] ? result_m_addsub_rounded >> 1 : result_m_addsub_rounded;
   assign result_e_addsub_renorm = result_m_addsub_rounded[24] ? result_e_addsub_norm + 1'b1 : result_e_addsub_norm;
-  
   // final result
   assign {result_s_addsub, 
           result_e_addsub, 
@@ -375,7 +371,7 @@ module fpu(
                                    a_inf                                            ? {a_sign, 8'hFF, 23'h000000}       : // inf with same sign as a
                                    b_inf                                            ? {b_sign, 8'hFF, 23'h000000}       : // inf with same sign as b
                                    result_m_addsub_abs == '0                        ? {1'b0, 8'h00, 23'h0}              : // if mantissa result is '0, then set entire result to zero including exponents
-                                   {result_m_addsub_prenorm[25], result_e_addsub_renorm, result_m_addsub_renorm[22:0]};
+                                                                                      {result_m_addsub_prenorm[25], result_e_addsub_renorm, result_m_addsub_renorm[22:0]};
 
   // MULTIPLICATION DATAPATH
   // for multiplication an example follows:
@@ -434,7 +430,7 @@ module fpu(
                                  zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
                                  inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                  zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                 {a_sign ^ b_sign, mul_exp_renorm, product_renorm[46:24]};           
+                                                         {a_sign ^ b_sign, mul_exp_renorm, product_renorm[46:24]};           
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -459,7 +455,7 @@ module fpu(
                                        zero_and_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
                                        a_zero        ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
                                        b_zero        ?  {1'b0, 8'hFF, 23'h000000}            : // inf
-                                       {a_sign ^ b_sign, exp_div_norm, quotient_mantissa_div_norm[22:0]};           
+                                                        {a_sign ^ b_sign, exp_div_norm, quotient_mantissa_div_norm[22:0]};           
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
