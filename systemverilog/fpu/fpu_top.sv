@@ -490,7 +490,7 @@ module fpu(
         // subnormal detection
         if(operand_a[30:23] == 8'h00 && |operand_a[22:0]) begin // subnormal
           a_mantissa <= {2'b00, 1'b0, a_operand[22:0]};
-          a_exp      <= 8'h00 
+          a_exp      <= 8'h01; // set exponent to -126 (1 - 127)
           a_sign     <= a_operand[31];
         end
         else begin // normal
@@ -501,7 +501,7 @@ module fpu(
         // subnormal detection
         if(operand_b[30:23] == 8'h00 && |operand_b[22:0]) begin // subnormal
           b_mantissa <= {2'b00, 1'b0, b_operand[22:0]};
-          b_exp      <= 8'h00;
+          b_exp      <= 8'h01; // set exponent to -126 (1 - 127)
           b_sign     <= b_operand[31];
         end
         else begin // normal
