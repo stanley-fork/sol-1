@@ -69,13 +69,13 @@ module fpu_tb;
       @(cmd_end) start = 1'b0;
       #1us;
       $display("a: %-18.6f, b: %-18.6f, result: %-18.6f (%h, %b %b %b)", 
-               $bitstoshortreal(a_operand), 
-               $bitstoshortreal(b_operand), 
-               $bitstoshortreal(ieee_packet_out), 
-               ieee_packet_out, 
-               ieee_packet_out[31], 
-               ieee_packet_out[30:23], 
-               ieee_packet_out[22:0]
+              $bitstoshortreal(a_operand), 
+              $bitstoshortreal(b_operand), 
+              $bitstoshortreal(ieee_packet_out), 
+              ieee_packet_out, 
+              ieee_packet_out[31], 
+              ieee_packet_out[30:23], 
+              ieee_packet_out[22:0]
       );
     end
 

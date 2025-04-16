@@ -344,6 +344,7 @@ module fpu(
   // of the addition operation. so here we make it such that if the current operation is sqrt, then we select addition instead of
   // subtraction. 
   assign result_m_addsub_prenorm = operation == pa_fpu::op_add || operation == pa_fpu::op_sqrt ? a_mantissa_adjusted + b_mantissa_adjusted :
+                                                                                                 a_mantissa_adjusted - b_mantissa_adjusted;
   assign result_e_addsub_prenorm = a_exp_adjusted;
   assign result_m_addsub_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
   // lzc function is 32bit and result_m_addsub_abs is 29 wide, hence need to add extra 3bits to left of the argument. 
@@ -490,7 +491,7 @@ module fpu(
     else begin
       if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
         // subnormal detection
-        if(a_subnrmal) begin // subnormal
+        if(a_subnormal) begin // subnormal
           a_mantissa <= {2'b00, 1'b0, a_operand[22:0]};
           a_exp      <= 8'h01; // set exponent to -126 (1 - 127)
           a_sign     <= a_operand[31];
