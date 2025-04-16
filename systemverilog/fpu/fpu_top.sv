@@ -211,11 +211,12 @@ module fpu(
 
   // status
   logic a_neg;
-  logic a_subnormal, b_subnormal;
   logic a_overflow, a_underflow;
-  logic b_overflow, b_underflow;
   logic a_nan, a_inf, a_pos_inf, a_neg_inf, a_zero;
+  logic a_subnormal;
+  logic b_overflow, b_underflow;
   logic b_nan, b_inf, b_pos_inf, b_neg_inf, b_zero;
+  logic b_subnormal;
   // for multiplication
   logic zero_inf_or_inf_zero;
   logic inf_or_inf;
