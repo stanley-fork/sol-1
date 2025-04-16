@@ -281,12 +281,13 @@ module fpu(
 
   assign ieee_packet_out = operation == pa_fpu::op_add          ? {result_s_addsub, result_e_addsub, result_m_addsub[22:0]} :
                            operation == pa_fpu::op_sub          ? {result_s_addsub, result_e_addsub, result_m_addsub[22:0]} :
-                           operation == pa_fpu::op_mul          ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
-                           operation == pa_fpu::op_square       ? {result_sign_mul, result_exp_mul, result_mantissa_mul[22:0]} :
-                           operation == pa_fpu::op_div          ? {result_sign_div, result_exp_div, result_mantissa_div[22:0]} :
-                           operation == pa_fpu::op_sqrt         ? {sqrt_xn_sign, sqrt_xn_exp, sqrt_xn_mantissa[22:0]} :
-                           operation == pa_fpu::op_float_to_int ? result_float2int :
-                           operation == pa_fpu::op_log2         ? {log2_sign, log2_exp_norm, log2_norm[29:7]} : '0;
+                           operation == pa_fpu::op_mul          ? {result_sign_mul, result_exp_mul,  result_mantissa_mul[22:0]} :
+                           operation == pa_fpu::op_square       ? {result_sign_mul, result_exp_mul,  result_mantissa_mul[22:0]} :
+                           operation == pa_fpu::op_div          ? {result_sign_div, result_exp_div,  result_mantissa_div[22:0]} :
+                           operation == pa_fpu::op_sqrt         ? {sqrt_xn_sign,    sqrt_xn_exp,     sqrt_xn_mantissa[22:0]} :
+                           operation == pa_fpu::op_log2         ? {log2_sign,       log2_exp_norm,   log2_norm[29:7]} :
+                           operation == pa_fpu::op_float_to_int ? result_float2int : 
+                                                                  32'h00000000;
 
   assign ab_shift_amount = 9'(abs(ab_exp_diff));
   // sticky bit (guard -3) = OR of all bits from index (s-3) down to 0
@@ -486,12 +487,28 @@ module fpu(
     end   
     else begin
       if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
-        a_mantissa <= {2'b00, 1'b1, a_operand[22:0]};
-        a_exp      <= a_operand[30:23];
-        a_sign     <= a_operand[31];
-        b_mantissa <= {2'b00, 1'b1, b_operand[22:0]};
-        b_exp      <= b_operand[30:23];
-        b_sign     <= b_operand[31];
+        // subnormal detection
+        if(operand_a[30:23] == 8'h00 && |operand_a[22:0]) begin // subnormal
+          a_mantissa <= {2'b00, 1'b0, a_operand[22:0]};
+          a_exp      <= 8'h00 
+          a_sign     <= a_operand[31];
+        end
+        else begin // normal
+          a_mantissa <= {2'b00, 1'b1, a_operand[22:0]};
+          a_exp      <= a_operand[30:23];
+          a_sign     <= a_operand[31];
+        end
+        // subnormal detection
+        if(operand_b[30:23] == 8'h00 && |operand_b[22:0]) begin // subnormal
+          b_mantissa <= {2'b00, 1'b0, b_operand[22:0]};
+          b_exp      <= 8'h00;
+          b_sign     <= b_operand[31];
+        end
+        else begin // normal
+          b_mantissa <= {2'b00, 1'b1, b_operand[22:0]};
+          b_exp      <= b_operand[30:23];
+          b_sign     <= b_operand[31];
+        end
       end
       if(sqrt_mov_a_xn) begin
         a_mantissa <= {2'b00, sqrt_xn_mantissa};
