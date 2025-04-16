@@ -211,6 +211,7 @@ module fpu(
 
   // status
   logic a_neg;
+  logic a_subnormal, b_subnormal;
   logic a_overflow, a_underflow;
   logic b_overflow, b_underflow;
   logic a_nan, a_inf, a_pos_inf, a_neg_inf, a_zero;
@@ -253,17 +254,19 @@ module fpu(
     return (6)'(32);    
   endfunction
 
-  assign a_nan     = a_exp == 8'hff && |a_mantissa[22:0];
-  assign a_zero    = a_exp == 8'h00 &&  a_mantissa[22:0] == 23'h0;
-  assign a_inf     = a_exp == 8'hff &&  a_mantissa[22:0] == 23'h0;
-  assign a_pos_inf = a_sign == 1'b0 &&  a_inf;
-  assign a_neg_inf = a_sign == 1'b1 &&  a_inf;
+  assign a_nan       = a_exp == 8'hff && |a_mantissa[22:0];
+  assign a_zero      = a_exp == 8'h00 &&  a_mantissa[22:0] == 23'h0;
+  assign a_inf       = a_exp == 8'hff &&  a_mantissa[22:0] == 23'h0;
+  assign a_pos_inf   = a_sign == 1'b0 &&  a_inf;
+  assign a_neg_inf   = a_sign == 1'b1 &&  a_inf;
+  assign a_subnormal = a_operand[30:23] == 8'h00 && |a_operand[22:0];
 
-  assign b_nan     = b_exp == 8'hff && |b_mantissa[22:0];
-  assign b_zero    = b_exp == 8'h00 &&  b_mantissa[22:0] == 23'h0;
-  assign b_inf     = b_exp == 8'hff &&  b_mantissa[22:0] == 23'h0;
-  assign b_pos_inf = b_sign == 1'b0 &&  b_inf;
-  assign b_neg_inf = b_sign == 1'b1 &&  b_inf;
+  assign b_nan       = b_exp == 8'hff && |b_mantissa[22:0];
+  assign b_zero      = b_exp == 8'h00 &&  b_mantissa[22:0] == 23'h0;
+  assign b_inf       = b_exp == 8'hff &&  b_mantissa[22:0] == 23'h0;
+  assign b_pos_inf   = b_sign == 1'b0 &&  b_inf;
+  assign b_neg_inf   = b_sign == 1'b1 &&  b_inf;
+  assign b_subnormal = b_operand[30:23] == 8'h00 && |b_operand[22:0];
 
   assign zero_or_zero         = a_zero || b_zero;
   assign zero_and_zero        = a_zero && b_zero;
@@ -485,7 +488,7 @@ module fpu(
     else begin
       if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
         // subnormal detection
-        if(a_operand[30:23] == 8'h00 && |a_operand[22:0]) begin // subnormal
+        if(a_subnrmal) begin // subnormal
           a_mantissa <= {2'b00, 1'b0, a_operand[22:0]};
           a_exp      <= 8'h01; // set exponent to -126 (1 - 127)
           a_sign     <= a_operand[31];
@@ -496,7 +499,7 @@ module fpu(
           a_sign     <= a_operand[31];
         end
         // subnormal detection
-        if(b_operand[30:23] == 8'h00 && |b_operand[22:0]) begin // subnormal
+        if(b_subnormal) begin // subnormal
           b_mantissa <= {2'b00, 1'b0, b_operand[22:0]};
           b_exp      <= 8'h01; // set exponent to -126 (1 - 127)
           b_sign     <= b_operand[31];
