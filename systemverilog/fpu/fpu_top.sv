@@ -138,6 +138,7 @@ module fpu(
   logic [25:-3] result_m_addsub_prenorm;  // 24 bits plus carry plus 3 guard bits
   logic [25:-3] result_m_addsub_abs;      // 24 bits plus carry plus 3 guard bits
   logic [25:-3] result_m_addsub_norm;     // after first normalization
+  logic [25:-3] result_m_addsub_subnorm_check;
   logic  [25:0] result_m_addsub_rounded;  // after rounding
   logic  [25:0] result_m_addsub_renorm;   // renormalization after rounding (if there is a carry after rounding up)
   logic  [22:0] result_m_addsub;          // 23 bits for final mantissa
@@ -146,7 +147,7 @@ module fpu(
   logic   [7:0] result_e_addsub_renorm;   
   logic   [7:0] result_e_addsub;
   logic         result_s_addsub;
-  logic         e_addsub_is_subnormal;    // whether normalizing the final number results in a subnormal
+  logic         result_addsub_is_subnormal;    // whether normalizing the final number results in a subnormal
   logic   [5:0] zcount_addsub;
   logic         addsub_guard; // guard bits
   logic         addsub_round; 
@@ -361,23 +362,31 @@ module fpu(
   // if decreasing the exponent by zcount makes it <= -127(or 0 when biased), this means it would create a subnormal
   // hence we only shift up to the point where it makes it -126(1 biased). this gives a subnormal default exponent
   // and also keeps the mantissa in the form 0.xxx...
-  assign e_addsub_is_subnormal = 9'(result_e_addsub_prenorm) - 9'(zcount_addsub) <= 9'sd0;
+  assign result_addsub_is_subnormal = 9'(result_e_addsub_prenorm) - 9'(zcount_addsub) == '0;
   assign addsub_effective_normalization_shift = min(result_e_addsub_prenorm, zcount_addsub); // check whats smallest, the number of shifts from current exp till -126(01 biased), or leading zero count.
                                                                                              // the current exponent indicates how many shifts we can perform before the exponent becomes 0 (which would make it subnormal)
                                                                                              // hence if zcount > current exponent, this means we would need to shift the number (and correspondingly subtract from exponent)
                                                                                              // more times than the exponent can be decreased before becoming 0.
                                                                                              // thus we can only shift as many times as the minimum of the exponent value, and the number of leading zeroes, in order
                                                                                              // to avoid the exponent becoming -127 (00 biased)
-  assign result_m_addsub_norm = result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : result_m_addsub_abs << addsub_effective_normalization_shift; // if there was a carry bit after the addition then shift right
-  assign result_e_addsub_norm = result_m_addsub_abs[24] ? result_e_addsub_prenorm + 1'b1 : result_e_addsub_prenorm - addsub_effective_normalization_shift;
+  assign result_e_addsub_norm = result_m_addsub_abs[24] ? result_e_addsub_prenorm + 1'b1 : 
+                                                          result_e_addsub_prenorm - addsub_effective_normalization_shift;
+  assign result_m_addsub_norm = result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : // if there was a carry bit after the addition then shift right
+                                                          result_m_addsub_abs << addsub_effective_normalization_shift;
+  // this is a special case check where the result is subnormal and bit 23 of the mantissa is 1 while the exponent is -127(0 biased)
+  // we need to right shift the mantissa once, while keeping the exp as 0 because this will encode the subnomal correctly.
+  // for example: 1.xxx e-127 becomes 0.1xxx e-127, but -127(0) as exponent with msb of mantissa = 0 means we interpret the float 
+  // as 0.xxx e-126, which is equal to 0.1xxx e-126, the original value.
+  assign result_m_addsub_subnorm_check = result_m_addsub_norm >> (result_addsub_is_subnormal && result_m_addsub_norm[23] ? 1'b1 : 0);
+
   // set the guard bits
-  assign {addsub_guard, addsub_round, addsub_sticky} = result_m_addsub_norm[-1:-3];
+  assign {addsub_guard, addsub_round, addsub_sticky} = result_m_addsub_subnorm_check[-1:-3];
   // ROUND TO NEAREST TIES TO EVEN
   // if G is 0, round down
   // else if G is 1 and at least one bit after G is 1 then round up
   // else if G is 1 and all bits after that are 0 then there's a tie: if L = 0 round down else if L = 1 round up
   assign result_m_addsub_rounded = (addsub_guard && (addsub_round || addsub_sticky)) || 
-                                   (addsub_guard && ~addsub_round && ~addsub_sticky && result_m_addsub_norm[0]) ? result_m_addsub_norm[25:0] + 1'b1 : result_m_addsub_norm[25:0];
+                                   (addsub_guard && ~addsub_round && ~addsub_sticky && result_m_addsub_subnorm_check[0]) ? result_m_addsub_subnorm_check[25:0] + 1'b1 : result_m_addsub_subnorm_check[25:0];
   // renormalize if rounding caused a carry
   assign result_m_addsub_renorm = result_m_addsub_rounded[24] ? result_m_addsub_rounded >> 1 : result_m_addsub_rounded;
   assign result_e_addsub_renorm = result_m_addsub_rounded[24] ? result_e_addsub_norm + 1'b1 : result_e_addsub_norm;

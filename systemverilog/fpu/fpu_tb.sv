@@ -53,7 +53,12 @@ module fpu_tb;
     st_fpu_computation'{32'h402df854, 32'h7FC00000}    // 7   2.7182818,    NAN}
   };
 
+  typedef enum {type_single, type_loop} e_test_type;
+
   st_fpu_computation test_list[];
+  e_test_type test_type;
+  pa_fpu::e_fpu_op test_op;
+  int test_index;
 
   initial begin
     clk = 0;
@@ -66,13 +71,29 @@ module fpu_tb;
     #1us;
     arst = 0;
 
+    test_type = type_single;
+    test_index = 1;
+    test_op = pa_fpu::op_sub;
     test_list = list_subnormal;
 
-    //for(int i = 0; i < list_normal.size(); i++) begin
-    for(int i = 1; i < 2; i++) begin
-      a_operand = test_list[i].a; 
-      b_operand = test_list[i].b; 
-      operation = pa_fpu::op_add;
+    if(test_type == type_loop) begin
+      for(int i = 0; i < test_list.size(); i++) begin
+        a_operand = test_list[i].a; 
+        b_operand = test_list[i].b; 
+        operation = test_op;
+        start = 1'b1;
+        @(cmd_end) start = 1'b0;
+        #1us;
+        $display("a:      %.50f (%h)", $bitstoshortreal(a_operand),       a_operand);
+        $display("b:      %.50f (%h)", $bitstoshortreal(b_operand),       b_operand);
+        $display("result: %.50f (%h)", $bitstoshortreal(ieee_packet_out), ieee_packet_out);
+        $display("%b %b %b", ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0]);
+      end
+    end
+    else if(test_type == type_single) begin
+      a_operand = test_list[test_index].a; 
+      b_operand = test_list[test_index].b; 
+      operation = test_op;
       start = 1'b1;
       @(cmd_end) start = 1'b0;
       #1us;
@@ -81,7 +102,7 @@ module fpu_tb;
       $display("result: %.50f (%h)", $bitstoshortreal(ieee_packet_out), ieee_packet_out);
       $display("%b %b %b", ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0]);
     end
-
+$display("test %b", 8'hff << -1);
     $stop;
   end
 
