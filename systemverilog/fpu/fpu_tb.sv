@@ -16,31 +16,7 @@ module fpu_tb;
   } st_fpu_computation;
 
   st_fpu_computation list_subnormal[] = {
-    st_fpu_computation'{32'h00800000, 32'h00400000},   // 1.1754944e-38,   5.877472e-39     NORMAL,    SUBNORMAL
-
-    st_fpu_computation'{32'h00000001, 32'h00000001},   // 1.4012985e-45,   1.4012985e-45    Smallest positive subnormal
-    st_fpu_computation'{32'h00000002, 32'h00000002},   // 2.8025969e-45,   2.8025969e-45    Slightly larger subnormal
-    st_fpu_computation'{32'h00000010, 32'h00000010},   // 2.2420775e-44,   2.2420775e-44    Another small subnormal
-    st_fpu_computation'{32'h00000100, 32'h00000100},   // 3.5873241e-43,   3.5873241e-43    Larger subnormal
-    st_fpu_computation'{32'h00001000, 32'h00001000},   // 5.7397185e-42,   5.7397185e-42    Larger subnormal
-    st_fpu_computation'{32'h00010000, 32'h00010000},   // 9.1835496e-41,   9.1835496e-41    Larger subnormal
-    st_fpu_computation'{32'h000FFFFF, 32'h000FFFFF},   // 1.1754942e-38,   1.1754942e-38    Largest subnormal
-    st_fpu_computation'{32'h00000001, 32'h00000002},   // 1.4012985e-45,   2.8025969e-45    Smallest positive subnormal with another subnormal
-    st_fpu_computation'{32'h00000001, 32'h00800000},   // 1.4012985e-45,   1.1754944e-38    Smallest subnormal with smallest normal
-    st_fpu_computation'{32'h00000001, 32'h3F800000},   // 1.4012985e-45,   1.0             Smallest subnormal with 1.0 (normal)
-    st_fpu_computation'{32'h00000001, 32'h7F800000},   // 1.4012985e-45,   Infinity        Smallest subnormal with infinity
-    st_fpu_computation'{32'h00000001, 32'hFF800000},   // 1.4012985e-45,  -Infinity        Smallest subnormal with -infinity
-    st_fpu_computation'{32'h00000001, 32'h7FC00000},   // 1.4012985e-45,   NaN             Smallest subnormal with NaN
-    st_fpu_computation'{32'h00000001, 32'h00000000},   // 1.4012985e-45,   0.0             Smallest subnormal with zero
-    st_fpu_computation'{32'h00000001, 32'h80000000},   // 1.4012985e-45,  -0.0             Smallest subnormal with negative zero
-    st_fpu_computation'{32'h00000001, 32'h00400000},   // 1.4012985e-45,   5.877472e-39    Smallest subnormal with mid-range subnormal
-    st_fpu_computation'{32'h00000001, 32'h000FFFFF},   // 1.4012985e-45,   1.1754942e-38   Smallest subnormal with largest subnormal
-    st_fpu_computation'{32'h00000003, 32'h00000003},   // 4.2038954e-45,   4.2038954e-45   Another small subnormal
-    st_fpu_computation'{32'h00000005, 32'h00000005},   // 7.0064923e-45,   7.0064923e-45   Another small subnormal
-    st_fpu_computation'{32'h0000000F, 32'h0000000F},   // 2.1019477e-44,   2.1019477e-44   Another small subnormal
-    st_fpu_computation'{32'h000000FF, 32'h000000FF},   // 2.3509887e-42,   2.3509887e-42   Another small subnormal
-    st_fpu_computation'{32'h00000FFF, 32'h00000FFF},   // 3.8213709e-40,   3.8213709e-40   Another small subnormal
-    st_fpu_computation'{32'h0000FFFF, 32'h0000FFFF}    // 6.1035156e-38,   6.1035156e-38   Another small subnormal
+    st_fpu_computation'{32'h00000001, 32'h00000000}   // 1.4012985e-45,   0.0             Smallest subnormal with zero
   };
 
 

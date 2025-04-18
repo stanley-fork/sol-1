@@ -397,15 +397,21 @@ module fpu(
   // final result
   assign {result_s_addsub, 
           result_e_addsub, 
-          result_m_addsub[22:0]} = a_nan                                            ? {a_sign, a_exp, a_mantissa[22:0]} : // 'a' as NAN
-                                   b_nan                                            ? {b_sign, b_exp, b_mantissa[22:0]} : // 'b' as NAN
-                                   a_pos_inf && b_neg_inf || a_neg_inf && b_pos_inf ? {1'b0, 8'hFF, 23'h400000}         : // NAN
-                                   a_pos_inf && b_pos_inf                           ? {1'b0, 8'hFF, 23'h000000}         : // inf
-                                   a_neg_inf && b_neg_inf                           ? {1'b1, 8'hFF, 23'h000000}         : // inf
-                                   a_inf                                            ? {a_sign, 8'hFF, 23'h000000}       : // inf with same sign as a
-                                   b_inf                                            ? {b_sign, 8'hFF, 23'h000000}       : // inf with same sign as b
-                                   result_m_addsub_renorm == '0                     ? {1'b0, 8'h00, 23'h0}              : // if mantissa result is '0, then set entire result to zero including exponents
-                                                                                      {result_m_addsub_prenorm[25], result_e_addsub_renorm, result_m_addsub_renorm[22:0]};
+          result_m_addsub[22:0]} = a_nan                                                   ? {a_sign, a_exp, a_mantissa[22:0]} : // 'a' as NAN
+                                   b_nan                                                   ? {b_sign, b_exp, b_mantissa[22:0]} : // 'b' as NAN
+                                   operation == pa_fpu::op_add && a_pos_inf && b_neg_inf   ? {1'b0, 8'hFF, 23'h400000} : // NAN
+                                   operation == pa_fpu::op_add && a_neg_inf && b_pos_inf   ? {1'b0, 8'hFF, 23'h400000} : // NAN
+                                   operation == pa_fpu::op_add && a_pos_inf && b_pos_inf   ? {1'b0, 8'hFF, 23'h000000} : // inf
+                                   operation == pa_fpu::op_add && a_neg_inf && b_neg_inf   ? {1'b1, 8'hFF, 23'h000000} : // -inf
+                                   operation == pa_fpu::op_sub && a_pos_inf && b_neg_inf   ? {1'b0, 8'hFF, 23'h000000} : // inf
+                                   operation == pa_fpu::op_sub && a_neg_inf && b_pos_inf   ? {1'b1, 8'hFF, 23'h000000} : // -inf
+                                   operation == pa_fpu::op_sub && a_pos_inf && b_pos_inf   ? {1'b0, 8'hFF, 23'h400000} : // NAN
+                                   operation == pa_fpu::op_sub && a_neg_inf && b_neg_inf   ? {1'b0, 8'hFF, 23'h400000} : // NAN
+                                   a_inf                                                   ? {a_sign, 8'hFF, 23'h000000} : // inf with same sign as a
+                                   operation == pa_fpu::op_add && b_inf                    ? {b_sign, 8'hFF, 23'h000000} : // inf with same sign as b
+                                   operation == pa_fpu::op_sub && b_inf                    ? {~b_sign, 8'hFF, 23'h000000} : // inf with inverted b sign
+                                   result_m_addsub_renorm == '0                            ? {1'b0, 8'h00, 23'h0}        : // if mantissa result is '0, then set entire result to zero including exponents
+                                                                                             {result_m_addsub_prenorm[25], result_e_addsub_renorm, result_m_addsub_renorm[22:0]};
 
   // MULTIPLICATION DATAPATH
   // for multiplication an example follows:
@@ -524,6 +530,11 @@ module fpu(
           a_exp      <= 8'h01; // set exponent to -126 (1 - 127)
           a_sign     <= a_operand[31];
         end
+        else if(a_zero) begin // zero
+          a_mantissa <= {2'b00, 1'b0, a_operand[22:0]};
+          a_exp      <= a_operand[30:23];
+          a_sign     <= a_operand[31];
+        end
         else begin // normal
           a_mantissa <= {2'b00, 1'b1, a_operand[22:0]};
           a_exp      <= a_operand[30:23];
@@ -533,6 +544,11 @@ module fpu(
         if(b_subnormal) begin // subnormal
           b_mantissa <= {2'b00, 1'b0, b_operand[22:0]};
           b_exp      <= 8'h01; // set exponent to -126 (1 - 127)
+          b_sign     <= b_operand[31];
+        end
+        else if(b_zero) begin // zero
+          b_mantissa <= {2'b00, 1'b0, b_operand[22:0]};
+          b_exp      <= b_operand[30:23];
           b_sign     <= b_operand[31];
         end
         else begin // normal
