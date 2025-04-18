@@ -27,6 +27,7 @@ add wave -noupdate -radix binary /fpu_tb/fpu_top/ab_shift_amount
 add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_prenorm
 add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_abs
 add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_norm
+add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_subnorm_check
 add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_rounded
 add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub_renorm
 add wave -noupdate -radix binary /fpu_tb/fpu_top/result_m_addsub
@@ -70,10 +71,10 @@ add wave -noupdate -radix binary /fpu_tb/fpu_top/zero_nan_or_nan_zero
 add wave -noupdate -radix binary /fpu_tb/fpu_top/curr_state_main_fsm
 add wave -noupdate -radix binary /fpu_tb/fpu_top/curr_state_arith_fsm
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {3332 ns} 0}
+WaveRestoreCursors {{Cursor 1} {3966 ns} 0}
 quietly wave cursor active 1
-configure wave -namecolwidth 234
-configure wave -valuecolwidth 284
+configure wave -namecolwidth 301
+configure wave -valuecolwidth 312
 configure wave -justifyvalue left
 configure wave -signalnamewidth 1
 configure wave -snapdistance 10
@@ -86,4 +87,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {5513 ns}
+WaveRestoreZoom {0 ns} {5209 ns}
