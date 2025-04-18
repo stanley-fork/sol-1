@@ -53,7 +53,7 @@ module fpu_tb;
     st_fpu_computation'{32'h402df854, 32'h7FC00000}    // 7   2.7182818,    NAN}
   };
 
-  typedef enum {type_single, type_loop} e_test_type;
+  typedef enum {type_single, type_all} e_test_type;
 
   st_fpu_computation test_list[];
   e_test_type test_type;
@@ -72,11 +72,11 @@ module fpu_tb;
     arst = 0;
 
     test_type = type_single;
-    test_index = 1;
+    test_index = 0;
     test_op = pa_fpu::op_sub;
-    test_list = list_subnormal;
+    test_list = list_normal;
 
-    if(test_type == type_loop) begin
+    if(test_type == type_all) begin
       for(int i = 0; i < test_list.size(); i++) begin
         a_operand = test_list[i].a; 
         b_operand = test_list[i].b; 
@@ -102,7 +102,7 @@ module fpu_tb;
       $display("result: %.50f (%h)", $bitstoshortreal(ieee_packet_out), ieee_packet_out);
       $display("%b %b %b", ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0]);
     end
-$display("test %b", 8'hff << -1);
+
     $stop;
   end
 

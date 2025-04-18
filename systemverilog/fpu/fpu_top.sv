@@ -363,7 +363,7 @@ module fpu(
   // hence we only shift up to the point where it makes it -126(1 biased). this gives a subnormal default exponent
   // and also keeps the mantissa in the form 0.xxx...
   assign result_addsub_is_subnormal = 9'(result_e_addsub_prenorm) - 9'(zcount_addsub) == '0;
-  assign addsub_effective_normalization_shift = min(result_e_addsub_prenorm, zcount_addsub); // check whats smallest, the number of shifts from current exp till -126(01 biased), or leading zero count.
+  assign addsub_effective_normalization_shift = min(9'(result_e_addsub_prenorm), 9'(zcount_addsub)); // check whats smallest, the number of shifts from current exp till -126(01 biased), or leading zero count.
                                                                                              // the current exponent indicates how many shifts we can perform before the exponent becomes 0 (which would make it subnormal)
                                                                                              // hence if zcount > current exponent, this means we would need to shift the number (and correspondingly subtract from exponent)
                                                                                              // more times than the exponent can be decreased before becoming 0.
