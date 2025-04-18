@@ -1,5 +1,3 @@
-`default_nettype none
-
 module fpu_tb;
 
   logic arst;
@@ -18,9 +16,9 @@ module fpu_tb;
   } st_fpu_computation;
 
   st_fpu_computation list_subnormal[] = {
-    st_fpu_computation'{32'h00555555, 32'h00555555},   // 12   7.836629e-39    7.836629e-39     SUBNORMAL, SUBNORMAL
-    st_fpu_computation'{32'h00800000, 32'h00400000}    // 1   1.1754944e-38,   5.877472e-39,    NORMAL,    SUBNORMAL
+   st_fpu_computation'{32'h3f800000, 32'h00000001}   // 1,   1.4012985e-45    Smallest positive subnormal
   };
+
 
   st_fpu_computation list_normal[] = {
     st_fpu_computation'{32'h3f800000, 32'h3f8ccccd},   // 1   1.0,          1.1},      
@@ -71,9 +69,9 @@ module fpu_tb;
     #1us;
     arst = 0;
 
-    test_type = type_single;
+    test_type = type_all;
     test_index = 0;
-    test_op = pa_fpu::op_sub;
+    test_op = pa_fpu::op_add;
     test_list = list_normal;
 
     if(test_type == type_all) begin
@@ -84,10 +82,14 @@ module fpu_tb;
         start = 1'b1;
         @(cmd_end) start = 1'b0;
         #1us;
-        $display("a:      %.50f (%h)", $bitstoshortreal(a_operand),       a_operand);
-        $display("b:      %.50f (%h)", $bitstoshortreal(b_operand),       b_operand);
-        $display("result: %.50f (%h)", $bitstoshortreal(ieee_packet_out), ieee_packet_out);
-        $display("%b %b %b", ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0]);
+        $display("%.50f(%h) + %.50f(%h) = %.50f(%h, %b %b %b)", $bitstoshortreal(a_operand), 
+                                                                (a_operand), 
+                                                                $bitstoshortreal(b_operand), 
+                                                                (b_operand), 
+                                                                $bitstoshortreal(ieee_packet_out),
+                                                                (ieee_packet_out),
+                                                                ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0]
+        );
       end
     end
     else if(test_type == type_single) begin
@@ -97,10 +99,14 @@ module fpu_tb;
       start = 1'b1;
       @(cmd_end) start = 1'b0;
       #1us;
-      $display("a:      %.50f (%h)", $bitstoshortreal(a_operand),       a_operand);
-      $display("b:      %.50f (%h)", $bitstoshortreal(b_operand),       b_operand);
-      $display("result: %.50f (%h)", $bitstoshortreal(ieee_packet_out), ieee_packet_out);
-      $display("%b %b %b", ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0]);
+        $display("%.50f(%h) + %.50f(%h) = %.50f(%h, %b %b %b)", $bitstoshortreal(a_operand), 
+                                                                (a_operand), 
+                                                                $bitstoshortreal(b_operand), 
+                                                                (b_operand), 
+                                                                $bitstoshortreal(ieee_packet_out),
+                                                                (ieee_packet_out),
+                                                                ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0]
+        );
     end
 
     $stop;

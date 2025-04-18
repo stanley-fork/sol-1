@@ -137,6 +137,7 @@ module fpu(
   // addition/subtraction datapath
   logic [25:-3] result_m_addsub_prenorm;  // 24 bits plus carry plus 3 guard bits
   logic [25:-3] result_m_addsub_abs;      // 24 bits plus carry plus 3 guard bits
+  logic [25:-3] result_m_addsub_abs_24;   // 24 bits plus carry plus 3 guard bits
   logic [25:-3] result_m_addsub_norm;     // after first normalization
   logic [25:-3] result_m_addsub_subnorm_check;
   logic  [25:0] result_m_addsub_rounded;  // after rounding
@@ -149,6 +150,8 @@ module fpu(
   logic         result_s_addsub;
   logic         result_addsub_is_subnormal;    // whether normalizing the final number results in a subnormal
   logic   [5:0] zcount_addsub;
+  logic   [4:0] addsub_effective_normalization_shift;
+
   logic         addsub_guard; // guard bits
   logic         addsub_round; 
   logic         addsub_sticky;
@@ -351,33 +354,34 @@ module fpu(
   // subtraction. 
   assign result_m_addsub_prenorm = operation == pa_fpu::op_add || operation == pa_fpu::op_sqrt ? a_mantissa_adjusted + b_mantissa_adjusted :
                                                                                                  a_mantissa_adjusted - b_mantissa_adjusted;
-  assign result_e_addsub_prenorm = a_exp_adjusted;
   assign result_m_addsub_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
+  assign result_e_addsub_prenorm = a_exp_adjusted + (result_m_addsub_abs[24] ? 1'b1 : 1'b0);
+  assign result_m_addsub_abs_24 = result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : result_m_addsub_abs; // if there was a carry bit after the addition then shift right
+
   // lzc function is 32bit and result_m_addsub_abs is 29 wide, hence need to add extra 3bits to left of the argument. 
   // also, the variable result_m_addsub_abs itself has the extra sign bit and the possible carry bit, however if the carry bit is 1, we shift right and not left
   // and the value of zcount_addsub is not used, hence we can subtract 5 from the total of zcount_addsub
   // so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 5 from the result.
-  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs}) - 6'd5;
+  assign zcount_addsub = lzc({3'b000, result_m_addsub_abs_24}) - 6'd5;
   // normalize the result
   // if decreasing the exponent by zcount makes it <= -127(or 0 when biased), this means it would create a subnormal
   // hence we only shift up to the point where it makes it -126(1 biased). this gives a subnormal default exponent
   // and also keeps the mantissa in the form 0.xxx...
-  assign result_addsub_is_subnormal = 9'(result_e_addsub_prenorm) - 9'(zcount_addsub) == '0;
+  assign result_addsub_is_subnormal = $signed(9'(result_e_addsub_prenorm)) - $signed(9'(zcount_addsub)) <= 9'sd0; // 9'sd0 NEEDS to be signed! otherwise the comparison becomes unsigned.
   assign addsub_effective_normalization_shift = min(9'(result_e_addsub_prenorm), 9'(zcount_addsub)); // check whats smallest, the number of shifts from current exp till -126(01 biased), or leading zero count.
                                                                                              // the current exponent indicates how many shifts we can perform before the exponent becomes 0 (which would make it subnormal)
                                                                                              // hence if zcount > current exponent, this means we would need to shift the number (and correspondingly subtract from exponent)
                                                                                              // more times than the exponent can be decreased before becoming 0.
                                                                                              // thus we can only shift as many times as the minimum of the exponent value, and the number of leading zeroes, in order
                                                                                              // to avoid the exponent becoming -127 (00 biased)
-  assign result_e_addsub_norm = result_m_addsub_abs[24] ? result_e_addsub_prenorm + 1'b1 : 
-                                                          result_e_addsub_prenorm - addsub_effective_normalization_shift;
-  assign result_m_addsub_norm = result_m_addsub_abs[24] ? result_m_addsub_abs >> 1 : // if there was a carry bit after the addition then shift right
-                                                          result_m_addsub_abs << addsub_effective_normalization_shift;
+  assign result_e_addsub_norm = result_e_addsub_prenorm - addsub_effective_normalization_shift;
+  assign result_m_addsub_norm = result_m_addsub_abs_24 << addsub_effective_normalization_shift;
+
   // this is a special case check where the result is subnormal and bit 23 of the mantissa is 1 while the exponent is -127(0 biased)
   // we need to right shift the mantissa once, while keeping the exp as 0 because this will encode the subnomal correctly.
   // for example: 1.xxx e-127 becomes 0.1xxx e-127, but -127(0) as exponent with msb of mantissa = 0 means we interpret the float 
   // as 0.xxx e-126, which is equal to 0.1xxx e-126, the original value.
-  assign result_m_addsub_subnorm_check = result_m_addsub_norm >> (result_addsub_is_subnormal && result_m_addsub_norm[23] ? 1'b1 : 0);
+  assign result_m_addsub_subnorm_check = result_m_addsub_norm >> (result_addsub_is_subnormal ? 1'b1 : 0);
 
   // set the guard bits
   assign {addsub_guard, addsub_round, addsub_sticky} = result_m_addsub_subnorm_check[-1:-3];
@@ -400,7 +404,7 @@ module fpu(
                                    a_neg_inf && b_neg_inf                           ? {1'b1, 8'hFF, 23'h000000}         : // inf
                                    a_inf                                            ? {a_sign, 8'hFF, 23'h000000}       : // inf with same sign as a
                                    b_inf                                            ? {b_sign, 8'hFF, 23'h000000}       : // inf with same sign as b
-                                   result_m_addsub_abs == '0                        ? {1'b0, 8'h00, 23'h0}              : // if mantissa result is '0, then set entire result to zero including exponents
+                                   result_m_addsub_renorm == '0                     ? {1'b0, 8'h00, 23'h0}              : // if mantissa result is '0, then set entire result to zero including exponents
                                                                                       {result_m_addsub_prenorm[25], result_e_addsub_renorm, result_m_addsub_renorm[22:0]};
 
   // MULTIPLICATION DATAPATH
