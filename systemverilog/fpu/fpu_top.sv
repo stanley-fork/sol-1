@@ -102,26 +102,21 @@
 */
 
 module fpu(
-  input  logic           arst,
-  input  logic           clk,
   input  logic    [31:0] a_operand,
   input  logic    [31:0] b_operand,
   input pa_fpu::e_fpu_op operation, // arithmetic operation to be performed
-  input  logic           start,
-  output logic    [31:0] ieee_packet_out,
-  output logic           cmd_end, // end of command / irq
-  output logic           busy     // active high when an operation is in progress
+  output logic    [31:0] ieee_packet_out
 );
 
   logic  [25:0] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
-  logic [25:-3] a_mantissa_shifted;
+  logic [25:-3] a_mantissa_adjusted;
   logic [25:-3] a_mantissa_signed;
   logic   [7:0] a_exp;
   logic   [7:0] a_exp_adjusted;
   logic         a_sign;
 
   logic  [25:0] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
-  logic [25:-3] b_mantissa_shifted;  // 24 mantissa, 2 upper guards for signed arithmetic, 3 lower rounding guard bits
+  logic [25:-3] b_mantissa_adjusted;  // 24 mantissa, 2 upper guards for signed arithmetic, 3 lower rounding guard bits
   logic [25:-3] b_mantissa_signed; // 24 mantissa, 2 upper guards for signed arithmetic, 3 lower rounding guard bits
   logic   [7:0] b_exp;
   logic   [7:0] b_exp_adjusted;
@@ -178,28 +173,6 @@ module fpu(
   logic [ 7:0] result_exp_div;
   logic        result_sign_div;
   
-  // sqrt datapath
-  logic [23:0] sqrt_xn_mantissa;
-  logic  [7:0] sqrt_xn_exp;
-  logic        sqrt_xn_sign;
-  logic [23:0] sqrt_A_mantissa;
-  logic  [7:0] sqrt_A_exp;
-  logic        sqrt_A_sign;
-  logic  [3:0] sqrt_counter;
-
-  // fsm control
-  logic start_operation_sqrt_fsm;  
-  logic operation_done_sqrt_fsm;   
-  logic sqrt_mov_xn_A;
-  logic sqrt_mov_xn_a_approx;
-  logic sqrt_mov_xn_a;
-  logic sqrt_mov_xn_add;
-  logic sqrt_mov_A_a;
-  logic sqrt_mov_a_xn;
-  logic sqrt_mov_a_A;
-  logic sqrt_mov_b_xn;
-  logic sqrt_mov_b_div;
-
   // float2int
   logic [31:0] result_float2int;
 
@@ -216,11 +189,8 @@ module fpu(
   logic        log2_sign;
 
   // status
-  logic a_neg;
-  logic a_overflow, a_underflow;
   logic a_nan, a_inf, a_pos_inf, a_neg_inf, a_zero;
   logic a_subnormal;
-  logic b_overflow, b_underflow;
   logic b_nan, b_inf, b_pos_inf, b_neg_inf, b_zero;
   logic b_subnormal;
   // for multiplication
@@ -241,8 +211,6 @@ module fpu(
   pa_fpu::e_main_st  next_state_main_fsm;
   pa_fpu::e_arith_st curr_state_arith_fsm;
   pa_fpu::e_arith_st next_state_arith_fsm;
-  pa_fpu::e_sqrt_st  curr_state_sqrt_fsm;
-  pa_fpu::e_sqrt_st  next_state_sqrt_fsm;
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -265,18 +233,18 @@ module fpu(
     return (6)'(32);    
   endfunction
 
-  assign a_nan       = a_exp == 8'hff && |a_mantissa[22:0];
-  assign a_zero      = a_exp == 8'h00 &&  a_mantissa[22:0] == 23'h0;
-  assign a_inf       = a_exp == 8'hff &&  a_mantissa[22:0] == 23'h0;
-  assign a_pos_inf   = a_sign == 1'b0 &&  a_inf;
-  assign a_neg_inf   = a_sign == 1'b1 &&  a_inf;
+  assign a_nan       = a_operand[30:23] == 8'hff && |a_operand[22:0];
+  assign a_zero      = a_operand[30:23] == 8'h00 &&  a_operand[22:0] == 23'h0;
+  assign a_inf       = a_operand[30:23] == 8'hff &&  a_operand[22:0] == 23'h0;
+  assign a_pos_inf   = a_operand[31] == 1'b0 &&  a_inf;
+  assign a_neg_inf   = a_operand[31] == 1'b1 &&  a_inf;
   assign a_subnormal = a_operand[30:23] == 8'h00 && |a_operand[22:0];
 
-  assign b_nan       = b_exp == 8'hff && |b_mantissa[22:0];
-  assign b_zero      = b_exp == 8'h00 &&  b_mantissa[22:0] == 23'h0;
-  assign b_inf       = b_exp == 8'hff &&  b_mantissa[22:0] == 23'h0;
-  assign b_pos_inf   = b_sign == 1'b0 &&  b_inf;
-  assign b_neg_inf   = b_sign == 1'b1 &&  b_inf;
+  assign b_nan       = b_operand[30:23] == 8'hff && |b_operand[22:0];
+  assign b_zero      = b_operand[30:23] == 8'h00 &&  b_operand[22:0] == 23'h0;
+  assign b_inf       = b_operand[30:23] == 8'hff &&  b_operand[22:0] == 23'h0;
+  assign b_pos_inf   = b_operand[31] == 1'b0 &&  b_inf;
+  assign b_neg_inf   = b_operand[31] == 1'b1 &&  b_inf;
   assign b_subnormal = b_operand[30:23] == 8'h00 && |b_operand[22:0];
 
   assign zero_or_zero         = a_zero || b_zero;
@@ -288,17 +256,19 @@ module fpu(
   assign inf_or_inf           = a_inf  || b_inf;
   assign zero_inf             = a_zero && b_inf;
   assign inf_zero             = a_inf  && b_zero;
-                     
-  assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. 
-                                              // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
-                                              // however for clarity, the operands are explicitly extended to 9 bits.
+
+  assign a_mantissa = a_subnormal ? {2'b00, 1'b0, a_operand[22:0]} : {2'b00, ~a_zero, a_operand[22:0]};
+  assign a_exp      = a_subnormal ? 8'h01 : a_operand[30:23];
+  assign a_sign     = a_operand[31];
+  assign b_mantissa = b_subnormal ? {2'b00, 1'b0, b_operand[22:0]} : {2'b00, ~b_zero, b_operand[22:0]};
+  assign b_exp      = b_subnormal ? 8'h01 : b_operand[30:23];
+  assign b_sign     = b_operand[31];
 
   assign ieee_packet_out = operation == pa_fpu::op_add          ? {result_s_addsub, result_e_addsub, result_m_addsub[22:0]} :
                            operation == pa_fpu::op_sub          ? {result_s_addsub, result_e_addsub, result_m_addsub[22:0]} :
                            operation == pa_fpu::op_mul          ? {result_sign_mul, result_exp_mul,  result_mantissa_mul[22:0]} :
                            operation == pa_fpu::op_square       ? {result_sign_mul, result_exp_mul,  result_mantissa_mul[22:0]} :
                            operation == pa_fpu::op_div          ? {result_sign_div, result_exp_div,  result_mantissa_div[22:0]} :
-                           operation == pa_fpu::op_sqrt         ? {sqrt_xn_sign,    sqrt_xn_exp,     sqrt_xn_mantissa[22:0]} :
                            operation == pa_fpu::op_log2         ? {log2_sign,       log2_exp_norm,   log2_norm[29:7]} :
                            operation == pa_fpu::op_float_to_int ? result_float2int : 
                                                                   32'h00000000;
@@ -306,6 +276,10 @@ module fpu(
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
   // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
+  assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. 
+                                              // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
+                                              // however for clarity, the operands are explicitly extended to 9 bits.
+
   // exponent difference between 'a' and 'b'
   assign ab_shift_amount = 9'(abs(ab_exp_diff));
   // sticky bit (guard -3) = OR of all bits from index (s-3) down to 0
@@ -340,20 +314,20 @@ module fpu(
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
   // else if aexp > bexp, then increase bexp and right-shift b_mantissa by same number
   // else, exponents are the same
-  assign a_mantissa_shifted[25:-3] = a_exp < b_exp ? {{a_mantissa, 2'b00} >> ab_shift_amount, sticky_bit} : {a_mantissa, 3'b000};
-  assign b_mantissa_shifted[25:-3] = b_exp < a_exp ? {{b_mantissa, 2'b00} >> ab_shift_amount, sticky_bit} : {b_mantissa, 3'b000};
+  assign a_mantissa_adjusted[25:-3] = a_exp < b_exp ? {{a_mantissa, 2'b00} >> ab_shift_amount, sticky_bit} : {a_mantissa, 3'b000};
+  assign b_mantissa_adjusted[25:-3] = b_exp < a_exp ? {{b_mantissa, 2'b00} >> ab_shift_amount, sticky_bit} : {b_mantissa, 3'b000};
   assign a_exp_adjusted = a_exp < b_exp ? b_exp : a_exp;
-  assign b_exp_adjusted = b_exp < a_exp ? a_exp : b_exp;
-  assign a_mantissa_signed = a_sign ? ~a_mantissa_shifted + 1'b1 : a_mantissa_shifted;
-  assign b_mantissa_signed = b_sign ? ~b_mantissa_shifted + 1'b1 : b_mantissa_shifted;
+  assign b_exp_adjusted = a_exp;
+  assign a_mantissa_signed = a_sign ? ~a_mantissa_adjusted + 1'b1 : a_mantissa_adjusted;
+  assign b_mantissa_signed = b_sign ? ~b_mantissa_adjusted + 1'b1 : b_mantissa_adjusted;
   // sign bit for result_m_addsub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
   // that can come out of bit 23
   // here we need to be careful, because some other operations make use of the internal add/sub circuit, for example op_sqrt makes use
   // of the addition operation. so here we make it such that if the current operation is sqrt, then we select addition instead of
   // subtraction. 
-  assign result_m_addsub_prenorm = operation == pa_fpu::op_add || operation == pa_fpu::op_sqrt ? a_mantissa_signed + b_mantissa_signed :
-                                                                                                 a_mantissa_signed - b_mantissa_signed;
+  assign result_m_addsub_prenorm = operation == pa_fpu::op_add ? a_mantissa_signed + b_mantissa_signed :
+                                                                 a_mantissa_signed - b_mantissa_signed;
   assign result_m_addsub_prenorm_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
   assign result_e_addsub_prenorm_abs_24 = a_exp_adjusted + (result_m_addsub_prenorm_abs[24] ? 1'b1 : 1'b0);
   assign result_m_addsub_prenorm_abs_24 = result_m_addsub_prenorm_abs[24] ? result_m_addsub_prenorm_abs >> 1 : result_m_addsub_prenorm_abs; // if there was a carry bit after the addition then shift right
@@ -512,125 +486,6 @@ module fpu(
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
-  // REGISTER LOADING
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      a_mantissa <= '0;
-      a_exp      <= '0;
-      a_sign     <= '0;
-      b_mantissa <= '0;
-      b_exp      <= '0;
-      b_sign     <= '0;
-    end   
-    else begin
-      if(next_state_arith_fsm == pa_fpu::arith_load_operands_st) begin
-        // subnormal detection
-        if(a_subnormal) begin // subnormal
-          a_mantissa <= {2'b00, 1'b0, a_operand[22:0]};
-          a_exp      <= 8'h01; // set exponent to -126 (1 - 127)
-          a_sign     <= a_operand[31];
-        end
-        else begin // normal/zero
-          a_mantissa <= {2'b00, ~a_zero, a_operand[22:0]};
-          a_exp      <= a_operand[30:23];
-          a_sign     <= a_operand[31];
-        end
-        // subnormal detection
-        if(b_subnormal) begin // subnormal
-          b_mantissa <= {2'b00, 1'b0, b_operand[22:0]};
-          b_exp      <= 8'h01; // set exponent to -126 (1 - 127)
-          b_sign     <= b_operand[31];
-        end
-        else begin // normal/zero
-          b_mantissa <= {2'b00, ~b_zero, b_operand[22:0]};
-          b_exp      <= b_operand[30:23];
-          b_sign     <= b_operand[31];
-        end
-      end
-      if(sqrt_mov_a_xn) begin
-        a_mantissa <= {2'b00, sqrt_xn_mantissa};
-        a_exp      <= sqrt_xn_exp;
-        a_sign     <= sqrt_xn_sign;
-      end
-      else if(sqrt_mov_a_A) begin
-        a_mantissa <= {2'b00, sqrt_A_mantissa};
-        a_exp      <= sqrt_A_exp;
-        a_sign     <= sqrt_A_sign;
-      end
-      if(sqrt_mov_b_xn) begin
-        b_mantissa <= {2'b00, sqrt_xn_mantissa};
-        b_exp      <= sqrt_xn_exp;
-        b_sign     <= sqrt_xn_sign;
-      end
-      else if(sqrt_mov_b_div) begin
-        b_mantissa <= {2'b00, 1'b1, result_mantissa_div};
-        b_exp      <= result_exp_div;
-        b_sign     <= result_sign_div;
-      end
-    end
-  end
-
-  // ---------------------------------------------------------------------------------------------------------------------------------------------------
-
-  // SQRT DATAPATH
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      sqrt_xn_mantissa <= '0;
-      sqrt_xn_exp      <= '0;
-      sqrt_xn_sign     <= '0;
-      sqrt_A_mantissa  <= '0;
-      sqrt_A_exp       <= '0;
-      sqrt_A_sign      <= '0;
-      sqrt_counter     <= '0;
-    end
-    else begin
-      if(next_state_sqrt_fsm == pa_fpu::sqrt_start_st) begin
-        sqrt_counter <= 0;
-      end
-      else if(next_state_sqrt_fsm == pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st) begin
-        sqrt_counter <= sqrt_counter + 4'd1;
-      end
-      // in exceptional_st, next state is sqrt_result_valid_st
-      if(curr_state_sqrt_fsm == pa_fpu::sqrt_exceptional_st) begin
-        if(a_nan || a_pos_inf || a_zero) 
-          {sqrt_xn_sign, sqrt_xn_exp, sqrt_xn_mantissa[22:0]} = {a_sign, a_exp, a_mantissa[22:0]}; // a
-        else if(a_sign) 
-          {sqrt_xn_sign, sqrt_xn_exp, sqrt_xn_mantissa[22:0]} = {1'b0, 8'hFF, 23'h400000}; // NAN
-      end
-      if(sqrt_mov_xn_A) begin
-        sqrt_xn_mantissa <= sqrt_A_mantissa;
-        sqrt_xn_exp      <= sqrt_A_exp;
-        sqrt_xn_sign     <= 1'b0;
-      end
-      else if(sqrt_mov_xn_a_approx) begin
-        sqrt_xn_mantissa <= a_mantissa; 
-        //sqrt_xn_exp      <= a_exp - 8'd1;
-        // 9'b110000001 = -127 with 1 bit extended for signed arithmetic
-        //sqrt_xn_exp      <= (({1'b0, a_exp} + 9'b110000001) >> 1) + 9'd127 ; // divide a_exp by 2. hence initial approx to A = m*2^E  is  m*e^(E/2) which is very close to its square root.
-        // a_exp is biased. shifting it by 1 divides the bias 127 by 2 as well, hence add back 127/2 = 63
-        sqrt_xn_exp      <= (a_exp >> 1) + 9'd63 ; // divide a_exp by 2. hence initial approx to A = m*2^E  is  m*e^(E/2) which is very close to its square root.
-        sqrt_xn_sign     <= a_sign;
-      end
-      else if(sqrt_mov_xn_a) begin
-        sqrt_xn_mantissa <= a_mantissa;
-        sqrt_xn_exp      <= a_exp;
-        sqrt_xn_sign     <= a_sign;
-      end
-      else if(sqrt_mov_xn_add) begin
-        sqrt_xn_mantissa <= {1'b1, result_m_addsub[22:0]};
-        sqrt_xn_exp      <= result_e_addsub - 8'd1;
-        sqrt_xn_sign     <= result_s_addsub;
-      end
-      if(sqrt_mov_A_a) begin
-        sqrt_A_mantissa <= a_mantissa;
-        sqrt_A_exp      <= a_exp;
-        sqrt_A_sign     <= a_sign;
-      end
-    end
-  end
-
-  // ---------------------------------------------------------------------------------------------------------------------------------------------------
-
   // TODO: fix
   // FLOAT2INT
   // if exponent < 0, return 0
@@ -657,373 +512,5 @@ module fpu(
   // x - x^3/6 + x^5/120 - x^7/5040
   // 
   // 
-
-  // ---------------------------------------------------------------------------------------------------------------------------------------------------
-
-  // MAIN FSM
-  // next state assignments
-  always_comb begin
-    next_state_main_fsm = curr_state_main_fsm;
-
-    case(curr_state_main_fsm)
-      pa_fpu::main_idle_st: 
-        if(start) next_state_main_fsm = pa_fpu::main_wait_st;
-      
-      pa_fpu::main_wait_st: 
-        if(operation_done_ar_fsm == 1'b1) next_state_main_fsm = pa_fpu::main_finish_st;
-
-      pa_fpu::main_finish_st:
-        if(operation_done_ar_fsm == 1'b0) next_state_main_fsm = pa_fpu::main_wait_start_low_st;
-
-      pa_fpu::main_wait_start_low_st:
-        if(start == 1'b0) next_state_main_fsm = pa_fpu::main_idle_st;
-
-      default:
-        next_state_main_fsm = pa_fpu::main_idle_st;
-    endcase
-  end
-
-  // main fsm
-  // output assignments
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      start_operation_ar_fsm <= 1'b0;
-      cmd_end                <= 1'b0;             
-      busy                   <= 1'b0;         
-    end
-    else begin
-      case(next_state_main_fsm)
-        pa_fpu::main_idle_st: begin
-          start_operation_ar_fsm <= 1'b0;
-          cmd_end                <= 1'b0;             
-          busy                   <= 1'b0;         
-        end
-        pa_fpu::main_wait_st: begin
-          start_operation_ar_fsm <= 1'b1;
-          cmd_end                <= 1'b0;             
-          busy                   <= 1'b1;         
-        end
-        pa_fpu::main_finish_st: begin
-          start_operation_ar_fsm <= 1'b0;
-          cmd_end                <= 1'b0;             
-          busy                   <= 1'b1;         
-        end
-        pa_fpu::main_wait_start_low_st: begin
-          start_operation_ar_fsm <= 1'b0;
-          cmd_end                <= 1'b1;             
-          busy                   <= 1'b1;         
-        end
-      endcase  
-    end
-  end
-
-  // ---------------------------------------------------------------------------------------------------------------------------------------------------
-
-  // ARITHMETIC FSM
-  // next state assignments
-  always_comb begin
-    next_state_arith_fsm = curr_state_arith_fsm;
-
-    case(curr_state_arith_fsm)
-      pa_fpu::arith_idle_st: 
-        if(start_operation_ar_fsm)
-          next_state_arith_fsm = pa_fpu::arith_load_operands_st;
-
-      pa_fpu::arith_load_operands_st:
-        case(operation)
-          pa_fpu::op_add:
-            next_state_arith_fsm = pa_fpu::arith_add_st;
-          pa_fpu::op_sub:
-            next_state_arith_fsm = pa_fpu::arith_sub_st;
-          pa_fpu::op_mul:
-            next_state_arith_fsm = pa_fpu::arith_mul_st;
-          pa_fpu::op_div:
-            next_state_arith_fsm = pa_fpu::arith_div_st;
-          pa_fpu::op_sqrt:
-            next_state_arith_fsm = pa_fpu::arith_sqrt_st;
-          pa_fpu::op_log2:
-            next_state_arith_fsm = pa_fpu::arith_log2_st;
-          pa_fpu::op_float_to_int:
-            next_state_arith_fsm = pa_fpu::arith_float2int_st;
-        endcase
-
-      pa_fpu::arith_add_st:
-        next_state_arith_fsm = pa_fpu::arith_result_valid_st;
-
-      pa_fpu::arith_sub_st:
-        next_state_arith_fsm = pa_fpu::arith_result_valid_st;
-
-      pa_fpu::arith_mul_st:
-        next_state_arith_fsm = pa_fpu::arith_result_valid_st;
-
-      pa_fpu::arith_div_st:
-        next_state_arith_fsm = pa_fpu::arith_result_valid_st;
-
-      pa_fpu::arith_sqrt_st:
-        if(operation_done_sqrt_fsm == 1'b1) next_state_arith_fsm = pa_fpu::arith_sqrt_done_st;
-      pa_fpu::arith_sqrt_done_st:
-        if(operation_done_sqrt_fsm == 1'b0) next_state_arith_fsm = pa_fpu::arith_result_valid_st;
-
-      pa_fpu::arith_log2_st:
-        next_state_arith_fsm = pa_fpu::arith_result_valid_st;
-
-      pa_fpu::arith_float2int_st:
-        next_state_arith_fsm = pa_fpu::arith_result_valid_st;
-
-      pa_fpu::arith_result_valid_st:
-        if(start_operation_ar_fsm == 1'b0) next_state_arith_fsm = pa_fpu::arith_idle_st;
-
-      default:
-        next_state_arith_fsm = pa_fpu::arith_idle_st;
-    endcase
-  end
-
-  // ARITHMETIC FSM
-  // output assignments
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      operation_done_ar_fsm <= 1'b0;
-      start_operation_sqrt_fsm <= 1'b0;
-    end
-    else begin
-      case(next_state_arith_fsm)
-        pa_fpu::arith_idle_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_load_operands_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_add_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_sub_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_mul_st: begin
-          operation_done_ar_fsm   <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_div_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_sqrt_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b1;
-        end
-        pa_fpu::arith_sqrt_done_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_log2_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_float2int_st: begin
-          operation_done_ar_fsm <= 1'b0;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-        pa_fpu::arith_result_valid_st: begin
-          operation_done_ar_fsm <= 1'b1;
-          start_operation_sqrt_fsm <= 1'b0;
-        end
-      endcase  
-    end
-  end
-
-  // ---------------------------------------------------------------------------------------------------------------------------------------------------
-
-  // SQRT FSM
-  // next state assignments
-  // xn = 0.5(xn + A/xn)
-  always_comb begin
-    next_state_sqrt_fsm = curr_state_sqrt_fsm;
-
-    case(curr_state_sqrt_fsm)
-      pa_fpu::sqrt_idle_st: 
-        // NOTE: exceptional states added because then the sqrt FSM will jump any computation states that make changes to a_sign/a_exp/a_mantissa, 
-        // as making changes to those when we are trying to check for nan/inf etc will change the final result assigned to the result regiters.
-        if(start_operation_sqrt_fsm) next_state_sqrt_fsm = pa_fpu::sqrt_check_exceptional_st; 
-      // check if 'a' is a special value
-      pa_fpu::sqrt_check_exceptional_st:
-        if(a_nan || a_inf || a_zero) next_state_sqrt_fsm = pa_fpu::sqrt_exceptional_st;
-        else next_state_sqrt_fsm = pa_fpu::sqrt_start_st;
-      // set A = a_mantissa (A = number whose sqrt is requested)
-      // set xn to initial guess 
-      // set counter for number of steps
-      pa_fpu::sqrt_start_st: 
-        next_state_sqrt_fsm = pa_fpu::sqrt_div_st;
-      // set a_mantissa = A, a_exp = A_exp
-      // set b_mantissa = xn, b_exp = xn_exp
-      pa_fpu::sqrt_div_st: begin
-        next_state_sqrt_fsm = pa_fpu::sqrt_add_st;
-      end
-      // set a_mantissa <= xn, a_exp = xn_exp
-      // set b_mantissa <= result_mantissa_div, b_exp = result_exp_div
-      pa_fpu::sqrt_add_st: begin
-        next_state_sqrt_fsm = pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st;
-      end
-      // perform addition during this clock cycle
-      // set xn = result_m_addsub, while decreasing xn_exp by 1
-      // dec sqrt_counter when entering this state
-      // check sqrt_counter == 4
-      pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st: begin
-        if(sqrt_counter == 4'd4) next_state_sqrt_fsm = pa_fpu::sqrt_result_valid_st;
-        else next_state_sqrt_fsm = pa_fpu::sqrt_div_st;
-      end
-      // if 'a' was a exceptional value then set final result to exceptionl value
-      pa_fpu::sqrt_exceptional_st:
-        next_state_sqrt_fsm = pa_fpu::sqrt_result_valid_st;
-      pa_fpu::sqrt_result_valid_st:
-        if(start_operation_sqrt_fsm == 1'b0) next_state_sqrt_fsm = pa_fpu::sqrt_idle_st;
-      default:
-        next_state_sqrt_fsm = pa_fpu::sqrt_idle_st;
-    endcase
-  end
-
-  // SQRT FSM
-  // output assignments
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      operation_done_sqrt_fsm <= 1'b0;
-      sqrt_mov_xn_A           <= 1'b0;
-      sqrt_mov_xn_a_approx    <= 1'b0;
-      sqrt_mov_xn_a           <= 1'b0;
-      sqrt_mov_xn_add         <= 1'b0;
-      sqrt_mov_A_a            <= 1'b0;
-      sqrt_mov_a_xn           <= 1'b0;
-      sqrt_mov_a_A            <= 1'b0;
-      sqrt_mov_b_xn           <= 1'b0;
-      sqrt_mov_b_div          <= 1'b0;
-    end
-    else begin
-      case(next_state_sqrt_fsm)
-        pa_fpu::sqrt_idle_st: begin
-          operation_done_sqrt_fsm <= 1'b0;
-          sqrt_mov_xn_A           <= 1'b0;
-          sqrt_mov_xn_a_approx    <= 1'b0;
-          sqrt_mov_xn_a           <= 1'b0;
-          sqrt_mov_xn_add         <= 1'b0;
-          sqrt_mov_A_a            <= 1'b0;
-          sqrt_mov_a_xn           <= 1'b0;
-          sqrt_mov_a_A            <= 1'b0;
-          sqrt_mov_b_xn           <= 1'b0;
-          sqrt_mov_b_div          <= 1'b0;
-        end
-        pa_fpu::sqrt_check_exceptional_st: begin
-          operation_done_sqrt_fsm <= 1'b0;
-          sqrt_mov_xn_A           <= 1'b0;
-          sqrt_mov_xn_a           <= 1'b0;
-          sqrt_mov_xn_a_approx    <= 1'b0;
-          sqrt_mov_xn_add         <= 1'b0;
-          sqrt_mov_A_a            <= 1'b0;
-          sqrt_mov_a_xn           <= 1'b0;
-          sqrt_mov_a_A            <= 1'b0;
-          sqrt_mov_b_xn           <= 1'b0;
-          sqrt_mov_b_div          <= 1'b0;
-        end
-        // set A = a_mantissa (A = number whose sqrt is requested)
-        // set xn to initial guess
-        // set counter for number of steps
-        pa_fpu::sqrt_start_st: begin
-          operation_done_sqrt_fsm <= 1'b0;
-          sqrt_mov_xn_A           <= 1'b0;
-          sqrt_mov_xn_a           <= 1'b0;
-          sqrt_mov_xn_a_approx    <= 1'b1;
-          sqrt_mov_xn_add         <= 1'b0;
-          sqrt_mov_A_a            <= 1'b1;
-          sqrt_mov_a_xn           <= 1'b0;
-          sqrt_mov_a_A            <= 1'b0;
-          sqrt_mov_b_xn           <= 1'b0;
-          sqrt_mov_b_div          <= 1'b0;
-        end
-        // set a_mantissa = A, a_exp = A_exp
-        // set b_mantissa = xn, b_exp = xn_exp
-        pa_fpu::sqrt_div_st: begin
-          operation_done_sqrt_fsm <= 1'b0;
-          sqrt_mov_xn_A           <= 1'b0;
-          sqrt_mov_xn_a           <= 1'b0;
-          sqrt_mov_xn_a_approx    <= 1'b0;
-          sqrt_mov_xn_add         <= 1'b0;
-          sqrt_mov_A_a            <= 1'b0;
-          sqrt_mov_a_xn           <= 1'b0;
-          sqrt_mov_a_A            <= 1'b1;
-          sqrt_mov_b_xn           <= 1'b1;
-          sqrt_mov_b_div          <= 1'b0;
-        end
-        // set a_mantissa <= xn, a_exp = xn_exp
-        // set b_mantissa <= result_mantissa_div, b_exp = result_exp_div
-        // perform addition during this clock cycle
-        pa_fpu::sqrt_add_st: begin
-          operation_done_sqrt_fsm <= 1'b0;
-          sqrt_mov_xn_A           <= 1'b0;
-          sqrt_mov_xn_a           <= 1'b0;
-          sqrt_mov_xn_a_approx    <= 1'b0;
-          sqrt_mov_xn_add         <= 1'b0;
-          sqrt_mov_A_a            <= 1'b0;
-          sqrt_mov_a_xn           <= 1'b1;
-          sqrt_mov_a_A            <= 1'b0;
-          sqrt_mov_b_xn           <= 1'b0;
-          sqrt_mov_b_div          <= 1'b1;
-        end
-        // transfer addition result to xn, while decreasing xn_exp by 1
-        // inc sqrt_counter
-        pa_fpu::sqrt_mov_xn_a_dec_exp_dec_ctr_st: begin
-          operation_done_sqrt_fsm <= 1'b0;
-          sqrt_mov_xn_A           <= 1'b0;
-          sqrt_mov_xn_a           <= 1'b0;
-          sqrt_mov_xn_a_approx    <= 1'b0;
-          sqrt_mov_xn_add         <= 1'b1;
-          sqrt_mov_A_a            <= 1'b0;
-          sqrt_mov_a_xn           <= 1'b0;
-          sqrt_mov_a_A            <= 1'b0;
-          sqrt_mov_b_xn           <= 1'b0;
-          sqrt_mov_b_div          <= 1'b0;
-        end
-        pa_fpu::sqrt_exceptional_st: begin
-          operation_done_sqrt_fsm <= 1'b0;
-          sqrt_mov_xn_A           <= 1'b0;
-          sqrt_mov_xn_a           <= 1'b0;
-          sqrt_mov_xn_a_approx    <= 1'b0;
-          sqrt_mov_xn_add         <= 1'b0;
-          sqrt_mov_A_a            <= 1'b0;
-          sqrt_mov_a_xn           <= 1'b0;
-          sqrt_mov_a_A            <= 1'b0;
-          sqrt_mov_b_xn           <= 1'b0;
-          sqrt_mov_b_div          <= 1'b0;
-        end
-        pa_fpu::sqrt_result_valid_st: begin
-          operation_done_sqrt_fsm <= 1'b1;
-          sqrt_mov_xn_A           <= 1'b0;
-          sqrt_mov_xn_a           <= 1'b0;
-          sqrt_mov_xn_a_approx    <= 1'b0;
-          sqrt_mov_xn_add         <= 1'b0;
-          sqrt_mov_A_a            <= 1'b0;
-          sqrt_mov_a_xn           <= 1'b0;
-          sqrt_mov_a_A            <= 1'b0;
-          sqrt_mov_b_xn           <= 1'b0;
-          sqrt_mov_b_div          <= 1'b0;
-        end
-      endcase  
-    end
-  end
-
-  // next state clocking
-  always_ff @(posedge clk, posedge arst) begin
-    if(arst) begin
-      curr_state_main_fsm  <= pa_fpu::main_idle_st;
-      curr_state_arith_fsm <= pa_fpu::arith_idle_st;
-      curr_state_sqrt_fsm  <= pa_fpu::sqrt_idle_st;
-    end
-    else begin
-      curr_state_main_fsm  <= next_state_main_fsm;
-      curr_state_arith_fsm <= next_state_arith_fsm;
-      curr_state_sqrt_fsm  <= next_state_sqrt_fsm;
-    end
-  end
 
 endmodule
