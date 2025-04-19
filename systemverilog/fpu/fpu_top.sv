@@ -44,7 +44,6 @@ module fpu(
   logic   [7:0] result_e_addsub_renorm;   
   logic   [7:0] result_e_addsub;
   logic         result_s_addsub;
-  logic         result_addsub_is_subnormal;    // whether normalizing the final number results in a subnormal
   logic   [5:0] zcount_addsub;
   logic   [4:0] addsub_effective_normalization_shift;
 
@@ -177,7 +176,7 @@ module fpu(
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
   // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
-  assign ab_exp_diff = 9'(abs(9'(a_exp) - 9'(b_exp))); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
+  assign ab_exp_diff = abs($signed(9'(a_exp)) - $signed(9'(b_exp))); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. thus (a|b)_exp are zero-extended to 9bit first and then subtraction is performed
   // sticky bit (guard -3) = OR of all bits from index (s-3) down to 0
   assign sticky_bit = ab_exp_diff <=  2 ? 1'b0                                                    :
                       ab_exp_diff ==  3 ? (a_exp < b_exp ?  a_mantissa[0]    :  b_mantissa[0]   ) :
@@ -235,7 +234,6 @@ module fpu(
   // if decreasing the exponent by zcount makes it <= -127(or 0 when biased), this means it would create a subnormal
   // hence we only shift up to the point where it makes it -126(1 biased). this gives a subnormal default exponent
   // and also keeps the mantissa in the form 0.xxx...
-  assign result_addsub_is_subnormal = $signed(9'(result_e_addsub_prenorm_abs_24)) - $signed(9'(zcount_addsub)) <= 9'sd0; // 9'sd0 NEEDS to be signed! otherwise the comparison becomes unsigned.
   assign addsub_effective_normalization_shift = min(9'(result_e_addsub_prenorm_abs_24), 9'(zcount_addsub)); // check whats smallest, the number of shifts from current exp till -126(01 biased), or leading zero count.
                                                                                              // the current exponent indicates how many shifts we can perform before the exponent becomes 0 (which would make it subnormal)
                                                                                              // hence if zcount > current exponent, this means we would need to shift the number (and correspondingly subtract from exponent)
@@ -245,11 +243,8 @@ module fpu(
   assign result_e_addsub_norm = result_e_addsub_prenorm_abs_24 - addsub_effective_normalization_shift;
   assign result_m_addsub_norm = result_m_addsub_prenorm_abs_24 << addsub_effective_normalization_shift;
 
-  // this is a special case check where the result is subnormal and bit 23 of the mantissa is 1 while the exponent is -127(0 biased)
-  // we need to right shift the mantissa once, while keeping the exp as 0 because this will encode the subnomal correctly.
-  // for example: 1.xxx e-127 becomes 0.1xxx e-127, but -127(0) as exponent with msb of mantissa = 0 means we interpret the float 
-  // as 0.xxx e-126, which is equal to 0.1xxx e-126, the original value.
-  //assign result_m_addsub_subnorm_check = result_m_addsub_norm >> (result_addsub_is_subnormal ? 1'b1 : 0);
+  // if the exponent became -127(00) after the shifting, this number is subnormal, hence we need to shift the mantissa right once
+  // to set the correct subnormal value of 0.xxx E-126
   assign result_m_addsub_subnorm_check = result_e_addsub_norm == 8'h00 ? result_m_addsub_norm >> 1 : result_m_addsub_norm;
 
   // set the guard bits

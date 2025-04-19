@@ -91,12 +91,56 @@ module fpu_tb;
 
   initial begin
     test_phase = 0;
-    test_type = type_all;
     test_index = 0;
+    test_type = type_all;
     test_op = pa_fpu::op_sub;
     test_list = list_special;
 
     if(test_type == type_all) begin
+      $display("NORMAL");
+      for(int i = 0; i < list_normal.size(); i++) begin
+        a_operand = list_normal[i].a; 
+        b_operand = list_normal[i].b; 
+        operation = test_op;
+        #1us;
+        result = test_op == pa_fpu::op_add ? (ieee_packet_out == list_normal[i].result_add ? "PASS" : "FAIL") :
+                 test_op == pa_fpu::op_sub ? (ieee_packet_out == list_normal[i].result_sub ? "PASS" : "FAIL") : "Fix me";
+        $display("%53.50f(%h) %s %53.50f(%h) = %53.50f(%h, %b %b %b) : %s", $bitstoshortreal(a_operand), (a_operand), op_to_str(test_op), $bitstoshortreal(b_operand), (b_operand), 
+                                                                            $bitstoshortreal(ieee_packet_out), (ieee_packet_out), ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0], result
+        );
+        if(result == "PASS") nbr_pass++; else nbr_fail++;
+        test_phase++;
+      end
+      $display("SUBNORMAL");
+      for(int i = 0; i < list_subnormal.size(); i++) begin
+        a_operand = list_subnormal[i].a; 
+        b_operand = list_subnormal[i].b; 
+        operation = test_op;
+        #1us;
+        result = test_op == pa_fpu::op_add ? (ieee_packet_out == list_subnormal[i].result_add ? "PASS" : "FAIL") :
+                 test_op == pa_fpu::op_sub ? (ieee_packet_out == list_subnormal[i].result_sub ? "PASS" : "FAIL") : "Fix me";
+        $display("%53.50f(%h) %s %53.50f(%h) = %53.50f(%h, %b %b %b) : %s", $bitstoshortreal(a_operand), (a_operand), op_to_str(test_op), $bitstoshortreal(b_operand), (b_operand), 
+                                                                            $bitstoshortreal(ieee_packet_out), (ieee_packet_out), ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0], result
+        );
+        if(result == "PASS") nbr_pass++; else nbr_fail++;
+        test_phase++;
+      end
+      $display("SPECIAL");
+      for(int i = 0; i < list_special.size(); i++) begin
+        a_operand = list_special[i].a; 
+        b_operand = list_special[i].b; 
+        operation = test_op;
+        #1us;
+        result = test_op == pa_fpu::op_add ? (ieee_packet_out == list_special[i].result_add ? "PASS" : "FAIL") :
+                 test_op == pa_fpu::op_sub ? (ieee_packet_out == list_special[i].result_sub ? "PASS" : "FAIL") : "Fix me";
+        $display("%53.50f(%h) %s %53.50f(%h) = %53.50f(%h, %b %b %b) : %s", $bitstoshortreal(a_operand), (a_operand), op_to_str(test_op), $bitstoshortreal(b_operand), (b_operand), 
+                                                                            $bitstoshortreal(ieee_packet_out), (ieee_packet_out), ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0], result
+        );
+        if(result == "PASS") nbr_pass++; else nbr_fail++;
+        test_phase++;
+      end
+    end
+    else if(test_type == type_single) begin
       for(int i = 0; i < test_list.size(); i++) begin
         a_operand = test_list[i].a; 
         b_operand = test_list[i].b; 
@@ -104,38 +148,15 @@ module fpu_tb;
         #1us;
         result = test_op == pa_fpu::op_add ? (ieee_packet_out == test_list[i].result_add ? "PASS" : "FAIL") :
                  test_op == pa_fpu::op_sub ? (ieee_packet_out == test_list[i].result_sub ? "PASS" : "FAIL") : "Fix me";
-        $display("%53.50f(%h) %s %53.50f(%h) = %53.50f(%h, %b %b %b) : %s", $bitstoshortreal(a_operand), 
-                                                                            (a_operand), 
-                                                                            op_to_str(test_op),
-                                                                            $bitstoshortreal(b_operand), 
-                                                                            (b_operand), 
-                                                                            $bitstoshortreal(ieee_packet_out),
-                                                                            (ieee_packet_out),
-                                                                            ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0],
-                                                                            result
+        $display("%53.50f(%h) %s %53.50f(%h) = %53.50f(%h, %b %b %b) : %s", $bitstoshortreal(a_operand), (a_operand), op_to_str(test_op), $bitstoshortreal(b_operand), (b_operand), 
+                                                                            $bitstoshortreal(ieee_packet_out), (ieee_packet_out), ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0], result
         );
+        if(result == "PASS") nbr_pass++; else nbr_fail++;
         test_phase++;
       end
     end
-    else if(test_type == type_single) begin
-      a_operand = test_list[test_index].a; 
-      b_operand = test_list[test_index].b; 
-      operation = test_op;
-      #1us;
-      result = test_op == pa_fpu::op_add ? (ieee_packet_out == test_list[test_index].result_add ? "PASS" : "FAIL") :
-               test_op == pa_fpu::op_sub ? (ieee_packet_out == test_list[test_index].result_sub ? "PASS" : "FAIL") : "Fix me";
-      $display("%53.50f(%h) %s %53.50f(%h) = %53.50f(%h, %b %b %b) : %s", $bitstoshortreal(a_operand), 
-                                                                          (a_operand), 
-                                                                          op_to_str(test_op),
-                                                                          $bitstoshortreal(b_operand), 
-                                                                          (b_operand), 
-                                                                          $bitstoshortreal(ieee_packet_out),
-                                                                          (ieee_packet_out),
-                                                                          ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0],
-                                                                          result
-      );
-    end
 
+    $display("Pass: %0d, Fail: %0d, Total: %0d", nbr_pass, nbr_fail, nbr_pass + nbr_fail);
     $stop;
   end
 
