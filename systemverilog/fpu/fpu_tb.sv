@@ -41,11 +41,11 @@ module fpu_tb;
   };
 
   st_fpu_computation list_normal[] = '{
-    '{32'h3f800000, 32'h3f8ccccd, 32'h40066666, 32'hbdcccccd},  // 1   1.0,          1.1},      
-    '{32'h3fffffff, 32'h402df854, 32'h4096fc2a, 32'hbf37e151},  // 8   1.9999999,    2.7182818},      
+    '{32'h3f800000, 32'h3f8ccccd, 32'h40066666, 32'hbdccccd0},  // 1   1.0,          1.1},     bdccccd0 is badly rounded. -0.1 is really bdcccccd 
+    '{32'h3fffffff, 32'h402df854, 32'h4096fc2a, 32'hbf37e152},  // 8   1.9999999,    2.7182818},      
     '{32'h42168f5c, 32'h00000000, 32'h42168f5c, 32'h42168f5c},  // 9   37.64,        0},                
     '{32'h41800000, 32'h42000000, 32'h42400000, 32'hc1800000},  // 10  16.0,         32.0},              
-    '{32'h3e800000, 32'h3f000000, 32'h3f400000, 32'h3e800000}   // 11  0.25,         0.5}                
+    '{32'h3e800000, 32'h3f000000, 32'h3f400000, 32'hbe800000}   // 11  0.25,         0.5}                
   };
 
   st_fpu_computation list_special[] = '{
@@ -77,6 +77,8 @@ module fpu_tb;
   pa_fpu::e_fpu_op test_op;
   int test_index;
   int nbr_pass, nbr_fail;
+  byte test_phase;
+  string result;
 
   function string op_to_str(pa_fpu::e_fpu_op op);
     case(op)
@@ -88,10 +90,11 @@ module fpu_tb;
   endfunction
 
   initial begin
+    test_phase = 0;
     test_type = type_all;
     test_index = 0;
-    test_op = pa_fpu::op_add;
-    test_list = list_normal;
+    test_op = pa_fpu::op_sub;
+    test_list = list_special;
 
     if(test_type == type_all) begin
       for(int i = 0; i < test_list.size(); i++) begin
@@ -99,6 +102,8 @@ module fpu_tb;
         b_operand = test_list[i].b; 
         operation = test_op;
         #1us;
+        result = test_op == pa_fpu::op_add ? (ieee_packet_out == test_list[i].result_add ? "PASS" : "FAIL") :
+                 test_op == pa_fpu::op_sub ? (ieee_packet_out == test_list[i].result_sub ? "PASS" : "FAIL") : "Fix me";
         $display("%53.50f(%h) %s %53.50f(%h) = %53.50f(%h, %b %b %b) : %s", $bitstoshortreal(a_operand), 
                                                                             (a_operand), 
                                                                             op_to_str(test_op),
@@ -107,9 +112,9 @@ module fpu_tb;
                                                                             $bitstoshortreal(ieee_packet_out),
                                                                             (ieee_packet_out),
                                                                             ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0],
-                                                                            test_op == pa_fpu::op_add ? (ieee_packet_out == test_list[i].result_add ? "PASS" : "FAIL") :
-                                                                            test_op == pa_fpu::op_sub ? (ieee_packet_out == test_list[i].result_sub ? "PASS" : "FAIL") : "Fix me"
+                                                                            result
         );
+        test_phase++;
       end
     end
     else if(test_type == type_single) begin
@@ -117,6 +122,8 @@ module fpu_tb;
       b_operand = test_list[test_index].b; 
       operation = test_op;
       #1us;
+      result = test_op == pa_fpu::op_add ? (ieee_packet_out == test_list[test_index].result_add ? "PASS" : "FAIL") :
+               test_op == pa_fpu::op_sub ? (ieee_packet_out == test_list[test_index].result_sub ? "PASS" : "FAIL") : "Fix me";
       $display("%53.50f(%h) %s %53.50f(%h) = %53.50f(%h, %b %b %b) : %s", $bitstoshortreal(a_operand), 
                                                                           (a_operand), 
                                                                           op_to_str(test_op),
@@ -125,8 +132,7 @@ module fpu_tb;
                                                                           $bitstoshortreal(ieee_packet_out),
                                                                           (ieee_packet_out),
                                                                           ieee_packet_out[31], ieee_packet_out[30:23], ieee_packet_out[22:0],
-                                                                          test_op == pa_fpu::op_add ? (ieee_packet_out == test_list[test_index].result_add ? "PASS" : "FAIL") :
-                                                                          test_op == pa_fpu::op_sub ? (ieee_packet_out == test_list[test_index].result_sub ? "PASS" : "FAIL") : "Fix me"
+                                                                          result
       );
     end
 

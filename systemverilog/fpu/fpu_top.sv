@@ -26,7 +26,6 @@ module fpu(
 
   logic              sticky_bit; // sticky bit is used for whichever number has the smallest exponent and is shifted right for alignment during add or sub operations
   logic signed [8:0] ab_exp_diff;
-  logic        [8:0] ab_shift_amount;
 
   // sign bit for result_m_addsub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
@@ -178,45 +177,40 @@ module fpu(
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
   // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
-  assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
-
-  // exponent difference between 'a' and 'b'
-  assign ab_shift_amount = 9'(abs(ab_exp_diff));
+  assign ab_exp_diff = 9'(abs(9'(a_exp) - 9'(b_exp))); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
   // sticky bit (guard -3) = OR of all bits from index (s-3) down to 0
-  assign sticky_bit = ab_shift_amount <   3 ? 1'b0                                                    :
-                      ab_shift_amount ==  3 ? (a_exp < b_exp ?  a_mantissa[0]    :  b_mantissa[0]   ) :
-                      ab_shift_amount ==  4 ? (a_exp < b_exp ? |a_mantissa[1:0]  : |b_mantissa[1:0] ) :
-                      ab_shift_amount ==  5 ? (a_exp < b_exp ? |a_mantissa[2:0]  : |b_mantissa[2:0] ) :
-                      ab_shift_amount ==  6 ? (a_exp < b_exp ? |a_mantissa[3:0]  : |b_mantissa[3:0] ) :
-                      ab_shift_amount ==  7 ? (a_exp < b_exp ? |a_mantissa[4:0]  : |b_mantissa[4:0] ) :
-                      ab_shift_amount ==  8 ? (a_exp < b_exp ? |a_mantissa[5:0]  : |b_mantissa[5:0] ) :
-                      ab_shift_amount ==  9 ? (a_exp < b_exp ? |a_mantissa[6:0]  : |b_mantissa[6:0] ) :
-                      ab_shift_amount == 10 ? (a_exp < b_exp ? |a_mantissa[7:0]  : |b_mantissa[7:0] ) :
-                      ab_shift_amount == 11 ? (a_exp < b_exp ? |a_mantissa[8:0]  : |b_mantissa[8:0] ) :
-                      ab_shift_amount == 12 ? (a_exp < b_exp ? |a_mantissa[9:0]  : |b_mantissa[9:0] ) :
-                      ab_shift_amount == 13 ? (a_exp < b_exp ? |a_mantissa[10:0] : |b_mantissa[10:0]) :
-                      ab_shift_amount == 14 ? (a_exp < b_exp ? |a_mantissa[11:0] : |b_mantissa[11:0]) :
-                      ab_shift_amount == 15 ? (a_exp < b_exp ? |a_mantissa[12:0] : |b_mantissa[12:0]) :
-                      ab_shift_amount == 16 ? (a_exp < b_exp ? |a_mantissa[13:0] : |b_mantissa[13:0]) :
-                      ab_shift_amount == 17 ? (a_exp < b_exp ? |a_mantissa[14:0] : |b_mantissa[14:0]) :
-                      ab_shift_amount == 18 ? (a_exp < b_exp ? |a_mantissa[15:0] : |b_mantissa[15:0]) :
-                      ab_shift_amount == 19 ? (a_exp < b_exp ? |a_mantissa[16:0] : |b_mantissa[16:0]) :
-                      ab_shift_amount == 20 ? (a_exp < b_exp ? |a_mantissa[17:0] : |b_mantissa[17:0]) :
-                      ab_shift_amount == 21 ? (a_exp < b_exp ? |a_mantissa[18:0] : |b_mantissa[18:0]) :
-                      ab_shift_amount == 22 ? (a_exp < b_exp ? |a_mantissa[19:0] : |b_mantissa[19:0]) :
-                      ab_shift_amount == 23 ? (a_exp < b_exp ? |a_mantissa[20:0] : |b_mantissa[20:0]) :
-                      ab_shift_amount == 24 ? (a_exp < b_exp ? |a_mantissa[21:0] : |b_mantissa[21:0]) :
-                      ab_shift_amount == 25 ? (a_exp < b_exp ? |a_mantissa[22:0] : |b_mantissa[22:0]) :
-                      ab_shift_amount == 26 ? (a_exp < b_exp ? |a_mantissa[23:0] : |b_mantissa[23:0]) :
-                      ab_shift_amount == 27 ? (a_exp < b_exp ? |a_mantissa[24:0] : |b_mantissa[24:0]) :
-                      ab_shift_amount >= 28 ? (a_exp < b_exp ? |a_mantissa[25:0] : |b_mantissa[25:0]) : 
-                                              1'b0;
-
+  assign sticky_bit = ab_exp_diff <=  2 ? 1'b0                                                    :
+                      ab_exp_diff ==  3 ? (a_exp < b_exp ?  a_mantissa[0]    :  b_mantissa[0]   ) :
+                      ab_exp_diff ==  4 ? (a_exp < b_exp ? |a_mantissa[1:0]  : |b_mantissa[1:0] ) :
+                      ab_exp_diff ==  5 ? (a_exp < b_exp ? |a_mantissa[2:0]  : |b_mantissa[2:0] ) :
+                      ab_exp_diff ==  6 ? (a_exp < b_exp ? |a_mantissa[3:0]  : |b_mantissa[3:0] ) :
+                      ab_exp_diff ==  7 ? (a_exp < b_exp ? |a_mantissa[4:0]  : |b_mantissa[4:0] ) :
+                      ab_exp_diff ==  8 ? (a_exp < b_exp ? |a_mantissa[5:0]  : |b_mantissa[5:0] ) :
+                      ab_exp_diff ==  9 ? (a_exp < b_exp ? |a_mantissa[6:0]  : |b_mantissa[6:0] ) :
+                      ab_exp_diff == 10 ? (a_exp < b_exp ? |a_mantissa[7:0]  : |b_mantissa[7:0] ) :
+                      ab_exp_diff == 11 ? (a_exp < b_exp ? |a_mantissa[8:0]  : |b_mantissa[8:0] ) :
+                      ab_exp_diff == 12 ? (a_exp < b_exp ? |a_mantissa[9:0]  : |b_mantissa[9:0] ) :
+                      ab_exp_diff == 13 ? (a_exp < b_exp ? |a_mantissa[10:0] : |b_mantissa[10:0]) :
+                      ab_exp_diff == 14 ? (a_exp < b_exp ? |a_mantissa[11:0] : |b_mantissa[11:0]) :
+                      ab_exp_diff == 15 ? (a_exp < b_exp ? |a_mantissa[12:0] : |b_mantissa[12:0]) :
+                      ab_exp_diff == 16 ? (a_exp < b_exp ? |a_mantissa[13:0] : |b_mantissa[13:0]) :
+                      ab_exp_diff == 17 ? (a_exp < b_exp ? |a_mantissa[14:0] : |b_mantissa[14:0]) :
+                      ab_exp_diff == 18 ? (a_exp < b_exp ? |a_mantissa[15:0] : |b_mantissa[15:0]) :
+                      ab_exp_diff == 19 ? (a_exp < b_exp ? |a_mantissa[16:0] : |b_mantissa[16:0]) :
+                      ab_exp_diff == 20 ? (a_exp < b_exp ? |a_mantissa[17:0] : |b_mantissa[17:0]) :
+                      ab_exp_diff == 21 ? (a_exp < b_exp ? |a_mantissa[18:0] : |b_mantissa[18:0]) :
+                      ab_exp_diff == 22 ? (a_exp < b_exp ? |a_mantissa[19:0] : |b_mantissa[19:0]) :
+                      ab_exp_diff == 23 ? (a_exp < b_exp ? |a_mantissa[20:0] : |b_mantissa[20:0]) :
+                      ab_exp_diff == 24 ? (a_exp < b_exp ? |a_mantissa[21:0] : |b_mantissa[21:0]) :
+                      ab_exp_diff == 25 ? (a_exp < b_exp ? |a_mantissa[22:0] : |b_mantissa[22:0]) :
+                      ab_exp_diff == 26 ? (a_exp < b_exp ? |a_mantissa[23:0] : |b_mantissa[23:0]) :
+                      ab_exp_diff == 27 ? (a_exp < b_exp ? |a_mantissa[24:0] : |b_mantissa[24:0]) :
+                      ab_exp_diff >= 28 ? (a_exp < b_exp ? |a_mantissa[25:0] : |b_mantissa[25:0]) : 1'b0;
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
   // else if aexp > bexp, then increase bexp and right-shift b_mantissa by same number
   // else, exponents are the same
-  assign a_mantissa_adjusted[25:-3] = a_exp < b_exp ? {{a_mantissa, 2'b00} >> ab_shift_amount, sticky_bit} : {a_mantissa, 3'b000};
-  assign b_mantissa_adjusted[25:-3] = b_exp < a_exp ? {{b_mantissa, 2'b00} >> ab_shift_amount, sticky_bit} : {b_mantissa, 3'b000};
+  assign a_mantissa_adjusted[25:-3] = a_exp < b_exp ? {{a_mantissa, 2'b00} >> ab_exp_diff, sticky_bit} : {a_mantissa, 3'b000};
+  assign b_mantissa_adjusted[25:-3] = b_exp < a_exp ? {{b_mantissa, 2'b00} >> ab_exp_diff, sticky_bit} : {b_mantissa, 3'b000};
   assign a_exp_adjusted = a_exp < b_exp ? b_exp : a_exp;
   assign b_exp_adjusted = a_exp;
   assign a_mantissa_signed = a_sign ? ~a_mantissa_adjusted + 1'b1 : a_mantissa_adjusted;
@@ -234,8 +228,7 @@ module fpu(
   assign result_m_addsub_prenorm_abs_24 = result_m_addsub_prenorm_abs[24] ? result_m_addsub_prenorm_abs >> 1 : result_m_addsub_prenorm_abs; // if there was a carry bit after the addition then shift right
 
   // lzc function is 32bit and result_m_addsub_prenorm_abs is 29 wide, hence need to add extra 3bits to left of the argument. 
-  // also, the variable result_m_addsub_prenorm_abs itself has the extra sign bit and the possible carry bit, however if the carry bit is 1, we shift right and not left
-  // and the value of zcount_addsub is not used, hence we can subtract 5 from the total of zcount_addsub
+  // also, the variable result_m_addsub_prenorm_abs_24 itself has the extra sign bit and the possible carry bit which after the shift will be zero
   // so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 5 from the result.
   assign zcount_addsub = lzc({3'b000, result_m_addsub_prenorm_abs_24}) - 6'd5;
   // normalize the result
@@ -256,7 +249,8 @@ module fpu(
   // we need to right shift the mantissa once, while keeping the exp as 0 because this will encode the subnomal correctly.
   // for example: 1.xxx e-127 becomes 0.1xxx e-127, but -127(0) as exponent with msb of mantissa = 0 means we interpret the float 
   // as 0.xxx e-126, which is equal to 0.1xxx e-126, the original value.
-  assign result_m_addsub_subnorm_check = result_m_addsub_norm >> (result_addsub_is_subnormal ? 1'b1 : 0);
+  //assign result_m_addsub_subnorm_check = result_m_addsub_norm >> (result_addsub_is_subnormal ? 1'b1 : 0);
+  assign result_m_addsub_subnorm_check = result_e_addsub_norm == 8'h00 ? result_m_addsub_norm >> 1 : result_m_addsub_norm;
 
   // set the guard bits
   assign {addsub_guard, addsub_round, addsub_sticky} = result_m_addsub_subnorm_check[-1:-3];
