@@ -247,9 +247,9 @@ module fpu(
   // to set the correct subnormal value of 0.xxx E-126
   assign result_m_addsub_subnorm_check = result_e_addsub_norm == 8'h00 ? result_m_addsub_norm >> 1 : result_m_addsub_norm;
 
+  // ROUND TO NEAREST TIES TO EVEN
   // set the guard bits
   assign {addsub_guard, addsub_round, addsub_sticky} = result_m_addsub_subnorm_check[-1:-3];
-  // ROUND TO NEAREST TIES TO EVEN
   // if G is 0, round down
   // else if G is 1 and at least one bit after G is 1 then round up
   // else if G is 1 and all bits after that are 0 then there's a tie: if L = 0 round down else if L = 1 round up
