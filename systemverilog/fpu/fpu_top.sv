@@ -178,9 +178,7 @@ module fpu(
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
   // ADDITION & SUBTRACTION COMBINATIONAL DATAPATH
-  assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. 
-                                              // thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
-                                              // however for clarity, the operands are explicitly extended to 9 bits.
+  assign ab_exp_diff = 9'(a_exp) - 9'(b_exp); // (a|b)_exp is 8bit, ab_exp_diff is 9bit. thus (a|b)_exp are zero-extended to 9bit first and then an unsigned subtraction is performed
 
   // exponent difference between 'a' and 'b'
   assign ab_shift_amount = 9'(abs(ab_exp_diff));
@@ -213,6 +211,7 @@ module fpu(
                       ab_shift_amount == 27 ? (a_exp < b_exp ? |a_mantissa[24:0] : |b_mantissa[24:0]) :
                       ab_shift_amount >= 28 ? (a_exp < b_exp ? |a_mantissa[25:0] : |b_mantissa[25:0]) : 
                                               1'b0;
+
   // if aexp < bexp, then increase aexp and right-shift a_mantissa by same number
   // else if aexp > bexp, then increase bexp and right-shift b_mantissa by same number
   // else, exponents are the same
