@@ -115,14 +115,14 @@ module fpu(
 
   logic  [25:0] a_mantissa; // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
   logic [25:-3] a_mantissa_shifted;
-  logic [25:-3] a_mantissa_signed;
+  logic [25:-3] a_mantissa_adjusted;
   logic   [7:0] a_exp;
   logic   [7:0] a_exp_adjusted;
   logic         a_sign;
 
   logic  [25:0] b_mantissa;  // 24 bits plus 2 upper guard bits for dealing with signed arithmetic
   logic [25:-3] b_mantissa_shifted;  // 24 mantissa, 2 upper guards for signed arithmetic, 3 lower rounding guard bits
-  logic [25:-3] b_mantissa_signed; // 24 mantissa, 2 upper guards for signed arithmetic, 3 lower rounding guard bits
+  logic [25:-3] b_mantissa_adjusted; // 24 mantissa, 2 upper guards for signed arithmetic, 3 lower rounding guard bits
   logic   [7:0] b_exp;
   logic   [7:0] b_exp_adjusted;
   logic         b_sign;
@@ -344,16 +344,16 @@ module fpu(
   assign b_mantissa_shifted[25:-3] = b_exp < a_exp ? {{b_mantissa, 2'b00} >> ab_shift_amount, sticky_bit} : {b_mantissa, 3'b000};
   assign a_exp_adjusted = a_exp < b_exp ? b_exp : a_exp;
   assign b_exp_adjusted = b_exp < a_exp ? a_exp : b_exp;
-  assign a_mantissa_signed = a_sign ? ~a_mantissa_shifted + 1'b1 : a_mantissa_shifted;
-  assign b_mantissa_signed = b_sign ? ~b_mantissa_shifted + 1'b1 : b_mantissa_shifted;
+  assign a_mantissa_adjusted = a_sign ? ~a_mantissa_shifted + 1'b1 : a_mantissa_shifted;
+  assign b_mantissa_adjusted = b_sign ? ~b_mantissa_shifted + 1'b1 : b_mantissa_shifted;
   // sign bit for result_m_addsub is at bit 25, so that we have an extra bit position at bit 24 which is the carry bit from bit 23 
   // so the idea is that we don't simply extend a mantissa value by one bit, we extend it by 2 bits so we always have one bit of space for the carry
   // that can come out of bit 23
   // here we need to be careful, because some other operations make use of the internal add/sub circuit, for example op_sqrt makes use
   // of the addition operation. so here we make it such that if the current operation is sqrt, then we select addition instead of
   // subtraction. 
-  assign result_m_addsub_prenorm = operation == pa_fpu::op_add || operation == pa_fpu::op_sqrt ? a_mantissa_signed + b_mantissa_signed :
-                                                                                                 a_mantissa_signed - b_mantissa_signed;
+  assign result_m_addsub_prenorm = operation == pa_fpu::op_add || operation == pa_fpu::op_sqrt ? a_mantissa_adjusted + b_mantissa_adjusted :
+                                                                                                 a_mantissa_adjusted - b_mantissa_adjusted;
   assign result_m_addsub_prenorm_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
   assign result_e_addsub_prenorm_abs_24 = a_exp_adjusted + (result_m_addsub_prenorm_abs[24] ? 1'b1 : 1'b0);
   assign result_m_addsub_prenorm_abs_24 = result_m_addsub_prenorm_abs[24] ? result_m_addsub_prenorm_abs >> 1 : result_m_addsub_prenorm_abs; // if there was a carry bit after the addition then shift right
