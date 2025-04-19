@@ -93,7 +93,7 @@ module fpu_tb;
     test_phase = 0;
     test_index = 0;
     test_type = type_all;
-    test_op = pa_fpu::op_sub;
+    test_op = pa_fpu::op_add;
     test_list = list_special;
 
     if(test_type == type_all) begin

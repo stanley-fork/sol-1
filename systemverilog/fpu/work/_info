@@ -161,6 +161,8 @@ R0
 R1
 R0
 R1
+R0
+R1
 Z2 !s12c _opt
 R1
 R0
@@ -220,10 +222,10 @@ n@_opt1
 R11
 R4
 T_opt2
-!s110 1745106415
-Vak4N=CAaDRHOLoFY6;QeY1
+!s110 1745106489
+Vc<Ri69`em?UWAzGGR3=_U0
 R5
-=55-7c70db20d2b7-680435ee-2bf-3328
+=57-7c70db20d2b7-68043638-276-3328
 R1
 R6
 R7
@@ -287,7 +289,7 @@ vfpu
 2C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
 R14
 Z23 DXx4 work 6 pa_fpu 0 22 >bNfFhCJ=[F>gQ3TQYJcg1
-Z24 !s110 1745106413
+Z24 !s110 1745106487
 !i10b 1
 !s100 R5;HXcK3@Mlo2BPoIVVd=1
 IF4a2?m?CXYX<g]H@gYVaY1
@@ -296,14 +298,14 @@ Z25 dC:/Users/pcons/Desktop/sol-1/systemverilog/fpu
 w1745105410
 8C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
 FC:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
-!i122 315
+!i122 321
 L0 6 401
 R17
 R18
 r1
 !s85 0
 31
-Z26 !s108 1745106413.000000
+Z26 !s108 1745106487.000000
 !s107 C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv|
 !s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv|
 !i113 0
@@ -313,23 +315,23 @@ vfpu_tb
 2C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
 R14
 R23
-!s110 1745106414
+R24
 !i10b 1
-!s100 nIgiJT5hd@9T8MCSzJBRz0
-IiTcU`RIgG2<BK6QUff^Z80
+!s100 D<kRZcIzdfS>QZTdgncdj1
+IRNCTdgzb3:J?U?oIlSfP?1
 S1
 R25
-w1745106412
+w1745106483
 8C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
 FC:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
-!i122 316
+!i122 322
 L0 1 170
 R17
 R18
 r1
 !s85 0
 31
-!s108 1745106414.000000
+R26
 !s107 C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv|
 !s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv|
 !i113 0
@@ -347,7 +349,7 @@ R25
 w1744762489
 8C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
 FC:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
-!i122 314
+!i122 320
 L0 1 0
 V>bNfFhCJ=[F>gQ3TQYJcg1
 R18
