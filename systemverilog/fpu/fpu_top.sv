@@ -33,13 +33,13 @@ module fpu(
   // addition/subtraction datapath
   logic [25:-3] result_m_addsub_prenorm;  // 24 bits plus carry plus 3 guard bits
   logic [25:-3] result_m_addsub_prenorm_abs;      // 24 bits plus carry plus 3 guard bits
-  logic [25:-3] result_m_addsub_prenorm_abs_24;   // 24 bits plus carry plus 3 guard bits
+  logic [25:-3] result_m_addsub_prenorm_24;   // 24 bits plus carry plus 3 guard bits
   logic [25:-3] result_m_addsub_norm;     // after first normalization
   logic [25:-3] result_m_addsub_subnorm_check;
   logic  [25:0] result_m_addsub_rounded;  // after rounding
   logic  [25:0] result_m_addsub_renorm;   // renormalization after rounding (if there is a carry after rounding up)
   logic  [22:0] result_m_addsub;          // 23 bits for final mantissa
-  logic   [7:0] result_e_addsub_prenorm_abs_24;
+  logic   [7:0] result_e_addsub_prenorm_24;
   logic   [7:0] result_e_addsub_norm;  
   logic   [7:0] result_e_addsub_renorm;   
   logic   [7:0] result_e_addsub;
@@ -54,12 +54,15 @@ module fpu(
   // multiplication datapath
   logic [47:0] product_pre_norm;     // result after multiplication
   logic [48:0] product_norm;         // after first normalization
+  logic [48:0] product_norm2;        // after first normalization
   logic [48:0] product_renorm;       // after second normalization (after rounding)
   logic [48:0] product_rounded;      // after rounding
   logic [22:0] result_mantissa_mul;  // final value
   logic [ 7:0] result_exp_mul;       // final exponent
   logic        result_sign_mul;      // resulting sign
   logic [ 7:0] mul_exp;              // exponent sum
+  logic [ 8:0] mul_exp_check;        // exponent sum for checking exponents smaller than -127
+  logic        mul_is_subnormal;
   logic [ 7:0] mul_exp_norm;         // normalized exponent
   logic [ 7:0] mul_exp_renorm;       // exponent after renormalization
 
@@ -105,12 +108,6 @@ module fpu(
   logic nan_or_nan;
   logic nan_inf_or_inf_nan;
   logic zero_nan_or_nan_zero;
-
-  // fsm states
-  pa_fpu::e_main_st  curr_state_main_fsm;
-  pa_fpu::e_main_st  next_state_main_fsm;
-  pa_fpu::e_arith_st curr_state_arith_fsm;
-  pa_fpu::e_arith_st next_state_arith_fsm;
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -220,34 +217,32 @@ module fpu(
   // here we need to be careful, because some other operations make use of the internal add/sub circuit, for example op_sqrt makes use
   // of the addition operation. so here we make it such that if the current operation is sqrt, then we select addition instead of
   // subtraction. 
-  assign result_m_addsub_prenorm = operation == pa_fpu::op_add ? a_mantissa_signed + b_mantissa_signed :
-                                                                 a_mantissa_signed - b_mantissa_signed;
+  assign result_m_addsub_prenorm = operation == pa_fpu::op_add ? (a_mantissa_signed + b_mantissa_signed) : (a_mantissa_signed - b_mantissa_signed);
   assign result_m_addsub_prenorm_abs = result_m_addsub_prenorm[25] ? -result_m_addsub_prenorm : result_m_addsub_prenorm;
-  assign result_e_addsub_prenorm_abs_24 = a_exp_adjusted + (result_m_addsub_prenorm_abs[24] ? 1'b1 : 1'b0);
-  assign result_m_addsub_prenorm_abs_24 = result_m_addsub_prenorm_abs[24] ? result_m_addsub_prenorm_abs >> 1 : result_m_addsub_prenorm_abs; // if there was a carry bit after the addition then shift right
+  // NORMALIZE THE RESULT
+  assign result_e_addsub_prenorm_24 = a_exp_adjusted + (result_m_addsub_prenorm_abs[24] ? 1'b1 : 1'b0);
+  assign result_m_addsub_prenorm_24 = result_m_addsub_prenorm_abs[24] ? (result_m_addsub_prenorm_abs >> 1) : result_m_addsub_prenorm_abs; // if there was a carry bit after the addition then shift right
 
   // lzc function is 32bit and result_m_addsub_prenorm_abs is 29 wide, hence need to add extra 3bits to left of the argument. 
-  // also, the variable result_m_addsub_prenorm_abs_24 itself has the extra sign bit and the possible carry bit which after the shift will be zero
+  // also, the variable result_m_addsub_prenorm_24 itself has the extra sign bit and the possible carry bit which after the shift will be zero
   // so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 5 from the result.
-  assign zcount_addsub = lzc({3'b000, result_m_addsub_prenorm_abs_24}) - 6'd5;
-  // normalize the result
+  assign zcount_addsub = lzc({3'b000, result_m_addsub_prenorm_24}) - 6'd5;
+  // CHECK FOR SUBNORMALS
   // if decreasing the exponent by zcount makes it <= -127(or 0 when biased), this means it would create a subnormal
   // hence we only shift up to the point where it makes it -126(1 biased). this gives a subnormal default exponent
   // and also keeps the mantissa in the form 0.xxx...
-  assign addsub_effective_normalization_shift = min(9'(result_e_addsub_prenorm_abs_24), 9'(zcount_addsub)); // check whats smallest, the number of shifts from current exp till -126(01 biased), or leading zero count.
+  assign addsub_effective_normalization_shift = min(9'(result_e_addsub_prenorm_24), 9'(zcount_addsub)); // check whats smallest, the number of shifts from current exp till -126(01 biased), or leading zero count.
                                                                                              // the current exponent indicates how many shifts we can perform before the exponent becomes 0 (which would make it subnormal)
                                                                                              // hence if zcount > current exponent, this means we would need to shift the number (and correspondingly subtract from exponent)
                                                                                              // more times than the exponent can be decreased before becoming 0.
                                                                                              // thus we can only shift as many times as the minimum of the exponent value, and the number of leading zeroes, in order
                                                                                              // to avoid the exponent becoming -127 (00 biased)
-  assign result_e_addsub_norm = result_e_addsub_prenorm_abs_24 - addsub_effective_normalization_shift;
-  assign result_m_addsub_norm = result_m_addsub_prenorm_abs_24 << addsub_effective_normalization_shift;
-
+  assign result_e_addsub_norm = result_e_addsub_prenorm_24 - addsub_effective_normalization_shift;
+  assign result_m_addsub_norm = result_m_addsub_prenorm_24 << addsub_effective_normalization_shift;
   // if the exponent became -127(00) after the shifting, this number is subnormal, hence we need to shift the mantissa right once
   // to set the correct subnormal value of 0.xxx E-126
-  assign result_m_addsub_subnorm_check = result_e_addsub_norm == 8'h00 ? result_m_addsub_norm >> 1 : result_m_addsub_norm;
-
-  // ROUND TO NEAREST TIES TO EVEN
+  assign result_m_addsub_subnorm_check = result_e_addsub_norm == 8'h00 ? (result_m_addsub_norm >> 1) : result_m_addsub_norm;
+  // ROUND TO NEAREST TIE TO EVEN
   // set the guard bits
   assign {addsub_guard, addsub_round, addsub_sticky} = result_m_addsub_subnorm_check[-1:-3];
   // if G is 0, round down
@@ -255,10 +250,10 @@ module fpu(
   // else if G is 1 and all bits after that are 0 then there's a tie: if L = 0 round down else if L = 1 round up
   assign result_m_addsub_rounded = (addsub_guard && (addsub_round || addsub_sticky)) || 
                                    (addsub_guard && ~addsub_round && ~addsub_sticky && result_m_addsub_subnorm_check[0]) ? result_m_addsub_subnorm_check[25:0] + 1'b1 : result_m_addsub_subnorm_check[25:0];
-  // renormalize if rounding caused a carry
-  assign result_m_addsub_renorm = result_m_addsub_rounded[24] ? result_m_addsub_rounded >> 1 : result_m_addsub_rounded;
-  assign result_e_addsub_renorm = result_m_addsub_rounded[24] ? result_e_addsub_norm + 1'b1 : result_e_addsub_norm;
-  // final result
+  // RENORMALIZE IF ROUNDING CAUSED A CARRY
+  assign result_m_addsub_renorm = result_m_addsub_rounded[24] ? (result_m_addsub_rounded >> 1) : result_m_addsub_rounded;
+  assign result_e_addsub_renorm = result_m_addsub_rounded[24] ? (result_e_addsub_norm + 1'b1)  : result_e_addsub_norm;
+  // FINAL RESULT AND CHECK FOR SPECIAL CASES
   assign {result_s_addsub, 
           result_e_addsub, 
           result_m_addsub[22:0]} = a_nan                                                   ? {a_sign, a_exp, a_mantissa[22:0]} : // 'a' as NAN
@@ -306,22 +301,25 @@ module fpu(
     .a(a_mantissa[23:0]),
     .b(b_mantissa[23:0]),
     ._signed(1'b0),
-    .result(product_pre_norm)
+    .result(product_pre_norm[47:0])
   );
-  assign mul_exp = (a_exp - 8'd127) + b_exp;
+  assign mul_exp_check = (9'(a_exp) - 9'd127) + (9'(b_exp) - 9'd127); // calculate result's exponent, which could be < -127
+  assign mul_is_subnormal = mul_exp_check <= -9'sd127; // result is subnormal if exponent is <= -127  or exp > -127 and there are enough leading zeroes to make it subnormal TODO: FIX
   // normalize floating point result
-  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp + 1'b1 : mul_exp;                  // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp_check + 1'b1 : mul_exp_check;      // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
   assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
                                                                                            // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
                                                                                            // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
+  assign product_norm2 = product_norm[47] ? ($signed(mul_exp_norm) <= -9'sd127 ? (product_norm >> abs($signed(mul_exp_norm) - -9'sd126)) : product_norm) :
+                                            ($signed(mul_exp_norm) <= -9'sd127 ? (product_norm >> abs($signed(mul_exp_norm) - -9'sd126)) : (product_norm << abs($signed(mul_exp_norm) - -9'sd126)));
+
   // rounding: round to nearest ties to even
   // if first bit after epsilon is 1, then round up (and account for possible carry out)
   // if all bits after epsilon are 0, we have a tie
   // if rounding up produces an even result, then round up (and account for possible carry out)
   // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
-  assign product_rounded[48:24] = product_norm[23] || 
-                                 (product_norm[23:0] == '0 && ~{product_norm[47:24] + 1'b1}[0]) || 
-                                (~product_norm[23] && |product_norm[22:0]) ? product_norm[47:24] + 1'b1 : product_norm[47:24];
+  assign product_rounded[48:24] = product_norm2[23] || (product_norm2[23:0] == '0 && ~{product_norm2[47:24] + 1'b1}[0]) || 
+                                (~product_norm2[23] && |product_norm2[22:0]) ? product_norm2[47:24] + 1'b1 : product_norm2[47:24];
   // now check whether there was a carry out after rounding up
   // if there was a carry, then re-normalize
   assign product_renorm = product_rounded[48] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
@@ -334,7 +332,7 @@ module fpu(
                                  zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
                                  inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                  zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                                         {a_sign ^ b_sign, mul_exp_renorm, product_renorm[46:24]};           
+                                                         {a_sign ^ b_sign, mul_exp_norm <= -9'sd149 ? 8'h00 : mul_exp_norm+8'd127, product_renorm[46:24]};           
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
