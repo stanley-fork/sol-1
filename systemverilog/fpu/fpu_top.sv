@@ -1,8 +1,3 @@
-/*
-  TODO:
-    check for infinity when adding or multiplying two normal numbers
-*/
-
 module fpu(
   input  logic    [31:0] a_operand,
   input  logic    [31:0] b_operand,
@@ -60,11 +55,10 @@ module fpu(
   logic [22:0] result_mantissa_mul;  // final value
   logic [ 7:0] result_exp_mul;       // final exponent
   logic        result_sign_mul;      // resulting sign
-  logic [ 7:0] mul_exp;              // exponent sum
   logic [ 8:0] mul_exp_sum;          // exponent sum for checking exponents smaller than -127
+  logic [ 8:0] mul_exp_shift1;         // normalized exponent
+  logic [ 8:0] mul_exp_renorm;       // exponent after renormalization
   logic        mul_is_subnormal;
-  logic [ 7:0] mul_exp_norm;         // normalized exponent
-  logic [ 7:0] mul_exp_renorm;       // exponent after renormalization
 
   // division datapath 
   logic [7:0]  exp_div_prenorm;
@@ -317,7 +311,7 @@ module fpu(
   // NORMALIZE FLOATING POINT RESULT
   assign mul_exp_sum = ($signed(9'(a_exp)) - 9'd127) + ($signed(9'(b_exp)) - 9'd127); // calculate result's exponent, which could be <= -127
   // first check for MSB==1 (which cannot happen if either number is subnormal)
-  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp_sum + 1'b1 : mul_exp_sum; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+  assign mul_exp_shift1 =  product_pre_norm[47] ? mul_exp_sum + 1'b1 : mul_exp_sum; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
                                                                                   // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
   //assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
                                                                                            // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
@@ -328,26 +322,33 @@ module fpu(
   
   // 2ND APPROACH:
   // check number of leading zeroes. shift mant left by nbr leading zeroes(which will make msb of mant ==1),and subtract from exp at same time.
-  // then: if new exp <= -127, then shift mant right by exp - -126. 
+  // then: if new exp <= -127, then shift mant right by -126 - exp. 
   // finally if the number is subnormal(exp == 0) then shift right once (because subnormals are interpreted as 0.xxx e-126(E 01), so we need to divide the man by 2 since the interpreted exp is larger than -127 by 1)
   // this approach is the same as above but in opposite order
-
-  assign mul_is_subnormal = mul_exp_sum <= -9'sd127; // result is subnormal if msb==1 and exponent is <= -127  or exp > -127 and there are enough leading zeroes to make it subnormal TODO: FIX
-
-  assign product_norm2 = product_norm[47] ? ($signed(mul_exp_norm) <= -9'sd127 ? (product_norm >> abs($signed(mul_exp_norm) - -9'sd126)) : product_norm) :
-                                            ($signed(mul_exp_norm) <= -9'sd127 ? (product_norm >> abs($signed(mul_exp_norm) - -9'sd126)) : (product_norm << abs($signed(mul_exp_norm) - -9'sd126)));
+  logic [5:0] mul_zcount;
+  logic [47:0] mul_m_shift_left;
+  logic [8:0] mul_e_shift_left;
+  logic [8:0] mul_e_norm;
+  logic [47:0] mul_m_norm;
+  logic [47:0] mul_m_norm2;
+  assign mul_zcount = lzc48(product_pre_norm);
+  assign mul_m_shift_left = product_pre_norm << mul_zcount;
+  assign mul_e_shift_left = $signed(9'(mul_exp_shift1)) - $signed(9'(mul_zcount));
+  assign mul_m_norm = $signed(mul_e_shift_left) <= -9'sd127 ? mul_m_shift_left >> (-9'sd127 - $signed(mul_e_shift_left)) : mul_m_shift_left;
+  assign mul_e_norm = $signed(mul_e_shift_left) <= -9'sd127 ? mul_e_shift_left + (-9'sd127 - $signed(mul_e_shift_left)) : mul_e_shift_left;
+  assign mul_m_norm2 = $signed(mul_e_norm) == -8'sd127 ? mul_m_norm >> 1 : mul_m_norm;
 
   // rounding: round to nearest ties to even
   // if first bit after epsilon is 1, then round up (and account for possible carry out)
   // if all bits after epsilon are 0, we have a tie
   // if rounding up produces an even result, then round up (and account for possible carry out)
   // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
-  assign product_rounded[48:24] = product_norm2[23] || (product_norm2[23:0] == '0 && ~{product_norm2[47:24] + 1'b1}[0]) || 
-                                (~product_norm2[23] && |product_norm2[22:0]) ? product_norm2[47:24] + 1'b1 : product_norm2[47:24];
+  assign product_rounded[48:24] = mul_m_norm2[23] || (mul_m_norm2[23:0] == '0 && ~{mul_m_norm2[47:24] + 1'b1}[0]) || 
+                                (~mul_m_norm2[23] && |mul_m_norm2[22:0]) ? mul_m_norm2[47:24] + 1'b1 : mul_m_norm2[47:24];
   // now check whether there was a carry out after rounding up
   // if there was a carry, then re-normalize
   assign product_renorm = product_rounded[48] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
-  assign mul_exp_renorm = product_rounded[48] ? mul_exp_norm + 1'b1  : mul_exp_norm;    // and increase exponent
+  assign mul_exp_renorm = product_rounded[48] ? mul_e_norm + 1'b1  : mul_e_norm;    // and increase exponent
   // output result to final variables. but before that, test for special cases.
   assign {result_sign_mul, 
           result_exp_mul, 
@@ -356,7 +357,7 @@ module fpu(
                                  zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
                                  inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                  zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                                         {a_sign ^ b_sign, mul_exp_norm <= -9'sd149 ? 8'h00 : mul_exp_norm+8'd127, product_renorm[46:24]};           
+                                                         {a_sign ^ b_sign, mul_exp_renorm + 8'd127, product_renorm[46:24]};           
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
