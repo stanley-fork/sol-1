@@ -50,8 +50,8 @@ module fpu(
   logic [47:0] product_pre_norm;     // result after multiplication
   logic [48:0] product_norm;         // after first normalization
   logic [48:0] product_norm2;        // after first normalization
-  logic [48:0] product_renorm;       // after second normalization (after rounding)
-  logic [48:0] product_rounded;      // after rounding
+  logic [22:0] product_renorm;       // after second normalization (after rounding)
+  logic [24:0] product_rounded;      // after rounding
   logic [22:0] result_mantissa_mul;  // final value
   logic [ 7:0] result_exp_mul;       // final exponent
   logic        result_sign_mul;      // resulting sign
@@ -336,19 +336,19 @@ module fpu(
   assign mul_e_shift_left = $signed(9'(mul_exp_shift1)) - $signed(9'(mul_zcount));
   assign mul_m_norm = $signed(mul_e_shift_left) <= -9'sd127 ? mul_m_shift_left >> (-9'sd127 - $signed(mul_e_shift_left)) : mul_m_shift_left;
   assign mul_e_norm = $signed(mul_e_shift_left) <= -9'sd127 ? mul_e_shift_left + (-9'sd127 - $signed(mul_e_shift_left)) : mul_e_shift_left;
-  assign mul_m_norm2 = $signed(mul_e_norm) == -8'sd127 ? mul_m_norm >> 1 : mul_m_norm;
+  assign mul_m_norm2 = $signed(mul_e_norm) == -9'sd127 ? mul_m_norm >> 1 : mul_m_norm;
 
   // rounding: round to nearest ties to even
   // if first bit after epsilon is 1, then round up (and account for possible carry out)
   // if all bits after epsilon are 0, we have a tie
   // if rounding up produces an even result, then round up (and account for possible carry out)
   // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
-  assign product_rounded[48:24] = mul_m_norm2[23] || (mul_m_norm2[23:0] == '0 && ~{mul_m_norm2[47:24] + 1'b1}[0]) || 
+  assign product_rounded[24:0] = mul_m_norm2[23] || (mul_m_norm2[23:0] == '0 && ~{mul_m_norm2[47:24] + 1'b1}[0]) || 
                                 (~mul_m_norm2[23] && |mul_m_norm2[22:0]) ? mul_m_norm2[47:24] + 1'b1 : mul_m_norm2[47:24];
   // now check whether there was a carry out after rounding up
   // if there was a carry, then re-normalize
-  assign product_renorm = product_rounded[48] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
-  assign mul_exp_renorm = product_rounded[48] ? mul_e_norm + 1'b1  : mul_e_norm;    // and increase exponent
+  assign product_renorm = product_rounded[24] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
+  assign mul_exp_renorm = product_rounded[24] ? mul_e_norm + 1'b1  : mul_e_norm;    // and increase exponent
   // output result to final variables. but before that, test for special cases.
   assign {result_sign_mul, 
           result_exp_mul, 
@@ -357,7 +357,7 @@ module fpu(
                                  zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
                                  inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                  zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                                         {a_sign ^ b_sign, mul_exp_renorm + 8'd127, product_renorm[46:24]};           
+                                                         {a_sign ^ b_sign, mul_exp_renorm + 8'd127, product_renorm[22:0]};           
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 

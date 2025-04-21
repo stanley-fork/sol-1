@@ -54,7 +54,7 @@ add wave -noupdate -radix binary /fpu_tb/fpu_top/nan_or_nan
 add wave -noupdate -radix binary /fpu_tb/fpu_top/nan_inf_or_inf_nan
 add wave -noupdate -radix binary /fpu_tb/fpu_top/zero_nan_or_nan_zero
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {310 ns} 0}
+WaveRestoreCursors {{Cursor 1} {357 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 301
 configure wave -valuecolwidth 489
