@@ -61,7 +61,7 @@ module fpu(
   logic [ 7:0] result_exp_mul;       // final exponent
   logic        result_sign_mul;      // resulting sign
   logic [ 7:0] mul_exp;              // exponent sum
-  logic [ 8:0] mul_exp_check;        // exponent sum for checking exponents smaller than -127
+  logic [ 8:0] mul_exp_sum;          // exponent sum for checking exponents smaller than -127
   logic        mul_is_subnormal;
   logic [ 7:0] mul_exp_norm;         // normalized exponent
   logic [ 7:0] mul_exp_renorm;       // exponent after renormalization
@@ -120,7 +120,7 @@ module fpu(
   endfunction
 
   // counts number of leading zeroes
-  function logic [5 : 0] lzc(
+  function logic [5 : 0] lzc32(
     input logic [31:0] a
   );
     for(int unsigned i = 0; i < 32; i++) begin
@@ -128,6 +128,17 @@ module fpu(
     end
 
     return (6)'(32);    
+  endfunction
+
+  // counts number of leading zeroes
+  function logic [5 : 0] lzc48(
+    input logic [47:0] a
+  );
+    for(int unsigned i = 0; i < 48; i++) begin
+      if(a[47 - i]) return (6)'(i);
+    end
+
+    return (6)'(48);    
   endfunction
 
   assign a_nan       = a_operand[30:23] == 8'hff && |a_operand[22:0];
@@ -223,10 +234,10 @@ module fpu(
   assign result_e_addsub_prenorm_24 = a_exp_adjusted + (result_m_addsub_prenorm_abs[24] ? 1'b1 : 1'b0);
   assign result_m_addsub_prenorm_24 = result_m_addsub_prenorm_abs[24] ? (result_m_addsub_prenorm_abs >> 1) : result_m_addsub_prenorm_abs; // if there was a carry bit after the addition then shift right
 
-  // lzc function is 32bit and result_m_addsub_prenorm_abs is 29 wide, hence need to add extra 3bits to left of the argument. 
+  // lzc32 function is 32bit and result_m_addsub_prenorm_abs is 29 wide, hence need to add extra 3bits to left of the argument. 
   // also, the variable result_m_addsub_prenorm_24 itself has the extra sign bit and the possible carry bit which after the shift will be zero
   // so for counting leading zeroes we need to subtract the extra count of 2. hence we subtract a total of 5 from the result.
-  assign zcount_addsub = lzc({3'b000, result_m_addsub_prenorm_24}) - 6'd5;
+  assign zcount_addsub = lzc32({3'b000, result_m_addsub_prenorm_24}) - 6'd5;
   // CHECK FOR SUBNORMALS
   // if decreasing the exponent by zcount makes it <= -127(or 0 when biased), this means it would create a subnormal
   // hence we only shift up to the point where it makes it -126(1 biased). this gives a subnormal default exponent
@@ -303,13 +314,26 @@ module fpu(
     ._signed(1'b0),
     .result(product_pre_norm[47:0])
   );
-  assign mul_exp_check = (9'(a_exp) - 9'd127) + (9'(b_exp) - 9'd127); // calculate result's exponent, which could be < -127
-  assign mul_is_subnormal = mul_exp_check <= -9'sd127; // result is subnormal if exponent is <= -127  or exp > -127 and there are enough leading zeroes to make it subnormal TODO: FIX
-  // normalize floating point result
-  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp_check + 1'b1 : mul_exp_check;      // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
-  assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-                                                                                           // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
+  // NORMALIZE FLOATING POINT RESULT
+  assign mul_exp_sum = ($signed(9'(a_exp)) - 9'd127) + ($signed(9'(b_exp)) - 9'd127); // calculate result's exponent, which could be <= -127
+  // first check for MSB==1 (which cannot happen if either number is subnormal)
+  assign mul_exp_norm =  product_pre_norm[47] ? mul_exp_sum + 1'b1 : mul_exp_sum; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+                                                                                  // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
+  //assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
                                                                                            // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
+  // CHECK FOR SUBNORMAL NUMBERS
+  // 1. if exp <= -127, then shift mant right by exp - -126. it doesnt matter whether msb==1 or not
+  // 2. if exp >  -127, then if there are any leading zeroes, shift left by min(leading zeroes, exo - -127)
+  // finally if the number is subnormal(exp == 0) then shift right once (because subnormals are interpreted as 0.xxx e-126(E 01), so we need to divide the man by 2 since the interpreted exp is larger than -127 by 1)
+  
+  // 2ND APPROACH:
+  // check number of leading zeroes. shift mant left by nbr leading zeroes(which will make msb of mant ==1),and subtract from exp at same time.
+  // then: if new exp <= -127, then shift mant right by exp - -126. 
+  // finally if the number is subnormal(exp == 0) then shift right once (because subnormals are interpreted as 0.xxx e-126(E 01), so we need to divide the man by 2 since the interpreted exp is larger than -127 by 1)
+  // this approach is the same as above but in opposite order
+
+  assign mul_is_subnormal = mul_exp_sum <= -9'sd127; // result is subnormal if msb==1 and exponent is <= -127  or exp > -127 and there are enough leading zeroes to make it subnormal TODO: FIX
+
   assign product_norm2 = product_norm[47] ? ($signed(mul_exp_norm) <= -9'sd127 ? (product_norm >> abs($signed(mul_exp_norm) - -9'sd126)) : product_norm) :
                                             ($signed(mul_exp_norm) <= -9'sd127 ? (product_norm >> abs($signed(mul_exp_norm) - -9'sd126)) : (product_norm << abs($signed(mul_exp_norm) - -9'sd126)));
 
@@ -343,7 +367,7 @@ module fpu(
     .quotient(div_quotient_prenorm_out[23:0])
   );
   assign exp_div_prenorm            = (a_exp - b_exp) + 8'd127;
-  assign zcount_div                 = lzc({8'b00000000, div_quotient_prenorm_out[23:0]}) - 4'd8;
+  assign zcount_div                 = lzc32({8'b00000000, div_quotient_prenorm_out[23:0]}) - 4'd8;
   assign quotient_mantissa_div_norm = div_quotient_prenorm_out << zcount_div;
   assign exp_div_norm               = exp_div_prenorm - zcount_div;
   assign {result_sign_div, 
@@ -368,7 +392,7 @@ module fpu(
   assign log2_exp_prenorm = 8'd7;
   assign log2_abs = log2_prenorm[30] ? -log2_prenorm : log2_prenorm;
   assign log2_sign = log2_prenorm[30];
-  assign log2_zcount = lzc({1'b0, log2_abs}) - 1;
+  assign log2_zcount = lzc32({1'b0, log2_abs}) - 1;
   assign log2_norm = log2_abs << log2_zcount;
   assign log2_exp_norm = 8'(9'(log2_exp_prenorm) - 9'(log2_zcount)) + 8'd127;
 
