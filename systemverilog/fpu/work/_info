@@ -267,6 +267,52 @@ R0
 R1
 R0
 R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
 Z2 !s12c _opt
 R1
 R0
@@ -326,10 +372,10 @@ n@_opt1
 R11
 R4
 T_opt2
-!s110 1745265381
-VFP<m=2@3lfo1ICPAZ]Z7n3
+!s110 1745279151
+VEF<7g7iO;enzl^6H];6Sf3
 R5
-=60-7c70db20d2b7-6806a2e4-37a-4e40
+=85-7c70db20d2b7-6806d8af-1c4-4e40
 R1
 R6
 R7
@@ -393,23 +439,23 @@ vfpu
 2C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
 R14
 Z23 DXx4 work 6 pa_fpu 0 22 >bNfFhCJ=[F>gQ3TQYJcg1
-Z24 !s110 1745265380
+Z24 !s110 1745279150
 !i10b 1
-!s100 47YOAUd`bkhk33<B7NWV10
-I48o^bKCD_n3EGBeh7V13c1
+!s100 62T0dcz;A>f:7GNbE@Y4Y1
+IQQ2Dc5Z8[?GnQh:mB2^^10
 S1
 Z25 dC:/Users/pcons/Desktop/sol-1/systemverilog/fpu
-w1745265378
+w1745279133
 8C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
 FC:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
-!i122 522
-L0 1 429
+!i122 597
+L0 1 430
 R17
 R18
 r1
 !s85 0
 31
-Z26 !s108 1745265380.000000
+Z26 !s108 1745279150.000000
 !s107 C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv|
 !s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv|
 !i113 0
@@ -421,15 +467,15 @@ R14
 R23
 R24
 !i10b 1
-!s100 nPViZHnoezo7=3SfDb?KF0
-ImMDJ3UhSlUOND>2Ve@ABN1
+!s100 aEgJXkK5Fi`6=>bz8M:P;1
+IKYe]Z[b;2o:je3JS<i[9;2
 S1
 R25
-w1745246504
+w1745279149
 8C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
 FC:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
-!i122 523
-L0 1 176
+!i122 598
+L0 1 179
 R17
 R18
 r1
@@ -444,7 +490,7 @@ R10
 Xpa_fpu
 2C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
 R14
-!s110 1745265379
+R24
 !i10b 1
 !s100 :VCke`hoHQb^Hd[KczP<53
 I>bNfFhCJ=[F>gQ3TQYJcg1
@@ -453,14 +499,14 @@ R25
 w1744762489
 8C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
 FC:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
-!i122 521
+!i122 596
 L0 1 0
 V>bNfFhCJ=[F>gQ3TQYJcg1
 R18
 r1
 !s85 0
 31
-!s108 1745265379.000000
+R26
 !s107 C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv|
 !s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv|
 !i113 0

@@ -308,12 +308,18 @@ module fpu(
     ._signed(1'b0),
     .result(product_pre_norm[47:0])
   );
+  logic [5:0] mul_zcount;
+  logic [47:0] mul_m_shift_left;
+  logic [8:0] mul_e_shift_left;
+  logic [8:0] mul_e_norm;
+  logic [47:0] mul_m_norm;
+  logic [47:0] mul_m_norm2;
   // NORMALIZE FLOATING POINT RESULT
-  assign mul_exp_sum = ($signed(9'(a_exp)) - 9'd127) + ($signed(9'(b_exp)) - 9'd127); // calculate result's exponent, which could be <= -127
+  assign mul_exp_sum = ($signed(9'(a_exp)) - 9'sd127) + ($signed(9'(b_exp)) - 9'sd127); // calculate result's exponent, which could be <= -127
   // first check for MSB==1 (which cannot happen if either number is subnormal)
-  assign mul_exp_shift1 =  product_pre_norm[47] ? mul_exp_sum + 1'b1 : mul_exp_sum; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+  assign mul_exp_shift1 = product_pre_norm[47] ? mul_exp_sum + 1'b1 : mul_exp_sum; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
                                                                                   // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-  //assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
+  assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
                                                                                            // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
   // CHECK FOR SUBNORMAL NUMBERS
   // 1. if exp <= -127, then shift mant right by exp - -126. it doesnt matter whether msb==1 or not
@@ -325,18 +331,13 @@ module fpu(
   // then: if new exp <= -127, then shift mant right by -126 - exp. 
   // finally if the number is subnormal(exp == 0) then shift right once (because subnormals are interpreted as 0.xxx e-126(E 01), so we need to divide the man by 2 since the interpreted exp is larger than -127 by 1)
   // this approach is the same as above but in opposite order
-  logic [5:0] mul_zcount;
-  logic [47:0] mul_m_shift_left;
-  logic [8:0] mul_e_shift_left;
-  logic [8:0] mul_e_norm;
-  logic [47:0] mul_m_norm;
-  logic [47:0] mul_m_norm2;
-  assign mul_zcount = lzc48(product_pre_norm);
-  assign mul_m_shift_left = product_pre_norm << mul_zcount;
-  assign mul_e_shift_left = $signed(9'(mul_exp_shift1)) - $signed(9'(mul_zcount));
-  assign mul_m_norm = $signed(mul_e_shift_left) <= -9'sd127 ? mul_m_shift_left >> (-9'sd127 - $signed(mul_e_shift_left)) : mul_m_shift_left;
-  assign mul_e_norm = $signed(mul_e_shift_left) <= -9'sd127 ? mul_e_shift_left + (-9'sd127 - $signed(mul_e_shift_left)) : mul_e_shift_left;
-  assign mul_m_norm2 = $signed(mul_e_norm) == -9'sd127 ? mul_m_norm >> 1 : mul_m_norm;
+  assign mul_zcount       = lzc48(product_norm);
+  assign mul_m_shift_left = product_norm << mul_zcount;
+  // after multiplying and adding the exponents, the minimum value of the sexponent sum is -252 (for both exponents being -126). however, for very small subnormals, the result can be 0.0...1 with enough zeroes that subtracting that from -252 would overflow the 9bit variable below, so we first test for it being < -252 and only subtract if the result would be be >= -252
+  assign mul_e_shift_left = 10'($signed(mul_exp_shift1)) - $signed(10'(mul_zcount)) < -10'sd252 ? -9'sd252 : 9'($signed(mul_exp_shift1)) - $signed(9'(mul_zcount));
+  assign mul_m_norm       = $signed(mul_e_shift_left) <= -9'sd127 ? mul_m_shift_left >> (-9'sd127 - $signed(mul_e_shift_left)) : mul_m_shift_left;
+  assign mul_e_norm       = $signed(mul_e_shift_left) <= -9'sd127 ? mul_e_shift_left + (-9'sd127 - $signed(mul_e_shift_left)) : mul_e_shift_left;
+  assign mul_m_norm2      = $signed(mul_e_norm) == -9'sd127 ? mul_m_norm >> 1 : mul_m_norm;
 
   // rounding: round to nearest ties to even
   // if first bit after epsilon is 1, then round up (and account for possible carry out)

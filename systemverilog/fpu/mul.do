@@ -27,6 +27,7 @@ add wave -noupdate -radix binary /fpu_tb/fpu_top/product_renorm
 add wave -noupdate -radix binary /fpu_tb/fpu_top/result_mantissa_mul
 add wave -noupdate -radix unsigned /fpu_tb/fpu_top/mul_zcount
 add wave -noupdate -radix decimal /fpu_tb/fpu_top/mul_exp_sum
+add wave -noupdate -radix decimal /fpu_tb/fpu_top/mul_exp_shift1
 add wave -noupdate -radix decimal /fpu_tb/fpu_top/mul_e_shift_left
 add wave -noupdate -radix decimal /fpu_tb/fpu_top/mul_exp_renorm
 add wave -noupdate -radix decimal /fpu_tb/fpu_top/mul_e_norm
@@ -54,7 +55,7 @@ add wave -noupdate -radix binary /fpu_tb/fpu_top/nan_or_nan
 add wave -noupdate -radix binary /fpu_tb/fpu_top/nan_inf_or_inf_nan
 add wave -noupdate -radix binary /fpu_tb/fpu_top/zero_nan_or_nan_zero
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {357 ns} 0}
+WaveRestoreCursors {{Cursor 1} {2501 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 301
 configure wave -valuecolwidth 489
