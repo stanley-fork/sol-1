@@ -38,16 +38,16 @@ module fpu_tb;
     '{32'h007ffffe, 32'h00000002, 32'h00800000, 32'h007ffffc, 32'h00000000},  // 2nd largest + 2nd smallest
 
     // Cross zero behavior
-    '{32'h00000001, 32'h80000001, 32'h00000000, 32'h00000002, 32'h00000000},  // smallest - smallest
-    '{32'h80000001, 32'h00000001, 32'h00000000, 32'h80000002, 32'h00000000},  // -smallest - smallest
+    '{32'h00000001, 32'h80000001, 32'h00000000, 32'h00000002, 32'h80000000},  // smallest - smallest
+    '{32'h80000001, 32'h00000001, 32'h00000000, 32'h80000002, 32'h80000000},  // -smallest - smallest
     '{32'h00000001, 32'h80000000, 32'h00000001, 32'h00000001, 32'h80000000},  // smallest - (-0)
     '{32'h80000001, 32'h00000000, 32'h80000001, 32'h80000001, 32'h80000000}   // -smallest - 0
   };
 
   st_fpu_computation list_normal[] = '{
     '{32'h3f800000, 32'h3f800000, 32'h40000000, 32'h00000000, 32'h3f800000},  // 1   1.0,          1.0},
-    '{32'h3f800000, 32'h3f8ccccd, 32'h40066666, 32'hbdccccd0, 32'h3f8cccce},  // 1   1.0,          1.1},     bdccccd0 is badly rounded. -0.1 is really bdcccccd 
-    '{32'h3fffffff, 32'h402df854, 32'h4096fc2a, 32'hbf37e152, 32'h40adf854},  // 8   1.9999999,    2.7182818},      
+    '{32'h3f800000, 32'h3f8ccccd, 32'h40066666, 32'hbdccccd0, 32'h3f8ccccd},  // 1   1.0,          1.1},     bdccccd0 is badly rounded. -0.1 is really bdcccccd 
+    '{32'h3fffffff, 32'h402df854, 32'h4096fc2a, 32'hbf37e152, 32'h40adf853},  // 8   1.9999999,    2.7182818},      
     '{32'h42168f5c, 32'h00000000, 32'h42168f5c, 32'h42168f5c, 32'h00000000},  // 9   37.64,        0},                
     '{32'h41800000, 32'h42000000, 32'h42400000, 32'hc1800000, 32'h44000000},  // 10  16.0,         32.0},              
     '{32'h3e800000, 32'h3f000000, 32'h3f400000, 32'hbe800000, 32'h3e000000}   // 11  0.25,         0.5}                
@@ -99,7 +99,7 @@ module fpu_tb;
     test_index = 0;
     test_type = type_single;
     test_op = pa_fpu::op_mul;
-    test_list = list_normal;
+    test_list = list_subnormal;
 
     if(test_type == type_all) begin
       $display("NORMAL");

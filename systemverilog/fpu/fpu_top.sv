@@ -318,8 +318,11 @@ module fpu(
   // first check for MSB==1 (which cannot happen if either number is subnormal)
   assign mul_exp_shift1 = product_pre_norm[47] ? mul_exp_sum + 1'b1 : mul_exp_sum; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
                                                                                   // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-  assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
-                                                                                           // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
+  assign product_norm = ~product_pre_norm[47] && product_pre_norm[46] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0 AND MSB-1 == 1, then shift left the result to normalize. 
+                                                                                                                   // we need to test that MSB-1 == 1, because we only want to perform this normalizaton in case the number is actually normal
+                                                                                                                   // as for subnormal results, we perform the full normalization anther way as givn below. so here, basically if both a and b are normal
+                                                                                                                   // numbers, the only results possible are 01.xxx..., 10.xxx..., and 11.xxx..., and then we normalize the result right here.
+                                                                                                                   // but if either a or b are subnormal, then the result will be 00.xxx etc, and we normalize as per the code below.
   // CHECK FOR SUBNORMAL NUMBERS
   // 1. if exp <= -127, then shift mant right by exp - -127. it doesnt matter whether msb==1 or not
   // 2. if exp >  -127, then if there are any leading zeroes, shift left by min(leading zeroes, exo - -127)
@@ -330,11 +333,10 @@ module fpu(
   // finally if the number is subnormal(exp == 0) then shift right once (because subnormals are interpreted as 0.xxx e-126(E 01), so we need to divide the man by 2 since the interpreted exp is larger than -127 by 1)
   // this approach is the same as above but in opposite order
   assign mul_zcount       = lzc48(product_norm);
-  // after multiplying and adding the exponents, the minimum value of the sexponent sum is -252 (for both exponents being -126). however, for very small subnormals, the result can be 0.0...1 with enough zeroes that subtracting that from -252 would overflow the 9bit variable below, so we first test for it being < -252 and only subtract if the result would be be >= -252
   assign mul_e_shift_left = 10'($signed(mul_exp_shift1)) - $signed(10'(mul_zcount));
   assign mul_m_shift_left = product_norm << mul_zcount;
   assign mul_e_norm       = $signed(mul_e_shift_left) < -10'sd127 ? -10'sd127 : mul_e_shift_left;
-  assign mul_m_norm       = $signed(mul_e_shift_left) <= -10'sd127 ? mul_m_shift_left >> (-10'sd126 - $signed(mul_e_shift_left)) : mul_m_shift_left;
+  assign mul_m_norm       = $signed(mul_e_shift_left) < -10'sd127 ? mul_m_shift_left >> (-10'sd127 - $signed(mul_e_shift_left)) : mul_m_shift_left;
 
   // output result to final variables. but before that, test for special cases.
   assign {result_sign_mul, 
@@ -344,7 +346,7 @@ module fpu(
                                  zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
                                  inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                  zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                                         {a_sign ^ b_sign, mul_e_norm[7:0] + 8'd127, mul_m_norm[22:0]};           
+                                                         {a_sign ^ b_sign, mul_e_norm[7:0] + 8'd127, mul_m_norm[46:24]};           
 
   // rounding: round to nearest ties to even
   // if first bit after epsilon is 1, then round up (and account for possible carry out)
