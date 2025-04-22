@@ -99,7 +99,7 @@ module fpu_tb;
     test_index = 0;
     test_type = type_single;
     test_op = pa_fpu::op_mul;
-    test_list = list_subnormal;
+    test_list = list_normal;
 
     if(test_type == type_all) begin
       $display("NORMAL");

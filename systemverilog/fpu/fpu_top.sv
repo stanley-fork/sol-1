@@ -48,7 +48,7 @@ module fpu(
 
   // multiplication datapath
   logic [47:0] product_pre_norm;     // result after multiplication
-  logic [48:0] product_norm;         // after first normalization
+  logic [47:0] product_norm;         // after first normalization
   logic [48:0] product_norm2;        // after first normalization
   logic [22:0] product_renorm;       // after second normalization (after rounding)
   logic [24:0] product_rounded;      // after rounding
@@ -310,10 +310,9 @@ module fpu(
   );
   logic [5:0] mul_zcount;
   logic [47:0] mul_m_shift_left;
-  logic [8:0] mul_e_shift_left;
-  logic [8:0] mul_e_norm;
+  logic [9:0] mul_e_shift_left;
+  logic [9:0] mul_e_norm;
   logic [47:0] mul_m_norm;
-  logic [47:0] mul_m_norm2;
   // NORMALIZE FLOATING POINT RESULT
   assign mul_exp_sum = ($signed(9'(a_exp)) - 9'sd127) + ($signed(9'(b_exp)) - 9'sd127); // calculate result's exponent, which could be <= -127
   // first check for MSB==1 (which cannot happen if either number is subnormal)
@@ -322,34 +321,21 @@ module fpu(
   assign product_norm = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0, then shift left the result to normalize. in this case, nothing is changed in the mantissa 
                                                                                            // or exponent. we only shift here because of the way we are copying the mantissa from the result variable to the final packet.
   // CHECK FOR SUBNORMAL NUMBERS
-  // 1. if exp <= -127, then shift mant right by exp - -126. it doesnt matter whether msb==1 or not
+  // 1. if exp <= -127, then shift mant right by exp - -127. it doesnt matter whether msb==1 or not
   // 2. if exp >  -127, then if there are any leading zeroes, shift left by min(leading zeroes, exo - -127)
   // finally if the number is subnormal(exp == 0) then shift right once (because subnormals are interpreted as 0.xxx e-126(E 01), so we need to divide the man by 2 since the interpreted exp is larger than -127 by 1)
-  
   // 2ND APPROACH:
   // check number of leading zeroes. shift mant left by nbr leading zeroes(which will make msb of mant ==1),and subtract from exp at same time.
-  // then: if new exp <= -127, then shift mant right by -126 - exp. 
+  // then: if new exp <= -127, then shift mant right by -127 - exp. 
   // finally if the number is subnormal(exp == 0) then shift right once (because subnormals are interpreted as 0.xxx e-126(E 01), so we need to divide the man by 2 since the interpreted exp is larger than -127 by 1)
   // this approach is the same as above but in opposite order
   assign mul_zcount       = lzc48(product_norm);
-  assign mul_m_shift_left = product_norm << mul_zcount;
   // after multiplying and adding the exponents, the minimum value of the sexponent sum is -252 (for both exponents being -126). however, for very small subnormals, the result can be 0.0...1 with enough zeroes that subtracting that from -252 would overflow the 9bit variable below, so we first test for it being < -252 and only subtract if the result would be be >= -252
-  assign mul_e_shift_left = 10'($signed(mul_exp_shift1)) - $signed(10'(mul_zcount)) < -10'sd252 ? -9'sd252 : 9'($signed(mul_exp_shift1)) - $signed(9'(mul_zcount));
-  assign mul_m_norm       = $signed(mul_e_shift_left) <= -9'sd127 ? mul_m_shift_left >> (-9'sd127 - $signed(mul_e_shift_left)) : mul_m_shift_left;
-  assign mul_e_norm       = $signed(mul_e_shift_left) <= -9'sd127 ? mul_e_shift_left + (-9'sd127 - $signed(mul_e_shift_left)) : mul_e_shift_left;
-  assign mul_m_norm2      = $signed(mul_e_norm) == -9'sd127 ? mul_m_norm >> 1 : mul_m_norm;
+  assign mul_e_shift_left = 10'($signed(mul_exp_shift1)) - $signed(10'(mul_zcount));
+  assign mul_m_shift_left = product_norm << mul_zcount;
+  assign mul_e_norm       = $signed(mul_e_shift_left) < -10'sd127 ? -10'sd127 : mul_e_shift_left;
+  assign mul_m_norm       = $signed(mul_e_shift_left) <= -10'sd127 ? mul_m_shift_left >> (-10'sd126 - $signed(mul_e_shift_left)) : mul_m_shift_left;
 
-  // rounding: round to nearest ties to even
-  // if first bit after epsilon is 1, then round up (and account for possible carry out)
-  // if all bits after epsilon are 0, we have a tie
-  // if rounding up produces an even result, then round up (and account for possible carry out)
-  // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
-  assign product_rounded[24:0] = mul_m_norm2[23] || (mul_m_norm2[23:0] == '0 && ~{mul_m_norm2[47:24] + 1'b1}[0]) || 
-                                (~mul_m_norm2[23] && |mul_m_norm2[22:0]) ? mul_m_norm2[47:24] + 1'b1 : mul_m_norm2[47:24];
-  // now check whether there was a carry out after rounding up
-  // if there was a carry, then re-normalize
-  assign product_renorm = product_rounded[24] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
-  assign mul_exp_renorm = product_rounded[24] ? mul_e_norm + 1'b1  : mul_e_norm;    // and increase exponent
   // output result to final variables. but before that, test for special cases.
   assign {result_sign_mul, 
           result_exp_mul, 
@@ -358,7 +344,19 @@ module fpu(
                                  zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
                                  inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                  zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                                         {a_sign ^ b_sign, mul_exp_renorm + 8'd127, product_renorm[22:0]};           
+                                                         {a_sign ^ b_sign, mul_e_norm[7:0] + 8'd127, mul_m_norm[22:0]};           
+
+  // rounding: round to nearest ties to even
+  // if first bit after epsilon is 1, then round up (and account for possible carry out)
+  // if all bits after epsilon are 0, we have a tie
+  // if rounding up produces an even result, then round up (and account for possible carry out)
+  // else if first bit after epsilon is 0, and at least one bit after that is a 1, then round up (and account for possible carry out)
+  assign product_rounded[24:0] = mul_m_norm[23] || (mul_m_norm[23:0] == '0 && ~{mul_m_norm[47:24] + 1'b1}[0]) || 
+                                (~mul_m_norm[23] && |mul_m_norm[22:0]) ? mul_m_norm[47:24] + 1'b1 : mul_m_norm[47:24];
+  // now check whether there was a carry out after rounding up
+  // if there was a carry, then re-normalize
+  assign product_renorm = product_rounded[24] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
+  assign mul_exp_renorm = product_rounded[24] ? mul_e_norm + 1'b1  : mul_e_norm;    // and increase exponent
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
