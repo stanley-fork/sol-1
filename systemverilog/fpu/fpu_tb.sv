@@ -13,6 +13,54 @@ module fpu_tb;
     logic [31:0] result_mul;
   } st_fpu_computation;
 
+  st_fpu_computation list_misc[] = '{
+    // Existing cases from user's list
+    '{32'h3f800000, 32'h3f800000, 32'h40000000, 32'h00000000, 32'h3f800000}, // 1.0, 1.0 --> 2.0, 0.0, 1.0
+    '{32'h3f800000, 32'h3f8ccccd, 32'h40066666, 32'hbdcccccd, 32'h3f8ccccd}, // 1.0, 1.1 --> 2.1, -0.1, 1.1 (Corrected -0.1 hex)
+    '{32'h3fffffff, 32'h402df854, 32'h4096fc2a, 32'hbf37e152, 32'h40adf853}, // 1.9999999, 2.7182818 --> ~4.718, ~-0.718, ~5.436 (Results match user's)
+    '{32'h42168f5c, 32'h00000000, 32'h42168f5c, 32'h42168f5c, 32'h00000000}, // 37.64, 0.0 --> 37.64, 37.64, 0.0 (Results match user's)
+    '{32'h41800000, 32'h42000000, 32'h42400000, 32'hc1800000, 32'h44000000}, // 16.0, 32.0 --> 48.0, -16.0, 512.0 (Results match user's)
+    '{32'h3e800000, 32'h3f000000, 32'h3f400000, 32'hbe800000, 32'h3e000000}, // 0.25, 0.5 --> 0.75, -0.25, 0.125 (Results match user's)
+
+    // Powers of Two
+    '{32'h40000000, 32'h40400000, 32'h40A00000, 32'hBF800000, 32'h40C00000}, // 2.0, 3.0 --> 5.0, -1.0, 6.0
+    '{32'h41000000, 32'h3f800000, 32'h41100000, 32'h40E00000, 32'h41000000}, // 8.0, 1.0 --> 9.0, 7.0, 8.0
+    '{32'h3d800000, 32'h3e800000, 32'h3ea00000, 32'hBC800000, 32'h3C800000}, // 0.0625, 0.25 --> 0.3125, -0.1875, 0.015625
+
+    // Signed Numbers
+    '{32'hbf800000, 32'h3f800000, 32'h00000000, 32'hC0000000, 32'hBF800000}, // -1.0, 1.0 --> 0.0, -2.0, -1.0
+    '{32'hc0000000, 32'h40400000, 32'h3f800000, 32'hC0A00000, 32'hC0C00000}, // -2.0, 3.0 --> 1.0, -5.0, -6.0
+    '{32'hc0a00000, 32'hc0a00000, 32'hC1200000, 32'h00000000, 32'h41C80000}, // -5.0, -5.0 --> -10.0, 0.0, 25.0
+    '{32'h40a00000, 32'hc0a00000, 32'h00000000, 32'h41200000, 32'hC1C80000}, // 5.0, -5.0 --> 0.0, 10.0, -25.0
+
+    // Zero
+    '{32'h80000000, 32'h41800000, 32'h41800000, 32'hC1800000, 32'h80000000}, // -0.0, 16.0 --> 16.0, -16.0, -0.0
+    '{32'h00000000, 32'h80000000, 32'h00000000, 32'h00000000, 32'h80000000}, // 0.0, -0.0 --> +0.0, +0.0, -0.0
+
+    // Infinity
+    '{32'h7f800000, 32'h40800000, 32'h7f800000, 32'h7f800000, 32'h7f800000}, // +Inf, 2.0 --> +Inf, +Inf, +Inf
+    '{32'hff800000, 32'h40800000, 32'hff800000, 32'hff800000, 32'hff800000}, // -Inf, 2.0 --> -Inf, -Inf, -Inf
+    '{32'h7f800000, 32'h7f800000, 32'h7f800000, 32'h7fc00000, 32'h7f800000}, // +Inf, +Inf --> +Inf, NaN, +Inf
+    '{32'hff800000, 32'hff800000, 32'hff800000, 32'h7fc00000, 32'h7f800000}, // -Inf, -Inf --> -Inf, NaN, +Inf
+    '{32'h7f800000, 32'hff800000, 32'h7fc00000, 32'h7f800000, 32'hff800000}, // +Inf, -Inf --> NaN, +Inf, -Inf
+    '{32'h7f800000, 32'h00000000, 32'h7f800000, 32'h7f800000, 32'h7fc00000}, // +Inf, 0.0 --> +Inf, +Inf, NaN
+    '{32'hff800000, 32'h00000000, 32'hff800000, 32'hff800000, 32'h7fc00000}, // -Inf, 0.0 --> -Inf, -Inf, NaN
+
+    // NaN (Using QNaN 0x7fc00000 and SNaN 0xffbFFFFF - NaN results are typially QNaN 0x7fc00000 or 0xffc00000)
+    '{32'h7fc00000, 32'h40800000, 32'h7fc00000, 32'h7fc00000, 32'h7fc00000}, // QNaN, 2.0 --> QNaN, QNaN, QNaN
+    '{32'hffbFFFFF, 32'h40800000, 32'h7fc00000, 32'h7fc00000, 32'h7fc00000}, // SNaN, 2.0 --> QNaN, QNaN, QNaN
+    '{32'h7f800000, 32'h7fc00000, 32'h7fc00000, 32'h7fc00000, 32'h7fc00000}, // +Inf, QNaN --> QNaN, QNaN, QNaN
+
+    // Boundary Values & Subnormal Results (Pre-rounding results shown)
+    // Max Normal (Approx 3.4e38, hex 0x7f7fffff)
+    '{32'h7f7fffff, 32'h3f800000, 32'h7f800000, 32'h7f7fffff, 32'h7f7fffff}, // Max_Normal, 1.0 --> +Inf (Overflow), Max_Normal - 1.0, Max_Normal * 1.0
+    '{32'h7f000000, 32'h7f000000, 32'h7f800000, 32'h00000000, 32'h7f800000}, // Large Normal (1*2^127), Large Normal --> +Inf, +0.0, +Inf (Overflow)
+    // Min Normal (Approx 1.18e-38, hex 0x00800000)
+    '{32'h00800000, 32'h3f800000, 32'h3f800000, 32'hBF800000, 32'h00800000}, // Min_Normal, 1.0 --> Min_Normal + 1.0 (~1.0), Min_Normal - 1.0 (~-1.0), Min_Normal * 1.0 (Min_Normal)
+    // Multiplication resulting in Underflow to Zero
+    '{32'h00800000, 32'h00800000, 32'h01000000, 32'h00000000, 32'h00000000}// Min_Normal, Min_Normal --> 2*Min_Normal, +0.0, Underflow to +0.0
+ };
+
   st_fpu_computation list_subnormal[] = '{
     '{32'h3fffffff, 32'h007fffff, 32'h3f800001, 32'h007fffff, 32'h00fffffd},  // 1.99999 * 2^0,  0.999999 * 2^-126
     '{32'h00000001, 32'h3f800000, 32'h3f800001, 32'h007fffff, 32'h00000001},  // smallest, 1.0
@@ -98,9 +146,9 @@ module fpu_tb;
   initial begin
     test_phase = 0;
     test_index = 0;
-    test_type = type_all;
+    test_type = type_single;
     test_op = pa_fpu::op_mul;
-    test_list = list_normal;
+    test_list = list_misc;
 
     if(test_type == type_all) begin
       $display("NORMAL");

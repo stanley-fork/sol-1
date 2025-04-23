@@ -316,9 +316,9 @@ module fpu(
   // NORMALIZE FLOATING POINT RESULT
   assign mul_exp_sum = ($signed(9'(a_exp)) - 9'sd127) + ($signed(9'(b_exp)) - 9'sd127); // calculate result's exponent, which could be <= -127
   // first check for MSB==1 (which cannot happen if either number is subnormal)
-  assign mul_exp_shift1 = product_pre_norm[47] ? mul_exp_sum + 1'b1 : mul_exp_sum; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
+  assign mul_exp_shift1 =  product_pre_norm[47] ? mul_exp_sum + 1'b1 : mul_exp_sum; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
                                                                                   // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-  assign product_norm = ~product_pre_norm[47] && product_pre_norm[46] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0 AND MSB-1 == 1, then shift left the result to normalize. 
+  assign product_norm   = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0 AND MSB-1 == 1, then shift left the result to normalize. 
                                                                                                                    // we need to test that MSB-1 == 1, because we only want to perform this normalizaton in case the number is actually normal
                                                                                                                    // as for subnormal results, we perform the full normalization anther way as givn below. so here, basically if both a and b are normal
                                                                                                                    // numbers, the only results possible are 01.xxx..., 10.xxx..., and 11.xxx..., and then we normalize the result right here.
@@ -335,14 +335,14 @@ module fpu(
   assign mul_zcount       = lzc48(product_norm);
   assign mul_e_shift_left = 10'($signed(mul_exp_shift1)) - $signed(10'(mul_zcount));
   assign mul_m_shift_left = product_norm << mul_zcount;
-  assign mul_e_norm       = $signed(mul_e_shift_left) < -10'sd127 ? -10'sd127 : mul_e_shift_left;
-  assign mul_m_norm       = $signed(mul_e_shift_left) < -10'sd127 ? mul_m_shift_left >> (-10'sd127 - $signed(mul_e_shift_left)) : mul_m_shift_left;
+  assign mul_e_norm       = $signed(mul_e_shift_left) < -10'sd126 ? -10'sd127 : mul_e_shift_left;
+  assign mul_m_norm       = $signed(mul_e_shift_left) < -10'sd126 ? mul_m_shift_left >> (-10'sd126 - $signed(mul_e_shift_left)) : mul_m_shift_left;
 
   // output result to final variables. but before that, test for special cases.
   assign {result_sign_mul, 
           result_exp_mul, 
-          result_mantissa_mul} = a_nan                ?  {a_sign, a_exp, a_mantissa[22:0]}    : // a
-                                 b_nan                ?  {b_sign, b_exp, b_mantissa[22:0]}    : // b
+          result_mantissa_mul} = a_nan                ?  {32'h7fc00000}    : // QNaN
+                                 b_nan                ?  {32'h7fc00000}    : // QNaN
                                  zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
                                  inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                  zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
