@@ -315,14 +315,10 @@ module fpu(
   logic [47:0] mul_m_norm;
   // NORMALIZE FLOATING POINT RESULT
   assign mul_exp_sum = ($signed(9'(a_exp)) - 9'sd127) + ($signed(9'(b_exp)) - 9'sd127); // calculate result's exponent, which could be <= -127
-  // first check for MSB==1 (which cannot happen if either number is subnormal)
+  // for multiplication, MSB of result is actually the 2^1 position, bit MSB-1 is 2^0, and so on. so we need to do a first stage of normalization before doing the rest
   assign mul_exp_shift1 =  product_pre_norm[47] ? mul_exp_sum + 1'b1 : mul_exp_sum; // if MSB is 1, then increment exp by one to normalize because in this case, we have two digits before the decimal point, 
-                                                                                  // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
-  assign product_norm   = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // else if the MSB of result is a 0 AND MSB-1 == 1, then shift left the result to normalize. 
-                                                                                                                   // we need to test that MSB-1 == 1, because we only want to perform this normalizaton in case the number is actually normal
-                                                                                                                   // as for subnormal results, we perform the full normalization anther way as givn below. so here, basically if both a and b are normal
-                                                                                                                   // numbers, the only results possible are 01.xxx..., 10.xxx..., and 11.xxx..., and then we normalize the result right here.
-                                                                                                                   // but if either a or b are subnormal, then the result will be 00.xxx etc, and we normalize as per the code below.
+                                                                                    // and so really the result we had was 10.xxx or 11.xxx for example, and so the final exponent needs to be incremented
+  assign product_norm   = ~product_pre_norm[47] ? product_pre_norm << 1 : product_pre_norm;  // else if MSB==0, then shift left once to keep 2^0 position as the MSB bit
   // CHECK FOR SUBNORMAL NUMBERS
   // 1. if exp <= -127, then shift mant right by exp - -127. it doesnt matter whether msb==1 or not
   // 2. if exp >  -127, then if there are any leading zeroes, shift left by min(leading zeroes, exo - -127)
@@ -338,16 +334,6 @@ module fpu(
   assign mul_e_norm       = $signed(mul_e_shift_left) < -10'sd126 ? -10'sd127 : mul_e_shift_left;
   assign mul_m_norm       = $signed(mul_e_shift_left) < -10'sd126 ? mul_m_shift_left >> (-10'sd126 - $signed(mul_e_shift_left)) : mul_m_shift_left;
 
-  // output result to final variables. but before that, test for special cases.
-  assign {result_sign_mul, 
-          result_exp_mul, 
-          result_mantissa_mul} = a_nan                ?  {32'h7fc00000}    : // QNaN
-                                 b_nan                ?  {32'h7fc00000}    : // QNaN
-                                 zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
-                                 inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
-                                 zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                                         {a_sign ^ b_sign, mul_e_norm[7:0] + 8'd127, mul_m_norm[46:24]};           
-
   // rounding: round to nearest ties to even
   // if first bit after epsilon is 1, then round up (and account for possible carry out)
   // if all bits after epsilon are 0, we have a tie
@@ -359,6 +345,16 @@ module fpu(
   // if there was a carry, then re-normalize
   assign product_renorm = product_rounded[24] ? product_rounded >> 1 : product_rounded; // if there was a carry, then shift right (divided by 2)
   assign mul_exp_renorm = product_rounded[24] ? mul_e_norm + 1'b1  : mul_e_norm;    // and increase exponent
+
+  // output result to final variables. but before that, test for special cases.
+  assign {result_sign_mul, 
+          result_exp_mul, 
+          result_mantissa_mul} = a_nan                ?  {32'h7fc00000}    : // QNaN
+                                 b_nan                ?  {32'h7fc00000}    : // QNaN
+                                 zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
+                                 inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
+                                 zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
+                                                         {a_sign ^ b_sign, mul_exp_renorm[7:0] + 8'd127, product_renorm[22:0]};           
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 

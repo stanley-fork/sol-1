@@ -489,6 +489,22 @@ R0
 R1
 R0
 R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
+R0
+R1
 Z2 !s12c _opt
 R1
 R0
@@ -548,10 +564,10 @@ n@_opt1
 R11
 R4
 T_opt2
-!s110 1745444023
-V_bTB;7^;5Rj0>PARnWE`j0
+!s110 1745446336
+Vz<Ko66LMG^OET1Ffo4K040
 R5
-=181-7c70db20d2b7-68095cb6-2b5-4e40
+=189-7c70db20d2b7-680965c0-40-4e40
 R1
 R6
 R7
@@ -615,23 +631,23 @@ vfpu
 2C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
 R14
 Z23 DXx4 work 6 pa_fpu 0 22 >bNfFhCJ=[F>gQ3TQYJcg1
-Z24 !s110 1745444021
+Z24 !s110 1745446335
 !i10b 1
-!s100 g62jnhjW;KQaRza7nU<ao2
-IcnhK3TQD:Ze=n4[n?:DC<0
+!s100 Zdi:>Z2fG`oLD_W5c8E`K3
+IPJ72YZOa8kjVQP0gf>BT`3
 S1
 Z25 dC:/Users/pcons/Desktop/sol-1/systemverilog/fpu
-w1745444020
+w1745446312
 8C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
 FC:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv
-!i122 889
-L0 1 430
+!i122 913
+L0 1 426
 R17
 R18
 r1
 !s85 0
 31
-Z26 !s108 1745444021.000000
+Z26 !s108 1745446335.000000
 !s107 C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv|
 !s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_top.sv|
 !i113 0
@@ -641,23 +657,23 @@ vfpu_tb
 2C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
 R14
 R23
-!s110 1745444022
+R24
 !i10b 1
-!s100 U_f?==:Kzn6`U3kmmSL;m3
-I^7g]_hITU>>YXjg]]ibI=3
+!s100 4lN]L_W3oVaEJTzbk9:^Q0
+IEklCzj6gWNDBIRQEf_;KA0
 S1
 R25
-w1745443498
+w1745446331
 8C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
 FC:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv
-!i122 890
-L0 1 230
+!i122 914
+L0 1 243
 R17
 R18
 r1
 !s85 0
 31
-!s108 1745444022.000000
+R26
 !s107 C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv|
 !s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/fpu_tb.sv|
 !i113 0
@@ -675,14 +691,14 @@ R25
 w1744762489
 8C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
 FC:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv
-!i122 888
+!i122 912
 L0 1 0
 V>bNfFhCJ=[F>gQ3TQYJcg1
 R18
 r1
 !s85 0
 31
-R26
+!s108 1745446334.000000
 !s107 C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv|
 !s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/pcons/Desktop/sol-1/systemverilog/fpu/pa_fpu.sv|
 !i113 0
