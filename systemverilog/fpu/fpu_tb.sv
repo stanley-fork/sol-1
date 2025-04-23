@@ -14,6 +14,7 @@ module fpu_tb;
   } st_fpu_computation;
 
   st_fpu_computation list_subnormal[] = '{
+    '{32'h3fffffff, 32'h007fffff, 32'h3f800001, 32'h007fffff, 32'h00fffffd},  // 1.99999 * 2^0,  0.999999 * 2^-126
     '{32'h00000001, 32'h3f800000, 32'h3f800001, 32'h007fffff, 32'h00000001},  // smallest, 1.0
     '{32'h00000001, 32'h40000000, 32'h3f800001, 32'h007fffff, 32'h00000002},  // smallest, 2.0
     '{32'h00000001, 32'h41000000, 32'h3f800001, 32'h007fffff, 32'h00000008},  // smallest, 8.0
@@ -97,9 +98,9 @@ module fpu_tb;
   initial begin
     test_phase = 0;
     test_index = 0;
-    test_type = type_single;
+    test_type = type_all;
     test_op = pa_fpu::op_mul;
-    test_list = list_subnormal;
+    test_list = list_normal;
 
     if(test_type == type_all) begin
       $display("NORMAL");
