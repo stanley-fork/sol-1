@@ -358,7 +358,7 @@ module fpu(
                                  zero_or_zero                   ? {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
                                  a_one                          ? {a_sign ^ b_sign, b_operand[30:23], b_mantissa[22:0]} : // if either operand is 1.0, set result to other operand as a special case
                                  b_one                          ? {a_sign ^ b_sign, a_operand[30:23], a_mantissa[22:0]} : // "
-                                 $signed(mul_exp_sum) > 9'sd127 ? {a_sign ^ b_sign, 8'hFF, 23'h000000} :
+                                 $signed(mul_exp_sum) > 9'sd127 ? {a_sign ^ b_sign, 8'hFF, 23'h000000} : // if the result's exponent is larger than the maximum of 127, set result to +-infinity
                                                                   {a_sign ^ b_sign, mul_exp_renorm[7:0] + 8'd127, product_renorm[22:0]};           
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
