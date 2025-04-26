@@ -86,9 +86,9 @@ module fpu(
   logic        log2_sign;
 
   // status
-  logic a_nan, a_inf, a_pos_inf, a_neg_inf, a_zero;
+  logic a_nan, a_one, a_inf, a_pos_inf, a_neg_inf, a_zero;
   logic a_subnormal;
-  logic b_nan, b_inf, b_pos_inf, b_neg_inf, b_zero;
+  logic b_nan, b_one, b_inf, b_pos_inf, b_neg_inf, b_zero;
   logic b_subnormal;
   // for multiplication
   logic zero_inf_or_inf_zero;
@@ -136,6 +136,7 @@ module fpu(
   endfunction
 
   assign a_nan       = a_operand[30:23] == 8'hff && |a_operand[22:0];
+  assign a_one       = a_operand == 32'h3f800000;
   assign a_zero      = a_operand[30:23] == 8'h00 &&  a_operand[22:0] == 23'h0;
   assign a_inf       = a_operand[30:23] == 8'hff &&  a_operand[22:0] == 23'h0;
   assign a_pos_inf   = a_operand[31] == 1'b0 &&  a_inf;
@@ -143,6 +144,7 @@ module fpu(
   assign a_subnormal = a_operand[30:23] == 8'h00 && |a_operand[22:0];
 
   assign b_nan       = b_operand[30:23] == 8'hff && |b_operand[22:0];
+  assign b_one       = b_operand == 32'h3f800000;
   assign b_zero      = b_operand[30:23] == 8'h00 &&  b_operand[22:0] == 23'h0;
   assign b_inf       = b_operand[30:23] == 8'hff &&  b_operand[22:0] == 23'h0;
   assign b_pos_inf   = b_operand[31] == 1'b0 &&  b_inf;
@@ -349,12 +351,15 @@ module fpu(
   // output result to final variables. but before that, test for special cases.
   assign {result_sign_mul, 
           result_exp_mul, 
-          result_mantissa_mul} = a_nan                ?  {32'h7fc00000}    : // QNaN
-                                 b_nan                ?  {32'h7fc00000}    : // QNaN
-                                 zero_inf_or_inf_zero ?  {1'b0, 8'hFF, 23'h400000}            : // NAN
-                                 inf_or_inf           ?  {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
-                                 zero_or_zero         ?  {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                                         {a_sign ^ b_sign, mul_exp_renorm[7:0] + 8'd127, product_renorm[22:0]};           
+          result_mantissa_mul} = a_nan                          ? {32'h7fc00000}    : // QNaN
+                                 b_nan                          ? {32'h7fc00000}    : // QNaN
+                                 zero_inf_or_inf_zero           ? {1'b0, 8'hFF, 23'h400000}            : // NAN
+                                 inf_or_inf                     ? {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
+                                 zero_or_zero                   ? {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
+                                 a_one                          ? {a_sign ^ b_sign, b_operand[30:24], b_mantissa[22:0]} :
+                                 b_one                          ? {a_sign ^ b_sign, a_operand[30:24], a_mantissa[22:0]} :
+                                 $signed(mul_exp_sum) > 9'sd127 ? {a_sign ^ b_sign, 8'hFF, 23'h000000} :
+                                                                  {a_sign ^ b_sign, mul_exp_renorm[7:0] + 8'd127, product_renorm[22:0]};           
 
   // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
