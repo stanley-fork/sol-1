@@ -356,8 +356,8 @@ module fpu(
                                  zero_inf_or_inf_zero           ? {1'b0, 8'hFF, 23'h400000}            : // NAN
                                  inf_or_inf                     ? {a_sign ^ b_sign, 8'hFF, 23'h000000} : // inf
                                  zero_or_zero                   ? {a_sign ^ b_sign, 8'h00, 23'h000000} : // zero
-                                 a_one                          ? {a_sign ^ b_sign, b_operand[30:24], b_mantissa[22:0]} :
-                                 b_one                          ? {a_sign ^ b_sign, a_operand[30:24], a_mantissa[22:0]} :
+                                 a_one                          ? {a_sign ^ b_sign, b_operand[30:23], b_mantissa[22:0]} : // if either operand is 1.0, set result to other operand as a special case
+                                 b_one                          ? {a_sign ^ b_sign, a_operand[30:23], a_mantissa[22:0]} : // "
                                  $signed(mul_exp_sum) > 9'sd127 ? {a_sign ^ b_sign, 8'hFF, 23'h000000} :
                                                                   {a_sign ^ b_sign, mul_exp_renorm[7:0] + 8'd127, product_renorm[22:0]};           
 
