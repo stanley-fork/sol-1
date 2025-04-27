@@ -3,6 +3,17 @@
 Sol-1 is a homebrew CPU and Minicomputer built from 74HC logic.
 It is published here for educational purposes.
 
+### Directory Struture
+| Folder Name | Description |
+| ------------- | ----------- |
+| ccompiler     | a c compiler written for the Sol-1 CPU. It outputs Sol-1 assembly |
+| hardware      | schematics, board pictures, microcode assembler |
+| software      | bios, kernel, shell, and unix utilities programs written in ASM for Sol-1 |
+| solarium      | the operating system for Sol-1 |
+| systemverilog | systemverilog models for the Sol-1 CPU, computer, and a few other things |
+| general_docs  | datasheets and miscellaneous documents related to Sol-1 and digital design in general | 
+| sol1_docs     | documents directly related to Sol-1 | 
+
 ## Features
 ### Hardware
 - User and Kernel privilege modes, with up to 256 processes running in parallel.
