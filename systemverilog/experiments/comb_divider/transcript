@@ -1,35 +1,19 @@
-# Reading pref.tcl
-# //  Questa Intel Starter FPGA Edition-64
-# //  Version 2024.1 linux_x86_64 Apr 19 2024
-# //
-# // Unpublished work. Copyright 2024 Siemens
-# //
-# // This material contains trade secrets or otherwise confidential information
-# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
-# // "SISW"), or its licensors. Access to and use of this information is strictly
-# // limited as set forth in the Customer's applicable agreements with SISW.
-# //
-# // This material may not be copied, distributed, or otherwise disclosed outside
-# // of the Customer's facilities without the express written permission of SISW,
-# // and may not be used in any way not expressly authorized by SISW.
-# //
-# vsim -gui -voptargs="+acc=rtl" -work work comb_div24_frac_tb 
-# Start time: 23:08:22 on Apr 06,2025
-# ** Note: (vsim-3812) Design is being optimized...
-# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
-# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
-# Loading sv_std.std
-# Loading work.comb_div24_frac_tb(fast)
-# Loading work.comb_div24_frac(fast)
-add wave -position insertpoint  \
-sim:/comb_div24_frac_tb/div24_frac/a \
-sim:/comb_div24_frac_tb/div24_frac/b \
-sim:/comb_div24_frac_tb/div24_frac/quotient \
-sim:/comb_div24_frac_tb/div24_frac/partial
-run -all
-# quotient: 010000000000000010111111
-# ** Note: $stop    : comb_div24_frac_tb.sv(14)
-#    Time: 10 us  Iteration: 0  Instance: /comb_div24_frac_tb
-# Break in Module comb_div24_frac_tb at comb_div24_frac_tb.sv line 14
-# End time: 23:21:53 on Apr 06,2025, Elapsed time: 0:13:31
-# Errors: 0, Warnings: 1
+# 0 compiles, 2 failed with no errors.
+# 0 compiles, 2 failed with no errors.
+# vlog -work work -vopt -sv -stats=none C:/Users/pcons/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_div_24.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module comb_div_24
+# 
+# Top level modules:
+# 	comb_div_24
+# 
+# 
+# vlog -work work -vopt -sv -stats=none C:/Users/pcons/Desktop/sol-1/systemverilog/experiments/comb_divider/comb_div_24_tb.sv
+# Questa Intel Starter FPGA Edition-64 vlog 2024.3 Compiler 2024.09 Sep 10 2024
+# -- Compiling module comb_div_24_tb
+# 
+# Top level modules:
+# 	comb_div_24_tb
+# 
+# 
+# 2 compiles, 0 failed with no errors.
