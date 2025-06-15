@@ -28,7 +28,7 @@ bootloader_installer:
 	syscall sys_filesystem		; obtain dirID for kernel file, in A
   mov b, a
 	inc b					; increment LBA because data starts after the header sector
-  mov al, 3
+  mov al, 3     ; bootloader installer syscall
 	syscall sys_system
 
 	syscall sys_terminate_proc
