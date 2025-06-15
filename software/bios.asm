@@ -941,45 +941,43 @@ _hex_to_int_ret:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; DATA BLOCK
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-s_welcome:    .db "\n\n\rSol-1 74HC HomebrewCPU MiniComputer\n"
-        .db "BIOS Version 0.1\n\n\r"
-        .db "terminal-1 initialized\n\r", 0
+s_welcome:      .db "\n\n\rSol-1 74HC HomebrewCPU MiniComputer\n"
+                .db "BIOS Version 0.1\n\n\r"
+                .db "terminal-1 initialized\n\r", 0
         
-s_boot1:      .db "reading boot sector\n\r", 0
-s_boot2:      .db "boot-sector read\n\r", 0
-
+s_boot1:        .db "reading boot sector\n\r", 0
+s_boot2:        .db "boot-sector read\n\r", 0
         
-s_bios3:     .db "resetting IDE-drive\n\r", 0
-s_bios4:     .db "configuring Timer-1\n\r", 0
-s_bios5:       .db "PIO-A set to output mode\n\r", 0
+s_bios3:        .db "resetting IDE-drive\n\r", 0
+s_bios4:        .db "configuring Timer-1\n\r", 0
+s_bios5:        .db "PIO-A set to output mode\n\r", 0
 
-s_init:      .db "entering real-mode [supervisor on; paging off]\n\r"
-        .db "interrupts disabled\n\r"
-        .db "display register loading disabled\n\r", 0
+s_init:         .db "entering real-mode [supervisor on; paging off]\n\r"
+                .db "interrupts disabled\n\r"
+                .db "display register loading disabled\n\r", 0
 
-s_nl_2:      .db "\n"
-s_nl_1:      .db "\n\r", 0
+s_nl_2:         .db "\n"
+s_nl_1:         .db "\n\r", 0
 
-s_enter_prog:    .db "data: ", 0
+s_enter_prog:   .db "data: ", 0
 s_origin_addr:  .db "origin address: ", 0
 
-s_IDE_serial:    .db "Serial: ", 0
-s_IDE_firm:    .db "Firmware: ", 0
+s_IDE_serial:   .db "Serial: ", 0
+s_IDE_firm:     .db "Firmware: ", 0
 s_IDE_model:    .db "Model: ", 0
-s_sectors:    .db "Number of sectors: ", 0
-s_LBA0:      .db "LBA 0: ", 0
-s_LBA1:      .db "LBA 1: ", 0
-s_LBA2:      .db "LBA 2: ", 0
-s_LBA3:      .db "LBA 3: ", 0
-s_error:      .db "\n\rError.\n\r", 0
-
-s_hex_digits:    .db "0123456789ABCDEF"
-s_bkpt:       .db "this is the breakpoint.", 0
-
-
-s_priv1:      .db "\n\n\rsoftware failure: privilege exception "
-        .db "press any key to continue...\n\r", 0
-s_divzero:    .db "\n\rexception: zero division\n\r", 0
+s_sectors:      .db "Number of sectors: ", 0
+s_LBA0:         .db "LBA 0: ", 0
+s_LBA1:         .db "LBA 1: ", 0
+s_LBA2:         .db "LBA 2: ", 0
+s_LBA3:         .db "LBA 3: ", 0
+s_error:        .db "\n\rError.\n\r", 0
+                
+s_hex_digits:   .db "0123456789ABCDEF"
+s_bkpt:         .db "this is the breakpoint.", 0
+                
+s_priv1:        .db "\n\n\rsoftware failure: privilege exception "
+                .db "press any key to continue...\n\r", 0
+s_divzero:      .db "\n\rexception: zero division\n\r", 0
 
 
 

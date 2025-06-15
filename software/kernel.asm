@@ -1803,12 +1803,12 @@ fs_ls_end:
   sysret
 
 
-; file structure:
-; 512 bytes header
-; header used to tell whether the block is free
 ;------------------------------------------------------------------------------------------------------;
 ; CREATE NEW TEXTFILE
 ;------------------------------------------------------------------------------------------------------;
+; file structure:
+; 512 bytes header
+; header used to tell whether the block is free
 ; d = content pointer in user space
 ; c = file size
 fs_starcom:
@@ -2590,9 +2590,9 @@ __load_hex_ret:
   pop a
   ret
 
-; synopsis: look insIDE a certain DIRECTORY for files/directories
-; BEFORE CALLING THIS FUNCTION, CD INTO REQUIRED DIRECTORY
-; for each entry insIDE DIRECTORY:
+; synopsis: look inside a certain directory for files/directories
+; before calling this function, cd into required directory
+; for each entry inside directory:
 ;  if entry is a file:
 ;    compare filename to searched filename
 ;    if filenames are the same, print filename
@@ -2733,21 +2733,21 @@ s_week:
 ; the Data Register with the following values. For every
 ; byte to be written, there is one Data Request.
 fdc_128_bytes_per_sect:                                                                       
-fdc_40_FF:     .fill 40,  $FF  ; or 00                                                                                
-fdc_6_00_0:    .fill 6,   $00  ;                                                                            <--|        
-fdc_id_fe:     .fill 1,   $FE  ; ID Address Mark                                                               |        
-fdc_track:     .fill 1,   $00  ; Track Number                                                                  |                    
-fdc_side:      .fill 1,   $00  ; Side Number 00 or 01                                                          |                
-fdc_sector:    .fill 1,   $01  ; Sector Number  1 through 10                                                   |                              
-fdc_length:    .fill 1,   $00  ; Sector Length                                                                 |                        
-fdc_2_crc_0:   .fill 1,   $F7  ; 2 CRC's Written                                                               | Write 16 times                 
-fdc_11_ff:     .fill 11,  $FF  ; or 00                                                                         |                      
-fdc_6_00_1:    .fill 6,   $00  ;                                                                               |                        
-fdc_data_addr: .fill 1,   $FB  ; Data Address Mark                                                             |                                  
-fdc_data:      .fill 128, $E5  ; Data (IBM uses E5)                                                            |                                      
-fdc_2_crc_1:   .fill 1,   $F7  ; 2 CRC's Written                                                               |                                                        
-fdc_10_ff:     .fill 10,  $FF  ; or 00                                                                      <--|                                                  
-fdc_369_ff:    .fill 369, $FF  ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
+fdc_40_FF:          .fill 40,  $FF    ; or 00                                                                                
+fdc_6_00_0:         .fill 6,   $00    ;                                                                            <--|        
+fdc_id_fe:          .fill 1,   $FE    ; ID Address Mark                                                               |        
+fdc_track:          .fill 1,   $00    ; Track Number                                                                  |                    
+fdc_side:           .fill 1,   $00    ; Side Number 00 or 01                                                          |                
+fdc_sector:         .fill 1,   $01    ; Sector Number  1 through 10                                                   |                              
+fdc_length:         .fill 1,   $00    ; Sector Length                                                                 |                        
+fdc_2_crc_0:        .fill 1,   $F7    ; 2 CRC's Written                                                               | Write 16 times                 
+fdc_11_ff:          .fill 11,  $FF    ; or 00                                                                         |                      
+fdc_6_00_1:         .fill 6,   $00    ;                                                                               |                        
+fdc_data_addr:      .fill 1,   $FB    ; Data Address Mark                                                             |                                  
+fdc_data:           .fill 128, $E5    ; Data (IBM uses E5)                                                            |                                      
+fdc_2_crc_1:        .fill 1,   $F7    ; 2 CRC's Written                                                               |                                                        
+fdc_10_ff:          .fill 10,  $FF    ; or 00                                                                      <--|                                                  
+fdc_369_ff:         .fill 369, $FF    ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
 
 proc_state_table:   .fill 16 * 20, 0  ; for 15 processes max
 proc_availab_table: .fill 16, 0       ; space for 15 processes. 0 = process empty, 1 = process taken
