@@ -1,8 +1,5 @@
 .include "lib/kernel.exp"
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 .org text_org			; origin at 1024
 
 ; when running the installer, we need to be inside /boot because the mkbin system call

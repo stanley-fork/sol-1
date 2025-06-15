@@ -1,23 +1,20 @@
 ; ------------------------------------------------------------------------------------------------------------------;
 ; Solarium - Sol-1 Homebrew Minicomputer Operating System Kernel.
 ; ------------------------------------------------------------------------------------------------------------------;
+
 ; Memory Map
 ; ------------------------------------------------------------------------------------------------------------------;
-; 0000    ROM BEGIN
-; ....
-; 7FFF    ROM END
-;
-; 8000    RAM begin
-; ....
-; F7FF    Stack root
-; ------------------------------------------------------------------------------------------------------------------;
+; 0000 ... 7FFF - ROM SPACE
+; 8000 ... F7FF - RAM SPACE
+; F7FF          - Stack root
+
 ; I/O MAP
 ; ------------------------------------------------------------------------------------------------------------------;
-; FF80    UART 0              (16550)
-; FF90    UART 1              (16550)
-; FFA0    RTC                 (M48T02)
-; FFB0    PIO 0               (8255)
-; FFC0    5.25" Floppy Drive Block
+; FF80 - UART 0 (16550)
+; FF90 - UART 1 (16550)
+; FFA0 - RTC    (M48T02)
+; FFB0 - PIO 0  (8255)
+; FFC0 - FDD    (5.25" Floppy Drive Block)
 ;   - FFC0      Output Port (377 Flip-Flop)                  
 ;   - FFC1      Input Port  (244 Buffer)                     
 ;   - FFC8      WD1770 Status/Command    
@@ -25,9 +22,9 @@
 ;   - FFCA      WD1770 Sector Register
 ;   - FFCB      WD1770 Data Register
 ;      
-; FFD0    IDE                 (Compact Flash / PATA)
-; FFE0    Timer               (8253)
-; FFF0    BIOS CONFIGURATION NV-RAM STORE AREA
+; FFD0 - IDE    (Compact Flash / PATA)
+; FFE0 - Timer  (8253)
+; FFF0 - BIOS CONFIGURATION NV-RAM STORE AREA
 ; ------------------------------------------------------------------------------------------------------------------;
 
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -49,45 +46,42 @@ _UART1_FCR        .equ $FF92            ; FIFO control register
 _UART1_LCR        .equ $FF93            ; line control register
 _UART1_LSR        .equ $FF95            ; line status register
 
-XON               .equ $11
-XOFF              .equ $13
+_ide_BASE         .equ $FFD0            ; ide base
+_ide_R0           .equ _ide_BASE + 0    ; data port
+_ide_R1           .equ _ide_BASE + 1    ; read: error code, write: feature
+_ide_R2           .equ _ide_BASE + 2    ; number of sectors to transfer
+_ide_R3           .equ _ide_BASE + 3    ; sector address lba 0 [0:7]
+_ide_R4           .equ _ide_BASE + 4    ; sector address lba 1 [8:15]
+_ide_R5           .equ _ide_BASE + 5    ; sector address lba 2 [16:23]
+_ide_R6           .equ _ide_BASE + 6    ; sector address lba 3 [24:27 (lsb)]
+_ide_R7           .equ _ide_BASE + 7    ; read: status, write: command       
 
-_ide_BASE         .equ $FFD0            ; IDE BASE
-_ide_R0           .equ _ide_BASE + 0    ; DATA PORT
-_ide_R1           .equ _ide_BASE + 1    ; READ: ERROR CODE, WRITE: FEATURE
-_ide_R2           .equ _ide_BASE + 2    ; NUMBER OF SECTORS TO TRANSFER
-_ide_R3           .equ _ide_BASE + 3    ; SECTOR ADDRESS LBA 0 [0:7]
-_ide_R4           .equ _ide_BASE + 4    ; SECTOR ADDRESS LBA 1 [8:15]
-_ide_R5           .equ _ide_BASE + 5    ; SECTOR ADDRESS LBA 2 [16:23]
-_ide_R6           .equ _ide_BASE + 6    ; SECTOR ADDRESS LBA 3 [24:27 (LSB)]
-_ide_R7           .equ _ide_BASE + 7    ; READ: STATUS, WRITE: COMMAND
-
-_7SEG_DISPLAY     .equ $FFB0            ; BIOS POST CODE HEX DISPLAY (2 DIGITS) (CONNECTED TO PIO A)
-_BIOS_POST_CTRL   .equ $FFB3            ; BIOS POST DISPLAY CONTROL REGISTER, 80h = As Output
+_7SEG_DISPLAY     .equ $FFB0            ; bios post code hex display (2 digits) (connected to pio a)
+_BIOS_POST_CTRL   .equ $FFB3            ; bios post display control register, 80h = as output
 _PIO_A            .equ $FFB0    
 _PIO_B            .equ $FFB1
 _PIO_C            .equ $FFB2
-_PIO_CONTROL      .equ $FFB3            ; PIO CONTROL PORT
+_PIO_CONTROL      .equ $FFB3            ; pio control port
 
-_FDC_CONFIG       .equ $FFC0 
-_FDC_STATUS_1     .equ $FFC1
-_FDC_WD_STAT_CMD  .equ $FFC8
-_FDC_WD_TRACK     .equ $FFC9
-_FDC_WD_SECTOR    .equ $FFCA
-_FDC_WD_DATA      .equ $FFCB
+_FDC_CONFIG       .equ $FFC0            ; 0 = select_0, 1 = select_1, 2 = side_select, 3 = dden, 4 = in_use_or_head_load, 5 = wd1770_rst
+_FDC_STATUS_1     .equ $FFC1            ; 0 = drq, 1 = ready
+_FDC_WD_STAT_CMD  .equ $FFC8            ; status / command register
+_FDC_WD_TRACK     .equ $FFC9            ; track register
+_FDC_WD_SECTOR    .equ $FFCA            ; sector register
+_FDC_WD_DATA      .equ $FFCB            ; data register
 
-_TIMER_C_0        .equ $FFE0            ; TIMER COUNTER 0
-_TIMER_C_1        .equ $FFE1            ; TIMER COUNTER 1
-_TIMER_C_2        .equ $FFE2            ; TIMER COUNTER 2
-_TIMER_CTRL       .equ $FFE3            ; TIMER CONTROL REGISTER
+_TIMER_C_0        .equ $FFE0            ; timer counter 0
+_TIMER_C_1        .equ $FFE1            ; timer counter 1
+_TIMER_C_2        .equ $FFE2            ; timer counter 2
+_TIMER_CTRL       .equ $FFE3            ; timer control register
 
 STACK_BEGIN       .equ $F7FF            ; beginning of stack
 FIFO_SIZE         .equ 1024
 
-text_org          .equ $400
+text_org          .equ $400             ; code origin address for all user processes
+
+
 ; ------------------------------------------------------------------------------------------------------------------;
-
-
 ; For the next iteration:
 ; boot-sector(1) | kernel-sectors(32) | inode-bitmap | rawdata-bitmap | inode-table | raw-disk-data
 ; inode-table format:
@@ -120,8 +114,8 @@ FST_LBA_START           .equ 32
 FST_LBA_END             .equ (FST_LBA_START + FST_TOTAL_SECTORS - 1)
 
 FS_NBR_FILES            .equ (FST_NBR_DIRECTORIES * FST_FILES_PER_DIR)
-FS_SECTORS_PER_FILE     .equ 32         ; the first sector is always a header with a NULL parameter (first byte)
-                                        ; so that we know which blocks are free or taken
+FS_SECTORS_PER_FILE     .equ 32 ; the first sector is always a header with a NULL parameter (first byte)
+                                ; so that we know which blocks are free or taken
 FS_FILE_SIZE            .equ (FS_SECTORS_PER_FILE * 512)                  
 FS_TOTAL_SECTORS        .equ (FS_NBR_FILES * FS_SECTORS_PER_FILE)
 FS_LBA_START            .equ (FST_LBA_END + 1)
@@ -134,8 +128,8 @@ root_id:                .equ FST_LBA_START
 ; ------------------------------------------------------------------------------------------------------------------;
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; IRQ Table
-; Highest priority at lowest address
+; IRQ table
+; highest priority at lowest address
 ; ------------------------------------------------------------------------------------------------------------------;
 .dw int_0_fdc
 .dw int_1
@@ -147,13 +141,13 @@ root_id:                .equ FST_LBA_START
 .dw int_7_uart0
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; Reset Vector
+; kernel reset vector
 ; ------------------------------------------------------------------------------------------------------------------;
 .dw kernel_reset_vector
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; Exception Vector Table
-; Total of 7 entries, starting at address $0012
+; exception vector table
+; total of 7 entries, starting at address $0012
 ; ------------------------------------------------------------------------------------------------------------------;
 .dw trap_privilege
 .dw trap_div_zero
@@ -164,8 +158,8 @@ root_id:                .equ FST_LBA_START
 .dw 0
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; System Call Vector Table
-; Starts at address $0020
+; system call vector table
+; starts at address $0020
 ; ------------------------------------------------------------------------------------------------------------------;
 .dw syscall_break
 .dw syscall_rtc
@@ -183,7 +177,7 @@ root_id:                .equ FST_LBA_START
 .dw syscall_fdc
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; System Call Aliases
+; system call aliases
 ; ------------------------------------------------------------------------------------------------------------------;
 sys_break            .equ 0
 sys_rtc              .equ 1
@@ -201,7 +195,7 @@ sys_system           .equ 12
 sys_fdc              .equ 13
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; Alias Exports
+; alias exports
 ; ------------------------------------------------------------------------------------------------------------------;
 .export text_org
 .export sys_break
@@ -220,7 +214,7 @@ sys_fdc              .equ 13
 .export sys_fdc
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; IRQs' Code Block
+; IRQs' code block
 ; ------------------------------------------------------------------------------------------------------------------;
 ; 5.25" Floppy Drive Controller IRQ
 int_0_fdc:
@@ -241,20 +235,20 @@ int_5:
 s_fdc_irq: .db "\nIRQ0 Executed.\n", 0
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; Process Swapping
+; process swapping
 ; ------------------------------------------------------------------------------------------------------------------;
 int_6:  
-  pusha ; save all registers into kernel stack
+  pusha                             ; save all registers into kernel stack
   mov ah, 0
   mov al, [active_proc_index]
-  shl a              ; x2
-  mov a, [proc_table_convert + a]  ; get process state start index
+  shl a                             ; x2
+  mov a, [proc_table_convert + a]   ; get process state start index
   mov di, a
   mov a, sp
   inc a
   mov si, a
   mov c, 20
-  rep movsb          ; save process state!
+  rep movsb                         ; save process state!
 ; restore kernel stack position to point before interrupt arrived
   add sp, 20
 ; now load next process in queue
@@ -262,22 +256,22 @@ int_6:
   mov bl, [nbr_active_procs]
   cmp al, bl
   je int6_cycle_back
-  inc al            ; next process is next in the series
+  inc al                            ; next process is next in the series
   jmp int6_continue
 int6_cycle_back:
-  mov al, 1        ; next process = process 1
+  mov al, 1                         ; next process = process 1
 int6_continue:
-  mov [active_proc_index], al    ; set next active proc
+  mov [active_proc_index], al       ; set next active proc
 
 ; calculate LUT entry for next process
   mov ah, 0
-  shl a              ; x2
-  mov a, [proc_table_convert + a]    ; get process state start index  
+  shl a                             ; x2
+  mov a, [proc_table_convert + a]   ; get process state start index  
   
-  mov si, a            ; source is proc state block
+  mov si, a                         ; source is proc state block
   mov a, sp
   sub a, 19
-  mov di, a            ; destination is kernel stack
+  mov di, a                         ; destination is kernel stack
 ; restore SP
   dec a
   mov sp, a
@@ -286,8 +280,8 @@ int6_continue:
 ; set VM process
   mov al, [active_proc_index]
   setptb
-  mov byte[_TIMER_C_0], 0        ; load counter 0 low byte
-  mov byte[_TIMER_C_0], $10        ; load counter 0 high byte
+  mov byte[_TIMER_C_0], 0           ; load counter 0 low byte
+  mov byte[_TIMER_C_0], $10         ; load counter 0 high byte
   popa
   sysret
 
@@ -300,19 +294,19 @@ int_7_uart0:
   pushf
   mov a, [fifo_in]
   mov d, a
-  mov al, [_UART0_DATA]  ; get character
-  cmp al, $03        ; CTRL-C
+  mov al, [_UART0_DATA]       ; get character
+  cmp al, $03                 ; CTRL-C
   je CTRLC
-  cmp al, $1A        ; CTRL-Z
+  cmp al, $1A                 ; CTRL-Z
   je CTRLZ
-  mov [d], al        ; add to fifo
+  mov [d], al                 ; add to fifo
   mov a, [fifo_in]
   inc a
-  cmp a, fifo + FIFO_SIZE         ; check if pointer reached the end of the fifo
+  cmp a, fifo + FIFO_SIZE     ; check if pointer reached the end of the fifo
   jne int_7_continue
   mov a, fifo  
 int_7_continue:  
-  mov [fifo_in], a      ; update fifo pointer
+  mov [fifo_in], a            ; update fifo pointer
   popf
   pop d
   pop a  
@@ -324,12 +318,10 @@ CTRLZ:
   popf
   pop d
   pop a
-  jmp syscall_pause_proc    ; pause current process and go back to the shell
-
-
+  jmp syscall_pause_proc      ; pause current process and go back to the shell
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; System Syscalls
+; system syscalls
 ; ------------------------------------------------------------------------------------------------------------------;
 system_jmptbl:
   .dw system_uname
@@ -376,6 +368,9 @@ system_whoami:
   sysret
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; floppy drive system calls
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; the floppy control below is not yet tested. it needs to be tested.
 ; fdc_40_FF:     .fill 40,  $FF  ; or 00                                                                                
 ; fdc_6_00_0:    .fill 6,   $00  ;                                                                            <--|        
@@ -392,7 +387,7 @@ system_whoami:
 ; fdc_2_crc_1:   .fill 1,   $F7  ; 2 CRC's Written                                                               |                                                        
 ; fdc_10_ff:     .fill 10,  $FF  ; or 00                                                                      <--|                                                  
 ; fdc_369_ff:    .fill 369, $FF  ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
-; ***************************************************************************************************************
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; _FDC_CONFIG       .equ $FFC0 
 ; _FDC_STATUS_1     .equ $FFC1
 ; _FDC_WD_STAT_CMD  .equ $FFC8
@@ -424,11 +419,11 @@ fdc_sector_loop:
 fdc_drq_loop:
   mov d, _FDC_STATUS_1
   mov al, [d]
-  and al, $01               ; check drq bit
+  and al, $01                ; check drq bit
   jz fdc_drq_loop
-  lodsb                     ; load format byte
-  mov d, _FDC_WD_DATA       ; data register
-  mov [d], al               ; send data byte to wd1770
+  lodsb                      ; load format byte
+  mov d, _FDC_WD_DATA        ; data register
+  mov [d], al                ; send data byte to wd1770
   dec c
   jnz fdc_sector_loop
   mov d, fdc_sector
@@ -436,17 +431,17 @@ fdc_drq_loop:
   inc b
   mov [d], bl
   cmp bl, 11
-  jne fdc_sector_loop       ; continue formatting
+  jne fdc_sector_loop        ; continue formatting
 
 ; here all the sectors have been written. now fill in remaining of the track until wd1770 interrupts out
 fdc_drq_loop_fill:
   mov d, _FDC_STATUS_1
   mov al, [d]
-  and al, $01               ; check drq bit
+  and al, $01                ; check drq bit
   jz fdc_drq_loop_fill
-  mov d, _FDC_WD_DATA       ; data register
+  mov d, _FDC_WD_DATA        ; data register
   mov al, gl
-  mov [d], al               ; send data byte to wd1770
+  mov [d], al                ; send data byte to wd1770
   lodstat
   mov al, ah
   and al, $01
@@ -458,14 +453,14 @@ fdc_drq_loop_fill:
   sysret
 
 s_send_write_cmd: .db "\nSending Write Command...\n", 0
-s_format_begin: .db "\nFormatting starting...\n", 0
-s_format_done: .db "\nFormatting done.\n", 0
+s_format_begin:   .db "\nFormatting starting...\n", 0
+s_format_done:    .db "\nFormatting done.\n", 0
 
 ; REBOOT SYSTEM
 syscall_reboot:
   push word $FFFF 
   push byte %00000000             ; dma_ack = 0, interrupts disabled, mode = supervisor, paging = off, halt=0, display_reg_load=0, dir=0
-  push word BIOS_RESET_VECTOR    ; and then push RESET VECTOR of the shell to the stack
+  push word BIOS_RESET_VECTOR     ; and then push RESET VECTOR of the shell to the stack
   sysret
 
 ;------------------------------------------------------------------------------------------------------;;
@@ -510,6 +505,9 @@ syscall_resume_proc:
   popa
   sysret
 
+;------------------------------------------------------------------------------------------------------;;
+; list processes
+;------------------------------------------------------------------------------------------------------;;
 syscall_list_procs:
   mov d, s_ps_header
   call _puts
@@ -543,9 +541,9 @@ list_procs_end:
   sysret
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; Exceptions' Code Block
+; exceptions code block
 ; ------------------------------------------------------------------------------------------------------------------;
-; Privilege
+; privilege exception
 ; ------------------------------------------------------------------------------------------------------------------;
 trap_privilege:
   jmp syscall_reboot
@@ -556,7 +554,7 @@ trap_privilege:
   sysret
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; Breakpoint
+; breakpoint
 ; IMPORTANT: values in the stack are being pushed in big endian. i.e.: MSB at low address
 ; and LSB at high address. *** NEED TO CORRECT THIS IN THE MICROCODE and make it little endian again ***
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -662,7 +660,7 @@ s_break1:
   .db "2. Continue Execution", 0
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; Divide by Zero
+; divide by zero exception
 ; ------------------------------------------------------------------------------------------------------------------;
 trap_div_zero:
   push a
@@ -676,13 +674,13 @@ trap_div_zero:
   sysret ; enable interrupts
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; Undefined Opcode
+; undefined opcode exception
 ; ------------------------------------------------------------------------------------------------------------------;
 trap_undef_opcode:
   sysret
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; RTC Services Syscall
+; real-time clock services syscall
 ; RTC I/O bank = FFA0 to FFAF
 ; FFA0 to FFA7 is scratch RAM
 ; Control register at $FFA8 [ W | R | S | Cal4..Cal0 ]
@@ -1811,6 +1809,7 @@ fs_ls_end:
 ; header used to tell whether the block is free
 ; d = content pointer in user space
 ; c = file size
+; TODO: i cant remember what starcom is about. i dont think it works anyhow and needs revising/deleting
 fs_starcom:
 	mov si, d
 	mov di, transient_area
@@ -2017,7 +2016,7 @@ fs_mktxt_add_to_dir_null:
 
 
 ;------------------------------------------------------------------------------------------------------;
-; CREATE NEW BINARY FILE
+; create new binary file
 ;------------------------------------------------------------------------------------------------------;
 ; search for first null block
 fs_mkbin:
@@ -2120,7 +2119,7 @@ fs_mkbin_add_to_dir_null:
   sysret
 
 ;------------------------------------------------------------------------------------------------------;
-; PWD - PRINT WORKING DIRECTORY
+; pwd - print working directory
 ;------------------------------------------------------------------------------------------------------;    
 fs_pwd:
   mov d, filename
@@ -2387,6 +2386,9 @@ proc_memory_map_L0:
   ret
   
 
+;----------------------------------------------------------------------------------------------------;
+; terminate process
+;----------------------------------------------------------------------------------------------------;
 syscall_terminate_proc:
   add sp, 5                            ; clear stack of the values that were pushed by the interrupt (SP, Status, PC)
                                        ; since they will not be used for anything here.
@@ -2433,6 +2435,9 @@ syscall_terminate_proc:
   popa
   sysret
 
+;----------------------------------------------------------------------------------------------------;
+; pause process
+;----------------------------------------------------------------------------------------------------;
 syscall_pause_proc:
 ; save all registers into kernel stack
   pusha
@@ -2518,7 +2523,7 @@ syscall_create_proc:
   store
 ; now copy process binary data into process's memory
   mov si, transient_area
-  mov di, text_org              ; code origin address for all user processes
+  mov di, text_org                   ; code origin address for all user processes
   mov c, FS_FILE_SIZE                ; size of memory space to copy, which is equal to the max file size in disk (for now)
   store                              ; copy process data
     
@@ -2569,7 +2574,6 @@ _load_hex:
   mov a, di
   mov d, a          ; start of string data block
   call _gets        ; get program string
-  ;call _puts        ; reprint to screen
   mov si, a
 __load_hex_loop:
   lodsb             ; load from [SI] to AL
@@ -2599,7 +2603,7 @@ __load_hex_ret:
 ;  else if entry is a directory:
 ;    cd to the given directory
 ;    recursively call cmd_find
-;    cd outsIDE previous directory
+;    cd outside previous directory
 ;  if current entry == last entry, return
 ; endfor
 f_find:
@@ -2607,7 +2611,7 @@ f_find:
 
 
 ; ---------------------------------------------------------------------
-; KERNEL RESET VECTOR
+; kernel reset vector
 ; ---------------------------------------------------------------------
 kernel_reset_vector:  
   mov bp, STACK_BEGIN

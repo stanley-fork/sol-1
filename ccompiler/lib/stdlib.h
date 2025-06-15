@@ -61,7 +61,7 @@ int rand(){
 // heap and heap_top are defined internally by the compiler
 // so that 'heap' is the last variable in memory and therefore can grow upwards
 // towards the stack
-char *alloc(int bytes){
+char *malloc(int bytes){
   heap_top = heap_top + bytes;
   return heap_top - bytes;
 }

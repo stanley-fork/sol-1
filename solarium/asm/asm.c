@@ -79,38 +79,8 @@ char *symbols[8] = {
   "#", "#"
 };
 
-int main(){
-  char *p;
-  print("\n");
-
-  program = alloc(16384);
-  bin_out = alloc(16384);
-  opcode_table = alloc(12310);
-
-  loadfile(0x0000, program);
-  loadfile("./config.d/op_tbl", opcode_table);
-
-  // remove space at end of file
-  p = program;
-  while(*p) p++;
-  while(is_space(*p)) p--;
-  p++;
-  *p = '\0';
-
-  prog = program;
-  bin_p = bin_out + _org;
-  pc = _org;
-  prog_size = 0;
-  label_directive_scan();
-  prog_size = 0;
-  parse_text();
-  parse_data();
-  display_output();
-}
-
-
 void parse_data(){
-  print("Parsing DATA section...");
+  printf("Parsing DATA section...");
 
   for(;;){
     get();
@@ -125,7 +95,7 @@ void parse_data(){
     get();
     if(tok == SEGMENT_END) break;
     if(tok == DB){
-      print(".db: ");
+      printf(".db: ");
       for(;;){
         get();
         if(toktype == CHAR_CONST){
@@ -141,12 +111,12 @@ void parse_data(){
           back();
           break;
         }
-        print(", ");
+        printf(", ");
       }
-      print("\n");
+      printf("\n");
     }
     else if(tok == DW){
-      print(".dw: ");
+      printf(".dw: ");
       for(;;){
         get();
         if(toktype == CHAR_CONST){
@@ -163,13 +133,13 @@ void parse_data(){
           back();
           break;
         }
-        print(", ");
+        printf(", ");
       }
-      print("\n");
+      printf("\n");
     }
   }
 
-  print("Done.\n");
+  printf("Done.\n");
 }
 
 void parse_directive(char emit_override){
@@ -180,7 +150,7 @@ void parse_directive(char emit_override){
     _org = int_const;
   }
   else if(tok == DB){
-    //print("\n.db: ");
+    //printf("\n.db: ");
     for(;;){
       get();
       if(toktype == CHAR_CONST){
@@ -199,7 +169,7 @@ void parse_directive(char emit_override){
     }
   }
   else if(tok == DW){
-    //print("\n.dw: ");
+    //printf("\n.dw: ");
     for(;;){
       get();
       if(toktype == CHAR_CONST){
@@ -228,7 +198,7 @@ void label_directive_scan(){
   bin_p = bin_out + _org;
   pc = _org;
 
-  print("Parsing labels and directives...\n");
+  printf("Parsing labels and directives...\n");
   for(;;){
     get(); back();
     temp_prog = prog;
@@ -246,22 +216,22 @@ void label_directive_scan(){
       if(tok == COLON){
         prog = temp_prog;
         parse_label();
-        print(".");
+        printf(".");
       }
       else{
         prog = temp_prog;
         parse_instr(1);      
-        print(".");
+        printf(".");
       }
     }
   }
-  print("\nDone.\n");
+  printf("\nDone.\n");
   printf("Org: %s\n", _org);
-  print("\nLabels list:\n");
+  printf("\nLabels list:\n");
   for(i = 0; label_table[i].name[0]; i++){
     printf("%s: %x\n", label_table[i].name, label_table[i].address);
   }
-  print("\n");
+  printf("\n");
 }
 
 void label_parse_instr(){
@@ -523,7 +493,7 @@ void parse_instr(char emit_override){
 void parse_text(){
   char *temp_prog;
 
-  print("Parsing TEXT section...\n");
+  printf("Parsing TEXT section...\n");
   prog = program;
   bin_p = bin_out + _org;
   pc = _org;
@@ -557,7 +527,7 @@ void parse_text(){
     }
   }
 
-  print("Done.\n\n");
+  printf("Done.\n\n");
 }
 
 void debug(){
@@ -574,11 +544,11 @@ void debug(){
 void display_output(){
   int i;
   unsigned char *p;
-  print("\nAssembly complete.\n");
+  printf("\nAssembly complete.\n");
   printf("Program size: %d\n", prog_size);
 
 
-  print("Listing: \n");
+  printf("Listing: \n");
   p = bin_out + _org;
   for(;;){
     if(p == bin_p) break;
@@ -586,7 +556,7 @@ void display_output(){
     p++;
   }
 
-  print("\n");
+  printf("\n");
 }
 
 char is_reserved(char *name){
@@ -1044,4 +1014,33 @@ int exp(int base, int exp){
     result = result * base;
   }
   return result;
+}
+
+int main(){
+  char *p;
+  printf("\n");
+
+  program = malloc(16384);
+  bin_out = malloc(16384);
+  opcode_table = malloc(12310);
+
+  loadfile(0x0000, program);
+  loadfile("./config.d/op_tbl", opcode_table);
+
+  // remove space at end of file
+  p = program;
+  while(*p) p++;
+  while(is_space(*p)) p--;
+  p++;
+  *p = '\0';
+
+  prog = program;
+  bin_p = bin_out + _org;
+  pc = _org;
+  prog_size = 0;
+  label_directive_scan();
+  prog_size = 0;
+  parse_text();
+  parse_data();
+  display_output();
 }
