@@ -145,8 +145,6 @@ cmd_shell:
   call printnl
   ret
 
-  
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CD
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -276,7 +274,7 @@ s_etc_config:     .db "/etc/shell.cfg", 0
 s_home:           .db "home", 0
 s_path:           .db "path", 0
 
-s_rebooting:      .db "\033[2J\033[H", "Now Rebooting...", 0
+s_rebooting:      .db "\033[2J\033[H", "now rebooting...", 0
 s_hash:           .db " # ", 0
 s_fslash:         .db "/", 0
 s_sol1:           .db "Sol-1:", 0, 0

@@ -338,6 +338,12 @@ system_getparam:
   mov bl, [d]
   sysret
 
+; param register address in register d
+; param value in register bl
+system_setparam:
+  mov [d], bl
+  sysret
+
 ; kernel LBA address in 'b'
 system_bootloader_install:
   push b
@@ -355,18 +361,13 @@ system_bootloader_install:
   call ide_write_sect         ; write sector
   sysret
 
-; param register address in register d
-; param value in register bl
-system_setparam:
-  mov [d], bl
-  sysret
-
 system_uname:
+  mov d, s_uname
+  call _puts
   sysret
 
 system_whoami:
   sysret
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; floppy drive system calls
@@ -2617,8 +2618,8 @@ kernel_reset_vector:
   mov bp, STACK_BEGIN
   mov sp, STACK_BEGIN
   
-  mov al, %10000001
-  stomsk                        ; mask out timer interrupt for now (only allow UART to interrupt)
+  mov al, %10000001             ; mask out timer interrupt for now - enable uart and fdc irqs 
+  stomsk                        
   sti  
 
   lodstat
@@ -2643,7 +2644,7 @@ kernel_reset_vector:
   mov d, s_prompt_init
   call _puts
   mov d, s_init_path
-  syscall sys_create_proc              ; launch init as a new process
+  syscall sys_create_proc       ; launch init as a new process
 
 
 ; FILE INCLUDES
@@ -2683,14 +2684,15 @@ fifo_out:           .dw fifo
 current_dir_id:     .dw 0     ; keep dirID of current directory
 s_init_path:        .db "/sbin/init", 0
 
+s_uname:            .db "solarium v.1.0", 0
 s_dataentry:        .db "> ", 0
 s_parent_dir:       .db "..", 0
 s_current_dir:      .db ".", 0
 s_fslash:           .db "/", 0
 file_attrib:        .db "-rw x"      ; chars at powers of 2
 file_type:          .db "-dc"
-s_ps_header:        .db "PID COMMAND\n", 0
-s_ls_total:         .db "Total: ", 0
+s_ps_header:        .db "pid command\n", 0
+s_ls_total:         .db "total: ", 0
 
 s_int_en:           .db "IRQs enabled\n", 0
 s_kernel_started:   .db "kernel started(version 1.0)\n", 0
@@ -2698,13 +2700,13 @@ s_prompt_init:      .db "starting init\n", 0
 s_priviledge:       .db "\nexception: privilege\n", 0
 s_divzero:          .db "\nexception: zero division\n", 0
 
-s_set_year:         .db "Year: ", 0
-s_set_month:        .db "Month: ", 0
-s_set_day:          .db "Day: ", 0
-s_set_week:         .db "Weekday: ", 0
-s_set_hours:        .db "Hours: ", 0
-s_set_minutes:      .db "Minutes: ", 0
-s_set_seconds:      .db "Seconds: ", 0
+s_set_year:         .db "year: ", 0
+s_set_month:        .db "month: ", 0
+s_set_day:          .db "day: ", 0
+s_set_week:         .db "weekday: ", 0
+s_set_hours:        .db "hours: ", 0
+s_set_minutes:      .db "minutes: ", 0
+s_set_seconds:      .db "seconds: ", 0
 s_months:      
   .db "   ", 0
   .db "Jan", 0
