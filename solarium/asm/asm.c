@@ -79,6 +79,42 @@ char *symbols[8] = {
   "#", "#"
 };
 
+/*
+prototypes for gcc
+int _exp(int base, int _exp);
+int loadfile(char *filename, char *destination);
+int hex_to_int(char *hex_string) ;
+int search_keyword(char *keyword);
+void pop_prog();
+void push_prog();
+void error_s(char *msg, char *param);
+void error(char *msg);
+void convert_constant();
+void get();
+void get_line(void);
+char is_hex_digit(char c);
+void get_path();
+void back(void);
+void emit_word(int word, char emit_override);
+void emit_byte(char byte, char emit_override);
+void forwards(char amount);
+struct t_opcode search_opcode(char *what_opcode);
+int label_exists(char *name);
+int get_label_addr(char *name);
+int declare_label(char *name, int address);
+void parse_label();
+char is_directive(char *name);
+char is_reserved(char *name);
+void display_output();
+void debug();
+void parse_text();
+void parse_instr(char emit_override);
+void label_parse_instr();
+void label_directive_scan();
+void parse_directive(char emit_override);
+void parse_data();
+*/
+
 void parse_data(){
   printf("Parsing DATA section...");
 
@@ -100,11 +136,11 @@ void parse_data(){
         get();
         if(toktype == CHAR_CONST){
           emit_byte(string_const[0], 0);
-          printx8(string_const[0]);
+          printf("%d", string_const[0]);
         }
         else if(toktype == INTEGER_CONST){
           emit_byte(int_const, 0);
-          printx8(int_const);
+          printf("%d", int_const);
         }
         get();
         if(tok != COMMA){
@@ -122,11 +158,11 @@ void parse_data(){
         if(toktype == CHAR_CONST){
           emit_byte(string_const[0], 0);
           emit_byte(0, 0);
-          printx8(string_const[0]);
+          printf("%d", string_const[0]);
         }
         else if(toktype == INTEGER_CONST){
           emit_word(int_const, 0);
-          printx16(int_const);
+          printf("%d", int_const);
         }
         get();
         if(tok != COMMA){
@@ -146,7 +182,7 @@ void parse_directive(char emit_override){
   get();
   if(tok == ORG){
     get();
-    if(toktype != INTEGER_CONST) error("Integer constant expected in .org directive.");
+    if(toktype != INTEGER_CONST) error("Integer constant _expected in .org directive.");
     _org = int_const;
   }
   else if(tok == DB){
@@ -155,11 +191,9 @@ void parse_directive(char emit_override){
       get();
       if(toktype == CHAR_CONST){
         emit_byte(string_const[0], emit_override);
-        //printx8(string_const[0]);
       }
       else if(toktype == INTEGER_CONST){
         emit_byte(int_const, emit_override);
-        //printx8(int_const);
       }
       get();
       if(tok != COMMA){
@@ -175,11 +209,9 @@ void parse_directive(char emit_override){
       if(toktype == CHAR_CONST){
         emit_byte(string_const[0], emit_override);
         emit_byte(0, emit_override);
-        //printx8(string_const[0]);
       }
       else if(toktype == INTEGER_CONST){
         emit_word(int_const, 0);
-        //printx16(int_const);
       }
       get();
       if(tok != COMMA){
@@ -238,7 +270,7 @@ void label_parse_instr(){
   char opcode[32];
   char code_line[64];
   struct t_opcode op;
-  int num_operands, num_operandsexp;
+  int num_operands, num_operands_exp;
   int i, j;
   char operand_types[3]; // operand types and locations
   int old_pc;
@@ -295,8 +327,8 @@ void label_parse_instr(){
       }
     }
     if(num_operands > 2) error("Maximum number of operands per instruction is 2.");
-    num_operandsexp = exp(2, num_operands);
-    for(i = 0; i < num_operandsexp; i++){
+    num_operands_exp = _exp(2, num_operands);
+    for(i = 0; i < num_operands_exp; i++){
       prog = code_line;
       get();
       strcpy(opcode, token);
@@ -329,7 +361,7 @@ void label_parse_instr(){
         if(toktype == END) break;
         if(toktype == IDENTIFIER && !is_reserved(token)){
           if(operand_types[j] == '#'){
-            error("8bit operand expected but 16bit label given.");
+            error("8bit operand _expected but 16bit label given.");
           }
           else if(operand_types[j] == '@'){
             forwards(2);
@@ -357,7 +389,7 @@ void parse_instr(char emit_override){
   char code_line[64];
   struct t_opcode op;
   int instr_len;
-  int num_operands, num_operandsexp;
+  int num_operands, num_operands_exp;
   int i, j;
   char operand_types[3]; // operand types and locations
   int old_pc;
@@ -418,8 +450,8 @@ void parse_instr(char emit_override){
       if(toktype == INTEGER_CONST || label_exists(token) != -1) num_operands++;
     }
     if(num_operands > 2) error("Maximum number of operands per instruction is 2.");
-    num_operandsexp = exp(2, num_operands);
-    for(i = 0; i < num_operandsexp; i++){
+    num_operands_exp = _exp(2, num_operands);
+    for(i = 0; i < num_operands_exp; i++){
       prog = code_line;
       get();
       strcpy(opcode, token);
@@ -455,7 +487,7 @@ void parse_instr(char emit_override){
         if(toktype == IDENTIFIER){
           if(label_exists(token) != -1){
             if(operand_types[j] == '#'){
-              error("8bit operand expected but 16bit label given.");
+              error("8bit operand _expected but 16bit label given.");
             }
             else if(operand_types[j] == '@'){
               emit_word(get_label_addr(token), emit_override);
@@ -515,7 +547,7 @@ void parse_text(){
       get();
       if(tok == SEGMENT_END) break;
       else{
-        error("Unexpected directive.");
+        error("Un_expected directive.");
       }
     }
     else if(toktype == IDENTIFIER){
@@ -552,7 +584,7 @@ void display_output(){
   p = bin_out + _org;
   for(;;){
     if(p == bin_p) break;
-    printx8(*p); 
+    printf("%x", *p); 
     p++;
   }
 
@@ -586,10 +618,12 @@ char is_reserved(char *name){
       || !strcmp(name, "movsb")
       || !strcmp(name, "stosb");
 }
+
 char is_directive(char *name){
   return !strcmp(name, "org") 
       || !strcmp(name, "define");
 }
+
 void parse_label(){
   char label_name[ID_LEN];
   get();
@@ -808,7 +842,7 @@ void get(){
       *t++ = *prog++;
     }
     if(*prog != '\''){
-      error("Closing single quotes expected.");
+      error("Closing single quotes _expected.");
     }
     *t++ = '\'';
     prog++;
@@ -822,7 +856,7 @@ void get(){
     while(*prog != '\"' && *prog){
       *t++ = *prog++;
     }
-    if(*prog != '\"') error("Double quotes expected");
+    if(*prog != '\"') error("Double quotes _expected");
     *t++ = '\"';
     prog++;
     toktype = STRING_CONST;
@@ -1007,10 +1041,10 @@ int loadfile(char *filename, char *destination){
   }
 }
 
-int exp(int base, int exp){
+int _exp(int base, int _exp){
   int i;
   int result = 1;
-  for(i = 0; i < exp; i++){
+  for(i = 0; i < _exp; i++){
     result = result * base;
   }
   return result;

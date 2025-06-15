@@ -1,5 +1,5 @@
 ; --- FILENAME: ../solarium/asm/asm.c
-; --- DATE:     15-06-2025 at 19:11:06
+; --- DATE:     15-06-2025 at 19:24:20
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -391,7 +391,7 @@ _if11_TRUE:
   call emit_byte
   add sp, 2
 ; --- END FUNCTION CALL
-; printx8(string_const[0]); 
+; printf("%d", string_const[0]); 
 ; --- START FUNCTION CALL
   mov d, _string_const_data ; $string_const
   push a
@@ -403,9 +403,13 @@ _if11_TRUE:
   mov bl, [d]
   mov bh, 0
   mov c, 0
-  push bl
-  call printx8
-  add sp, 1
+  swp b
+  push b
+  mov b, _s15 ; "%d"
+  swp b
+  push b
+  call printf
+  add sp, 3
 ; --- END FUNCTION CALL
   jmp _if11_exit
 _if11_else:
@@ -436,14 +440,18 @@ _if12_TRUE:
   call emit_byte
   add sp, 2
 ; --- END FUNCTION CALL
-; printx8(int_const); 
+; printf("%d", int_const); 
 ; --- START FUNCTION CALL
   mov d, _int_const ; $int_const
   mov b, [d]
   mov c, 0
-  push bl
-  call printx8
-  add sp, 1
+  swp b
+  push b
+  mov b, _s15 ; "%d"
+  swp b
+  push b
+  call printf
+  add sp, 4
 ; --- END FUNCTION CALL
   jmp _if12_exit
 _if12_exit:
@@ -476,7 +484,7 @@ _if13_TRUE:
 _if13_exit:
 ; printf(", "); 
 ; --- START FUNCTION CALL
-  mov b, _s15 ; ", "
+  mov b, _s16 ; ", "
   swp b
   push b
   call printf
@@ -513,7 +521,7 @@ _if14_cond:
 _if14_TRUE:
 ; printf(".dw: "); 
 ; --- START FUNCTION CALL
-  mov b, _s16 ; ".dw: "
+  mov b, _s17 ; ".dw: "
   swp b
   push b
   call printf
@@ -569,7 +577,7 @@ _if16_TRUE:
   call emit_byte
   add sp, 2
 ; --- END FUNCTION CALL
-; printx8(string_const[0]); 
+; printf("%d", string_const[0]); 
 ; --- START FUNCTION CALL
   mov d, _string_const_data ; $string_const
   push a
@@ -581,9 +589,13 @@ _if16_TRUE:
   mov bl, [d]
   mov bh, 0
   mov c, 0
-  push bl
-  call printx8
-  add sp, 1
+  swp b
+  push b
+  mov b, _s15 ; "%d"
+  swp b
+  push b
+  call printf
+  add sp, 3
 ; --- END FUNCTION CALL
   jmp _if16_exit
 _if16_else:
@@ -615,15 +627,18 @@ _if17_TRUE:
   call emit_word
   add sp, 3
 ; --- END FUNCTION CALL
-; printx16(int_const); 
+; printf("%d", int_const); 
 ; --- START FUNCTION CALL
   mov d, _int_const ; $int_const
   mov b, [d]
   mov c, 0
   swp b
   push b
-  call printx16
-  add sp, 2
+  mov b, _s15 ; "%d"
+  swp b
+  push b
+  call printf
+  add sp, 4
 ; --- END FUNCTION CALL
   jmp _if17_exit
 _if17_exit:
@@ -656,7 +671,7 @@ _if18_TRUE:
 _if18_exit:
 ; printf(", "); 
 ; --- START FUNCTION CALL
-  mov b, _s15 ; ", "
+  mov b, _s16 ; ", "
   swp b
   push b
   call printf
@@ -681,7 +696,7 @@ _for7_update:
 _for7_exit:
 ; printf("Done.\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s17 ; "Done.\n"
+  mov b, _s18 ; "Done.\n"
   swp b
   push b
   call printf
@@ -714,7 +729,7 @@ _if19_TRUE:
 ; get(); 
 ; --- START FUNCTION CALL
   call get
-; if(toktype != INTEGER_CONST) error("Integer constant expected in .org directive."); 
+; if(toktype != INTEGER_CONST) error("Integer constant _expected in .org directive."); 
 _if20_cond:
   mov d, _toktype ; $toktype
   mov b, [d]
@@ -730,9 +745,9 @@ _if20_cond:
   cmp b, 0
   je _if20_exit
 _if20_TRUE:
-; error("Integer constant expected in .org directive."); 
+; error("Integer constant _expected in .org directive."); 
 ; --- START FUNCTION CALL
-  mov b, _s18 ; "Integer constant expected in .org directive."
+  mov b, _s19 ; "Integer constant _expected in .org directive."
   swp b
   push b
   call error
@@ -1058,7 +1073,7 @@ label_directive_scan:
   mov [d], b
 ; printf("Parsing labels and directives...\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s19 ; "Parsing labels and directives...\n"
+  mov b, _s20 ; "Parsing labels and directives...\n"
   swp b
   push b
   call printf
@@ -1200,7 +1215,7 @@ _if36_TRUE:
   call parse_label
 ; printf("."); 
 ; --- START FUNCTION CALL
-  mov b, _s20 ; "."
+  mov b, _s21 ; "."
   swp b
   push b
   call printf
@@ -1225,7 +1240,7 @@ _if36_else:
 ; --- END FUNCTION CALL
 ; printf("."); 
 ; --- START FUNCTION CALL
-  mov b, _s20 ; "."
+  mov b, _s21 ; "."
   swp b
   push b
   call printf
@@ -1240,7 +1255,7 @@ _for31_update:
 _for31_exit:
 ; printf("\nDone.\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s21 ; "\nDone.\n"
+  mov b, _s22 ; "\nDone.\n"
   swp b
   push b
   call printf
@@ -1253,7 +1268,7 @@ _for31_exit:
   mov c, 0
   swp b
   push b
-  mov b, _s22 ; "Org: %s\n"
+  mov b, _s23 ; "Org: %s\n"
   swp b
   push b
   call printf
@@ -1261,7 +1276,7 @@ _for31_exit:
 ; --- END FUNCTION CALL
 ; printf("\nLabels list:\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s23 ; "\nLabels list:\n"
+  mov b, _s24 ; "\nLabels list:\n"
   swp b
   push b
   call printf
@@ -1327,7 +1342,7 @@ _for37_block:
   mov c, 0
   swp b
   push b
-  mov b, _s24 ; "%s: %x\n"
+  mov b, _s25 ; "%s: %x\n"
   swp b
   push b
   call printf
@@ -1363,7 +1378,7 @@ label_parse_instr:
   sub sp, 64
 ; struct t_opcode op; 
   sub sp, 26
-; int num_operands, num_operandsexp; 
+; int num_operands, num_operands_exp; 
   sub sp, 2
   sub sp, 2
 ; int i, j; 
@@ -1577,7 +1592,7 @@ _if42_cond:
 _if42_TRUE:
 ; strcat(opcode, " ."); 
 ; --- START FUNCTION CALL
-  mov b, _s25 ; " ."
+  mov b, _s26 ; " ."
   swp b
   push b
   lea d, [bp + -31] ; $opcode
@@ -1592,7 +1607,7 @@ _if42_TRUE:
 _if42_else:
 ; strcat(opcode, " "); 
 ; --- START FUNCTION CALL
-  mov b, _s26 ; " "
+  mov b, _s27 ; " "
   swp b
   push b
   lea d, [bp + -31] ; $opcode
@@ -1822,7 +1837,7 @@ _if49_cond:
 _if49_TRUE:
 ; error("Maximum number of operands per instruction is 2."); 
 ; --- START FUNCTION CALL
-  mov b, _s27 ; "Maximum number of operands per instruction is 2."
+  mov b, _s28 ; "Maximum number of operands per instruction is 2."
   swp b
   push b
   call error
@@ -1830,8 +1845,8 @@ _if49_TRUE:
 ; --- END FUNCTION CALL
   jmp _if49_exit
 _if49_exit:
-; num_operandsexp = exp(2, num_operands); 
-  lea d, [bp + -125] ; $num_operandsexp
+; num_operands_exp = _exp(2, num_operands); 
+  lea d, [bp + -125] ; $num_operands_exp
   push d
 ; --- START FUNCTION CALL
   lea d, [bp + -123] ; $num_operands
@@ -1842,12 +1857,12 @@ _if49_exit:
   mov32 cb, $00000002
   swp b
   push b
-  call exp
+  call _exp
   add sp, 4
 ; --- END FUNCTION CALL
   pop d
   mov [d], b
-; for(i = 0; i < num_operandsexp; i++){ 
+; for(i = 0; i < num_operands_exp; i++){ 
 _for50_init:
   lea d, [bp + -127] ; $i
   push d
@@ -1861,7 +1876,7 @@ _for50_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  lea d, [bp + -125] ; $num_operandsexp
+  lea d, [bp + -125] ; $num_operands_exp
   mov b, [d]
   mov c, 0
   cmp a, b
@@ -1899,7 +1914,7 @@ _for50_block:
 ; --- END FUNCTION CALL
 ; strcat(opcode, " "); 
 ; --- START FUNCTION CALL
-  mov b, _s26 ; " "
+  mov b, _s27 ; " "
   swp b
   push b
   lea d, [bp + -31] ; $opcode
@@ -2353,9 +2368,9 @@ _if71_cond:
   cmp b, 0
   je _if71_else
 _if71_TRUE:
-; error("8bit operand expected but 16bit label given."); 
+; error("8bit operand _expected but 16bit label given."); 
 ; --- START FUNCTION CALL
-  mov b, _s28 ; "8bit operand expected but 16bit label given."
+  mov b, _s29 ; "8bit operand _expected but 16bit label given."
   swp b
   push b
   call error
@@ -2539,7 +2554,7 @@ parse_instr:
   sub sp, 26
 ; int instr_len; 
   sub sp, 2
-; int num_operands, num_operandsexp; 
+; int num_operands, num_operands_exp; 
   sub sp, 2
   sub sp, 2
 ; int i, j; 
@@ -2744,7 +2759,7 @@ _if80_cond:
 _if80_TRUE:
 ; strcat(opcode, " ."); 
 ; --- START FUNCTION CALL
-  mov b, _s25 ; " ."
+  mov b, _s26 ; " ."
   swp b
   push b
   lea d, [bp + -31] ; $opcode
@@ -2759,7 +2774,7 @@ _if80_TRUE:
 _if80_else:
 ; strcat(opcode, " "); 
 ; --- START FUNCTION CALL
-  mov b, _s26 ; " "
+  mov b, _s27 ; " "
   swp b
   push b
   lea d, [bp + -31] ; $opcode
@@ -2929,7 +2944,7 @@ _if84_TRUE:
   mov c, 0
   swp b
   push b
-  mov b, _s29 ; "%x(%d): %s\n"
+  mov b, _s30 ; "%x(%d): %s\n"
   swp b
   push b
   call printf
@@ -3043,7 +3058,7 @@ _if88_cond:
 _if88_TRUE:
 ; error("Maximum number of operands per instruction is 2."); 
 ; --- START FUNCTION CALL
-  mov b, _s27 ; "Maximum number of operands per instruction is 2."
+  mov b, _s28 ; "Maximum number of operands per instruction is 2."
   swp b
   push b
   call error
@@ -3051,8 +3066,8 @@ _if88_TRUE:
 ; --- END FUNCTION CALL
   jmp _if88_exit
 _if88_exit:
-; num_operandsexp = exp(2, num_operands); 
-  lea d, [bp + -127] ; $num_operandsexp
+; num_operands_exp = _exp(2, num_operands); 
+  lea d, [bp + -127] ; $num_operands_exp
   push d
 ; --- START FUNCTION CALL
   lea d, [bp + -125] ; $num_operands
@@ -3063,12 +3078,12 @@ _if88_exit:
   mov32 cb, $00000002
   swp b
   push b
-  call exp
+  call _exp
   add sp, 4
 ; --- END FUNCTION CALL
   pop d
   mov [d], b
-; for(i = 0; i < num_operandsexp; i++){ 
+; for(i = 0; i < num_operands_exp; i++){ 
 _for89_init:
   lea d, [bp + -129] ; $i
   push d
@@ -3082,7 +3097,7 @@ _for89_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  lea d, [bp + -127] ; $num_operandsexp
+  lea d, [bp + -127] ; $num_operands_exp
   mov b, [d]
   mov c, 0
   cmp a, b
@@ -3120,7 +3135,7 @@ _for89_block:
 ; --- END FUNCTION CALL
 ; strcat(opcode, " "); 
 ; --- START FUNCTION CALL
-  mov b, _s26 ; " "
+  mov b, _s27 ; " "
   swp b
   push b
   lea d, [bp + -31] ; $opcode
@@ -3601,9 +3616,9 @@ _if111_cond:
   cmp b, 0
   je _if111_else
 _if111_TRUE:
-; error("8bit operand expected but 16bit label given."); 
+; error("8bit operand _expected but 16bit label given."); 
 ; --- START FUNCTION CALL
-  mov b, _s28 ; "8bit operand expected but 16bit label given."
+  mov b, _s29 ; "8bit operand _expected but 16bit label given."
   swp b
   push b
   call error
@@ -3707,7 +3722,7 @@ _if113_TRUE:
   mov c, 0
   swp b
   push b
-  mov b, _s30 ; "Undeclared label: "
+  mov b, _s31 ; "Undeclared label: "
   swp b
   push b
   call error_s
@@ -3883,7 +3898,7 @@ _if117_TRUE:
   mov c, 0
   swp b
   push b
-  mov b, _s29 ; "%x(%d): %s\n"
+  mov b, _s30 ; "%x(%d): %s\n"
   swp b
   push b
   call printf
@@ -3917,7 +3932,7 @@ parse_text:
   sub sp, 2
 ; printf("Parsing TEXT section...\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s31 ; "Parsing TEXT section...\n"
+  mov b, _s32 ; "Parsing TEXT section...\n"
   swp b
   push b
   call printf
@@ -3981,7 +3996,7 @@ _if119_cond:
 _if119_TRUE:
 ; error("TEXT section not found."); 
 ; --- START FUNCTION CALL
-  mov b, _s32 ; "TEXT section not found."
+  mov b, _s33 ; "TEXT section not found."
   swp b
   push b
   call error
@@ -4051,7 +4066,7 @@ _if122_cond:
 _if122_TRUE:
 ; error("TEXT section end not found."); 
 ; --- START FUNCTION CALL
-  mov b, _s33 ; "TEXT section end not found."
+  mov b, _s34 ; "TEXT section end not found."
   swp b
   push b
   call error
@@ -4098,9 +4113,9 @@ _if124_TRUE:
   jmp _for121_exit ; for break
   jmp _if124_exit
 _if124_else:
-; error("Unexpected directive."); 
+; error("Un_expected directive."); 
 ; --- START FUNCTION CALL
-  mov b, _s34 ; "Unexpected directive."
+  mov b, _s35 ; "Un_expected directive."
   swp b
   push b
   call error
@@ -4169,7 +4184,7 @@ _for121_update:
 _for121_exit:
 ; printf("Done.\n\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s35 ; "Done.\n\n"
+  mov b, _s36 ; "Done.\n\n"
   swp b
   push b
   call printf
@@ -4205,7 +4220,7 @@ debug:
 ; --- END TERMS
   swp b
   push b
-  mov b, _s36 ; "Prog Offset: %x\n"
+  mov b, _s37 ; "Prog Offset: %x\n"
   swp b
   push b
   call printf
@@ -4222,7 +4237,7 @@ debug:
   mov c, 0
   swp b
   push b
-  mov b, _s37 ; "Prog value : %c\n"
+  mov b, _s38 ; "Prog value : %c\n"
   swp b
   push b
   call printf
@@ -4235,7 +4250,7 @@ debug:
   mov c, 0
   swp b
   push b
-  mov b, _s38 ; "Token      : %s\n"
+  mov b, _s39 ; "Token      : %s\n"
   swp b
   push b
   call printf
@@ -4248,7 +4263,7 @@ debug:
   mov c, 0
   swp b
   push b
-  mov b, _s39 ; "Tok        : %d\n"
+  mov b, _s40 ; "Tok        : %d\n"
   swp b
   push b
   call printf
@@ -4261,7 +4276,7 @@ debug:
   mov c, 0
   swp b
   push b
-  mov b, _s40 ; "Toktype    : %d\n"
+  mov b, _s41 ; "Toktype    : %d\n"
   swp b
   push b
   call printf
@@ -4274,7 +4289,7 @@ debug:
   mov c, 0
   swp b
   push b
-  mov b, _s41 ; "StringConst: %s\n"
+  mov b, _s42 ; "StringConst: %s\n"
   swp b
   push b
   call printf
@@ -4287,7 +4302,7 @@ debug:
   mov c, 0
   swp b
   push b
-  mov b, _s42 ; "PC         : %x\n"
+  mov b, _s43 ; "PC         : %x\n"
   swp b
   push b
   call printf
@@ -4304,7 +4319,7 @@ display_output:
   sub sp, 2
 ; printf("\nAssembly complete.\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s43 ; "\nAssembly complete.\n"
+  mov b, _s44 ; "\nAssembly complete.\n"
   swp b
   push b
   call printf
@@ -4317,7 +4332,7 @@ display_output:
   mov c, 0
   swp b
   push b
-  mov b, _s44 ; "Program size: %d\n"
+  mov b, _s45 ; "Program size: %d\n"
   swp b
   push b
   call printf
@@ -4325,7 +4340,7 @@ display_output:
 ; --- END FUNCTION CALL
 ; printf("Listing: \n"); 
 ; --- START FUNCTION CALL
-  mov b, _s45 ; "Listing: \n"
+  mov b, _s46 ; "Listing: \n"
   swp b
   push b
   call printf
@@ -4374,7 +4389,7 @@ _if128_TRUE:
   jmp _for127_exit ; for break
   jmp _if128_exit
 _if128_exit:
-; printx8(*p);  
+; printf("%x", *p);  
 ; --- START FUNCTION CALL
   lea d, [bp + -3] ; $p
   mov b, [d]
@@ -4383,9 +4398,13 @@ _if128_exit:
   mov bl, [d]
   mov bh, 0
   mov c, 0
-  push bl
-  call printx8
-  add sp, 1
+  swp b
+  push b
+  mov b, _s47 ; "%x"
+  swp b
+  push b
+  call printf
+  add sp, 4
 ; --- END FUNCTION CALL
 ; p++; 
   lea d, [bp + -3] ; $p
@@ -4413,7 +4432,7 @@ is_reserved:
   enter 0 ; (push bp; mov bp, sp)
 ; return !strcmp(name, "a") 
 ; --- START FUNCTION CALL
-  mov b, _s46 ; "a"
+  mov b, _s48 ; "a"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4428,7 +4447,7 @@ is_reserved:
   push a
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s47 ; "al"
+  mov b, _s49 ; "al"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4442,7 +4461,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s48 ; "ah"
+  mov b, _s50 ; "ah"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4456,7 +4475,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s49 ; "b"
+  mov b, _s51 ; "b"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4470,7 +4489,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s50 ; "bl"
+  mov b, _s52 ; "bl"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4484,7 +4503,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s51 ; "bh"
+  mov b, _s53 ; "bh"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4498,7 +4517,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s52 ; "c"
+  mov b, _s54 ; "c"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4512,7 +4531,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s53 ; "cl"
+  mov b, _s55 ; "cl"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4526,7 +4545,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s54 ; "ch"
+  mov b, _s56 ; "ch"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4540,7 +4559,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s55 ; "d"
+  mov b, _s57 ; "d"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4554,7 +4573,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s56 ; "dl"
+  mov b, _s58 ; "dl"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4568,7 +4587,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s57 ; "dh"
+  mov b, _s59 ; "dh"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4582,7 +4601,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s58 ; "g"
+  mov b, _s60 ; "g"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4596,7 +4615,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s59 ; "gl"
+  mov b, _s61 ; "gl"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4610,7 +4629,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s60 ; "gh"
+  mov b, _s62 ; "gh"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4624,7 +4643,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s61 ; "pc"
+  mov b, _s63 ; "pc"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4638,7 +4657,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s62 ; "sp"
+  mov b, _s64 ; "sp"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4652,7 +4671,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s63 ; "bp"
+  mov b, _s65 ; "bp"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4666,7 +4685,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s64 ; "si"
+  mov b, _s66 ; "si"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4680,7 +4699,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s65 ; "di"
+  mov b, _s67 ; "di"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4694,7 +4713,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s66 ; "word"
+  mov b, _s68 ; "word"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4708,7 +4727,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s67 ; "byte"
+  mov b, _s69 ; "byte"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4722,7 +4741,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s68 ; "cmpsb"
+  mov b, _s70 ; "cmpsb"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4736,7 +4755,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s69 ; "movsb"
+  mov b, _s71 ; "movsb"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4750,7 +4769,7 @@ is_reserved:
   sor a, b ; ||
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s70 ; "stosb"
+  mov b, _s72 ; "stosb"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -4786,7 +4805,7 @@ is_directive:
   push a
   mov a, b
 ; --- START FUNCTION CALL
-  mov b, _s71 ; "define"
+  mov b, _s73 ; "define"
   swp b
   push b
   lea d, [bp + 5] ; $name
@@ -5048,7 +5067,7 @@ _for131_exit:
   mov c, 0
   swp b
   push b
-  mov b, _s72 ; "Label does not exist: "
+  mov b, _s74 ; "Label does not exist: "
   swp b
   push b
   call error_s
@@ -7091,9 +7110,9 @@ _if169_cond:
   cmp b, 0
   je _if169_exit
 _if169_TRUE:
-; error("Closing single quotes expected."); 
+; error("Closing single quotes _expected."); 
 ; --- START FUNCTION CALL
-  mov b, _s73 ; "Closing single quotes expected."
+  mov b, _s75 ; "Closing single quotes _expected."
   swp b
   push b
   call error
@@ -7237,7 +7256,7 @@ _while171_block:
   mov [d], bl
   jmp _while171_cond
 _while171_exit:
-; if(*prog != '\"') error("Double quotes expected"); 
+; if(*prog != '\"') error("Double quotes _expected"); 
 _if172_cond:
   mov d, _prog ; $prog
   mov b, [d]
@@ -7257,9 +7276,9 @@ _if172_cond:
   cmp b, 0
   je _if172_exit
 _if172_TRUE:
-; error("Double quotes expected"); 
+; error("Double quotes _expected"); 
 ; --- START FUNCTION CALL
-  mov b, _s74 ; "Double quotes expected"
+  mov b, _s76 ; "Double quotes _expected"
   swp b
   push b
   call error
@@ -7864,7 +7883,7 @@ _if182_TRUE:
   snex b
   swp b
   push b
-  mov b, _s75 ; "TOKEN ERROR. Prog: %x\n"
+  mov b, _s77 ; "TOKEN ERROR. Prog: %x\n"
   swp b
   push b
   call printf
@@ -7881,7 +7900,7 @@ _if182_TRUE:
   mov c, 0
   swp b
   push b
-  mov b, _s76 ; "ProgVal: %x"
+  mov b, _s78 ; "ProgVal: %x"
   swp b
   push b
   call printf
@@ -7894,7 +7913,7 @@ _if182_TRUE:
   mov c, 0
   swp b
   push b
-  mov b, _s77 ; "\n Text after prog: %s\n"
+  mov b, _s79 ; "\n Text after prog: %s\n"
   swp b
   push b
   call printf
@@ -8311,7 +8330,7 @@ error:
   mov c, 0
   swp b
   push b
-  mov b, _s78 ; "\nError: %s\n"
+  mov b, _s80 ; "\nError: %s\n"
   swp b
   push b
   call printf
@@ -8342,7 +8361,7 @@ error_s:
   mov c, 0
   swp b
   push b
-  mov b, _s79 ; "\nError: %s %s\n"
+  mov b, _s81 ; "\nError: %s %s\n"
   swp b
   push b
   call printf
@@ -8379,7 +8398,7 @@ _if188_cond:
 _if188_TRUE:
 ; error("Cannot push prog. Stack overflow."); 
 ; --- START FUNCTION CALL
-  mov b, _s80 ; "Cannot push prog. Stack overflow."
+  mov b, _s82 ; "Cannot push prog. Stack overflow."
   swp b
   push b
   call error
@@ -8435,7 +8454,7 @@ _if189_cond:
 _if189_TRUE:
 ; error("Cannot pop prog. Stack overflow."); 
 ; --- START FUNCTION CALL
-  mov b, _s81 ; "Cannot pop prog. Stack overflow."
+  mov b, _s83 ; "Cannot pop prog. Stack overflow."
   swp b
   push b
   call error
@@ -8970,7 +8989,7 @@ loadfile:
   leave
   ret
 
-exp:
+_exp:
   enter 0 ; (push bp; mov bp, sp)
 ; int i; 
   sub sp, 2
@@ -8983,7 +9002,7 @@ exp:
   pop d
   mov [d], b
 ; --- END LOCAL VAR INITIALIZATION
-; for(i = 0; i < exp; i++){ 
+; for(i = 0; i < _exp; i++){ 
 _for207_init:
   lea d, [bp + -1] ; $i
   push d
@@ -8997,7 +9016,7 @@ _for207_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  lea d, [bp + 7] ; $exp
+  lea d, [bp + 7] ; $_exp
   mov b, [d]
   mov c, 0
   cmp a, b
@@ -9332,7 +9351,7 @@ _if216_TRUE:
 _if216_else:
 ; err("Unexpected format in printf."); 
 ; --- START FUNCTION CALL
-  mov b, _s82 ; "Unexpected format in printf."
+  mov b, _s84 ; "Unexpected format in printf."
   swp b
   push b
   call err
@@ -9516,7 +9535,7 @@ _switch213_case7:
 _switch213_default:
 ; print("Error: Unknown argument type.\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s83 ; "Error: Unknown argument type.\n"
+  mov b, _s85 ; "Error: Unknown argument type.\n"
   swp b
   push b
   call print
@@ -11402,45 +11421,6 @@ _for266_exit:
   mov c, 0
   leave
   ret
-
-printx8:
-  enter 0 ; (push bp; mov bp, sp)
-; --- BEGIN INLINE ASM SEGMENT
-  lea d, [bp + 5] ; $hex
-  mov bl, [d]
-  call _itoa_printx8        ; convert bl to char in A
-  mov bl, al        ; save al
-  mov al, 0
-  syscall sys_io        ; display AH
-  mov ah, bl        ; retrieve al
-  mov al, 0
-  syscall sys_io        ; display AL
-; --- END INLINE ASM SEGMENT
-; return; 
-  leave
-  ret
-; --- BEGIN INLINE ASM SEGMENT
-_itoa_printx8:
-  push d
-  push b
-  mov bh, 0
-  shr bl, 4  
-  mov d, b
-  mov al, [d + s_hex_digits_printx8]
-  mov ah, al
-  pop b
-  push b
-  mov bh, 0
-  and bl, $0F
-  mov d, b
-  mov al, [d + s_hex_digits_printx8]
-  pop b
-  pop d
-  ret
-s_hex_digits_printx8:    .db "0123456789ABCDEF"  
-; --- END INLINE ASM SEGMENT
-  leave
-  ret
 ; --- END TEXT SEGMENT
 
 ; --- BEGIN DATA SEGMENT
@@ -11494,75 +11474,77 @@ _s11: .db "./config.d/op_tbl", 0
 _s12: .db "Parsing DATA section...", 0
 _s13: .db "Data segment not found.", 0
 _s14: .db ".db: ", 0
-_s15: .db ", ", 0
-_s16: .db ".dw: ", 0
-_s17: .db "Done.\n", 0
-_s18: .db "Integer constant expected in .org directive.", 0
-_s19: .db "Parsing labels and directives...\n", 0
-_s20: .db ".", 0
-_s21: .db "\nDone.\n", 0
-_s22: .db "Org: %s\n", 0
-_s23: .db "\nLabels list:\n", 0
-_s24: .db "%s: %x\n", 0
-_s25: .db " .", 0
-_s26: .db " ", 0
-_s27: .db "Maximum number of operands per instruction is 2.", 0
-_s28: .db "8bit operand expected but 16bit label given.", 0
-_s29: .db "%x(%d): %s\n", 0
-_s30: .db "Undeclared label: ", 0
-_s31: .db "Parsing TEXT section...\n", 0
-_s32: .db "TEXT section not found.", 0
-_s33: .db "TEXT section end not found.", 0
-_s34: .db "Unexpected directive.", 0
-_s35: .db "Done.\n\n", 0
-_s36: .db "Prog Offset: %x\n", 0
-_s37: .db "Prog value : %c\n", 0
-_s38: .db "Token      : %s\n", 0
-_s39: .db "Tok        : %d\n", 0
-_s40: .db "Toktype    : %d\n", 0
-_s41: .db "StringConst: %s\n", 0
-_s42: .db "PC         : %x\n", 0
-_s43: .db "\nAssembly complete.\n", 0
-_s44: .db "Program size: %d\n", 0
-_s45: .db "Listing: \n", 0
-_s46: .db "a", 0
-_s47: .db "al", 0
-_s48: .db "ah", 0
-_s49: .db "b", 0
-_s50: .db "bl", 0
-_s51: .db "bh", 0
-_s52: .db "c", 0
-_s53: .db "cl", 0
-_s54: .db "ch", 0
-_s55: .db "d", 0
-_s56: .db "dl", 0
-_s57: .db "dh", 0
-_s58: .db "g", 0
-_s59: .db "gl", 0
-_s60: .db "gh", 0
-_s61: .db "pc", 0
-_s62: .db "sp", 0
-_s63: .db "bp", 0
-_s64: .db "si", 0
-_s65: .db "di", 0
-_s66: .db "word", 0
-_s67: .db "byte", 0
-_s68: .db "cmpsb", 0
-_s69: .db "movsb", 0
-_s70: .db "stosb", 0
-_s71: .db "define", 0
-_s72: .db "Label does not exist: ", 0
-_s73: .db "Closing single quotes expected.", 0
-_s74: .db "Double quotes expected", 0
-_s75: .db "TOKEN ERROR. Prog: %x\n", 0
-_s76: .db "ProgVal: %x", 0
-_s77: .db "\n Text after prog: %s\n", 0
-_s78: .db "\nError: %s\n", 0
-_s79: .db "\nError: %s %s\n", 0
-_s80: .db "Cannot push prog. Stack overflow.", 0
-_s81: .db "Cannot pop prog. Stack overflow.", 0
-_s82: .db "Unexpected format in printf.", 0
-_s83: .db "Error: Unknown argument type.\n", 0
+_s15: .db "%d", 0
+_s16: .db ", ", 0
+_s17: .db ".dw: ", 0
+_s18: .db "Done.\n", 0
+_s19: .db "Integer constant _expected in .org directive.", 0
+_s20: .db "Parsing labels and directives...\n", 0
+_s21: .db ".", 0
+_s22: .db "\nDone.\n", 0
+_s23: .db "Org: %s\n", 0
+_s24: .db "\nLabels list:\n", 0
+_s25: .db "%s: %x\n", 0
+_s26: .db " .", 0
+_s27: .db " ", 0
+_s28: .db "Maximum number of operands per instruction is 2.", 0
+_s29: .db "8bit operand _expected but 16bit label given.", 0
+_s30: .db "%x(%d): %s\n", 0
+_s31: .db "Undeclared label: ", 0
+_s32: .db "Parsing TEXT section...\n", 0
+_s33: .db "TEXT section not found.", 0
+_s34: .db "TEXT section end not found.", 0
+_s35: .db "Un_expected directive.", 0
+_s36: .db "Done.\n\n", 0
+_s37: .db "Prog Offset: %x\n", 0
+_s38: .db "Prog value : %c\n", 0
+_s39: .db "Token      : %s\n", 0
+_s40: .db "Tok        : %d\n", 0
+_s41: .db "Toktype    : %d\n", 0
+_s42: .db "StringConst: %s\n", 0
+_s43: .db "PC         : %x\n", 0
+_s44: .db "\nAssembly complete.\n", 0
+_s45: .db "Program size: %d\n", 0
+_s46: .db "Listing: \n", 0
+_s47: .db "%x", 0
+_s48: .db "a", 0
+_s49: .db "al", 0
+_s50: .db "ah", 0
+_s51: .db "b", 0
+_s52: .db "bl", 0
+_s53: .db "bh", 0
+_s54: .db "c", 0
+_s55: .db "cl", 0
+_s56: .db "ch", 0
+_s57: .db "d", 0
+_s58: .db "dl", 0
+_s59: .db "dh", 0
+_s60: .db "g", 0
+_s61: .db "gl", 0
+_s62: .db "gh", 0
+_s63: .db "pc", 0
+_s64: .db "sp", 0
+_s65: .db "bp", 0
+_s66: .db "si", 0
+_s67: .db "di", 0
+_s68: .db "word", 0
+_s69: .db "byte", 0
+_s70: .db "cmpsb", 0
+_s71: .db "movsb", 0
+_s72: .db "stosb", 0
+_s73: .db "define", 0
+_s74: .db "Label does not exist: ", 0
+_s75: .db "Closing single quotes _expected.", 0
+_s76: .db "Double quotes _expected", 0
+_s77: .db "TOKEN ERROR. Prog: %x\n", 0
+_s78: .db "ProgVal: %x", 0
+_s79: .db "\n Text after prog: %s\n", 0
+_s80: .db "\nError: %s\n", 0
+_s81: .db "\nError: %s %s\n", 0
+_s82: .db "Cannot push prog. Stack overflow.", 0
+_s83: .db "Cannot pop prog. Stack overflow.", 0
+_s84: .db "Unexpected format in printf.", 0
+_s85: .db "Error: Unknown argument type.\n", 0
 
 _heap_top: .dw _heap
 _heap: .db 0
