@@ -43,7 +43,7 @@ setup_kernel_mem:
 ; map pages 0 to 30 to normal kernel ram memory.
   mov bl, 0             ; set PTB = 0 for kernel
   mov bh, 0             ; start at PAGE 0
-  mov a, 0              ; set MEM/IO bit to MEMORY, for physical address. this means physical address starting at 0, but in MEMORY space
+  mov a, 0              ; set MEM/IO bit to MEMORY.  this means physical address starting at 0, but in MEMORY space as opposed to DEVICE space.
 map_kernel_mem_L1:
   pagemap               ; write page table entry
   add b, $0800          ; increase page number (msb 5 bits of BH only)
@@ -51,8 +51,7 @@ map_kernel_mem_L1:
   cmp al, 31            ; check to see if we reached the end of memory for kernel
   jne map_kernel_mem_L1
   
-; here we map the last page of kernel memory, to DEVICE space, or the last 2KB of BIOS memory
-; so that the kernel has access to IO devices.
+; here we map the last page of kernel memory, to DEVICE space, or the last 2KB of BIOS memory so that the kernel has access to IO devices.
   or a, $0800           ; set MEM/IO bit to DEVICE, for physical address
   pagemap               ; write page table entry
   
