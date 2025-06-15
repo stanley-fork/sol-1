@@ -590,46 +590,6 @@ unsigned char immy_5 ;
 unsigned char immy_6 ;
 unsigned char immy_7 ;
 
-uint16_t a;
-uint16_t b;
-uint16_t c;
-uint16_t d;
-uint16_t g;
-uint16_t pc;
-uint16_t sp;
-uint16_t ssp;
-uint16_t bp;
-uint16_t si;
-uint16_t di;
-uint16_t tdr;
-uint16_t mdr;
-uint16_t mar;
-unsigned char ir;
-unsigned char ptb;
-unsigned char status;
-unsigned char flags;
-
-unsigned char zbus;
-unsigned char xbus;
-unsigned char ybus;
-unsigned char alu_out;
-
-uint16_t micro_addr;
-uint8_t micro_condition;
-uint8_t irq_pending;
-uint8_t any_interruption;
-uint8_t irq_req;
-uint8_t dma_req;
-uint8_t status_irq_enable;
-
-unsigned char arst;
-unsigned char reset;
-unsigned char clk;
-unsigned char memory[256][65536];
-unsigned char bios_memory[65536];
-unsigned char databus;
-
-unsigned char program_in[65536];
 
 
 void load_program(char *filename);

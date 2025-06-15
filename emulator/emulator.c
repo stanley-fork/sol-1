@@ -6,6 +6,31 @@
 #include <math.h>
 #include "def.h"
 
+uint16_t a, b, c, d, g;
+uint16_t pc, sp, ssp, bp;
+uint16_t si, di;
+uint16_t tdr, mdr, mar;
+uint8_t  ir, ptb;
+uint8_t  status, flags;
+
+uint8_t zbus, xbus, ybus, alu_out;
+
+uint16_t micro_addr;
+uint8_t micro_condition;
+uint8_t irq_pending;
+uint8_t any_interruption;
+uint8_t irq_req;
+uint8_t dma_req;
+uint8_t status_irq_enable;
+
+unsigned char arst;
+unsigned char reset;
+unsigned char clk;
+unsigned char memory[256][65536];
+unsigned char bios_memory[65536];
+unsigned char databus;
+
+unsigned char program_in[65536];
 char int_pending;
 
 int main(int argc, char *argv[]){
@@ -89,15 +114,8 @@ void do_reset(){
 }
 
 void main_loop(){
-  int max = 50;
-
-  for(int cycles = 0; cycles < max; cycles++){
+  for(int i = 0; i < 100; i++){
     clk = ~clk;
-    if(!clk){
-      if(arst) reset = 1;
-      else reset = 0;
-    }
-    if(reset) do_reset();
     execute_micro_instruction();
   }
 }
@@ -296,8 +314,9 @@ void execute_micro_instruction(){
     databus = bios_memory[mar];
     printf("databus: %x\n", databus);
   }
-  if(wr){
+  else if(wr){
     bios_memory[mar] = databus;
+    printf("databus: %x\n", databus);
   }
 
   printf("Typ: %d, %d\n", typ_1, typ_0);  
