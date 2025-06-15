@@ -3,6 +3,58 @@
 #define ID_LEN     128
 #define PROG_SIZE  1024 * 64
 
+typedef union {
+  struct {
+    unsigned dma_ack : 1;
+    unsigned irq_en : 1;
+    unsigned cpu_mode : 1;
+    unsigned paging_en : 1;
+    unsigned halt : 1;
+    unsigned display_reg_load : 1;
+    unsigned : 1;
+    unsigned dir : 1;
+  };
+  unsigned char byte;
+} status_u;
+
+typedef enum{
+  alu_op_add, alu_op_sub, alu_op_and, alu_op_or, alu_op_xor, alu_op_a, alu_op_b, alu_op_not_a, alu_op_not_b, alu_op_nand, alu_op_nor, alu_op_nxor
+} alu_op_e;
+
+typedef union {
+  struct {
+    unsigned op_0 : 1;
+    unsigned op_1 : 1;
+    unsigned op_2 : 1;
+    unsigned op_3 : 1;
+    unsigned : 4;
+  };
+  unsigned char byte;
+} alu_op_u;
+
+typedef union {
+  struct {
+    unsigned a_src_0 : 1;
+    unsigned a_src_1 : 1;
+    unsigned a_src_2 : 1;
+    unsigned a_src_3 : 1;
+    unsigned a_src_4 : 1;
+    unsigned a_src_5 : 1;
+    unsigned : 2;
+  };
+  unsigned char byte;
+} alu_a_src_u;
+
+typedef union {
+  struct {
+    unsigned b_src_0 : 1;
+    unsigned b_src_1 : 1;
+    unsigned b_src_2 : 1;
+    unsigned : 5;
+  };
+  unsigned char byte;
+} alu_b_src_u;
+
 struct t_microcode_rom{
   union{
     unsigned char as_array;
@@ -598,3 +650,6 @@ void load_microcode_roms();
 void microcode_step();
 void main_loop();
 void execute_micro_instruction();
+
+
+void update_control_bits();
