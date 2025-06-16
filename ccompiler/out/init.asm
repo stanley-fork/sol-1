@@ -1,4 +1,5 @@
 ; --- FILENAME: ../solarium/sbin/init.c
+; --- DATE:     16-06-2025 at 04:42:15
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -532,6 +533,7 @@ _if8_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   slt ; <
   pop g
@@ -578,6 +580,7 @@ _if9_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -611,6 +614,7 @@ _while10_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgt
   pop g
@@ -653,6 +657,7 @@ _while10_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -778,6 +783,7 @@ _if18_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -810,6 +816,7 @@ _while19_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgu
   pop g
@@ -852,6 +859,7 @@ _while19_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS

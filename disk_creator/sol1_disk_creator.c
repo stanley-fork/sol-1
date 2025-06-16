@@ -14,7 +14,7 @@ file data         64 * 16 = 1024 sectors     512KB
 
 directory file entry format:
 filename (24)
-attributes (1)  |_|_|file_type(3bits)|x|w|r| types: file, directory, uint8_tacter device
+attributes (1)  |_|_|file_type(3bits)|x|w|r| types: file, directory, device
   executable file: 0000_0111, directory: 0000_1011
   
 LBA (2)
@@ -32,10 +32,9 @@ void list_dirs();
 __uint16_t  create_file(uint8_t *filename, __uint16_t  parent_dir_id, uint8_t *data, __uint16_t  size, uint8_t permissions);
 void list_files(__uint16_t  dir_id);
 
-#define BOOT_SECT_SIZE           1   // sector
+#define BOOT_SECT_SIZE           512 // bytes
 #define FST_NBR_DIRECTORIES      64
 #define FST_ENTRY_SIZE           32  // bytes
-#define FST_ENTRIES_PER_SECT     (512 / FST_ENTRY_SIZE)
 #define FST_FILES_PER_DIR        (512 / FST_ENTRY_SIZE)
 #define FST_SECTORS_PER_DIR      (1 + (FST_ENTRY_SIZE * FST_FILES_PER_DIR / 512))    
 #define FST_TOTAL_SECTORS        (FST_SECTORS_PER_DIR * FST_NBR_DIRECTORIES)
@@ -48,7 +47,7 @@ void list_files(__uint16_t  dir_id);
 #define FS_LBA_START             (FST_LBA_END + 1)
 #define FS_LBA_END               (FS_LBA_START + FS_NBR_FILES - 1)
 
-uint8_t disk_image[BOOT_SECT_SIZE * 512 + FS_TOTAL_SECTORS * 512];
+uint8_t disk_image[BOOT_SECT_SIZE + FS_TOTAL_SECTORS * 512];
 uint8_t temp_buffer[64 * 1024];
 uint16_t largest_used_lba;
 
@@ -286,14 +285,6 @@ __uint16_t  create_dir(uint8_t *dirname, __uint16_t  parent_id){
   return new_dir_id;
 }
 
-void list_dirs(){
-  uint16_t i;
-  printf("  ID     Parent   Name\n");
-  for(i = FST_LBA_START; i <= FST_LBA_END; i += 2){
-    if((__uint16_t )disk_image[i * 512 + 64] == 0) break;
-    printf("%4d %6d %10s\n", i, *(__uint16_t  *)(disk_image + i * 512 + 64), disk_image + i * 512);
-  }
-}
 /*
 directory file entry format:
 filename (24)
@@ -329,6 +320,7 @@ __uint16_t  create_file(uint8_t *filename, __uint16_t  parent_dir_id, uint8_t *d
   month = (mh << 4) | (ml & 0x0F);
   year = (yh << 4) | (yl & 0x0F);
 
+  // look for emty space in disk for the new file
   for(i = FS_LBA_START; i <= FS_LBA_END; i += 32){
     if(disk_image[i * 512] == 0){ // found a free filedata entry
       *(__uint16_t  *)(disk_image + i * 512) = 1;
@@ -340,6 +332,7 @@ __uint16_t  create_file(uint8_t *filename, __uint16_t  parent_dir_id, uint8_t *d
     }
   }
 
+  // find an empty entry in the directory and use it
   for(i = 0; i < 16 * 32 ; i += 32){
     if(*(disk_image + parent_dir_id * 512 + 512 + i) == '\0'){
       strcpy(disk_image + parent_dir_id * 512 + 512 + i, filename);
@@ -354,6 +347,15 @@ __uint16_t  create_file(uint8_t *filename, __uint16_t  parent_dir_id, uint8_t *d
   }
 
   return LBA;
+}
+
+void list_dirs(){
+  uint16_t i;
+  printf("  ID     Parent   Name\n");
+  for(i = FST_LBA_START; i <= FST_LBA_END; i += 2){
+    if((__uint16_t )disk_image[i * 512 + 64] == 0) break;
+    printf("%4d %6d %10s\n", i, *(__uint16_t  *)(disk_image + i * 512 + 64), disk_image + i * 512);
+  }
 }
 
 void list_files(__uint16_t  dir_id){

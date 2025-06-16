@@ -1,20 +1,20 @@
 0001   0000             ; --- FILENAME: ../solarium/usr/bin/shell.c
 0002   0000             .include "lib/asm/kernel.exp"
-0001+  0000             text_org    .EQU  $0400
-0002+  0000             sys_bkpt         .EQU  $0000
-0003+  0000             sys_rtc          .EQU  $0001
-0004+  0000             sys_ide          .EQU  $0002
-0005+  0000             sys_io           .EQU  $0003
-0006+  0000             sys_filesystem   .EQU  $0004
-0007+  0000             sys_spawn_proc   .EQU  $0005
-0008+  0000             sys_list         .EQU  $0006
-0009+  0000             sys_datetime     .EQU  $0007
-0010+  0000             sys_reboot       .EQU  $0008
-0011+  0000             sys_pause_proc   .EQU  $0009
-0012+  0000             sys_resume_proc  .EQU  $000a
-0013+  0000             sys_terminate_proc .EQU  $000b
-0014+  0000             sys_system       .EQU  $000c
-0015+  0000             sys_boot_install .EQU  $000d
+0001+  0000             sys_break        .EQU  $0000
+0002+  0000             sys_rtc          .EQU  $0001
+0003+  0000             sys_ide          .EQU  $0002
+0004+  0000             sys_io           .EQU  $0003
+0005+  0000             sys_filesystem   .EQU  $0004
+0006+  0000             sys_create_proc  .EQU  $0005
+0007+  0000             sys_list_proc    .EQU  $0006
+0008+  0000             sys_datetime     .EQU  $0007
+0009+  0000             sys_reboot       .EQU  $0008
+0010+  0000             sys_pause_proc   .EQU  $0009
+0011+  0000             sys_resume_proc  .EQU  $000a
+0012+  0000             sys_terminate_proc .EQU  $000b
+0013+  0000             sys_system       .EQU  $000c
+0014+  0000             sys_fdc          .EQU  $000d
+0015+  0000             text_org         .EQU  $0400
 0003   0000             .include "lib/asm/bios.exp"
 0001+  0000             BIOS_RESET_VECTOR .EQU  $01c0
 0002+  0000             IDE_buffer       .EQU  $8204
@@ -2230,7 +2230,9 @@
 2157   11AC 2A            mov b, [d]
 2158   11AD FA 05 00      lea d, [bp + 5] ; $executable_path
 2159   11B0 FD 2A         mov d, [d]
-2160   11B2 05 05         syscall sys_spawn_proc
+out/shell.asm line 2160: Label not found: (sys_spawn_proc)
+out/shell.asm line 2160: Unused data in MS byte of argument. (200)
+2160   11B2 05 00         syscall sys_spawn_proc
 2161   11B4             ; --- END INLINE ASM SEGMENT
 2162   11B4 F9            leave
 2163   11B5 09            ret
@@ -8917,4 +8919,4 @@
 8043   41B6             ; --- END DATA SEGMENT
 8044   41B6             
 8045   41B6             .end
-tasm: Number of errors = 0
+tasm: Number of errors = 2
