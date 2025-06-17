@@ -4,7 +4,7 @@ const char *shell_path = "/usr/bin0/shell";
 
 void main(){
   printf("init process started.\n\r");
-  printf("starting shell...\n\r");
+  printf("launching shell...\n\r");
 
 
   asm{

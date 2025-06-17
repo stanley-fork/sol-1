@@ -1,9 +1,9 @@
 #! /bin/bash
 
 
-printf "Assembling kernel.asm\n"
+printf "building kernel.asm\n"
 wine tasm -1 -b kernel.asm obj/kernel.obj lst/kernel.lst
-printf "Done\n"
+printf "done\n"
 #printf "\nAssembling shell.asm\n"
 #wine tasm -1 -b shell.asm lst/shell.lst obj/shell.obj
 #printf "Done\n"
@@ -20,6 +20,6 @@ printf "\n> binary file copied to clipboard.\n"
 
 
 echo
-echo -n "Object file size: "; ls -la obj/$filename.obj | awk '{printf "%d(0x%X)\n", $5, $5}'
-echo -n "Hex file size : "; ls -la obj/$filename.obj | awk '{printf "%d(0x%X)\n", $5*2, $5*2}'
-echo -n "Number of Assembly lines: "; wc -l $filename.asm | awk '{print $1}'
+echo -n "object file size: "; ls -la obj/$filename.obj | awk '{printf "%d(0x%X)\n", $5, $5}'
+echo -n "hex file size : "; ls -la obj/$filename.obj | awk '{printf "%d(0x%X)\n", $5*2, $5*2}'
+echo -n "number of assembly lines: "; wc -l $filename.asm | awk '{print $1}'

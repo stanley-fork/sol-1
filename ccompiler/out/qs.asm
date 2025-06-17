@@ -1,4 +1,5 @@
 ; --- FILENAME: programs/qs.c
+; --- DATE:     17-06-2025 at 18:16:46
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -965,14 +966,6 @@ _switch18_default:
   add sp, 2
 ; --- END FUNCTION CALL
 _switch18_exit:
-; format_p++; 
-  lea d, [bp + -3] ; $format_p
-  mov b, [d]
-  mov c, 0
-  inc b
-  lea d, [bp + -3] ; $format_p
-  mov [d], b
-  dec b
   jmp _if17_exit
 _if17_else:
 ; putchar(*format_p); 
@@ -988,6 +981,8 @@ _if17_else:
   call putchar
   add sp, 1
 ; --- END FUNCTION CALL
+_if17_exit:
+_if16_exit:
 ; format_p++; 
   lea d, [bp + -3] ; $format_p
   mov b, [d]
@@ -996,8 +991,6 @@ _if17_else:
   lea d, [bp + -3] ; $format_p
   mov [d], b
   dec b
-_if17_exit:
-_if16_exit:
 _for15_update:
   jmp _for15_cond
 _for15_exit:
@@ -1029,6 +1022,7 @@ _if22_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   slt ; <
   pop g
@@ -1075,6 +1069,7 @@ _if23_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -1108,6 +1103,7 @@ _while24_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgt
   pop g
@@ -1150,6 +1146,7 @@ _while24_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -1275,6 +1272,7 @@ _if32_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -1307,6 +1305,7 @@ _while33_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgu
   pop g
@@ -1349,6 +1348,7 @@ _while33_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS

@@ -1,4 +1,5 @@
 ; --- FILENAME: programs/wumpus.c
+; --- DATE:     17-06-2025 at 18:16:46
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -165,33 +166,33 @@ _while3_exit:
 
 print_instructions:
   enter 0 ; (push bp; mov bp, sp)
-; print("Welcome to 'hunt the wumpus'\n"); 
+; print("WELCOME TO 'HUNT THE WUMPUS'\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s2 ; "Welcome to 'hunt the wumpus'\n"
+  mov b, _s2 ; "WELCOME TO 'HUNT THE WUMPUS'\n"
   swp b
   push b
   call print
   add sp, 2
 ; --- END FUNCTION CALL
-; print("The wumpus lives in a cave of 20 rooms. Each room\n"); 
+; print("THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s3 ; "The wumpus lives in a cave of 20 rooms. Each room\n"
+  mov b, _s3 ; "THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM\n"
   swp b
   push b
   call print
   add sp, 2
 ; --- END FUNCTION CALL
-; print("has 3 tunnels leading to other rooms.\n");  
+; print("HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n");  
 ; --- START FUNCTION CALL
-  mov b, _s4 ; "has 3 tunnels leading to other rooms.\n"
+  mov b, _s4 ; "HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n"
   swp b
   push b
   call print
   add sp, 2
 ; --- END FUNCTION CALL
-; print("Look at a dodecahedron to see how this works.\n"); 
+; print("LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s5 ; "Look at a dodecahedron to see how this works.\n"
+  mov b, _s5 ; "LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n"
   swp b
   push b
   call print
@@ -205,25 +206,25 @@ print_instructions:
   call print
   add sp, 2
 ; --- END FUNCTION CALL
-; print(" Hazards:\n"); 
+; print(" HAZARDS:\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s7 ; " Hazards:\n"
+  mov b, _s7 ; " HAZARDS:\n"
   swp b
   push b
   call print
   add sp, 2
 ; --- END FUNCTION CALL
-; print(" Bottomless pits: Two rooms have bottomless pits in them\n"); 
+; print(" BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s8 ; " Bottomless pits: Two rooms have bottomless pits in them\n"
+  mov b, _s8 ; " BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM\n"
   swp b
   push b
   call print
   add sp, 2
 ; --- END FUNCTION CALL
-; print(" If you go there, you fall into the pit (& lose!)\n"); 
+; print(" IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s9 ; " If you go there, you fall into the pit (& lose!)\n"
+  mov b, _s9 ; " IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n"
   swp b
   push b
   call print
@@ -3137,14 +3138,14 @@ _cave_data: .dw $0001,$0004,$0007,$0000,$0002,$0009,$0001,$0003,$000b,$0002,$000
 .dw $0013,$0006,$000f,$0011,$0008,$0010,$0012,$000a,$0011,$0013,$000c,$000f,$0012,
 _s0: .db "INSTRUCTIONS (Y-N): ", 0
 _s1: .db "NEW GAME (Y-N): ", 0
-_s2: .db "Welcome to 'hunt the wumpus'\n", 0
-_s3: .db "The wumpus lives in a cave of 20 rooms. Each room\n", 0
-_s4: .db "has 3 tunnels leading to other rooms.\n", 0
-_s5: .db "Look at a dodecahedron to see how this works.\n", 0
+_s2: .db "WELCOME TO 'HUNT THE WUMPUS'\n", 0
+_s3: .db "THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM\n", 0
+_s4: .db "HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n", 0
+_s5: .db "LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n", 0
 _s6: .db "\n", 0
-_s7: .db " Hazards:\n", 0
-_s8: .db " Bottomless pits: Two rooms have bottomless pits in them\n", 0
-_s9: .db " If you go there, you fall into the pit (& lose!)\n", 0
+_s7: .db " HAZARDS:\n", 0
+_s8: .db " BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM\n", 0
+_s9: .db " IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n", 0
 _s10: .db " SUPER BATS     : TWO OTHER ROOMS HAVE SUPER BATS. IF YOU\n", 0
 _s11: .db " GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER\n", 0
 _s12: .db " ROOM AT RANDOM. (WHICH MAY BE TROUBLESOME)\n\n", 0

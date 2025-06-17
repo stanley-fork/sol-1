@@ -119,7 +119,7 @@ FS_SECTORS_PER_FILE     .equ 32 ; the first sector is always a header with a NUL
 FS_FILE_SIZE            .equ (FS_SECTORS_PER_FILE * 512)                  
 FS_TOTAL_SECTORS        .equ (FS_NBR_FILES * FS_SECTORS_PER_FILE)
 FS_LBA_START            .equ (FST_LBA_END + 1)
-FS_LBA_END              .equ (FS_LBA_START + FS_NBR_FILES - 1)
+FS_LBA_END              .equ (FS_LBA_START + FS_TOTAL_SECTORS - 1)
 
 root_id:                .equ FST_LBA_START
 
@@ -372,7 +372,8 @@ system_whoami:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; floppy drive system calls
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; the floppy control below is not yet tested. it needs to be tested.
+; data for formatting a floppy drive in single density mode (128 bytes per sector):
+;
 ; fdc_40_FF:     .fill 40,  $FF  ; or 00                                                                                
 ; fdc_6_00_0:    .fill 6,   $00  ;                                                                            <--|        
 ; fdc_id_fe:     .fill 1,   $FE  ; ID Address Mark                                                               |        
@@ -395,6 +396,7 @@ system_whoami:
 ; _FDC_WD_TRACK     .equ $FFC9
 ; _FDC_WD_SECTOR    .equ $FFCA
 ; _FDC_WD_DATA      .equ $FFCB
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 fdc_jmptbl:
   .dw syscall_fdc_format
 syscall_fdc:

@@ -29,7 +29,8 @@ uint16_t loadfile(uint8_t *filename, uint8_t *dest);
 __uint16_t  create_dir(uint8_t *dirname, __uint16_t  parent_id);
 void install_bootloader(__uint16_t  kernel_lba);
 void list_dirs();
-__uint16_t  create_file(uint8_t *filename, __uint16_t  parent_dir_id, uint8_t *data, __uint16_t  size, uint8_t permissions);
+uint16_t try_create_file(uint8_t *filename, uint8_t *filepath, uint16_t parent_id, uint8_t attributes);
+__uint16_t create_file(uint8_t *filename, __uint16_t  parent_dir_id, uint8_t *data, __uint16_t  size, uint8_t permissions);
 void list_files(__uint16_t  dir_id);
 
 #define BOOT_SECT_SIZE           512 // bytes
@@ -45,7 +46,8 @@ void list_files(__uint16_t  dir_id);
 #define FS_NBR_FILES             (FST_NBR_DIRECTORIES * FST_FILES_PER_DIR)
 #define FS_TOTAL_SECTORS         (FS_NBR_FILES * FS_SECTORS_PER_FILE)
 #define FS_LBA_START             (FST_LBA_END + 1)
-#define FS_LBA_END               (FS_LBA_START + FS_NBR_FILES - 1)
+#define FS_LBA_END               (FS_LBA_START + FS_TOTAL_SECTORS - 1)
+#define FS_MAX_FILESIZE          (FS_SECTORS_PER_FILE * 512)
 
 uint8_t disk_image[BOOT_SECT_SIZE + FS_TOTAL_SECTORS * 512];
 uint8_t temp_buffer[64 * 1024];
@@ -69,120 +71,79 @@ uint16_t main(void){
   root_id = FST_LBA_START;
 
   // -----------------------------------------------------------------------------------------------
-  // Directories
+  // create directories
   // -----------------------------------------------------------------------------------------------
   create_dir("", root_id); // root directory
-  usr_id = create_dir("usr", root_id);
-  bin0_id = create_dir("bin0", usr_id);
-  bin1_id = create_dir("bin1", usr_id);
-  create_dir("share", usr_id);
-  games_id = create_dir("games", usr_id);
-  
-  etc_id = create_dir("etc", root_id);
+  usr_id  = create_dir("usr",  root_id);
+  etc_id  = create_dir("etc",  root_id);
   boot_id = create_dir("boot", root_id);
-  create_dir("cc", root_id);
-  asm_id = create_dir("asm", root_id);
-  create_dir("tmp", root_id);
-  bin_id = create_dir("bin", root_id);
+  asm_id  = create_dir("asm",  root_id);
+  bin_id  = create_dir("bin",  root_id);
   sbin_id = create_dir("sbin", root_id);
+  create_dir("cc",   root_id);
+  create_dir("tmp",  root_id);
   create_dir("home", root_id);
-  create_dir("dev", root_id);
-  create_dir("doc", root_id);
-  create_dir("src", root_id);
+  create_dir("dev",  root_id);
+  create_dir("doc",  root_id);
+  create_dir("src",  root_id);
+
+  bin0_id  = create_dir("bin0",  usr_id);
+  bin1_id  = create_dir("bin1",  usr_id);
+  games_id = create_dir("games", usr_id);
+  create_dir("share", usr_id);
 
   // -----------------------------------------------------------------------------------------------
-  // Files
+  // create files
   // -----------------------------------------------------------------------------------------------
-  // /sbin
-  file_size = loadfile("../software/obj/init.obj", temp_buffer);
-  create_file("init", sbin_id, temp_buffer, file_size, 0x07);
-
   // /boot
-  file_size = loadfile("../software/obj/kernel.obj", temp_buffer);
-  kernel_lba = create_file("sol1.0", boot_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/install.obj", temp_buffer);
-  create_file("install", boot_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/swap.obj", temp_buffer);
-  create_file("swap", boot_id, temp_buffer, file_size, 0x07);
+  kernel_lba = try_create_file("sol1.0", "../software/obj/kernel.obj", boot_id, 0x07);
 
-  // /etc
-  file_size = loadfile("../solarium/etc/shell.cfg", temp_buffer);
-  create_file("shell.cfg", etc_id, temp_buffer, file_size, 0x03);
-  file_size = loadfile("../solarium/etc/.shellrc", temp_buffer);
-  create_file(".shellrc", etc_id, temp_buffer, file_size, 0x03);
-
-  // asm
-  file_size = loadfile("../ccompiler/out/obj/asm.obj", temp_buffer);
-  create_file("asm", asm_id, temp_buffer, file_size, 0x03);
+  // /sbin
+  try_create_file("init",      "../software/obj/init.obj",        sbin_id, 0x07);
+                                                                                       
+  try_create_file("install",   "../software/obj/install.obj",     boot_id, 0x07);
+  try_create_file("swap",      "../software/obj/swap.obj",        boot_id, 0x07);
+                                                                                       
+  // /etc                                                                              
+  try_create_file("shell.cfg", "../solarium/etc/shell.cfg",       etc_id, 0x03);
+  try_create_file(".shellrc",  "../solarium/etc/.shellrc",        etc_id, 0x03);
 
   // bin
-  file_size = loadfile("../ccompiler/out/obj/ansitest.obj", temp_buffer);
-  create_file("ansitest", bin_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../ccompiler/out/obj/base64.obj", temp_buffer);
-  create_file("base64", bin_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../ccompiler/out/obj/life.obj", temp_buffer);
-  create_file("life", bin_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../ccompiler/out/obj/qs.obj", temp_buffer);
-  create_file("qs", bin_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/cowsay.obj", temp_buffer);
-  create_file("cowsay", bin_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/sieve.obj", temp_buffer);
-  create_file("sieve", bin_id, temp_buffer, file_size, 0x07);
-
-  // /bin0
-  file_size = loadfile("../software/obj/shell.obj", temp_buffer);
-  create_file("shell", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../ccompiler/out/obj/getparam.obj", temp_buffer);
-  create_file("getparam", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../ccompiler/out/obj/setparam.obj", temp_buffer);
-  create_file("setparam", bin0_id, temp_buffer, file_size, 0x07);
-
-  file_size = loadfile("../software/obj/ls.obj", temp_buffer);
-  create_file("ls", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/mv.obj", temp_buffer);
-  create_file("mv", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/ps.obj", temp_buffer);
-  create_file("ps", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/mkbin.obj", temp_buffer);
-  create_file("mkbin", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/reboot.obj", temp_buffer);
-  create_file("reboot", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/rm.obj", temp_buffer);
-  create_file("rm", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/cat.obj", temp_buffer);
-  create_file("cat", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/date.obj", temp_buffer);
-  create_file("date", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/mkdir.obj", temp_buffer);
-  create_file("mkdir", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/rmdir.obj", temp_buffer);
-  create_file("rmdir", bin0_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/echo.obj", temp_buffer);
-  create_file("echo", bin0_id, temp_buffer, file_size, 0x07);
-
-  // /bin2
-  file_size = loadfile("../software/obj/wc.obj", temp_buffer);
-  create_file("wc", bin1_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/clear.obj", temp_buffer);
-  create_file("clear", bin1_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/chmod.obj", temp_buffer);
-  create_file("chmod", bin1_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/pwd.obj", temp_buffer);
-  create_file("pwd", bin1_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/xxd.obj", temp_buffer);
-  create_file("xxd", bin1_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/ed.obj", temp_buffer);
-  create_file("ed", bin1_id, temp_buffer, file_size, 0x07);
-
+  try_create_file("base64",    "../ccompiler/out/obj/base64.obj", bin_id, 0x07);
+  try_create_file("life",      "../ccompiler/out/obj/life.obj",   bin_id, 0x07);
+  try_create_file("qs",        "../ccompiler/out/obj/qs.obj",     bin_id, 0x07);
+  try_create_file("cowsay",    "../software/obj/cowsay.obj",      bin_id, 0x07);
+  try_create_file("sieve",     "../software/obj/sieve.obj",       bin_id, 0x07);
+                                                                                       
+  // /bin0                                                                             
+  try_create_file("shell",     "../software/obj/shell.obj",       bin0_id, 0x07);
+                                                                                       
+  try_create_file("ls",        "../software/obj/ls.obj",          bin0_id, 0x07);
+  try_create_file("mv",        "../software/obj/mv.obj",          bin0_id, 0x07);
+  try_create_file("ps",        "../software/obj/ps.obj",          bin0_id, 0x07);
+  try_create_file("mkbin",     "../software/obj/mkbin.obj",       bin0_id, 0x07);
+  try_create_file("reboot",    "../software/obj/reboot.obj",      bin0_id, 0x07);
+  try_create_file("rm",        "../software/obj/rm.obj",          bin0_id, 0x07);
+  try_create_file("cat",       "../software/obj/cat.obj",         bin0_id, 0x07);
+  try_create_file("date",      "../software/obj/date.obj",        bin0_id, 0x07);
+  try_create_file("mkdir",     "../software/obj/mkdir.obj",       bin0_id, 0x07);
+  try_create_file("rmdir",     "../software/obj/rmdir.obj",       bin0_id, 0x07);
+  try_create_file("echo",      "../software/obj/echo.obj",        bin0_id, 0x07);
+                                                                                       
+  // /bin1                                                                             
+  try_create_file("wc",        "../software/obj/wc.obj",          bin1_id, 0x07);
+  try_create_file("clear",     "../software/obj/clear.obj",       bin1_id, 0x07);
+  try_create_file("chmod",     "../software/obj/chmod.obj",       bin1_id, 0x07);
+  try_create_file("pwd",       "../software/obj/pwd.obj",         bin1_id, 0x07);
+  try_create_file("xxd",       "../software/obj/xxd.obj",         bin1_id, 0x07);
+  try_create_file("ed",        "../software/obj/ed.obj",          bin1_id, 0x07);
 
   // games
-  file_size = loadfile("../software/obj/automaton.obj", temp_buffer);
-  create_file("automaton", games_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../software/obj/advent.obj", temp_buffer);
-  create_file("adventure", games_id, temp_buffer, file_size, 0x07);
-  file_size = loadfile("../ccompiler/out/obj/wumpus.obj", temp_buffer);
-  create_file("wumpus", games_id, temp_buffer, file_size, 0x07);
+  try_create_file("automaton", "../software/obj/automaton.obj",   games_id, 0x07);
+  try_create_file("adventure", "../software/obj/advent.obj",      games_id, 0x07);
+  try_create_file("wumpus",    "../ccompiler/out/obj/wumpus.obj", games_id, 0x07);
 
+  // copy bootloader to beginning of disk image
   loadfile("../software/obj/boot.obj", disk_image);
   install_bootloader(kernel_lba);
 
@@ -201,6 +162,8 @@ uint16_t main(void){
   printf("\n");
   list_files(bin1_id);  
   printf("\n");
+  list_files(games_id);  
+  printf("\n");
 
   FILE *fp;
   printf("Creating solarium.img ");
@@ -213,6 +176,8 @@ uint16_t main(void){
 
   printf("[OK]\n");
   printf("Disk image size: %d bytes.\n", largest_used_lba * 512 + 32 * 512);
+
+  printf("last: %d", FS_LBA_END);
 
   return 0;
 }
@@ -285,6 +250,21 @@ __uint16_t  create_dir(uint8_t *dirname, __uint16_t  parent_id){
   return new_dir_id;
 }
 
+uint16_t try_create_file(uint8_t *filename, uint8_t *filepath, uint16_t parent_id, uint8_t attributes){
+  uint16_t file_size;
+  uint16_t lba;
+  uint8_t temp_buffer[64 * 1024];
+
+  file_size = loadfile(filepath, temp_buffer);
+  if(file_size <= FS_MAX_FILESIZE)
+    lba = create_file(filename, parent_id, temp_buffer, file_size, attributes);
+  else{
+    printf("filesize exceeds %d", FS_MAX_FILESIZE);
+    exit(1);
+  }
+  
+  return lba;
+}
 /*
 directory file entry format:
 filename (24)
@@ -296,7 +276,7 @@ month (1)
 year (1)
 packet size = 32 bytes
 */
-__uint16_t  create_file(uint8_t *filename, __uint16_t  parent_dir_id, uint8_t *data, __uint16_t  size, uint8_t permissions){
+__uint16_t create_file(uint8_t *filename, __uint16_t parent_dir_id, uint8_t *data, __uint16_t size, uint8_t permissions){
   uint16_t i, j;
   uint8_t *p;
   __uint16_t  LBA;
@@ -364,8 +344,7 @@ void list_files(__uint16_t  dir_id){
   printf("--------------------------------------------------------\n");
   for(i = 0; i < 16 * 32 ; i += 32){
     if(*(disk_image + dir_id * 512 + 512 + i) != '\0')
-      printf(
-        "%15s     %6d       0x%x   %6d    %x %x %x\n", 
+      printf("%15s     %6d       0x%x   %6d    %x %x %x\n", 
         disk_image + dir_id * 512 + 512 + i, 
         *(__uint16_t  *)(disk_image + dir_id * 512 + 512 + i + 25), 
         *(uint8_t *)(disk_image + dir_id * 512 + 512 + i + 24), 

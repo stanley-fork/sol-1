@@ -17,7 +17,7 @@ shell_main:
 	syscall sys_create_proc
 
 s_prompt_init:	.db "init started\n", 0
-s_prompt_shell:	.db "Launching a shell session...\n", 0
+s_prompt_shell:	.db "launching shell...\n", 0
 s_shell_path:	  .db "/usr/bin0/shell", 0
 
 .include "lib/stdio.asm"
