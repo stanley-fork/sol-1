@@ -402,33 +402,39 @@ syscall_fdc:
   jmp [fdc_jmptbl + al]
 
 syscall_fdc_format:
+  mov al, %00000001           ; mask out all irqs except irq0(fdc)
+  stomsk                        
   mov d, s_format_begin
   call _puts
   mov c, 40
-  mov d, _FDC_WD_STAT_CMD
   mov al, %11110010          ; Write Track Command: {1111, 0: Enable Spin-up Seq, 0: No Settling Delay, 1: No Write Precompensation, 0}
-  mov [d], al
+  mov [_FDC_WD_STAT_CMD], al
 ; write the first data block for formatting which is 40 bytes of 0xFF:
 fdc_header_loop:
 fdc_drq_loop: ; for each bye, we need to wait for DRQ to be high
-  mov d, _FDC_STATUS_1
-  mov al, [d]
+  mov al, [_FDC_STATUS_1]
   and al, $01                ; check drq bit
   jz fdc_drq_loop
   mov al, $FF                ; load format byte
-  mov d, _FDC_WD_DATA        ; data register
-  mov [d], al                ; send data byte to wd1770
+  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
   dec c
   jnz fdc_header_loop
 fdc_inner_loop:
+  mov g, 16                  ; write this data block 16 times
   mov si, fdc_128_format_inner
-  mov c, 169 ; the inner format data block has 169 byes total
+  mov c, 169                 ; the inner format data block has 169 byes total
 fdc_drq_loop1:
-  mov d, _FDC_STATUS_1
-  mov al, [d]
+  mov al, [_FDC_STATUS_1]
   and al, $01                ; check drq bit
-  jz fdc_drq_loop
+  jz fdc_drq_loop1
   lodsb                      ; load format byte
+  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  dec c
+  jnz fdc_drq_loop1          ; test whether entire data block was written
+  mov a, g
+  dec a
+  jne fdc_inner_loop         ; test whether data block was written 16 times
+
 
 ; here all the sectors have been written. now fill in remaining of the track until wd1770 interrupts out
 fdc_drq_loop_fill:
@@ -447,6 +453,8 @@ fdc_drq_loop_fill:
   mov d, s_format_done
   call _puts
 
+  mov al, $FF           ; re-enable all irqs
+  stomsk                        
   sysret
 
 s_send_write_cmd: .db "\nsending write command...\n", 0
