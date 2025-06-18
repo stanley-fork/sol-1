@@ -220,6 +220,8 @@ sys_fdc              .equ 13
 int_0_fdc:
   mov d, s_fdc_irq
   call _puts
+  mov al, 1
+  mov [_FDC_IRQ_EVENT], al
   sysret
 int_1:
   sysret
@@ -400,7 +402,6 @@ fdc_jmptbl:
   .dw syscall_fdc_format
 syscall_fdc:
   jmp [fdc_jmptbl + al]
-
 syscall_fdc_format:
   mov al, %00000001           ; mask out all irqs except irq0(fdc)
   stomsk                        
@@ -410,19 +411,20 @@ syscall_fdc_format:
   mov al, %11110010          ; Write Track Command: {1111, 0: Enable Spin-up Seq, 0: No Settling Delay, 1: No Write Precompensation, 0}
   mov [_FDC_WD_STAT_CMD], al
 ; write the first data block for formatting which is 40 bytes of 0xFF:
+  mov bl, $FF                ; load format byte
 fdc_header_loop:
 fdc_drq_loop: ; for each bye, we need to wait for DRQ to be high
   mov al, [_FDC_STATUS_1]
   and al, $01                ; check drq bit
   jz fdc_drq_loop
-  mov al, $FF                ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov [_FDC_WD_DATA], bl     ; send data byte to wd1770
   dec c
   jnz fdc_header_loop
-fdc_inner_loop:
+; start inner data block loop. this block is written 16 times
   mov g, 16                  ; write this data block 16 times
+fdc_inner_loop:
   mov si, fdc_128_format_inner
-  mov c, 169                 ; the inner format data block has 169 byes total
+  mov c, 169                 ; the inner format data block has 169 bytes total
 fdc_drq_loop1:
   mov al, [_FDC_STATUS_1]
   and al, $01                ; check drq bit
@@ -433,26 +435,24 @@ fdc_drq_loop1:
   jnz fdc_drq_loop1          ; test whether entire data block was written
   mov a, g
   dec a
-  jne fdc_inner_loop         ; test whether data block was written 16 times
-
-
+  mov g, a
+  jnz fdc_inner_loop         ; test whether data block was written 16 times
 ; here all the sectors have been written. now fill in remaining of the track until wd1770 interrupts out
-fdc_drq_loop_fill:
-  mov d, _FDC_STATUS_1
-  mov al, [d]
+fdc_format_footer:
+  mov bl, $FF                ; load format byte
+fdc_footer_drq_loop:
+  mov al, [_FDC_STATUS_1]
   and al, $01                ; check drq bit
-  jz fdc_drq_loop_fill
-  mov d, _FDC_WD_DATA        ; data register
-  mov al, gl
-  mov [d], al                ; send data byte to wd1770
-  lodstat
-  mov al, ah
-  and al, $01
-  jz fdc_drq_loop_fill
-
+  jz fdc_footer_drq_loop
+  mov [_FDC_WD_DATA], bl     ; send data byte to wd1770
+  mov al, [_FDC_IRQ_EVENT]   ; check if we have received an irq indicating the format command is done
+  cmp al, 1
+  jne fdc_footer_drq_loop
+  mov al, 0
+  mov [_FDC_IRQ_EVENT], al   ; after format is done and irq received, reset the irq-received event
+fdc_format_done:
   mov d, s_format_done
   call _puts
-
   mov al, $FF           ; re-enable all irqs
   stomsk                        
   sysret
@@ -2658,13 +2658,20 @@ kernel_reset_vector:
 .include "lib/token.asm"
 
 ; kernel parameters
-sys_debug_mode:     .db 0   ; debug modes: 0=normal mode, 1=debug mode
-sys_echo_on:        .db 1
-sys_uart0_lcr:      .db $07 ; 8 data bits, 2 stop bit, no parity
-sys_uart0_inten:    .db 1
-sys_uart0_fifoen:   .db 0
-sys_uart0_div0:     .db 12  ;
-sys_uart0_div1:     .db 0   ; default baud = 9600
+sys_debug_mode:
+  .db 0   ; debug modes: 0=normal mode, 1=debug mode
+sys_echo_on:
+  .db 1
+sys_uart0_lcr:
+  .db $07 ; 8 data bits, 2 stop bit, no parity
+sys_uart0_inten:
+  .db 1
+sys_uart0_fifoen:
+  .db 0
+sys_uart0_div0:
+  .db 12  ;
+sys_uart0_div1:
+  .db 0   ; default baud = 9600
 ; Baud  Divisor
 ; 50    2304
 ; 110   1047
@@ -2675,42 +2682,71 @@ sys_uart0_div1:     .db 0   ; default baud = 9600
 ; 19200    6
 ; 38400    3
 
-nbr_active_procs:   .db 0
-active_proc_index:  .db 1
+nbr_active_procs:
+  .db 0
+active_proc_index:
+  .db 1
 
-index:              .dw 0
-buffer_addr:        .dw 0
+index:
+  .dw 0
+buffer_addr:
+  .dw 0
 
-fifo_in:            .dw fifo
-fifo_out:           .dw fifo
+fifo_in:
+  .dw fifo
+fifo_out:
+  .dw fifo
 
 ; file system variables
-current_dir_id:     .dw 0     ; keep dirID of current directory
-s_init_path:        .db "/sbin/init", 0
+current_dir_id:
+  .dw 0     ; keep dirID of current directory
+s_init_path:
+  .db "/sbin/init", 0
 
-s_uname:            .db "solarium v.1.0", 0
-s_dataentry:        .db "> ", 0
-s_parent_dir:       .db "..", 0
-s_current_dir:      .db ".", 0
-s_fslash:           .db "/", 0
-file_attrib:        .db "-rw x"      ; chars at powers of 2
-file_type:          .db "-dc"
-s_ps_header:        .db "pid command\n", 0
-s_ls_total:         .db "total: ", 0
+s_uname:
+  .db "solarium v.1.0", 0
+s_dataentry:
+  .db "> ", 0
+s_parent_dir:
+  .db "..", 0
+s_current_dir:
+  .db ".", 0
+s_fslash:
+  .db "/", 0
+file_attrib:
+  .db "-rw x"      ; chars at powers of 2
+file_type:
+  .db "-dc"
+s_ps_header:
+  .db "pid command\n", 0
+s_ls_total:
+  .db "total: ", 0
 
-s_int_en:           .db "IRQs enabled\n", 0
-s_kernel_started:   .db "kernel started(version 1.0)\n", 0
-s_prompt_init:      .db "starting init\n", 0
-s_priviledge:       .db "\nexception: privilege\n", 0
-s_divzero:          .db "\nexception: zero division\n", 0
+s_int_en:
+  .db "IRQs enabled\n", 0
+s_kernel_started:
+  .db "kernel started(version 1.0)\n", 0
+s_prompt_init:
+  .db "starting init\n", 0
+s_priviledge:
+  .db "\nexception: privilege\n", 0
+s_divzero:
+  .db "\nexception: zero division\n", 0
 
-s_set_year:         .db "year: ", 0
-s_set_month:        .db "month: ", 0
-s_set_day:          .db "day: ", 0
-s_set_week:         .db "weekday: ", 0
-s_set_hours:        .db "hours: ", 0
-s_set_minutes:      .db "minutes: ", 0
-s_set_seconds:      .db "seconds: ", 0
+s_set_year:
+  .db "year: ", 0
+s_set_month:
+  .db "month: ", 0
+s_set_day:
+  .db "day: ", 0
+s_set_week:
+  .db "weekday: ", 0
+s_set_hours:
+  .db "hours: ", 0
+s_set_minutes:
+  .db "minutes: ", 0
+s_set_seconds:
+  .db "seconds: ", 0
 s_months:      
   .db "   ", 0
   .db "Jan", 0
@@ -2743,33 +2779,43 @@ s_week:
 ; the Data Register with the following values. For every
 ; byte to be written, there is one Data Request.
 fdc_128_format:                                                                       
-fdc_40_FF:          .fill 40,  $FF    ; or 00                                                                                
+fdc_40_FF:
+  .fill 40,  $FF    ; or 00                                                                                
 fdc_128_format_inner:
-fdc_6_00_0:         .fill 6,   $00    ;                                                                            <--|        
-fdc_id_fe:          .fill 1,   $FE    ; ID Address Mark                                                               |        
-fdc_track:          .fill 1,   $00    ; Track Number                                                                  |                    
-fdc_side:           .fill 1,   $00    ; Side Number 00 or 01                                                          |                
-fdc_sector:         .fill 1,   $01    ; Sector Number  1 through 10                                                   |                              
-fdc_length:         .fill 1,   $00    ; Sector Length                                                                 |                        
-fdc_2_crc_0:        .fill 1,   $F7    ; 2 CRC's Written                                                               | Write 16 times                 
-fdc_11_ff:          .fill 11,  $FF    ; or 00                                                                         |                      
-fdc_6_00_1:         .fill 6,   $00    ;                                                                               |                        
-fdc_data_addr:      .fill 1,   $FB    ; Data Address Mark                                                             |                                  
-fdc_data:           .fill 128, $E5    ; Data (IBM uses E5)                                                            |                                      
-fdc_2_crc_1:        .fill 1,   $F7    ; 2 CRC's Written                                                               |                                                        
-fdc_10_ff:          .fill 10,  $FF    ; or 00                                                                      <--|                                                  
+  .fill 6,   $00    ;                                                                            <--|        
+  .fill 1,   $FE    ; ID Address Mark                                                               |        
+  .fill 1,   $00    ; Track Number                                                                  |                    
+  .fill 1,   $00    ; Side Number 00 or 01                                                          |                
+  .fill 1,   $01    ; Sector Number  1 through 10                                                   |                              
+  .fill 1,   $00    ; Sector Length                                                                 |                        
+  .fill 1,   $F7    ; 2 CRC's Written                                                               | Write 16 times                 
+  .fill 11,  $FF    ; or 00                                                                         |                      
+  .fill 6,   $00    ;                                                                               |                        
+  .fill 1,   $FB    ; Data Address Mark                                                             |                                  
+  .fill 128, $E5    ; Data (IBM uses E5)                                                            |                                      
+  .fill 1,   $F7    ; 2 CRC's Written                                                               |                                                        
+  .fill 10,  $FF    ; or 00                                                                      <--|                                                  
 fdc_128_format_end:
-fdc_369_ff:         .fill 369, $FF    ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
+  .fill 369, $FF    ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
+_FDC_IRQ_EVENT:
+  .db 0             ; this variable holds whether an fdc irq has happened after an operation
 
-proc_state_table:   .fill 16 * 20, 0  ; for 15 processes max
-proc_availab_table: .fill 16, 0       ; space for 15 processes. 0 = process empty, 1 = process taken
-proc_names:         .fill 16 * 32, 0  ; process names
-filename:           .fill 128, 0      ; holds a path for file search
-user_data:          .fill 512, 0      ;  user space data
-fifo:               .fill FIFO_SIZE
+proc_state_table:   
+  .fill 16 * 20, 0  ; for 15 processes max
+proc_availab_table: 
+  .fill 16, 0       ; space for 15 processes. 0 = process empty, 1 = process taken
+proc_names:
+  .fill 16 * 32, 0  ; process names
+filename:
+  .fill 128, 0      ; holds a path for file search
+user_data:
+  .fill 512, 0      ;  user space data
+fifo:
+  .fill FIFO_SIZE
 
-scrap_sector:       .fill 512         ; scrap sector
-transient_area:     .db 0             ; beginning of the transient memory area. used for disk reads and other purposes    
-
+scrap_sector:
+  .fill 512         ; scrap sector
+transient_area:
+  .db 0             ; beginning of the transient memory area. used for disk reads and other purposes    
 
 .end
