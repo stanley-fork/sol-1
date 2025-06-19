@@ -10,41 +10,17 @@ main:
   mov bp, $FFFF
   mov sp, $FFFF
 
-
-  mov d, str0
+  mov d, s_irq1
   call _puts
-  ; First, select drive 1 and de-select drive 0
-  mov d, $FFC0
-  mov al, 2       ; setparam call
-  mov bl, $09     ; %00001001 : turn LED on, disable double density, select side 0, select drive 1, do not select drive 0
-  syscall sys_system
-
-  mov d, str1
-  call _puts
-; wait a little
-  mov c, $FF
-loop1:
-  push c
-  mov b, c
-  call print_u16x
-  pop c
-  dec c
-  cmp c, 0
-  jnz loop1
-
-  mov d, str2
-  call _puts
-; send restore command
-  mov d, $FFC8    ; wd1770
-  mov al, 2       ; setparam call
-  mov bl, $03     ; restore command, 30ms rate
-  syscall sys_system
+  mov d, fdc_irq_event
+  mov al, 4
+  syscall sys_system    ; read fdc irq
+  call print_u8x        ; print irq event
+  call printnl
 
   syscall sys_terminate_proc
 
-str0: .db $a, $d, "selecting drive 1...", $a, $d, 0
-str1: .db $a, $d, "waiting...", $a, $d, 0
-str2: .db $a, $d, "sending restore command...", $a, $d, 0
+s_irq1: .db "\nvalue of fdc irq: ", 0
 
 .include "lib/stdio.asm"
 .end

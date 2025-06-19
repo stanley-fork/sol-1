@@ -174,9 +174,6 @@ cmd_cd_syscall:
   mov al, 3
   syscall sys_filesystem  ; set dir to B
 
-; apply 'ls' to the directory
-	mov al, 4
-	syscall sys_filesystem
   ret
 cmd_cd_gotohome:
   call _putback

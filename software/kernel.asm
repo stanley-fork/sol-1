@@ -212,6 +212,7 @@ sys_fdc              .equ 13
 .export sys_terminate_proc
 .export sys_system
 .export sys_fdc
+.export fdc_irq_event
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; IRQs' code block
@@ -220,8 +221,6 @@ sys_fdc              .equ 13
 int_0_fdc:
   mov d, s_fdc_irq
   call _puts
-  mov al, 1
-  mov [fdc_irq_event], al
   sysret
 int_1:
   sysret
@@ -380,7 +379,7 @@ system_whoami:
 ; fdc_128_format_inner:
 ;   .fill 6,   $00    ;                                                                            <--|        
 ;   .fill 1,   $FE    ; ID Address Mark                                                               |        
-;   .fill 1,   $00    ; Track Number  0 thru 76(4C)                                                   |                    
+;   .fill 1,   $00    ; Track Number  0 thru 39                                                       |                    
 ;   .fill 1,   $00    ; Side Number 00 or 01                                                          |                
 ;   .fill 1,   $01    ; Sector Number  0x01 through 0x10                                              |                              
 ;   .fill 1,   $00    ; Sector Length                                                                 |                        
@@ -429,22 +428,22 @@ syscall_fdc_cmd:
 ; bl: track number
 syscall_fdc_format:
   mov [fdc_128_format_track], bl  ; write track number to formatting data block
-  mov al, 0
-  mov [fdc_128_format_sect], al   ; reset sector variable to 0
+  mov al, 1
+  mov [fdc_128_format_sect], al   ; reset sector variable to 1
   mov al, %10000000               ; mask out fdc interrupt for now because we are trying to format without using irqs. an irq would consume too much time during formatting
   stomsk                        
   mov d, s_format_begin
   call _puts
 fdc_header_loop_start:
-  mov cl, 40
-  mov bl, $FF                     ; load format byte
-  mov al, %11110110               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
+  mov al, %11110010               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
   mov [_FDC_WD_STAT_CMD], al
 ; write the first data block for formatting which is 40 bytes of 0xFF:
   call fdc_wait_64us              ; after issuing write track command, need to wait 64us before reading the status register 
+  mov cl, 40
+  mov bl, $FF                     ; load format byte
 fdc_drq_loop: ; for each byte, we need to wait for DRQ to be high
-  mov al, [_FDC_STATUS_1]
-  and al, $01                ; check drq bit
+  mov al, [_FDC_WD_STAT_CMD]
+  and al, $02                ; check drq bit
   jz fdc_drq_loop
   mov [_FDC_WD_DATA], bl     ; send data byte to wd1770
   dec cl
@@ -454,23 +453,24 @@ fdc_inner_loop:
   mov si, fdc_128_format_inner
   mov cl, 169                 ; the inner format data block has 169 bytes total
 fdc_drq_loop1:
-  mov al, [_FDC_STATUS_1]
-  and al, $01                ; check drq bit
+  mov al, [_FDC_WD_STAT_CMD]
+  and al, $02                ; check drq bit
   jz fdc_drq_loop1
   lodsb                      ; load format byte
   mov [_FDC_WD_DATA], al     ; send data byte to wd1770
   dec cl
   jnz fdc_drq_loop1          ; test whether entire data block was written
-  mov al, [fdc_128_format_sect] ; update the sector number variable in the format data block
+  mov al, [fdc_128_format_sect] ; read the sector number variable in the format data block
   inc al
-  cmp al, 16
+  mov [fdc_128_format_sect], al ; update the sector number variable in the format data block
+  cmp al, 17
   jne fdc_inner_loop         ; test whether data block was written 16 times
 ; here all the sectors have been written. now fill in remaining of the track until wd1770 interrupts out
 fdc_format_footer:
   mov bl, $FF                ; load format byte
 fdc_footer_drq_loop:
-  mov al, [_FDC_STATUS_1]
-  and al, $01                ; check drq bit
+  mov al, [_FDC_WD_STAT_CMD]
+  and al, $02                ; check drq bit
   jz fdc_footer_drq_loop
   mov [_FDC_WD_DATA], bl     ; send data byte to wd1770
   mov al, [_FDC_WD_STAT_CMD]
@@ -479,10 +479,12 @@ fdc_footer_drq_loop:
 fdc_format_done:
   mov d, s_format_done
   call _puts
-  mov al, $FF           ; re-enable all irqs
+  mov al, %10000001          ; re-enable uart and fdc irqs 
   stomsk                        
   sysret
 
+ss1: .db "\neh\n", 0
+ss2: .db "\nef\n", 0
 ; fetch is 2 cycles long when 'display_reg_load' is false.
 ; mov cl, 14 is 5 cycles long (2 to fetch, and 3 execution)
 ; 64us amounts to 160 cycles of the 2.5MHz clock
@@ -2818,6 +2820,8 @@ s_week:
 ; the user issues the Write Track Command, and loads
 ; the Data Register with the following values. For every
 ; byte to be written, there is one Data Request.
+fdc_irq_event:
+  .fill 1,  $00       ; keeps status of fdc irq event
 fdc_128_format:                                                                       
 fdc_40_FF:
   .fill 40,  $FF    ; or 00                                                                                
@@ -2825,7 +2829,7 @@ fdc_128_format_inner:
   .fill 6,   $00    ;                                                                            <--|        
   .fill 1,   $FE    ; ID Address Mark                                                               |        
 fdc_128_format_track:
-  .fill 1,   $00    ; Track Number   0 thru 76(4C)                                                  |                    
+  .fill 1,   $00    ; Track Number   0 thru 39                                                      |                    
   .fill 1,   $00    ; Side Number 00 or 01                                                          |                
 fdc_128_format_sect:
   .fill 1,   $01    ; Sector Number  0x01 through 0x10                                              |                              
@@ -2839,8 +2843,6 @@ fdc_128_format_sect:
   .fill 10,  $FF    ; or 00                                                                      <--|                                                  
 fdc_128_format_end:
   .fill 369, $FF    ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
-fdc_irq_event:
-  .fill 1,  $00       ; keeps status of fdc irq event
 
 proc_state_table:   
   .fill 16 * 20, 0  ; for 15 processes max

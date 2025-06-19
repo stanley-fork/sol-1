@@ -83,8 +83,6 @@ uint16_t main(void){
   create_dir("cc",   root_id);
   create_dir("tmp",  root_id);
   create_dir("home", root_id);
-  create_dir("dev",  root_id);
-  create_dir("doc",  root_id);
   create_dir("src",  root_id);
 
   bin0_id  = create_dir("bin0",  usr_id);
