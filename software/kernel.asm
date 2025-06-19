@@ -220,7 +220,8 @@ sys_fdc              .equ 13
 int_0_fdc:
   mov d, s_fdc_irq
   call _puts
-  mov [fdc_irq_event], $01
+  mov al, 1
+  mov [fdc_irq_event], al
   sysret
 int_1:
   sysret
@@ -404,7 +405,7 @@ fdc_jmptbl:
   .dw syscall_fdc_format
   .dw syscall_fdc_status1
   .dw syscall_fdc_status2
-  .dw syscall_fdc_step
+  .dw syscall_fdc_cmd
 syscall_fdc:
   jmp [fdc_jmptbl + al]
 ; bl: status
@@ -2839,7 +2840,7 @@ fdc_128_format_sect:
 fdc_128_format_end:
   .fill 369, $FF    ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
 fdc_irq_event:
-  ..fill 1,  $00       ; keeps status of fdc irq event
+  .fill 1,  $00       ; keeps status of fdc irq event
 
 proc_state_table:   
   .fill 16 * 20, 0  ; for 15 processes max
