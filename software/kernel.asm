@@ -378,9 +378,9 @@ system_whoami:
 ; fdc_128_format_inner:
 ;   .fill 6,   $00    ;                                                                            <--|        
 ;   .fill 1,   $FE    ; ID Address Mark                                                               |        
-;   .fill 1,   $00    ; Track Number                                                                  |                    
+;   .fill 1,   $00    ; Track Number  0 thru 76(4C)                                                   |                    
 ;   .fill 1,   $00    ; Side Number 00 or 01                                                          |                
-;   .fill 1,   $01    ; Sector Number  1 through 10                                                   |                              
+;   .fill 1,   $01    ; Sector Number  0x01 through 0x10                                              |                              
 ;   .fill 1,   $00    ; Sector Length                                                                 |                        
 ;   .fill 1,   $F7    ; 2 CRC's Written                                                               | Write 16 times                 
 ;   .fill 11,  $FF    ; or 00                                                                         |                      
@@ -421,17 +421,21 @@ syscall_fdc_status2:
   call printnl
   sysret
 
+; bl: track number
 syscall_fdc_format:
-  mov al, %10000000          ; mask out fdc interrupt for now because we are trying to format without using irqs. an irq would consume too much time during formatting
+  mov [fdc_128_format_track], bl  ; write track number to formatting data block
+  mov al, 0
+  mov [fdc_128_format_sect], al   ; reset sector variable to 0
+  mov al, %10000000               ; mask out fdc interrupt for now because we are trying to format without using irqs. an irq would consume too much time during formatting
   stomsk                        
   mov d, s_format_begin
   call _puts
-  mov al, %11110110          ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
+  mov al, %11110110               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
   mov [_FDC_WD_STAT_CMD], al
 ; write the first data block for formatting which is 40 bytes of 0xFF:
 fdc_header_loop:
   mov cl, 40
-  mov bl, $FF                ; load format byte
+  mov bl, $FF                     ; load format byte
 fdc_drq_loop: ; for each byte, we need to wait for DRQ to be high
   mov al, [_FDC_STATUS_1]
   and al, $01                ; check drq bit
@@ -440,7 +444,6 @@ fdc_drq_loop: ; for each byte, we need to wait for DRQ to be high
   dec cl
   jnz fdc_drq_loop
 ; start inner data block loop. this block is written 16 times
-  mov g, 16                  ; write this data block 16 times
 fdc_inner_loop:
   mov si, fdc_128_format_inner
   mov cl, 169                 ; the inner format data block has 169 bytes total
@@ -452,10 +455,10 @@ fdc_drq_loop1:
   mov [_FDC_WD_DATA], al     ; send data byte to wd1770
   dec cl
   jnz fdc_drq_loop1          ; test whether entire data block was written
-  mov a, g
-  dec a
-  mov g, a
-  jnz fdc_inner_loop         ; test whether data block was written 16 times
+  mov al, [fdc_128_format_sect] ; update the sector number variable in the format data block
+  inc al
+  cmp al, 16
+  jne fdc_inner_loop         ; test whether data block was written 16 times
 ; here all the sectors have been written. now fill in remaining of the track until wd1770 interrupts out
 fdc_format_footer:
   mov bl, $FF                ; load format byte
@@ -2817,9 +2820,11 @@ fdc_40_FF:
 fdc_128_format_inner:
   .fill 6,   $00    ;                                                                            <--|        
   .fill 1,   $FE    ; ID Address Mark                                                               |        
-  .fill 1,   $00    ; Track Number                                                                  |                    
+fdc_128_format_track:
+  .fill 1,   $00    ; Track Number   0 thru 76(4C)                                                  |                    
   .fill 1,   $00    ; Side Number 00 or 01                                                          |                
-  .fill 1,   $01    ; Sector Number  1 through 10                                                   |                              
+fdc_128_format_sect:
+  .fill 1,   $01    ; Sector Number  0x01 through 0x10                                              |                              
   .fill 1,   $00    ; Sector Length                                                                 |                        
   .fill 1,   $F7    ; 2 CRC's Written                                                               | Write 16 times                 
   .fill 11,  $FF    ; or 00                                                                         |                      
