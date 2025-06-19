@@ -220,6 +220,7 @@ sys_fdc              .equ 13
 int_0_fdc:
   mov d, s_fdc_irq
   call _puts
+  mov [fdc_irq_event], $01
   sysret
 int_1:
   sysret
@@ -406,23 +407,22 @@ fdc_jmptbl:
   .dw syscall_fdc_step
 syscall_fdc:
   jmp [fdc_jmptbl + al]
-
+; bl: status
 syscall_fdc_status1:
   mov d, s_fdc_status
   call _puts
   mov bl, [_FDC_WD_STAT_CMD]
-  call print_u8x
-  call printnl
   sysret
+; bl: status
 syscall_fdc_status2:
   mov d, s_fdc_status
   call _puts
   mov bl, [_FDC_STATUS_1]
-  call print_u8x
-  call printnl
   sysret
-syscall_fdc_step:
-
+; issue a fdc command
+; bl: command
+syscall_fdc_cmd:
+  mov [_FDC_WD_STAT_CMD], bl
   sysret
 
 ; bl: track number
@@ -434,12 +434,13 @@ syscall_fdc_format:
   stomsk                        
   mov d, s_format_begin
   call _puts
+fdc_header_loop_start:
+  mov cl, 40
+  mov bl, $FF                     ; load format byte
   mov al, %11110110               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
   mov [_FDC_WD_STAT_CMD], al
 ; write the first data block for formatting which is 40 bytes of 0xFF:
-fdc_header_loop:
-  mov cl, 40
-  mov bl, $FF                     ; load format byte
+  call fdc_wait_64us              ; after issuing write track command, need to wait 64us before reading the status register 
 fdc_drq_loop: ; for each byte, we need to wait for DRQ to be high
   mov al, [_FDC_STATUS_1]
   and al, $01                ; check drq bit
@@ -482,18 +483,16 @@ fdc_format_done:
   sysret
 
 ; fetch is 2 cycles long when 'display_reg_load' is false.
-; mov bl, $ff is 3 cycles long
-; mov cl, 40 is 3 cycles long
-; mov cl, 22 is 3 cycles long
+; mov cl, 14 is 5 cycles long (2 to fetch, and 3 execution)
 ; 64us amounts to 160 cycles of the 2.5MHz clock
-; so we need to wait for 151 cycles here
-; and since dec cl, and jnz amount to 7 cycles, we need to loop there 22 times
-; which gives ~154 cycles of waiting
+; so we need to wait for 155 cycles after mov cl, 14
+; and since dec cl, and jnz amount to 11 cycles, we need to loop there 14 times: 14*11 = 154
+; and 154 + 5 = 159
 fdc_wait_64us:
-  mov cl, 22                      ; 3 cycles
+  mov cl, 14                       ; 5 cycles
 fdc_wait_64_loop:
-  dec cl                           ; 1 cycle
-  jnz fdc_wait_64_loop             ; 6 cycles
+  dec cl                           ; 3 cycles
+  jnz fdc_wait_64_loop             ; 8 cycles
   ret
 
 s_send_write_cmd: .db "\nsending write command...\n", 0
@@ -2839,6 +2838,8 @@ fdc_128_format_sect:
   .fill 10,  $FF    ; or 00                                                                      <--|                                                  
 fdc_128_format_end:
   .fill 369, $FF    ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
+fdc_irq_event:
+  ..fill 1,  $00       ; keeps status of fdc irq event
 
 proc_state_table:   
   .fill 16 * 20, 0  ; for 15 processes max
