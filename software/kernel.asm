@@ -403,6 +403,7 @@ fdc_jmptbl:
   .dw syscall_fdc_format
   .dw syscall_fdc_status1
   .dw syscall_fdc_status2
+  .dw syscall_fdc_step
 syscall_fdc:
   jmp [fdc_jmptbl + al]
 
@@ -419,6 +420,9 @@ syscall_fdc_status2:
   mov bl, [_FDC_STATUS_1]
   call print_u8x
   call printnl
+  sysret
+syscall_fdc_step:
+
   sysret
 
 ; bl: track number
