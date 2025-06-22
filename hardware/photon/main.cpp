@@ -7,7 +7,7 @@
 #include <math.h>
 #include <windows.h>
 #include <IniFiles.hpp>
-#include "global.h"
+
 #include <cctype>
 
 
@@ -15,9 +15,9 @@
 #pragma hdrstop
 
 #include "main.h"
-#include "class.cpp"
-#include "bookmark.h"
-#include "options.h"
+
+
+
 
 
 //---------------------------------------------------------------------------

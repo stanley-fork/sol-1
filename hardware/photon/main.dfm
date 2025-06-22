@@ -1,8 +1,8 @@
 object fmain: Tfmain
-  Left = -8
-  Top = -8
-  Width = 1894
-  Height = 984
+  Left = -4
+  Top = -4
+  Width = 1928
+  Height = 1160
   Caption = 'Photon Microcode Compiler ver. 1.0'
   Color = 2829611
   Ctl3D = False
@@ -46,8 +46,8 @@ object fmain: Tfmain
   object Panel1: TPanel
     Left = 0
     Top = 46
-    Width = 1878
-    Height = 899
+    Width = 1920
+    Height = 1083
     Align = alClient
     BevelOuter = bvNone
     Color = 1184274
@@ -62,7 +62,7 @@ object fmain: Tfmain
       Left = 691
       Top = 0
       Width = 8
-      Height = 899
+      Height = 1083
       Cursor = crHSplit
       AutoSnap = False
       Color = 2829611
@@ -73,7 +73,7 @@ object fmain: Tfmain
       Left = 0
       Top = 0
       Width = 201
-      Height = 899
+      Height = 1083
       Align = alLeft
       BevelOuter = bvNone
       Color = 1184274
@@ -984,8 +984,8 @@ object fmain: Tfmain
     object Panel4: TPanel
       Left = 699
       Top = 0
-      Width = 1179
-      Height = 899
+      Width = 1221
+      Height = 1083
       Align = alClient
       BevelOuter = bvNone
       Color = 1184274
@@ -999,8 +999,8 @@ object fmain: Tfmain
       object list_names: TListBox
         Left = 0
         Top = 0
-        Width = 1179
-        Height = 899
+        Width = 1221
+        Height = 1083
         AutoComplete = False
         Align = alClient
         BevelInner = bvNone
@@ -1023,7 +1023,7 @@ object fmain: Tfmain
       Left = 209
       Top = 0
       Width = 482
-      Height = 899
+      Height = 1083
       Align = alLeft
       BevelOuter = bvNone
       Color = 1184274
@@ -1038,7 +1038,7 @@ object fmain: Tfmain
         Left = 449
         Top = 0
         Width = 33
-        Height = 899
+        Height = 1083
         Align = alRight
         BevelOuter = bvNone
         Color = 1184274
@@ -1047,7 +1047,7 @@ object fmain: Tfmain
           Left = 0
           Top = 0
           Width = 33
-          Height = 899
+          Height = 1083
           Align = alClient
           BevelEdges = []
           BevelInner = bvNone
@@ -1143,14 +1143,14 @@ object fmain: Tfmain
         Left = 0
         Top = 0
         Width = 449
-        Height = 899
+        Height = 1083
         Align = alClient
         BevelOuter = bvNone
         Color = 1184274
         TabOrder = 1
         object Splitter2: TSplitter
           Left = 0
-          Top = 575
+          Top = 568
           Width = 449
           Height = 8
           Cursor = crVSplit
@@ -1164,7 +1164,7 @@ object fmain: Tfmain
           Left = 0
           Top = 0
           Width = 449
-          Height = 575
+          Height = 568
           Cursor = crArrow
           OnClickCheck = control_listClickCheck
           Align = alClient
@@ -1308,9 +1308,9 @@ object fmain: Tfmain
         end
         object Panel3: TPanel
           Left = 0
-          Top = 583
+          Top = 576
           Width = 449
-          Height = 316
+          Height = 507
           Align = alBottom
           BevelOuter = bvNone
           Color = 1184274
@@ -1325,7 +1325,7 @@ object fmain: Tfmain
             Left = 0
             Top = 25
             Width = 449
-            Height = 291
+            Height = 482
             Align = alClient
             Color = 1184274
             Ctl3D = False
@@ -1371,7 +1371,7 @@ object fmain: Tfmain
       Left = 201
       Top = 0
       Width = 8
-      Height = 899
+      Height = 1083
       Align = alLeft
       BevelOuter = bvNone
       Color = 2829611
@@ -1390,7 +1390,7 @@ object fmain: Tfmain
   object Panel5: TPanel
     Left = 0
     Top = 0
-    Width = 1878
+    Width = 1920
     Height = 46
     Align = alTop
     BevelOuter = bvNone
@@ -1709,7 +1709,7 @@ object fmain: Tfmain
       OnClick = SpeedButton19Click
     end
     object panelstatus: TPanel
-      Left = 1443
+      Left = 1485
       Top = 0
       Width = 435
       Height = 46
