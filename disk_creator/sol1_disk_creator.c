@@ -94,7 +94,7 @@ uint16_t main(void){
   // create files
   // -----------------------------------------------------------------------------------------------
   // /boot
-  kernel_lba = try_create_file("sol1.0", "../software/obj/kernel.obj", boot_id, 0x07);
+  kernel_lba = try_create_file("sol1.0", "../software/obj/kernel_simple.obj", boot_id, 0x07);
 
   // /sbin
   try_create_file("init",      "../software/obj/init.obj",        sbin_id, 0x07);

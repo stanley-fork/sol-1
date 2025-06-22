@@ -1,7 +1,7 @@
 0001   0000             ; --- FILENAME: ../solarium/asm/asm.c
-0002   0000             ; --- DATE:     19-06-2025 at 22:12:24
+0002   0000             ; --- DATE:     22-06-2025 at 16:50:10
 0003   0000             .include "lib/asm/kernel.exp"
-0001+  0000             fdc_irq_event    .EQU  $1960
+0001+  0000             fdc_irq_event    .EQU  $195a
 0002+  0000             sys_break        .EQU  $0000
 0003+  0000             sys_rtc          .EQU  $0001
 0004+  0000             sys_ide          .EQU  $0002

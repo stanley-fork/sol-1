@@ -1,5 +1,5 @@
 0001   0000             .include "lib/kernel.exp"
-0001+  0000             fdc_irq_event    .EQU  $195f
+0001+  0000             fdc_irq_event    .EQU  $195a
 0002+  0000             sys_break        .EQU  $0000
 0003+  0000             sys_rtc          .EQU  $0001
 0004+  0000             sys_ide          .EQU  $0002
@@ -28,7 +28,7 @@
 0012   0408             
 0013   0408 3B 1D 04      mov d, s_irq1
 0014   040B 07 45 06      call _puts
-0015   040E 3B 5F 19      mov d, fdc_irq_event
+0015   040E 3B 5A 19      mov d, fdc_irq_event
 0016   0411 19 04         mov al, 4
 0017   0413 05 0C         syscall sys_system    ; read fdc irq
 0018   0415 07 E5 06      call print_u8x        ; print irq event
