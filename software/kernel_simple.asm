@@ -122,6 +122,7 @@ text_org          .equ $400             ; code origin address for all user proce
 .dw syscall_io
 .dw syscall_reboot
 .dw syscall_fdc
+.dw syscall_fdc_read
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; system call aliases
@@ -129,6 +130,7 @@ text_org          .equ $400             ; code origin address for all user proce
 sys_io               .equ 0
 sys_reboot           .equ 1
 sys_fdc              .equ 2
+sys_fdc_read         .equ 3
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; IRQs' code block
@@ -207,6 +209,49 @@ int_7_continue:
 ; _FDC_WD_SECTOR    .equ $FFCA
 ; _FDC_WD_DATA      .equ $FFCB
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+syscall_fdc_read:
+  mov al, [_FDC_WD_DATA]      ; read data register to clear any errors
+  mov al, [_FDC_WD_STAT_CMD]      ; read status register to clear any errors
+  mov al, %11100000         
+  mov [_FDC_WD_STAT_CMD], al
+  call fdc_wait_64us
+
+  mov di, transient_area
+fdc_read_loop: ; for each byte, we need to wait for DRQ to be high
+  mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag 10+3+5+8+5+8
+  mov bl, al                                                
+  and bl, $01                ; check drq bit
+  jz fdc_read_end
+  and al, $02                ; check drq bit
+  jz fdc_read_loop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  mov al, [_FDC_WD_DATA]     ; send data byte to wd1770
+  stosb
+  jmp fdc_read_loop
+
+;we need to check if writing to data reg causes a spurious read. so lets check inside the writing loop, how many times we actually write the bytes
+;say the 40 byte loop. if we find that we only write ~20 times, then this indcates this problem.
+;because for every write, if it also reads, then that clears DRQ, so we need to wait for next DRQ.
+
+
+fdc_read_end:
+  mov d, sss
+  call _puts
+  mov a, c
+  call print_u16d
+  call printnl
+  call cmd_hexd
+  sysret
+sss:.db "\ntrack read\n", 0
+
 syscall_fdc:
 ; bl: track number
 syscall_fdc_format:
@@ -223,6 +268,8 @@ syscall_fdc_format:
   mov bl, al
   call print_u8x
   call printnl
+  mov a, 0
+  mov [fdc_count], a
 fdc_header_loop_start:
   mov al, %11110010               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
   mov [_FDC_WD_STAT_CMD], al
@@ -336,7 +383,7 @@ fdc_l11:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l11
-  mov al, $FF
+  mov al, $AA
   mov [_FDC_WD_DATA], al     ; send data byte to wd1770
   dec cl
   jnz fdc_l11
@@ -365,12 +412,11 @@ fdc_l13:
   inc al
   mov g, a
   cmp al, 17
-  mov [_7SEG_DISPLAY], al
   jne fdc_inner_loop
 
 ; loop ~369 times
 fdc_format_footer:
-  mov cl, $FF
+  mov c, 0
 fdc_footer_drq_loop:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   mov bl, al
@@ -378,12 +424,14 @@ fdc_footer_drq_loop:
   jz fdc_format_done
   and al, $02                ; check drq bit
   jz fdc_footer_drq_loop
-  mov al, cl
+  mov al, $E5
   mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  inc c
   jmp fdc_footer_drq_loop
 
 fdc_format_done:
-
+  mov a, c
+  call print_u16d
   sysret
 
 ; fetch is 2 cycles long when 'display_reg_load' is false.
@@ -393,12 +441,13 @@ fdc_format_done:
 ; and since dec cl, and jnz amount to 11 cycles, we need to loop there 14 times: 14*11 = 154
 ; and 154 + 5 = 159
 fdc_wait_64us:
-  mov cl, 16                       ; 5 cycles
+  mov cl, 20                       ; 5 cycles
 fdc_wait_64_loop:
   dec cl                           ; 3 cycles
   jnz fdc_wait_64_loop             ; 8 cycles
   ret
 
+fdc_count: .dw 0
 fdc_irq: .db 0
 s_format_begin:   .db "\nformatting starting...\n", 0
 s_format_done:    .db "\nformatting done.\n", 0
@@ -567,7 +616,7 @@ kernel_reset_vector:
   call _puts
   ; First, select drive 1 and de-select drive 0
   mov d, $FFC0
-  mov bl, %00001001     ; %00001001 : turn LED on, disable double density, select side 0, select drive 0, do not select drive 1
+  mov bl, %00001101     ; %00001001 : turn LED on, disable double density, select side 0, select drive 0, do not select drive 1
   mov [d], bl
 
 menu:
@@ -586,6 +635,8 @@ menu:
   je status2
   cmp ah, '5'
   je format
+  cmp ah, '6'
+  je read
   jmp menu
 step_in:
   mov d, $FFC8    ; wd1770
@@ -632,6 +683,87 @@ format:
   mov d, s_format_done
   call _puts
   jmp menu
+read:
+  syscall sys_fdc_read
+  jmp menu
+
+
+cmd_hexd:
+  mov a, transient_area
+  mov [start], a
+  mov a, 3073
+  mov [length], a
+
+	mov a, [start]
+  mov d, a        ; dump pointer in d
+  mov c, 0
+dump_loop:
+  mov al, cl
+  and al, $0F
+  jz print_base
+back:
+  mov al, [d]        ; read byte
+  mov bl, al
+  call print_u8x
+  mov a, $2000
+  syscall sys_io      ; space
+  mov al, cl
+  and al, $0F
+  cmp al, $0F
+  je print_ascii
+back1:
+  inc d
+  inc c
+  mov a, [length]
+  cmp a, c
+  jne dump_loop
+  
+  mov a, $0A00
+  syscall sys_io
+  mov a, $0D00
+  syscall sys_io
+  ;call printnl
+
+  ret
+print_ascii:
+  sub d, 16
+  mov b, 16
+print_ascii_L:
+  inc d
+  mov al, [d]        ; read byte
+  cmp al, $20
+  jlu dot
+  cmp al, $7E
+  jleu ascii
+dot:
+  mov a, $2E00
+  syscall sys_io
+  jmp ascii_continue
+ascii:
+  mov ah, al
+  mov al, 0
+  syscall sys_io
+ascii_continue:
+  loopb print_ascii_L
+  jmp back1
+print_base:
+  mov a, $0A00
+  syscall sys_io
+  mov a, $0D00
+  syscall sys_io
+  mov b, d
+  sub b, transient_area
+  call print_u16x        ; display row
+  add b, transient_area
+  mov a, $2000
+  syscall sys_io
+  jmp back
+
+  ret
+
+start:  .dw 0
+length: .dw 1024
+
 
 s_track: .db "\ntrack: ", 0
 
@@ -641,7 +773,7 @@ s_menu: .db "\n0. step in\n"
         .db "3. read status 1\n", 
         .db "4. read status 2\n", 
         .db "5. format track\n", 
-        .db "6. exit\n", 
+        .db "6. read track\n", 
         .db "\nselect option: ", 0
 
 str0:   .db "\nselecting drive 1...\n", 0
