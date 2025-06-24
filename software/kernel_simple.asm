@@ -216,6 +216,11 @@ syscall_fdc_read:
   mov [_FDC_WD_STAT_CMD], al
   call fdc_wait_64us
 
+fdc_wait_busy_high1:
+  mov al, [_FDC_WD_STAT_CMD]      ; 
+  and al, $01                ; 
+  jz fdc_wait_busy_high1
+
   mov di, transient_area
 fdc_read_loop: ; for each byte, we need to wait for DRQ to be high
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag 10+3+5+8+5+8
@@ -224,18 +229,13 @@ fdc_read_loop: ; for each byte, we need to wait for DRQ to be high
   jz fdc_read_end
   and al, $02                ; check drq bit
   jz fdc_read_loop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  mov al, [_FDC_WD_DATA]     ; send data byte to wd1770
+  mov al, [_FDC_WD_DATA]     ; 
   stosb
   jmp fdc_read_loop
+
+  mov a, di
+  sub a, transient_area
+
 
 ;we need to check if writing to data reg causes a spurious read. so lets check inside the writing loop, how many times we actually write the bytes
 ;say the 40 byte loop. if we find that we only write ~20 times, then this indcates this problem.
@@ -245,7 +245,6 @@ fdc_read_loop: ; for each byte, we need to wait for DRQ to be high
 fdc_read_end:
   mov d, sss
   call _puts
-  mov a, c
   call print_u16d
   call printnl
   call cmd_hexd
@@ -271,31 +270,35 @@ syscall_fdc_format:
   mov a, 0
   mov [fdc_count], a
 fdc_header_loop_start:
-  mov al, %11110010               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
+  mov al, %11110110               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
   mov [_FDC_WD_STAT_CMD], al
 ; write the first data block for formatting which is 40 bytes of 0xFF:
   call fdc_wait_64us
+  mov d, 1
+
+fdc_wait_busy_high:
+  mov al, [_FDC_WD_STAT_CMD]      ; 
+  and al, $01                ; 
+  jz fdc_wait_busy_high
+
 
   mov cl, 40
 fdc_drq_loop: ; for each byte, we need to wait for DRQ to be high
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_drq_loop
-  mov al, $FF                     ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $FF     ; send data byte to wd1770
   dec cl
   jnz fdc_drq_loop
 ; start inner data block loop. this block is written 16 times
 
-  mov g, 1
 fdc_inner_loop:
   mov cl, 6
 fdc_l1:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l1
-  mov al, $00                     ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $00     ; send data byte to wd1770
   dec cl
   jnz fdc_l1
 
@@ -304,24 +307,21 @@ fdc_l2:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l2
-  mov al, $FE                     ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $FE     ; send data byte to wd1770
 
 ; track number
 fdc_l3:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l3
-  mov al, $00                     ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $00     ; send data byte to wd1770
 
 ; side number
 fdc_l4:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l4
-  mov al, $00                     ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $00     ; send data byte to wd1770
 
 ; sector number
 fdc_l5:
@@ -336,16 +336,14 @@ fdc_l6:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l6
-  mov al, $00                     ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $00     ; send data byte to wd1770
 
 ; 2 crc's
 fdc_l7:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l7
-  mov al, $F7                     ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $F7     ; send data byte to wd1770
 
 ; 11 times $FF
   mov cl, 11
@@ -353,8 +351,7 @@ fdc_l8:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l8
-  mov al, $FF
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $FF     ; send data byte to wd1770
   dec cl
   jnz fdc_l8
 
@@ -364,8 +361,7 @@ fdc_l9:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l9
-  mov al, $00
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $00     ; send data byte to wd1770
   dec cl
   jnz fdc_l9
 
@@ -374,17 +370,16 @@ fdc_l10:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l10
-  mov al, $FB                     ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $FB     ; send data byte to wd1770
 
 ; sector data
   mov cl, 128
+  mov bl, $E5
 fdc_l11:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l11
-  mov al, $AA
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov [_FDC_WD_DATA], bl     ; send data byte to wd1770
   dec cl
   jnz fdc_l11
 
@@ -393,8 +388,7 @@ fdc_l12:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l12
-  mov al, $F7                     ; load format byte
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $F7     ; send data byte to wd1770
 
 ; 10 times $FF
   mov cl, 10
@@ -402,21 +396,19 @@ fdc_l13:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   and al, $02                ; check drq bit
   jz fdc_l13
-  mov al, $FF
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
+  mov byte [_FDC_WD_DATA], $FF     ; send data byte to wd1770
   dec cl
   jnz fdc_l13
 
 ; check whether we did this 16 times
-  mov al, gl
-  inc al
-  mov g, a
-  cmp al, 17
+  inc d
+  cmp d, 17
   jne fdc_inner_loop
+
+  sysret
 
 ; loop ~369 times
 fdc_format_footer:
-  mov c, 0
 fdc_footer_drq_loop:
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag
   mov bl, al
@@ -424,14 +416,10 @@ fdc_footer_drq_loop:
   jz fdc_format_done
   and al, $02                ; check drq bit
   jz fdc_footer_drq_loop
-  mov al, $E5
-  mov [_FDC_WD_DATA], al     ; send data byte to wd1770
-  inc c
+  mov byte [_FDC_WD_DATA], $FF     ; send data byte to wd1770
   jmp fdc_footer_drq_loop
 
 fdc_format_done:
-  mov a, c
-  call print_u16d
   sysret
 
 ; fetch is 2 cycles long when 'display_reg_load' is false.
@@ -441,7 +429,7 @@ fdc_format_done:
 ; and since dec cl, and jnz amount to 11 cycles, we need to loop there 14 times: 14*11 = 154
 ; and 154 + 5 = 159
 fdc_wait_64us:
-  mov cl, 20                       ; 5 cycles
+  mov cl, 14                       ; 5 cycles
 fdc_wait_64_loop:
   dec cl                           ; 3 cycles
   jnz fdc_wait_64_loop             ; 8 cycles
