@@ -121,7 +121,7 @@ text_org          .equ $400             ; code origin address for all user proce
 ; ------------------------------------------------------------------------------------------------------------------;
 .dw syscall_io
 .dw syscall_reboot
-.dw syscall_fdc
+.dw syscall_fdc_format
 .dw syscall_fdc_read
 .dw syscall_fdc_read_sec
 
@@ -130,7 +130,7 @@ text_org          .equ $400             ; code origin address for all user proce
 ; ------------------------------------------------------------------------------------------------------------------;
 sys_io               .equ 0
 sys_reboot           .equ 1
-sys_fdc              .equ 2
+sys_fdc_format       .equ 2
 sys_fdc_read         .equ 3
 sys_fdc_read_sec     .equ 4
 
@@ -215,22 +215,21 @@ int_7_continue:
 syscall_fdc_read:
   mov al, [_FDC_WD_DATA]      ; read data register to clear any errors
   mov al, [_FDC_WD_STAT_CMD]      ; read status register to clear any errors
-  mov al, %11100100         
+  mov al, %11101000         
   mov [_FDC_WD_STAT_CMD], al
   call fdc_wait_64us
 
-fdc_wait_busy_high1:
-  mov al, [_FDC_WD_STAT_CMD]      ; 
-  and al, $01                ; 
-  jz fdc_wait_busy_high1
+;fdc_wait_busy_high1:
+;  mov al, [_FDC_WD_STAT_CMD]      ; 
+;  test al, $01                ; 
+;  jz fdc_wait_busy_high1
 
   mov di, transient_area
 fdc_read_loop: ; for each byte, we need to wait for DRQ to be high
-  mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag 10+3+5+8+5+8
-  mov bl, al                                                
-  and bl, $01                ; check drq bit
+  mov al, [_FDC_WD_STAT_CMD]      ; 
+  test al, $01                ; check busy bit
   jz fdc_read_end
-  and al, $02                ; check drq bit
+  test al, $02                ; check drq bit
   jz fdc_read_loop
   mov al, [_FDC_WD_DATA]     ; 
   stosb
@@ -246,7 +245,7 @@ fdc_read_end:
   call _puts
   call print_u16d
   call printnl
-  mov b, 3080
+  mov b, 3300
   call cmd_hexd
   sysret
 sss:.db "\ntrack read\n", 0
@@ -258,22 +257,21 @@ syscall_fdc_read_sec:
   mov [_FDC_WD_SECTOR], al
   mov al, ah
   mov [_FDC_WD_TRACK], al
-  mov al, %10000100         
+  mov al, %10001000         
   mov [_FDC_WD_STAT_CMD], al
   call fdc_wait_64us
 
-fdc_wait_busy_high2:
-  mov al, [_FDC_WD_STAT_CMD]      ; 
-  and al, $01                ; 
-  jz fdc_wait_busy_high2
+;fdc_wait_busy_high2:
+;  mov al, [_FDC_WD_STAT_CMD]      ; 
+;  test al, $01                ; 
+;  jz fdc_wait_busy_high2
 
   mov di, transient_area
 fdc_read_loop2: ; for each byte, we need to wait for DRQ to be high
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag 10+3+5+8+5+8
-  mov bl, al                                                
-  and bl, $01                ; check drq bit
+  test al, $01                ; check drq bit
   jz fdc_read_end2
-  and al, $02                ; check drq bit
+  test al, $02                ; check drq bit
   jz fdc_read_loop2
   mov al, [_FDC_WD_DATA]     ; 
   stosb
@@ -289,38 +287,49 @@ fdc_read_end2:
   call cmd_hexd
   sysret
 
-syscall_fdc:
 ; bl: track number
 syscall_fdc_format:
-  mov al, bl
-  mov [fdc_128_format_track], al  ; write track number to formatting data block
-  mov al, 1
-  mov [fdc_128_format_sect], al   ; reset sector variable to 1
-  mov al, 0
-  mov [_FDC_WD_TRACK], al   
+  mov [_FDC_WD_TRACK], bl
   mov d, s_format_begin
   call _puts
   mov al, [_FDC_WD_DATA]      ; read data register to clear any errors
   mov al, [_FDC_WD_STAT_CMD]      ; read status register to clear any errors
-  mov bl, al
-  call print_u8x
-  call printnl
-  mov a, 0
-  mov [fdc_count], a
 fdc_header_loop_start:
-  mov al, %11110110               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
+  mov al, %11111010               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
   mov [_FDC_WD_STAT_CMD], al
 ; write the first data block for formatting which is 40 bytes of 0xFF:
   call fdc_wait_64us
-  mov d, 1
 
-fdc_wait_busy_high:
-  mov al, [_FDC_WD_STAT_CMD]      ; 
-  and al, $01                ; 
-  jz fdc_wait_busy_high
+
+;fdc_wait_busy_high:
+;  mov al, [_FDC_WD_STAT_CMD]      ; 
+;  test al, $01                ; 
+;  jz fdc_wait_busy_high
+
+  mov si, transient_area
+fdc_format_drq:
+  mov al, [_FDC_WD_STAT_CMD]  ; 10
+  test al, $01                ; 4
+  jz fdc_format_end           ; 8
+  test al, $02                ; 4
+  jz fdc_format_drq           ; 8
+  lodsb                       ; 7
+  mov [_FDC_WD_DATA], al      ; 10   
+  jmp fdc_format_drq
+fdc_format_end:
+  mov d, sss1
+  call _puts
+  sysret
+
+sss1:.db "\nformat done\n", 0
+
+
+
+
 
 
 fdc_format_mem:
+  mov d, 1
   mov di, transient_area
   mov c, 40
   mov al, $FF
@@ -354,7 +363,7 @@ fdc_l4:
 
 ; sector number
 fdc_l5:
-  mov al, gl
+  mov a, d
   stosb
 
 ; sector length 128 bytes
@@ -389,12 +398,13 @@ fdc_l10:
   stosb
 
 ; sector data
-  mov c, 128
-  mov al, $E5
+  mov c, 0
 fdc_l11:
+  mov al, cl
   stosb
-  dec c
-  jnz fdc_l11
+  inc c
+  cmp c, 128
+  jne fdc_l11
 
 ; 2 crc's
 fdc_l12:
@@ -430,13 +440,12 @@ fdc_footer_drq_loop:
 ; call u16 is 14 cycles long
 ; 160 - 5 - 14 = 
 fdc_wait_64us:
-  mov cl, 12                       ; 5 cycles
+  mov cl, 11                       ; 5 cycles
 fdc_wait_64_loop:
   dec cl                           ; 3 cycles
   jnz fdc_wait_64_loop             ; 8 cycles
   ret
 
-fdc_count: .dw 0
 fdc_irq: .db 0
 s_format_begin:   .db "\nformatting starting...\n", 0
 s_format_done:    .db "\nformatting done.\n", 0
@@ -605,14 +614,9 @@ kernel_reset_vector:
   call _puts
   ; First, select drive 1 and de-select drive 0
   mov d, $FFC0
-  mov bl, %00001001     ; %00001001 : turn LED on, disable double density, select side 0, select drive 0, do not select drive 1
+  mov bl, %00001101     ; %00001001 : turn LED on, disable double density, select side 0, select drive 0, do not select drive 1
   mov [d], bl
 
-  ; fill ram with fdc format
-  call fdc_format_mem
-  mov a, transient_area
-  mov b, 4000
-  call cmd_hexd
 
 menu:
   mov d, s_menu
@@ -634,6 +638,8 @@ menu:
   je read
   cmp ah, '7'
   je read_sec
+  cmp ah, '8'
+  je fdc_options
   jmp menu
 step_in:
   mov d, $FFC8    ; wd1770
@@ -671,19 +677,34 @@ status2:
   call printnl
   jmp menu
 format:
+  call fdc_format_mem ; fill ram with format
   mov d, s_track
   call _puts
   call scan_u8x   ; in al
   mov bl, al      ; track needs to be in bl
   mov al, 0       ; 0 = format
-  syscall sys_fdc 
+  syscall sys_fdc_format
   mov d, s_format_done
   call _puts
   jmp menu
 read:
+  mov di, transient_area
+  mov c, 4000
+  mov al, $33
+read_l0:
+  stosb
+  dec c
+  jnz read_l0
   syscall sys_fdc_read
   jmp menu
 read_sec:
+  mov di, transient_area
+  mov c, 128
+  mov al, $55
+read_l1:
+  stosb
+  dec c
+  jnz read_l1
   mov d, s1
   call _puts
   call scan_u8x
@@ -696,6 +717,14 @@ read_sec:
   jmp menu
 s1:.db "\ntrack: ", 0
 s2:.db "\nsector: ", 0
+ss3:.db "\nvalue: ", 0
+
+fdc_options:
+  mod d, ss3
+  call _puts
+  call scan_u8x
+  mov [_FDC_CONFIG], al
+  jmp menu
 
 ; b : len
 cmd_hexd:
@@ -785,6 +814,7 @@ s_menu: .db "\n0. step in\n"
         .db "5. format track\n", 
         .db "6. read track\n", 
         .db "7. read sector\n", 
+        .db "8. config\n", 
         .db "\nselect option: ", 0
 
 str0:   .db "\nselecting drive 1...\n", 0
