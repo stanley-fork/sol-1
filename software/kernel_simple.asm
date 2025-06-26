@@ -245,7 +245,7 @@ fdc_read_end:
   call _puts
   call print_u16d
   call printnl
-  mov b, 3300
+  mov b, 3090
   call cmd_hexd
   sysret
 sss:.db "\ntrack read\n", 0
@@ -287,6 +287,8 @@ fdc_read_end2:
   call cmd_hexd
   sysret
 
+; when writing the actual code for formatting multiple tracks, remember to change the track number byte
+; in the RAM formatting block because they are all set as 00 right now
 ; bl: track number
 syscall_fdc_format:
   mov [_FDC_WD_TRACK], bl
@@ -440,7 +442,7 @@ fdc_footer_drq_loop:
 ; call u16 is 14 cycles long
 ; 160 - 5 - 14 = 
 fdc_wait_64us:
-  mov cl, 11                       ; 5 cycles
+  mov cl, 1                       ; 5 cycles
 fdc_wait_64_loop:
   dec cl                           ; 3 cycles
   jnz fdc_wait_64_loop             ; 8 cycles
@@ -720,7 +722,7 @@ s2:.db "\nsector: ", 0
 ss3:.db "\nvalue: ", 0
 
 fdc_options:
-  mod d, ss3
+  mov d, ss3
   call _puts
   call scan_u8x
   mov [_FDC_CONFIG], al
