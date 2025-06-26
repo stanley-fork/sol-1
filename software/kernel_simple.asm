@@ -124,6 +124,7 @@ text_org          .equ $400             ; code origin address for all user proce
 .dw syscall_fdc_format
 .dw syscall_fdc_read
 .dw syscall_fdc_read_sec
+.dw syscall_fdc_write_sec
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; system call aliases
@@ -133,6 +134,7 @@ sys_reboot           .equ 1
 sys_fdc_format       .equ 2
 sys_fdc_read         .equ 3
 sys_fdc_read_sec     .equ 4
+sys_fdc_write_sec    .equ 5
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; IRQs' code block
@@ -215,7 +217,7 @@ int_7_continue:
 syscall_fdc_read:
   mov al, [_FDC_WD_DATA]      ; read data register to clear any errors
   mov al, [_FDC_WD_STAT_CMD]      ; read status register to clear any errors
-  mov al, %11101000         
+  mov al, %11101100         
   mov [_FDC_WD_STAT_CMD], al
   call fdc_wait_64us
 
@@ -257,15 +259,13 @@ syscall_fdc_read_sec:
   mov [_FDC_WD_SECTOR], al
   mov al, ah
   mov [_FDC_WD_TRACK], al
-  mov al, %10001000         
+  mov al, %10001100         
   mov [_FDC_WD_STAT_CMD], al
   call fdc_wait_64us
-
 ;fdc_wait_busy_high2:
 ;  mov al, [_FDC_WD_STAT_CMD]      ; 
 ;  test al, $01                ; 
 ;  jz fdc_wait_busy_high2
-
   mov di, transient_area
 fdc_read_loop2: ; for each byte, we need to wait for DRQ to be high
   mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag 10+3+5+8+5+8
@@ -297,7 +297,7 @@ syscall_fdc_format:
   mov al, [_FDC_WD_DATA]      ; read data register to clear any errors
   mov al, [_FDC_WD_STAT_CMD]      ; read status register to clear any errors
 fdc_header_loop_start:
-  mov al, %11111010               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
+  mov al, %11111110               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
   mov [_FDC_WD_STAT_CMD], al
 ; write the first data block for formatting which is 40 bytes of 0xFF:
   call fdc_wait_64us
@@ -326,7 +326,34 @@ fdc_format_end:
 sss1:.db "\nformat done\n", 0
 
 
-
+; sector in al
+; track in ah
+syscall_fdc_write_sec:
+  mov [_FDC_WD_SECTOR], al
+  mov al, ah
+  mov [_FDC_WD_TRACK], al
+  mov al, %10101110         
+  mov [_FDC_WD_STAT_CMD], al
+  call fdc_wait_64us
+;fdc_wait_busy_high2:
+;  mov al, [_FDC_WD_STAT_CMD]      ; 
+;  test al, $01                ; 
+;  jz fdc_wait_busy_high2
+  mov al, $55
+fdc_write_loop2: ; for each byte, we need to wait for DRQ to be high
+  mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag 10+3+5+8+5+8
+  test al, $01                ; check drq bit
+  jz fdc_write_end
+  test al, $02                ; check drq bit
+  jz fdc_write_loop2
+  mov [_FDC_WD_DATA], al     ; 
+  xor al, $ff
+  jmp fdc_write_loop2
+fdc_write_end:
+  mov d, sss2
+  call _puts
+  sysret
+sss2:.db "\nsector written\n",0
 
 
 
@@ -616,7 +643,7 @@ kernel_reset_vector:
   call _puts
   ; First, select drive 1 and de-select drive 0
   mov d, $FFC0
-  mov bl, %00001101     ; %00001001 : turn LED on, disable double density, select side 0, select drive 0, do not select drive 1
+  mov bl, %00001110     ; %00001001 : turn LED on, disable double density, select side 0, select drive 0, do not select drive 1
   mov [d], bl
 
 
@@ -642,6 +669,8 @@ menu:
   je read_sec
   cmp ah, '8'
   je fdc_options
+  cmp ah, '9'
+  je fdc_write_sec
   jmp menu
 step_in:
   mov d, $FFC8    ; wd1770
@@ -713,13 +742,24 @@ read_l1:
   mov ah, al
   mov d, s2
   call _puts
-  call scan_u8x ; in al
-  
+  call scan_u8x ; in al 
   syscall sys_fdc_read_sec
   jmp menu
 s1:.db "\ntrack: ", 0
 s2:.db "\nsector: ", 0
 ss3:.db "\nvalue: ", 0
+
+
+fdc_write_sec:
+  mov d, s1
+  call _puts
+  call scan_u8x
+  mov ah, al
+  mov d, s2
+  call _puts
+  call scan_u8x ; in al
+  syscall sys_fdc_write_sec
+  jmp menu
 
 fdc_options:
   mov d, ss3
@@ -817,6 +857,7 @@ s_menu: .db "\n0. step in\n"
         .db "6. read track\n", 
         .db "7. read sector\n", 
         .db "8. config\n", 
+        .db "9. write sector\n", 
         .db "\nselect option: ", 0
 
 str0:   .db "\nselecting drive 1...\n", 0

@@ -1,5 +1,5 @@
 ; --- FILENAME: programs/wumpus.c
-; --- DATE:     26-06-2025 at 21:07:16
+; --- DATE:     26-06-2025 at 22:49:09
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
