@@ -217,7 +217,7 @@ int_7_continue:
 syscall_fdc_read:
   mov al, [_FDC_WD_DATA]      ; read data register to clear any errors
   mov al, [_FDC_WD_STAT_CMD]      ; read status register to clear any errors
-  mov al, %11101100         
+  mov al, %11101000         
   mov [_FDC_WD_STAT_CMD], al
   call fdc_wait_64us
 
@@ -259,7 +259,7 @@ syscall_fdc_read_sec:
   mov [_FDC_WD_SECTOR], al
   mov al, ah
   mov [_FDC_WD_TRACK], al
-  mov al, %10001100         
+  mov al, %10001000         
   mov [_FDC_WD_STAT_CMD], al
   call fdc_wait_64us
 ;fdc_wait_busy_high2:
@@ -297,17 +297,14 @@ syscall_fdc_format:
   mov al, [_FDC_WD_DATA]      ; read data register to clear any errors
   mov al, [_FDC_WD_STAT_CMD]      ; read status register to clear any errors
 fdc_header_loop_start:
-  mov al, %11111110               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
+  mov al, %11111010               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
   mov [_FDC_WD_STAT_CMD], al
 ; write the first data block for formatting which is 40 bytes of 0xFF:
   call fdc_wait_64us
-
-
 ;fdc_wait_busy_high:
 ;  mov al, [_FDC_WD_STAT_CMD]      ; 
 ;  test al, $01                ; 
 ;  jz fdc_wait_busy_high
-
   mov si, transient_area
 fdc_format_drq:
   mov al, [_FDC_WD_STAT_CMD]  ; 10
@@ -332,22 +329,22 @@ syscall_fdc_write_sec:
   mov [_FDC_WD_SECTOR], al
   mov al, ah
   mov [_FDC_WD_TRACK], al
-  mov al, %10101110         
+  mov al, %10101010            ; 101, 0:single sector, 1: disable spinup, 0: no delay, 1: no precomp, 0: normal data mark
   mov [_FDC_WD_STAT_CMD], al
   call fdc_wait_64us
 ;fdc_wait_busy_high2:
 ;  mov al, [_FDC_WD_STAT_CMD]      ; 
 ;  test al, $01                ; 
 ;  jz fdc_wait_busy_high2
-  mov al, $55
+  mov si, fdc_sec_data
 fdc_write_loop2: ; for each byte, we need to wait for DRQ to be high
-  mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag 10+3+5+8+5+8
-  test al, $01                ; check drq bit
-  jz fdc_write_end
-  test al, $02                ; check drq bit
-  jz fdc_write_loop2
-  mov [_FDC_WD_DATA], al     ; 
-  xor al, $ff
+  mov al, [_FDC_WD_STAT_CMD]  ; 10
+  test al, $01                ; 4
+  jz fdc_format_end           ; 8
+  test al, $02                ; 4
+  jz fdc_format_drq           ; 8
+  lodsb                       ; 7
+  mov [_FDC_WD_DATA], al      ; 10   
   jmp fdc_write_loop2
 fdc_write_end:
   mov d, sss2
@@ -906,6 +903,16 @@ s_priviledge:
   .db "\nexception: privilege\n", 0
 s_divzero:
   .db "\nexception: zero division\n", 0
+
+fdc_sec_data:
+  .db $ff, $ee, $e0, $55, $66, $33, $42, $aa, $ae, $67, $23, $11, $23, $56, $88, $99,
+  .db $1f, $2e, $40, $53, $63, $43, $52, $1a, $a4, $67, $03, $31, $43, $56, $48, $f9,
+  .db $2f, $3e, $50, $57, $62, $53, $21, $2a, $a3, $17, $73, $41, $53, $46, $38, $b9,
+  .db $6f, $4e, $20, $56, $67, $63, $20, $6a, $a2, $27, $53, $61, $23, $16, $28, $e9,
+  .db $af, $7e, $10, $52, $62, $73, $18, $5a, $a1, $37, $43, $51, $13, $26, $18, $a9,
+  .db $6f, $3e, $90, $51, $63, $03, $18, $4a, $a5, $67, $33, $41, $43, $36, $68, $c9,
+  .db $8f, $5e, $60, $55, $68, $23, $18, $3a, $a3, $57, $23, $31, $73, $36, $48, $b9,
+  .db $2f, $1e, $40, $53, $69, $13, $19, $3a, $a1, $48, $23, $21, $53, $46, $38, $a9
 
 ; This is the format of a sector for the 128 byte per sector format.
 ; Write the bracketed data 16 times per track.
