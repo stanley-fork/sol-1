@@ -5,31 +5,31 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; CONVERT ASCII 'O'..'F' TO INTEGER 0..15
-; ASCII in BL
-; result in AL
-; ascii for F = 0100 0110
+; convert ascii 'o'..'f' to integer 0..15
+; ascii in bl
+; result in al
+; ascii for f = 0100 0110
 ; ascii for 9 = 0011 1001
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 hex_ascii_encode:
   mov al, bl
   test al, $40        ; test if letter or number
   jnz hex_letter
-  and al, $0F        ; get number
+  and al, $0f        ; get number
   ret
 hex_letter:
-  and al, $0F        ; get letter
+  and al, $0f        ; get letter
   add al, 9
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; ATOI
-; 2 letter hex string in B
-; 8bit integer returned in AL
+; atoi
+; 2 letter hex string in b
+; 8bit integer returned in al
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _atoi:
   push b
-  call hex_ascii_encode      ; convert BL to 4bit code in AL
+  call hex_ascii_encode      ; convert bl to 4bit code in al
   mov bl, bh
   push al          ; save a
   call hex_ascii_encode
@@ -48,9 +48,9 @@ scanf:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; ITOA
-; 8bit value in BL
-; 2 byte ASCII result in A
+; itoa
+; 8bit value in bl
+; 2 byte ascii result in a
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _itoa:
   push d
@@ -64,7 +64,7 @@ _itoa:
   pop b
   push b
   mov bh, 0
-  and bl, $0F
+  and bl, $0f
   mov d, b
   mov al, [d + s_hex_digits]
   pop b
@@ -72,67 +72,67 @@ _itoa:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; HEX STRING TO BINARY
+; hex string to binary
 ; di = destination address
 ; si = source
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _hex_to_int:
-_hex_to_int_L1:
-  lodsb          ; load from [SI] to AL
-  cmp al, 0        ; check if ASCII 0
+_hex_to_int_l1:
+  lodsb          ; load from [si] to al
+  cmp al, 0        ; check if ascii 0
   jz _hex_to_int_ret
   mov bh, al
   lodsb
   mov bl, al
-  call _atoi        ; convert ASCII byte in B to int (to AL)
-  stosb          ; store AL to [DI]
-  jmp _hex_to_int_L1
+  call _atoi        ; convert ascii byte in b to int (to al)
+  stosb          ; store al to [di]
+  jmp _hex_to_int_l1
 _hex_to_int_ret:
   ret    
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; GETCHAR
+; getchar
 ; char in ah
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 getch:
   push al
 getch_retry:
   mov al, 1
-  syscall sys_io      ; receive in AH
+  syscall sys_io      ; receive in ah
   pop al
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PUTCHAR
+; putchar
 ; char in ah
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _putchar:
   push al
   mov al, 0
-  syscall sys_io      ; char in AH
+  syscall sys_io      ; char in ah
   pop al
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; INPUT A STRING
+;; input a string
 ;; terminates with null
-;; pointer in D
+;; pointer in d
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _gets:
   push a
   push d
 _gets_loop:
   mov al, 1
-  syscall sys_io      ; receive in AH
+  syscall sys_io      ; receive in ah
   cmp ah, 27
   je _gets_ansi_esc
-  cmp ah, $0A        ; LF
+  cmp ah, $0a        ; lf
   je _gets_end
-  cmp ah, $0D        ; CR
+  cmp ah, $0d        ; cr
   je _gets_end
-  cmp ah, $5C        ; '\\'
+  cmp ah, $5c        ; '\\'
   je _gets_escape
   cmp ah, $08      ; check for backspace
   je _gets_backspace
@@ -145,14 +145,14 @@ _gets_backspace:
   jmp _gets_loop
 _gets_ansi_esc:
   mov al, 1
-  syscall sys_io        ; receive in AH without echo
+  syscall sys_io        ; receive in ah without echo
   cmp ah, '['
   jne _gets_loop
   mov al, 1
-  syscall sys_io          ; receive in AH without echo
-  cmp ah, 'D'
+  syscall sys_io          ; receive in ah without echo
+  cmp ah, 'd'
   je _gets_left_arrow
-  cmp ah, 'C'
+  cmp ah, 'c'
   je _gets_right_arrow
   jmp _gets_loop
 _gets_left_arrow:
@@ -163,35 +163,35 @@ _gets_right_arrow:
   jmp _gets_loop
 _gets_escape:
   mov al, 1
-  syscall sys_io      ; receive in AH
+  syscall sys_io      ; receive in ah
   cmp ah, 'n'
-  je _gets_LF
+  je _gets_lf
   cmp ah, 'r'
-  je _gets_CR
+  je _gets_cr
   cmp ah, '0'
-  je _gets_NULL
-  cmp ah, $5C  ; '\'
+  je _gets_null
+  cmp ah, $5c  ; '\'
   je _gets_slash
   mov al, ah        ; if not a known escape, it is just a normal letter
   mov [d], al
   inc d
   jmp _gets_loop
 _gets_slash:
-  mov al, $5C
+  mov al, $5c
   mov [d], al
   inc d
   jmp _gets_loop
-_gets_LF:
-  mov al, $0A
+_gets_lf:
+  mov al, $0a
   mov [d], al
   inc d
   jmp _gets_loop
-_gets_CR:
-  mov al, $0D
+_gets_cr:
+  mov al, $0d
   mov [d], al
   inc d
   jmp _gets_loop
-_gets_NULL:
+_gets_null:
   mov al, $00
   mov [d], al
   inc d
@@ -205,21 +205,21 @@ _gets_end:
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; INPUT TEXT
-;; terminated with CTRL+D
-;; pointer in D
+;; input text
+;; terminated with ctrl+d
+;; pointer in d
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _gettxt:
   push a
   push d
 _gettxt_loop:
   mov al, 1
-  syscall sys_io      ; receive in AH
-  cmp ah, 4      ; EOT
+  syscall sys_io      ; receive in ah
+  cmp ah, 4      ; eot
   je _gettxt_end
   cmp ah, $08      ; check for backspace
   je _gettxt_backspace
-  cmp ah, $5C        ; '\'
+  cmp ah, $5c        ; '\'
   je _gettxt_escape
   mov al, ah
   mov [d], al
@@ -227,22 +227,22 @@ _gettxt_loop:
   jmp _gettxt_loop
 _gettxt_escape:
   mov al, 1
-  syscall sys_io      ; receive in AH
+  syscall sys_io      ; receive in ah
   cmp ah, 'n'
-  je _gettxt_LF
+  je _gettxt_lf
   cmp ah, 'r'
-  je _gettxt_CR
+  je _gettxt_cr
   mov al, ah        ; if not a known escape, it is just a normal letter
   mov [d], al
   inc d
   jmp _gettxt_loop
-_gettxt_LF:
-  mov al, $0A
+_gettxt_lf:
+  mov al, $0a
   mov [d], al
   inc d
   jmp _gettxt_loop
-_gettxt_CR:
-  mov al, $0D
+_gettxt_cr:
+  mov al, $0d
   mov [d], al
   inc d
   jmp _gettxt_loop
@@ -257,13 +257,13 @@ _gettxt_end:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRINT NEW LINE
+; print new line
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 printnl:
   push a
-  mov a, $0A00
+  mov a, $0a00
   syscall sys_io
-  mov a, $0D00
+  mov a, $0d00
   syscall sys_io
   pop a
   ret
@@ -271,33 +271,33 @@ printnl:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; _strtoint
 ; 4 digit hex string number in d
-; integer returned in A
+; integer returned in a
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _strtointx:
   push b
   mov bl, [d]
   mov bh, bl
   mov bl, [d + 1]
-  call _atoi        ; convert to int in AL
-  mov ah, al        ; move to AH
+  call _atoi        ; convert to int in al
+  mov ah, al        ; move to ah
   mov bl, [d + 2]
   mov bh, bl
   mov bl, [d + 3]
-  call _atoi        ; convert to int in AL
+  call _atoi        ; convert to int in al
   pop b
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; _strtoint
 ; 5 digit base10 string number in d
-; integer returned in A
+; integer returned in a
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _strtoint:
   push si
   push b
   push c
   push d
-  call _strlen      ; get string length in C
+  call _strlen      ; get string length in c
   dec c
   mov si, d
   mov a, c
@@ -305,20 +305,20 @@ _strtoint:
   mov d, table_power
   add d, a
   mov c, 0
-_strtoint_L0:
-  lodsb      ; load ASCII to al
+_strtoint_l0:
+  lodsb      ; load ascii to al
   cmp al, 0
   je _strtoint_end
   sub al, $30    ; make into integer
   mov ah, 0
   mov b, [d]
-  mul a, b      ; result in B since it fits in 16bits
+  mul a, b      ; result in b since it fits in 16bits
   mov a, b
   mov b, c
   add a, b
   mov c, a
   sub d, 2
-  jmp _strtoint_L0
+  jmp _strtoint_l0
 _strtoint_end:
   mov a, c
   pop d
@@ -328,36 +328,36 @@ _strtoint_end:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRINT NULL TERMINATED STRING
-; pointer in D
+; print null terminated string
+; pointer in d
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _puts:
   push a
   push d
-_puts_L1:
+_puts_l1:
   mov al, [d]
   cmp al, 0
-  jz _puts_END
+  jz _puts_end
   mov ah, al
   mov al, 0
   syscall sys_io
   inc d
-  jmp _puts_L1
-_puts_END:
+  jmp _puts_l1
+_puts_end:
   pop d
   pop a
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRINT N SIZE STRING
-; pointer in D
-; size in C
+; print n size string
+; pointer in d
+; size in c
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _putsn:
   push al
   push d
   push c
-_putsn_L0:
+_putsn_l0:
   mov al, [d]
   mov ah, al
   mov al, 0
@@ -365,7 +365,7 @@ _putsn_L0:
   inc d
   dec c  
   cmp c, 0
-  jne _putsn_L0
+  jne _putsn_l0
 _putsn_end:
   pop c
   pop d
@@ -374,7 +374,7 @@ _putsn_end:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; print 16bit decimal number
-; input number in A
+; input number in a
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_u16d:
   push a
@@ -403,7 +403,7 @@ print_u16d:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; print AL
+; print al
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_number:
   add al, $30
@@ -412,38 +412,38 @@ print_number:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRINT 16BIT HEX INTEGER
-; integer value in reg B
+; print 16bit hex integer
+; integer value in reg b
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_u16x:
   push a
   push b
   push bl
   mov bl, bh
-  call _itoa        ; convert bh to char in A
+  call _itoa        ; convert bh to char in a
   mov bl, al        ; save al
   mov al, 0
-  syscall sys_io        ; display AH
+  syscall sys_io        ; display ah
   mov ah, bl        ; retrieve al
   mov al, 0
-  syscall sys_io        ; display AL
+  syscall sys_io        ; display al
 
   pop bl
-  call _itoa        ; convert bh to char in A
+  call _itoa        ; convert bh to char in a
   mov bl, al        ; save al
   mov al, 0
-  syscall sys_io        ; display AH
+  syscall sys_io        ; display ah
   mov ah, bl        ; retrieve al
   mov al, 0
-  syscall sys_io        ; display AL
+  syscall sys_io        ; display al
 
   pop b
   pop a
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; INPUT 16BIT HEX INTEGER
-; read 16bit integer into A
+; input 16bit hex integer
+; read 16bit integer into a
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 scan_u16x:
   enter 16
@@ -456,13 +456,13 @@ scan_u16x:
   mov bl, [d]
   mov bh, bl
   mov bl, [d + 1]
-  call _atoi        ; convert to int in AL
-  mov ah, al        ; move to AH
+  call _atoi        ; convert to int in al
+  mov ah, al        ; move to ah
 
   mov bl, [d + 2]
   mov bh, bl
   mov bl, [d + 3]
-  call _atoi        ; convert to int in AL
+  call _atoi        ; convert to int in al
 
   pop d
   pop b
@@ -470,20 +470,20 @@ scan_u16x:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRINT 8bit HEX INTEGER
+; print 8bit hex integer
 ; integer value in reg bl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_u8x:
   push a
   push bl
 
-  call _itoa        ; convert bl to char in A
+  call _itoa        ; convert bl to char in a
   mov bl, al        ; save al
   mov al, 0
-  syscall sys_io        ; display AH
+  syscall sys_io        ; display ah
   mov ah, bl        ; retrieve al
   mov al, 0
-  syscall sys_io        ; display AL
+  syscall sys_io        ; display al
 
   pop bl
   pop a
@@ -491,7 +491,7 @@ print_u8x:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; print 8bit decimal unsigned number
-; input number in AL
+; input number in al
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_u8d:
   push a
@@ -532,8 +532,8 @@ skip10:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; INPUT 8BIT HEX INTEGER
-; read 8bit integer into AL
+; input 8bit hex integer
+; read 8bit integer into al
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 scan_u8x:
   enter 4
@@ -546,7 +546,7 @@ scan_u8x:
   mov bl, [d]
   mov bh, bl
   mov bl, [d + 1]
-  call _atoi        ; convert to int in AL
+  call _atoi        ; convert to int in al
 
   pop d
   pop b
@@ -555,7 +555,7 @@ scan_u8x:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; input decimal number
-; result in A
+; result in a
 ; 655'\0'
 ; low--------high
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -567,7 +567,7 @@ scan_u16d:
   push d
   lea d, [bp +- 7]
   call _gets
-  call _strlen      ; get string length in C
+  call _strlen      ; get string length in c
   dec c
   mov si, d
   mov a, c
@@ -576,13 +576,13 @@ scan_u16d:
   add d, a
   mov c, 0
 mul_loop:
-  lodsb      ; load ASCII to al
+  lodsb      ; load ascii to al
   cmp al, 0
   je mul_exit
   sub al, $30    ; make into integer
   mov ah, 0
   mov b, [d]
-  mul a, b      ; result in B since it fits in 16bits
+  mul a, b      ; result in b since it fits in 16bits
   mov a, b
   mov b, c
   add a, b
@@ -599,8 +599,8 @@ mul_exit:
   ret
 
 
-s_hex_digits:    .db "0123456789ABCDEF"  
-s_telnet_clear:  .db "\033[2J\033[H", 0
+s_hex_digits:    .db "0123456789abcdef"  
+s_telnet_clear:  .db "\033[2j\033[h", 0
 
 table_power:
   .dw 1

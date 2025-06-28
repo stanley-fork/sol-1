@@ -3,9 +3,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; C character classification is an operation provided by a group of functions in the ANSI C Standard Library
-;; for the C programming language. These functions are used to test characters for membership in a particular
-;; class of characters, such as alphabetic characters, control characters, etc. Both single-byte, and wide
+;; c character classification is an operation provided by a group of functions in the ansi c standard library
+;; for the c programming language. these functions are used to test characters for membership in a particular
+;; class of characters, such as alphabetic characters, control characters, etc. both single-byte, and wide
 ;; characters are supported.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; _isalnum 
@@ -25,8 +25,8 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; IS ALPHANUMERIC
-;; sets ZF according with result
+;; is alphanumeric
+;; sets zf according with result
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _isalnum:
 	call _isalpha
@@ -35,8 +35,8 @@ _isalnum:
 _isalnum_exit:
 	ret	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; IS DIGIT
-;; sets ZF according with result
+;; is digit
+;; sets zf according with result
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _isdigit:
 	push al
@@ -44,17 +44,17 @@ _isdigit:
 	jlu _isdigit_false
 	cmp al, '9'
 	jgu _isdigit_false
-	and al, 0	; set ZF
+	and al, 0	; set zf
 	pop al
 	ret
 _isdigit_false:
-	or al, 1	; clear ZF
+	or al, 1	; clear zf
 	pop al
 	ret	
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; IS ALPHA
-;; sets ZF according with result
+;; is alpha
+;; sets zf according with result
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _isalpha:
 	push al
@@ -62,26 +62,26 @@ _isalpha:
 	je _isalpha_true
 	cmp al, '.'
 	je _isalpha_true
-	cmp al, 'A'
+	cmp al, 'a'
 	jlu _isalpha_false
 	cmp al, 'z'
 	jgu _isalpha_false
-	cmp al, 'Z'
+	cmp al, 'z'
 	jleu _isalpha_true
 	cmp al, 'a'
 	jgeu _isalpha_true
 _isalpha_false:
-	or al, 1	; clear ZF
+	or al, 1	; clear zf
 	pop al
 	ret
 _isalpha_true:
-	and al, 0	; set ZF
+	and al, 0	; set zf
 	pop al
 	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; IS PATH-ALPHA
-;; sets ZF according with result
+;; is path-alpha
+;; sets zf according with result
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ispath:
 	push al
@@ -93,54 +93,54 @@ ispath:
 	je ispath_true
 	cmp al, '.'
 	je ispath_true
-	cmp al, 'A'
+	cmp al, 'a'
 	jlu ispath_false
 	cmp al, 'z'
 	jgu ispath_false
-	cmp al, 'Z'
+	cmp al, 'z'
 	jleu ispath_true
 	cmp al, 'a'
 	jgeu ispath_true
 ispath_false:
-	or al, 1	; clear ZF
+	or al, 1	; clear zf
 	pop al
 	ret
 ispath_true:
-	and al, 0	; set ZF
+	and al, 0	; set zf
 	pop al
 	ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; IS SPACE
-;; sets ZF according with result
+;; is space
+;; sets zf according with result
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _isspace:
 	cmp al, $20		; ' '
 	je _isspace_exit
 	cmp al, $09		; '\t'
 	je _isspace_exit
-	cmp al, $0A		; '\n'
+	cmp al, $0a		; '\n'
 	je _isspace_exit
-	cmp al, $0D		; '\r'
+	cmp al, $0d		; '\r'
 	je _isspace_exit
-	cmp al, $0B		; '\v'
+	cmp al, $0b		; '\v'
 _isspace_exit:
 	ret	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; TO LOWER
-; input in AL
-; output in AL
+; to lower
+; input in al
+; output in al
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _to_lower:
-	cmp al, 'Z'
+	cmp al, 'z'
 	jgu _to_lower_ret
 	add al, $20				; convert to lower case
 _to_lower_ret:
 	ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; TO UPPER
-; input in AL
-; output in AL
+; to upper
+; input in al
+; output in al
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _to_upper:
 	cmp al, 'a'

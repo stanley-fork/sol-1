@@ -1,115 +1,113 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 74 SERIES MINICOMPUTER BIOS VERSION 1.0
+; 74 series minicomputer bios version 1.0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; MEMORY MAP
+; memory map
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 0000    ROM BEGIN
+; 0000    rom begin
 ; ....
-; 7FFF    ROM END
+; 7fff    rom end
 ;
-; 8000    RAM begin
+; 8000    ram begin
 ; ....
-; F7FF    Stack root
+; f7ff    stack root
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; I/O MAP
+; i/o map
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; FF80    UART 0    (16550)
-; FF90    UART 1    (16550)
-; FFA0    RTC       (M48T02)
-; FFB0    PIO 0     (8255)
-; FFC0    PIO 1     (8255)
-; FFD0    IDE       (Compact Flash / PATA)
-; FFE0    Timer     (8253)
-; FFF0    BIOS CONFIGURATION NV-RAM STORE AREA
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; SYSTEM CONSTANTS / EQUATIONS
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_UART0_DATA      .equ $FF80        		 ; data
-_UART0_DLAB_0    .equ $FF80        		 ; divisor latch low byte
-_UART0_DLAB_1    .equ $FF81        		 ; divisor latch high byte
-_UART0_IER       .equ $FF81        		 ; Interrupt enable register
-_UART0_FCR       .equ $FF82        		 ; FIFO control register
-_UART0_LCR       .equ $FF83        		 ; line control register
-_UART0_LSR       .equ $FF85        		 ; line status register
-
-_IDE_BASE        .equ $FFD0        		 ; IDE BASE
-_IDE_R0          .equ _IDE_BASE + 0    ; DATA PORT
-_IDE_R1          .equ _IDE_BASE + 1    ; READ: ERROR CODE, WRITE: FEATURE
-_IDE_R2          .equ _IDE_BASE + 2    ; NUMBER OF SECTORS TO TRANSFER
-_IDE_R3          .equ _IDE_BASE + 3    ; SECTOR ADDRESS LBA 0 [0:7]
-_IDE_R4          .equ _IDE_BASE + 4    ; SECTOR ADDRESS LBA 1 [8:15]
-_IDE_R5          .equ _IDE_BASE + 5    ; SECTOR ADDRESS LBA 2 [16:23]
-_IDE_R6          .equ _IDE_BASE + 6    ; SECTOR ADDRESS LBA 3 [24:27 (LSB)]
-_IDE_R7          .equ _IDE_BASE + 7    ; READ: STATUS, WRITE: COMMAND
-
-_7SEG_DISPLAY    .equ $FFB0        		 ; BIOS POST CODE HEX DISPLAY (2 DIGITS)
-_BIOS_POST_CTRL  .equ $FFB3        		 ; BIOS POST DISPLAY CONTROL REGISTER, 80h = As Output
-_PIO_A           .equ $FFB0    
-_PIO_B           .equ $FFB1
-_PIO_C           .equ $FFB2
-_PIO_CONTROL     .equ $FFB3        		 ; PIO CONTROL PORT
-
-_TIMER_C_0       .equ $FFE0        		 ; TIMER COUNTER 0
-_TIMER_C_1       .equ $FFE1        		 ; TIMER COUNTER 1
-_TIMER_C_2       .equ $FFE2        		 ; TIMER COUNTER 2
-_TIMER_CTRL      .equ $FFE3        		 ; TIMER CONTROL REGISTER
-
-_STACK_BEGIN     .equ $F7FF       		 ; beginning of stack
-_GLOBAL_BASE     .equ $8000       		 ; base of global variable block
-
-
-boot_origin:     .equ _GLOBAL_BASE + 2 + 2
-
-IDE_buffer:      .equ _GLOBAL_BASE + 2 + 2 + 512
+; ff80    uart 0    (16550)
+; ff90    uart 1    (16550)
+; ffa0    rtc       (m48t02)
+; ffb0    pio 0     (8255)
+; ffc0    pio 1     (8255)
+; ffd0    ide       (compact flash / pata)
+; ffe0    timer     (8253)
+; fff0    bios configuration nv-ram store area
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; GLOBAL SYSTEM VARIABLES
+; system constants / equations
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+_uart0_data      .equ $ff80        		 ; data
+_uart0_dlab_0    .equ $ff80        		 ; divisor latch low byte
+_uart0_dlab_1    .equ $ff81        		 ; divisor latch high byte
+_uart0_ier       .equ $ff81        		 ; interrupt enable register
+_uart0_fcr       .equ $ff82        		 ; fifo control register
+_uart0_lcr       .equ $ff83        		 ; line control register
+_uart0_lsr       .equ $ff85        		 ; line status register
+
+_ide_base        .equ $ffd0        		 ; ide base
+_ide_r0          .equ _ide_base + 0    ; data port
+_ide_r1          .equ _ide_base + 1    ; read: error code, write: feature
+_ide_r2          .equ _ide_base + 2    ; number of sectors to transfer
+_ide_r3          .equ _ide_base + 3    ; sector address lba 0 [0:7]
+_ide_r4          .equ _ide_base + 4    ; sector address lba 1 [8:15]
+_ide_r5          .equ _ide_base + 5    ; sector address lba 2 [16:23]
+_ide_r6          .equ _ide_base + 6    ; sector address lba 3 [24:27 (lsb)]
+_ide_r7          .equ _ide_base + 7    ; read: status, write: command
+
+_7seg_display    .equ $ffb0        		 ; bios post code hex display (2 digits)
+_bios_post_ctrl  .equ $ffb3        		 ; bios post display control register, 80h = as output
+_pio_a           .equ $ffb0    
+_pio_b           .equ $ffb1
+_pio_c           .equ $ffb2
+_pio_control     .equ $ffb3        		 ; pio control port
+
+_timer_c_0       .equ $ffe0        		 ; timer counter 0
+_timer_c_1       .equ $ffe1        		 ; timer counter 1
+_timer_c_2       .equ $ffe2        		 ; timer counter 2
+_timer_ctrl      .equ $ffe3        		 ; timer control register
+
+_stack_begin     .equ $f7ff       		 ; beginning of stack
+_global_base     .equ $8000       		 ; base of global variable block
 
 
+boot_origin:     .equ _global_base + 2 + 2
+
+ide_buffer:      .equ _global_base + 2 + 2 + 512
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; EXTERNAL INTERRUPT TABLE
+; global system variables
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; external interrupt table
 ; highest priority at lowest address
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.dw INT_0
-.dw INT_1
-.dw INT_2
-.dw INT_3
-.dw INT_4
-.dw INT_5
-.dw INT_6
-.dw INT_7
+.dw int_0
+.dw int_1
+.dw int_2
+.dw int_3
+.dw int_4
+.dw int_5
+.dw int_6
+.dw int_7
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; RESET VECTOR DECLARATION
+; reset vector declaration
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.dw BIOS_RESET_VECTOR
+.dw bios_reset_vector
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; EXCEPTION VECTOR TABLE
+;; exception vector table
 ;; total of 7 entries, starting at address $0012
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.dw TRAP_PRIVILEGE  
-.dw TRAP_DIV_ZERO  
-.dw UNDEFINED_OPCODE
+.dw trap_privilege  
+.dw trap_div_zero  
+.dw undefined_opcode
 .dw 0
 .dw 0
 .dw 0
 .dw 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SYSTEM CALL VECTOR TABLE
+;; system call vector table
 ;; starts at address $0020
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.dw TRAP_BREAKPOINT
-.dw RTC_SERVICES        
-.dw UART_SERVICES        
-.dw IDE_SERVICES  
+.dw trap_breakpoint
+.dw rtc_services        
+.dw uart_services        
+.dw ide_services  
 .dw 0
 .dw 0
 .dw 0
@@ -122,39 +120,39 @@ bios_rtc   .equ 1
 bios_uart  .equ 2
 bios_ide   .equ 3
 
-.export BIOS_RESET_VECTOR
-.export IDE_buffer
+.export bios_reset_vector
+.export ide_buffer
 .export boot_origin
 .export bios_uart
 .export bios_ide
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; EXTERNAL INTERRUPTS' CODE BLOCK
+; external interrupts' code block
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INT_0:
+int_0:
   sysret
-INT_1:
+int_1:
   sysret
-INT_2:
+int_2:
   sysret
-INT_3:
+int_3:
   sysret
-INT_4:
+int_4:
   sysret
-INT_5:
+int_5:
   sysret
-INT_6:  
+int_6:  
   sysret
-INT_7:
+int_7:
   sysret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; EXCEPTIONS
+; exceptions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRIVILEGE EXCEPTION
+; privilege exception
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TRAP_PRIVILEGE:
+trap_privilege:
   push d
 
   mov d, s_priv1
@@ -164,11 +162,10 @@ TRAP_PRIVILEGE:
               ; enable interrupts
   sysret
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; BREAKPOINT EXCEPTION
+; breakpoint exception
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TRAP_BREAKPOINT:
+trap_breakpoint:
   push a
   push d
   pushf
@@ -182,11 +179,10 @@ TRAP_BREAKPOINT:
               ; enable interrupts
   sysret
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; DIVIDE BY ZERO EXCEPTION
+; divide by zero exception
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TRAP_DIV_ZERO:
+trap_div_zero:
   push a
   push d
   pushf
@@ -201,222 +197,221 @@ TRAP_DIV_ZERO:
   sysret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; UNDEFINED OPCODE EXCEPTION
+; undefined opcode exception
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UNDEFINED_OPCODE:
+undefined_opcode:
   sysret
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; RTC SERVICES INTERRUPT
-; RTC I/O bank = FFA0 to FFAF
-; FFA0 to FFA7 is scratch RAM
-; control register at $FFA8 [ W | R | S | Cal4..Cal0 ]
+; rtc services interrupt
+; rtc i/o bank = ffa0 to ffaf
+; ffa0 to ffa7 is scratch ram
+; control register at $ffa8 [ w | r | s | cal4..cal0 ]
 ; al = 0..6 -> get
-; al = 7..D -> set
+; al = 7..d -> set
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-RTC_SERVICES:
+rtc_services:
   push al
   push d
   cmp al, 6
-  jgu RTC_SET
-RTC_GET:
-  add al, $A9      ; generate RTC address to get to address A9 of clock
-  mov ah, $FF    
-  mov d, a        ; get to FFA9 + offset
-  mov byte[$FFA8], $40    ; set R bit to 1
+  jgu rtc_set
+rtc_get:
+  add al, $a9      ; generate rtc address to get to address a9 of clock
+  mov ah, $ff    
+  mov d, a        ; get to ffa9 + offset
+  mov byte[$ffa8], $40    ; set r bit to 1
   mov al, [d]      ; get data
-  mov byte[$FFA8], 0    ; reset R bit
+  mov byte[$ffa8], 0    ; reset r bit
   mov ah, al
   pop d
   pop al
   sysret
-RTC_SET:
+rtc_set:
   push bl
-  mov bl, ah    ; set data asIDE
-  add al, $A2    ; generate RTC address to get to address A9 of clock
-  mov ah, $FF    
-  mov d, a    ; get to FFA9 + offset
+  mov bl, ah    ; set data aside
+  add al, $a2    ; generate rtc address to get to address a9 of clock
+  mov ah, $ff    
+  mov d, a    ; get to ffa9 + offset
   mov al, bl    ; get data back
-  mov byte[$FFA8], $80  ; set W bit to 1
+  mov byte[$ffa8], $80  ; set w bit to 1
   mov [d], al    ; set data
-  mov byte[$FFA8], 0    ; reset write bit
+  mov byte[$ffa8], 0    ; reset write bit
   pop bl
   pop d
   pop al
   sysret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; INT 4
-; UART SERVICES INTERRUPT
+; int 4
+; uart services interrupt
 ; al = option
 ; ah = data
 ; 0 = init, 1 = send, 2 = receive, 3 = receive with echo
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 uart_serv_tbl:
-  .dw UART_INIT
-  .dw UART_SEND
-  .dw UART_RECEIVE
-  .dw UART_RECEIVE_E
-UART_SERVICES:
+  .dw uart_init
+  .dw uart_send
+  .dw uart_receive
+  .dw uart_receive_e
+uart_services:
   jmp [uart_serv_tbl + al]
-UART_INIT:
-  mov byte[_UART0_LCR], 83h      ; 8 data, 1 stop, no parity  , divisor latch = 1, UART address 3 = Line Control Register
-  mov byte[_UART0_DLAB_0], 12      ; baud = 9600
-  mov byte[_UART0_DLAB_1], 0      ; divisor latch high byte = 0      
-  mov byte[_UART0_LCR], 3      ; divisor latch = 0, UART address 3 = Line Control Register
-  mov byte[_UART0_IER], 0      ; disable all UART interrupts
-  mov byte[_UART0_FCR], 0      ; disable FIFO
+uart_init:
+  mov byte[_uart0_lcr], 83h      ; 8 data, 1 stop, no parity  , divisor latch = 1, uart address 3 = line control register
+  mov byte[_uart0_dlab_0], 12      ; baud = 9600
+  mov byte[_uart0_dlab_1], 0      ; divisor latch high byte = 0      
+  mov byte[_uart0_lcr], 3      ; divisor latch = 0, uart address 3 = line control register
+  mov byte[_uart0_ier], 0      ; disable all uart interrupts
+  mov byte[_uart0_fcr], 0      ; disable fifo
   sysret
-UART_SEND:
-  mov al, [_UART0_LSR]      ; read Line Status Register
-  test al, 20h          ; isolate Transmitter Empty
-  jz UART_SEND    
+uart_send:
+  mov al, [_uart0_lsr]      ; read line status register
+  test al, 20h          ; isolate transmitter empty
+  jz uart_send    
   mov al, ah
-  mov [_UART0_DATA], al      ; write char to Transmitter Holding Register
+  mov [_uart0_data], al      ; write char to transmitter holding register
   sysret
-UART_RECEIVE:
-  mov al, [_UART0_LSR]      ; read Line Status Register
-  test al, 1          ; isolate Data Ready
-  jz UART_RECEIVE
-  mov al, [_UART0_DATA]      ; get character
+uart_receive:
+  mov al, [_uart0_lsr]      ; read line status register
+  test al, 1          ; isolate data ready
+  jz uart_receive
+  mov al, [_uart0_data]      ; get character
   mov ah, al
   sysret
-UART_RECEIVE_E:
-  mov al, [_UART0_LSR]      ; read Line Status Register
-  test al, 1          ; isolate Data Ready
-  jz UART_RECEIVE_E
-  mov al, [_UART0_DATA]      ; get character
+uart_receive_e:
+  mov al, [_uart0_lsr]      ; read line status register
+  test al, 1          ; isolate data ready
+  jz uart_receive_e
+  mov al, [_uart0_data]      ; get character
   mov ah, al
-UART_RECEIVE_E_LOOP:
-  mov al, [_UART0_LSR]      ; read Line Status Register
-  test al, 20h          ; isolate Transmitter Empty
-  jz UART_RECEIVE_E_LOOP
+uart_receive_e_loop:
+  mov al, [_uart0_lsr]      ; read line status register
+  test al, 20h          ; isolate transmitter empty
+  jz uart_receive_e_loop
   mov al, ah
-  mov [_UART0_DATA], al      ; write char to Transmitter Holding Register
+  mov [_uart0_data], al      ; write char to transmitter holding register
   sysret
   
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; IDE SERVICES INTERRUPT
+; ide services interrupt
 ; al = option
 ; 0 = ide reset, 1 = ide sleep, 2 = read sector, 3 = write sector
-; IDE read/write sector
+; ide read/write sector
 ; 512 bytes
-; user buffer pointer in D
-; kernel buffer pointer = IDE_buffer
-; AH = number of sectors
-; CB = LBA bytes 3..0
+; user buffer pointer in d
+; kernel buffer pointer = ide_buffer
+; ah = number of sectors
+; cb = lba bytes 3..0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ide_serv_tbl:
-  .dw IDE_RESET
-  .dw IDE_SLEEP
-  .dw IDE_READ_SECT
-  .dw IDE_WRITE_SECT
-IDE_SERVICES:
+  .dw ide_reset
+  .dw ide_sleep
+  .dw ide_read_sect
+  .dw ide_write_sect
+ide_services:
   jmp [ide_serv_tbl + al]  
-IDE_RESET:      
-  mov byte[_IDE_R7], 4    ; RESET IDE
-  call IDE_wait        ; wait for IDE ready             
-  mov byte[_IDE_R6], $E0    ; LBA3= 0, MASTER, MODE= LBA        
-  mov byte[_IDE_R1], 1    ; 8-BIT TRANSFERS      
-  mov byte[_IDE_R7], $EF    ; SET FEATURE COMMAND
+ide_reset:      
+  mov byte[_ide_r7], 4    ; reset ide
+  call ide_wait        ; wait for ide ready             
+  mov byte[_ide_r6], $e0    ; lba3= 0, master, mode= lba        
+  mov byte[_ide_r1], 1    ; 8-bit transfers      
+  mov byte[_ide_r7], $ef    ; set feature command
   sysret
-IDE_SLEEP:
-  call IDE_wait          ; wait for IDE ready             
-  mov byte [_IDE_R6], %01000000  ; lba[3:0](reserved), bit 6=1
-  mov byte [_IDE_R7], $E6    ; sleep command
-  call IDE_wait          ; wait for IDE ready
+ide_sleep:
+  call ide_wait          ; wait for ide ready             
+  mov byte [_ide_r6], %01000000  ; lba[3:0](reserved), bit 6=1
+  mov byte [_ide_r7], $e6    ; sleep command
+  call ide_wait          ; wait for ide ready
   sysret
-IDE_READ_SECT:
+ide_read_sect:
   mov al, ah
   mov ah, bl
-  mov [_IDE_R2], a      ; number of sectors (0..255)
+  mov [_ide_r2], a      ; number of sectors (0..255)
   mov al, bh
-  mov [_IDE_R4], al
+  mov [_ide_r4], al
   mov a, c
-  mov [_IDE_R5], al
+  mov [_ide_r5], al
   mov al, ah
   and al, %00001111
   or al, %11100000      ; mode lba, master
-  mov [_IDE_R6], al
-  call IDE_wait
+  mov [_ide_r6], al
+  call ide_wait
   mov al, 20h
-  mov [_IDE_R7], al      ; read sector cmd
-  call IDE_read  
+  mov [_ide_r7], al      ; read sector cmd
+  call ide_read  
   sysret
-IDE_WRITE_SECT:
+ide_write_sect:
   mov al, ah
   mov ah, bl
-  mov [_IDE_R2], a      ; number of sectors (0..255)
+  mov [_ide_r2], a      ; number of sectors (0..255)
   mov al, bh
-  mov [_IDE_R4], al
+  mov [_ide_r4], al
   mov a, c
-  mov [_IDE_R5], al
+  mov [_ide_r5], al
   mov al, ah
   and al, %00001111
   or al, %11100000      ; mode lba, master
-  mov [_IDE_R6], al
-  call IDE_wait
+  mov [_ide_r6], al
+  call ide_wait
   mov al, 30h
-  mov [_IDE_R7], al      ; write sector cmd
-  call IDE_write      
+  mov [_ide_r7], al      ; write sector cmd
+  call ide_write      
   sysret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; READ IDE DATA
-; pointer in D
+; read ide data
+; pointer in d
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-IDE_read:
+ide_read:
   push al
   push d
-IDE_read_loop:
-  call IDE_wait
-  mov al, [_IDE_R7]
-  and al, %00001000      ; DRQ FLAG
-  jz IDE_read_end
-  mov al, [_IDE_R0]
+ide_read_loop:
+  call ide_wait
+  mov al, [_ide_r7]
+  and al, %00001000      ; drq flag
+  jz ide_read_end
+  mov al, [_ide_r0]
   mov [d], al
   inc d
-  jmp IDE_read_loop
-IDE_read_end:
+  jmp ide_read_loop
+ide_read_end:
   pop d
   pop al
-  ret
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; WRITE IDE DATA
-; data pointer in D
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-IDE_write:
-  push al
-  push d
-IDE_write_loop:
-  call IDE_wait
-  mov al, [_IDE_R7]
-  and al, %00001000      ; DRQ FLAG
-  jz IDE_write_end
-  mov al, [d]
-  mov [_IDE_R0], al
-  inc d 
-  jmp IDE_write_loop
-IDE_write_end:
-  pop d
-  pop al
-  ret
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; wait for IDE to be ready
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-IDE_wait:
-  mov al, [_IDE_R7]  
-  and al, 80h        ; BUSY FLAG
-  jnz IDE_wait
   ret
 
-  
-  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; write ide data
+; data pointer in d
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ide_write:
+  push al
+  push d
+ide_write_loop:
+  call ide_wait
+  mov al, [_ide_r7]
+  and al, %00001000      ; drq flag
+  jz ide_write_end
+  mov al, [d]
+  mov [_ide_r0], al
+  inc d 
+  jmp ide_write_loop
+ide_write_end:
+  pop d
+  pop al
+  ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; wait for ide to be ready
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ide_wait:
+  mov al, [_ide_r7]  
+  and al, 80h        ; busy flag
+  jnz ide_wait
+  ret
+
 ; ************************************************************
-; GET HEX FILE
+; get hex file
 ; di = destination address
-; return length in bytes in C
+; return length in bytes in c
 ; ************************************************************
 _load_hex:
   push bp
@@ -458,13 +453,13 @@ __load_hex_ret:
   ret
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; BIOS ENTRY POINT
+; bios entry point
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-BIOS_RESET_VECTOR:
-  mov al, %00000000        ; interrupts = OFF, mode = SUP, paging = OFF, halt-flag = OFF, display_load = ON
+bios_reset_vector:
+  mov al, %00000000        ; interrupts = off, mode = sup, paging = off, halt-flag = off, display_load = on
   stostat
   
-  mov a, _STACK_BEGIN
+  mov a, _stack_begin
   mov sp, a
   mov bp, a      ; setup stack and frame
 
@@ -474,7 +469,7 @@ BIOS_RESET_VECTOR:
   mov d, s_welcome
   call _puts          ; print welcome msg
 
-  call BIOS_peripherals_setup
+  call bios_peripherals_setup
   
   mov d, s_boot1
   call _puts
@@ -492,7 +487,7 @@ BIOS_RESET_VECTOR:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-BIOS_peripherals_setup:
+bios_peripherals_setup:
   mov d, s_init
   call _puts
   
@@ -505,56 +500,56 @@ BIOS_peripherals_setup:
   call _puts
   
   mov al, %00110000          ; counter 0, load both bytes, mode 0, binary
-  mov [_TIMER_CTRL], al
-  mov al, $FF
-  mov [_TIMER_C_0], al        ; load counter 0 low byte
-  mov [_TIMER_C_0], al        ; load counter 0 high byte
+  mov [_timer_ctrl], al
+  mov al, $ff
+  mov [_timer_c_0], al        ; load counter 0 low byte
+  mov [_timer_c_0], al        ; load counter 0 high byte
   
   mov d, s_bios5
   call _puts
   mov al, $80
-  mov [_BIOS_POST_CTRL], al      ; set PIO_A to output mode
+  mov [_bios_post_ctrl], al      ; set pio_a to output mode
   mov al, 0
-  mov [_7SEG_DISPLAY], al      ; post code = 00
+  mov [_7seg_display], al      ; post code = 00
   ret
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRINT 16BIT HEX INTEGER
-; integer value in reg B
+; print 16bit hex integer
+; integer value in reg b
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-PRINT_U16X:
+print_u16x:
   pushf
   push a
   push b
   push bl
   mov bl, bh
-  call _itoa        ; convert bh to char in A
+  call _itoa        ; convert bh to char in a
   mov bl, al        ; save al  
   mov al, 1
-  syscall bios_uart        ; display AH
+  syscall bios_uart        ; display ah
   mov ah, bl        ; retrieve al
   mov al, 1
-  syscall bios_uart        ; display AL
+  syscall bios_uart        ; display al
 
   pop bl
-  call _itoa        ; convert bh to char in A
+  call _itoa        ; convert bh to char in a
   mov bl, al        ; save al
   mov al, 1
-  syscall bios_uart        ; display AH
+  syscall bios_uart        ; display ah
   mov ah, bl        ; retrieve al
   mov al, 1
-  syscall bios_uart        ; display AL
+  syscall bios_uart        ; display al
 
   pop b
   pop a
   popf
   ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; INPUT 16BIT HEX INTEGER
-; read 16bit integer into A
+; input 16bit hex integer
+; read 16bit integer into a
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-SCAN_U16X:
+scan_u16x:
   enter 16
   pushf
   push b
@@ -566,35 +561,36 @@ SCAN_U16X:
   mov bl, [d]
   mov bh, bl
   mov bl, [d + 1]
-  call _atoi        ; convert to int in AL
-  mov ah, al        ; move to AH
+  call _atoi        ; convert to int in al
+  mov ah, al        ; move to ah
   
   mov bl, [d + 2]
   mov bh, bl
   mov bl, [d + 3]
-  call _atoi        ; convert to int in AL
+  call _atoi        ; convert to int in al
   
   pop d  
   pop b
   popf
   leave
   ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRINT 8BIT HEX INTEGER
-; byte value in reg BL
+; print 8bit hex integer
+; byte value in reg bl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-XPUT_U8:
+xput_u8:
   push a
   push bl
   pushf
 
-  call _itoa          ; convert bl to char in A
+  call _itoa          ; convert bl to char in a
   mov bl, al          ; save al  
   mov al, 1
-  syscall bios_uart        ; display AH
+  syscall bios_uart        ; display ah
   mov ah, bl          ; retrieve al
   mov al, 1
-  syscall bios_uart        ; display AL
+  syscall bios_uart        ; display al
   
   popf
   pop bl
@@ -602,31 +598,30 @@ XPUT_U8:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRINT NULL TERMINATED STRING
-; pointer in D
+; print null terminated string
+; pointer in d
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _puts:
   push a
   push d
   pushf
-_puts_L1:
+_puts_l1:
   mov al, [d]
   cmp al, 0
   jz _puts_end
-_puts_L2:
-  mov al, [_UART0_LSR]      ; read Line Status Register
-  test al, $20          ; isolate Transmitter Empty
-  jz _puts_L2    
+_puts_l2:
+  mov al, [_uart0_lsr]      ; read line status register
+  test al, $20          ; isolate transmitter empty
+  jz _puts_l2    
   mov al, [d]
-  mov [_UART0_DATA], al      ; write char to Transmitter Holding Register
+  mov [_uart0_data], al      ; write char to transmitter holding register
   inc d  
-  jmp _puts_L1
+  jmp _puts_l1
 _puts_end:
   popf
   pop d
   pop a
   ret
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; _putchar
@@ -635,22 +630,20 @@ _puts_end:
 _putchar:
   push a
   pushf
-_putchar_L1:
-  mov al, [_UART0_LSR]      ; read Line Status Register
-  test al, 20h          ; isolate Transmitter Empty
-  jz _putchar_L1    
+_putchar_l1:
+  mov al, [_uart0_lsr]      ; read line status register
+  test al, 20h          ; isolate transmitter empty
+  jz _putchar_l1    
   mov al, ah
-  mov [_UART0_DATA], al      ; write char to Transmitter Holding Register
+  mov [_uart0_data], al      ; write char to transmitter holding register
   popf
   pop a
   ret
   
-  
-  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; INPUT A STRING with no echo
+;; input a string with no echo
 ;; terminates with null
-;; pointer in D
+;; pointer in d
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _gets:
   pushf
@@ -658,12 +651,12 @@ _gets:
   push d
 _gets_loop:
   mov al, 2
-  syscall bios_uart      ; receive in AH
-  cmp ah, 0Ah        ; LF
+  syscall bios_uart      ; receive in ah
+  cmp ah, 0ah        ; lf
   je _gets_end
-  cmp ah, 0Dh        ; CR
+  cmp ah, 0dh        ; cr
   je _gets_end
-  cmp ah, $5C        ; '\\'
+  cmp ah, $5c        ; '\\'
   je _gets_escape
   mov al, ah
   mov [d], al
@@ -671,22 +664,22 @@ _gets_loop:
   jmp _gets_loop
 _gets_escape:
   mov al, 2
-  syscall bios_uart      ; receive in AH
+  syscall bios_uart      ; receive in ah
   cmp ah, 'n'
-  je _gets_LF
+  je _gets_lf
   cmp ah, 'r'
-  je _gets_CR
+  je _gets_cr
   mov al, ah        ; if not a known escape, it is just a normal letter
   mov [d], al
   inc d
   jmp _gets_loop
-_gets_LF:
-  mov al, $0A
+_gets_lf:
+  mov al, $0a
   mov [d], al
   inc d
   jmp _gets_loop
-_gets_CR:
-  mov al, $0D
+_gets_cr:
+  mov al, $0d
   mov [d], al
   inc d
   jmp _gets_loop
@@ -762,6 +755,7 @@ put_nl:
   pop a
   popf
   ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; CONVERT ASCII 'O'..'F' TO INTEGER 0..15
 ; ASCII in BL
@@ -784,6 +778,7 @@ hex_letter:
   add al, 9
   pop ah
   ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ATOI
 ; 2 letter hex string in B
@@ -813,31 +808,31 @@ _atoi:
 _itoa:
   pushf
   push d
-  push  bh
+  push bh
   push bl
 
   mov bh, 0
   
-  and   bl, $0F
-  mov   d, s_hex_digits
-  add   d, b
-  mov   al, [d]        ; get ASCII
-  pop   bl
+  and bl, $0F
+  mov d, s_hex_digits
+  add d, b
+  mov al, [d]        ; get ASCII
+  pop bl
   sub sp, 1        ; push bl back
   push al
   
-  and   bl, $F0
-  shr   bl, 4
-  mov   d, s_hex_digits
-  add   d, b
-  mov   al, [d]        ; get ASCII
+  and bl, $F0
+  shr bl, 4
+  mov d, s_hex_digits
+  add d, b
+  mov al, [d]        ; get ASCII
 
   mov ah, al
-  pop   al  
+  pop al  
   
-  pop   bl
+  pop bl
   pop bh
-  pop   d
+  pop d
   popf
   ret
 
@@ -859,6 +854,7 @@ _strcmp_loop:
   jne _strcmp_loop        ; equal chars but not at end
 _strcmp_ret:        
   ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; TO LOWER
 ; input in AL
@@ -872,6 +868,7 @@ _to_lower:
 _to_lower_ret:
   popf
   ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; TO UPPER
 ; input in AL
@@ -885,11 +882,13 @@ _to_upper:
 _to_upper_ret:
   popf
   ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; PRINT DECIMAL INTEGER
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_decimal:
   ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; GET HEX FILE
 ; di = destination address
@@ -936,10 +935,9 @@ _hex_to_int_L1:
   jmp _hex_to_int_L1
 _hex_to_int_ret:
   ret  
-    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; DATA BLOCK
+; data block
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 s_welcome:      .db "\n\n\rSol-1 74HC HomebrewCPU MiniComputer\n"
                 .db "BIOS Version 0.1\n\n\r"
@@ -962,14 +960,14 @@ s_nl_1:         .db "\n\r", 0
 s_enter_prog:   .db "data: ", 0
 s_origin_addr:  .db "origin address: ", 0
 
-s_IDE_serial:   .db "Serial: ", 0
-s_IDE_firm:     .db "Firmware: ", 0
-s_IDE_model:    .db "Model: ", 0
+s_ide_serial:   .db "Serial: ", 0
+s_ide_firm:     .db "Firmware: ", 0
+s_ide_model:    .db "Model: ", 0
 s_sectors:      .db "Number of sectors: ", 0
-s_LBA0:         .db "LBA 0: ", 0
-s_LBA1:         .db "LBA 1: ", 0
-s_LBA2:         .db "LBA 2: ", 0
-s_LBA3:         .db "LBA 3: ", 0
+s_lba0:         .db "LBA 0: ", 0
+s_lba1:         .db "LBA 1: ", 0
+s_lba2:         .db "LBA 2: ", 0
+s_lba3:         .db "LBA 3: ", 0
 s_error:        .db "\n\rError.\n\r", 0
                 
 s_hex_digits:   .db "0123456789ABCDEF"
@@ -978,10 +976,5 @@ s_bkpt:         .db "this is the breakpoint.", 0
 s_priv1:        .db "\n\n\rsoftware failure: privilege exception "
                 .db "press any key to continue...\n\r", 0
 s_divzero:      .db "\n\rexception: zero division\n\r", 0
-
-
-
-
-
 
 .end

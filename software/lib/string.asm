@@ -6,12 +6,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; _strrev
 ; reverse a string
-; D = string address
+; d = string address
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; 01234
 _strrev:
 	pusha
-	call _strlen	; length in C
+	call _strlen	; length in c
 	mov a, c
 	cmp a, 1
 	jleu _strrev_end	; check string length. string len must be > 1
@@ -21,34 +21,34 @@ _strrev:
 	add d, a	; end of string
 	mov a, c
 	shr a		; divide by 2
-	mov c, a	; C now counts the steps
-_strrev_L0:
-	mov bl, [d]	; save load right-side char into BL
-	lodsb		; load left-side char into AL; increase SI
+	mov c, a	; c now counts the steps
+_strrev_l0:
+	mov bl, [d]	; save load right-side char into bl
+	lodsb		; load left-side char into al; increase si
 	mov [d], al	; store left char into right side
 	mov al, bl
-	stosb		; store right-side char into left-side; increase DI
+	stosb		; store right-side char into left-side; increase di
 	dec c
 	dec d
 	cmp c, 0
-	jne _strrev_L0
+	jne _strrev_l0
 _strrev_end:
 	popa
 	ret
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; _strchr
-; search string in D for char in AL
+; search string in d for char in al
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _strchr:
-_strchr_L0:
+_strchr_l0:
 	mov bl, [d]
 	cmp bl, 0
 	je _strchr_end
 	cmp al, bl
 	je _strchr_end
 	inc d
-	jmp _strchr_L0
+	jmp _strchr_l0
 _strchr_end:
 	mov al, bl
 	ret
@@ -56,9 +56,9 @@ _strchr_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; _strstr
 ; find sub-string
-; str1 in SI
-; str2 in DI
-; SI points to end of source string
+; str1 in si
+; str2 in di
+; si points to end of source string
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _strstr:
 	push al
@@ -77,28 +77,28 @@ _strstr_ret:
 	ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; length of null terminated string
-; result in C
-; pointer in D
+; result in c
+; pointer in d
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _strlen:
 	push d
 	mov c, 0
-_strlen_L1:
+_strlen_l1:
 	cmp byte [d], 0
 	je _strlen_ret
 	inc d
 	inc c
-	jmp _strlen_L1
+	jmp _strlen_l1
 _strlen_ret:
 	pop d
 	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; STRCMP
+; strcmp
 ; compare two strings
-; str1 in SI
-; str2 in DI
-; CREATE A STRING COMPAIRON INSTRUCION ?????
+; str1 in si
+; str2 in di
+; create a string compairon instrucion ?????
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _strcmp:
 	push al
@@ -119,29 +119,29 @@ _strcmp_ret:
 	ret
 
 
-; STRCPY
-; copy null terminated string from SI to DI
-; source in SI
-; destination in DI
+; strcpy
+; copy null terminated string from si to di
+; source in si
+; destination in di
 _strcpy:
 	push si
 	push di
 	push al
-_strcpy_L1:
+_strcpy_l1:
 	lodsb
 	stosb
 	cmp al, 0
-	jne _strcpy_L1
+	jne _strcpy_l1
 _strcpy_end:
 	pop al
 	pop di
 	pop si
 	ret
 
-; STRCAT
-; concatenate a NULL terminated string into string at DI, from string at SI
-; source in SI
-; destination in DI
+; strcat
+; concatenate a null terminated string into string at di, from string at si
+; source in si
+; destination in di
 _strcat:
 	push si
 	push di
@@ -149,18 +149,18 @@ _strcat:
 	push d
 	mov a, di
 	mov d, a
-_strcat_goto_end_L1:
+_strcat_goto_end_l1:
 	cmp byte[d], 0
 	je _strcat_start
 	inc d
-	jmp _strcat_goto_end_L1
+	jmp _strcat_goto_end_l1
 _strcat_start:
 	mov di, d
-_strcat_L1:
+_strcat_l1:
 	lodsb
 	stosb
 	cmp al, 0
-	jne _strcat_L1
+	jne _strcat_l1
 _strcat_end:
 	pop d
 	pop a
