@@ -359,19 +359,29 @@ syscall_fdc:
   jmp [fdc_jmptbl + al]
 
 syscall_fdc_restore:
+  mov byte [_fdc_stat_cmd], %00001000
   sysret
+
 syscall_fdc_step:
   sysret
+
 syscall_fdc_step_in:
+  mov byte [_fdc_stat_cmd], %01010000
   sysret
+
 syscall_fdc_step_out:
+  mov byte [_fdc_stat_cmd], %01111000
   sysret
+
 syscall_fdc_seek:
   sysret
+
 syscall_fdc_read_addr:
   sysret
+
 syscall_fdc_force_int:
   sysret
+
 ; when writing the actual code for formatting multiple tracks, remember to change the track number byte
 ; in the ram formatting block because they are all set as 00 right now
 ; bl: track number
