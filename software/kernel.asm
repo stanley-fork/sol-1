@@ -64,7 +64,7 @@ _pio_c            .equ $ffb2
 _pio_control      .equ $ffb3         ; pio control port
 
 _fdc_config       .equ $ffc0         ; 0 = select_0, 1 = select_1, 2 = side_select, 3 = dden, 4 = in_use_or_head_load, 5 = wd1770_rst
-_fdc_status_1     .equ $ffc1         ; 0 = drq, 1 = ready
+_fdc_status_0     .equ $ffc1         ; 0 = drq, 1 = ready
 _fdc_stat_cmd     .equ $ffc8         ; status / command register
 _fdc_track        .equ $ffc9         ; track register
 _fdc_sector       .equ $ffca         ; sector register
@@ -194,6 +194,21 @@ sys_terminate_proc   .equ 11
 sys_system           .equ 12
 sys_fdc              .equ 13
 
+; aliases for individual 'al' options for FDC system calls
+sys_fdc_restore      .equ 0
+sys_fdc_step         .equ 1
+sys_fdc_step_in      .equ 2
+sys_fdc_step_out     .equ 3
+sys_fdc_seek         .equ 4
+sys_fdc_format       .equ 5
+sys_fdc_read_addr    .equ 6
+sys_fdc_read_track   .equ 7
+sys_fdc_read_sect    .equ 8
+sys_fdc_write_sect   .equ 9
+sys_fdc_force_int    .equ 10
+sys_fdc_status0      .equ 11
+sys_fdc_status1      .equ 12
+
 ; ------------------------------------------------------------------------------------------------------------------;
 ; alias exports
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -213,6 +228,20 @@ sys_fdc              .equ 13
 .export sys_system
 .export sys_fdc
 
+; exports of aliases for individual 'al' options for FDC system calls
+.export sys_fdc_restore
+.export sys_fdc_step
+.export sys_fdc_step_in
+.export sys_fdc_step_out
+.export sys_fdc_seek
+.export sys_fdc_format
+.export sys_fdc_read_addr
+.export sys_fdc_read_track
+.export sys_fdc_read_sect
+.export sys_fdc_write_sect
+.export sys_fdc_force_int
+.export sys_fdc_status0
+.export sys_fdc_status1
 ; ------------------------------------------------------------------------------------------------------------------;
 ; irqs' code block
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -353,9 +382,17 @@ fdc_jmptbl:
   .dw syscall_fdc_read_sect
   .dw syscall_fdc_write_sect
   .dw syscall_fdc_force_int
+  .dw syscall_fdc_status0
+  .dw syscall_fdc_status1
 syscall_fdc:
   jmp [fdc_jmptbl + al]
 
+syscall_fdc_status0:
+  mov al, [_fdc_status_0]
+  sysret
+syscall_fdc_status1:
+  mov al, [_fdc_stat_cmd]
+  sysret
 syscall_fdc_restore:
   mov byte [_fdc_stat_cmd], %00001000
   sysret
@@ -395,13 +432,13 @@ syscall_fdc_format:
   mov [_fdc_data], al      ; 10   
   call fdc_wait_64us
 fdc_format_drq:
-  mov al, [_fdc_stat_cmd]  ; 10
+  mov al, [_fdc_stat_cmd]     ; 10
   test al, $01                ; 4
   jz fdc_format_end           ; 8
   test al, $02                ; 4
   jz fdc_format_drq           ; 8
   lodsb                       ; 7
-  mov [_fdc_data], al      ; 10   
+  mov [_fdc_data], al         ; 10   
   jmp fdc_format_drq
 fdc_format_end:
   sysret
@@ -431,9 +468,10 @@ fdc_read_track_end:
   sub a, transient_area
   sysret
 
-; sector in al
-; track in ah
+; sector in bl
+; track in bh
 syscall_fdc_read_sect:
+  mov a, b
   mov [_fdc_sector], al
   mov al, ah
   mov [_fdc_track], al
@@ -462,6 +500,7 @@ fdc_read_sect_end:
 ; track in ah
 ; data pointer in si
 syscall_fdc_write_sect:
+  mov a, b
   mov [_fdc_sector], al
   mov al, ah
   mov [_fdc_track], al
