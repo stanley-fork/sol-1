@@ -26,23 +26,21 @@
 0011   0403 42 59 06    	mov [prog], a			; move tokennizer pointer to the beginning of the arguments area (address 0)
 0012   0406 07 BA 04    	call get_token
 0013   0409 1D 5C 06    	mov al, [tok]
-ls.asm line 0014: Label not found: (TOK_END)
-ls.asm line 0014: Unused data in MS byte of argument. (200)
-0014   040C B9 00       	cmp al, TOK_END
+0014   040C B9 14       	cmp al, tok_end
 0015   040E C6 25 04    	je cmd_ls_current
 0016   0411             cmd_ls_arg_given:
 0017   0411 07 40 06    	call _putback
 0018   0414 07 63 04    	call get_path
 0019   0417 3B 5D 06    	mov d, tokstr
 0020   041A 19 13       	mov al, 19
-0021   041C 05 04       	syscall sys_filesystem	; get dirID in A
+0021   041C 05 04       	syscall sys_filesystem	; get dirid in a
 0022   041E 27          	mov b, a
 0023   041F 19 04       	mov al, 4
 0024   0421 05 04       	syscall sys_filesystem
 0025   0423 05 0B       	syscall sys_terminate_proc
 0026   0425             cmd_ls_current:
 0027   0425 19 11       	mov al, 17
-0028   0427 05 04       	syscall sys_filesystem		; get current dirID in B
+0028   0427 05 04       	syscall sys_filesystem		; get current dirid in b
 0029   0429 19 04       	mov al, 4
 0030   042B 05 04       	syscall sys_filesystem
 0031   042D             
@@ -1417,4 +1415,4 @@ ls.asm line 0014: Unused data in MS byte of argument. (200)
 0040   0B6C             
 0041   0B6C             
 0042   0B6C             
-tasm: Number of errors = 2
+tasm: Number of errors = 0

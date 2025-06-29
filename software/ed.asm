@@ -22,7 +22,7 @@ ed_main:
 	mov [prog], a
 	call get_token
 	mov al, [tok]
-	cmp al, TOK_END
+	cmp al, tok_end
 	je no_filename_given	; no filename given as argument
 
 	call _putback
@@ -36,7 +36,7 @@ ed_main:
 	mov a, c				; find size of buffer
 	add a, text_buffer
 	mov d, a
-	mov al, $0A
+	mov al, $0a
 	mov [d], al
 	inc d
 	mov al, 0
@@ -53,11 +53,11 @@ ed_main:
 no_filename_given:
 	mov d, ss
 	call _puts
-main_L0:
+main_l0:
 	mov byte [tokstr], 0			; clear tokstr (so that enter doesnt repeat last shell command)
 	call command_parser
-	jmp main_L0
-ss:.db "\nHello World\n",0
+	jmp main_l0
+ss:.db "\nhello world\n",0
 ; ,p
 ; 1,3p
 ; 2p
@@ -85,20 +85,20 @@ command_parser:
 parser_hasrange:
 	call get_number			; range start
 	mov d, tokstr
-	call _strtoint			; convert range to integer in A
+	call _strtoint			; convert range to integer in a
 	mov [start], a			; save range start
 	mov [end], a			; save end too in case the range end is not given
 
 	call get_token
 	mov al, [tok]
-	cmp al, TOK_COMMA
+	cmp al, tok_comma
 	je parser_range_end
 	jmp parser_start		; not a comma, so it must be a command
 
 parser_range_end:
 	call get_number			; range end
 	mov d, tokstr
-	call _strtoint			; convert range to integer in A
+	call _strtoint			; convert range to integer in a
 	mov [end], a			; save range start
 
 get_command:
@@ -107,19 +107,19 @@ parser_start:
 	mov di, keywords
 	mov a, 0
 	mov [parser_index], a		; reset keywords index
-parser_L2:
+parser_l2:
 	mov si, tokstr
 	call _strcmp
 	je parser_cmd_equal
-parser_L2_L0:
+parser_l2_l0:
 	lea d, [di + 0]
 	mov al, [d]
 	cmp al, 0
-	je parser_L2_L0_exit			; run through the keyword until finding NULL
+	je parser_l2_l0_exit			; run through the keyword until finding null
 	add di, 1
-	jmp parser_L2_L0
-parser_L2_L0_exit:
-	add di, 1				; then skip NULL byte at the end 
+	jmp parser_l2_l0
+parser_l2_l0_exit:
+	add di, 1				; then skip null byte at the end 
 	mov a, [parser_index]
 	add a, 2
 	mov [parser_index], a			; increase keywords table index
@@ -127,13 +127,13 @@ parser_L2_L0_exit:
 	mov al, [d]
 	cmp al, 0
 	je parser_cmd_not_found
-	jmp parser_L2
+	jmp parser_l2
 parser_cmd_equal:
-	mov a, $0D00
+	mov a, $0d00
 	syscall sys_io				; print carriage return
 	mov a, [parser_index]			; get the keyword pointer
 	call [a + keyword_pointers]		; execute command
-	mov a, $0D00
+	mov a, $0d00
 	syscall sys_io				; print carriage return
 	ret
 parser_cmd_not_found:
@@ -141,34 +141,34 @@ parser_cmd_not_found:
 	call _putchar
 	ret
 
-; A = line to append after
-; B = address of text to append
+; a = line to append after
+; b = address of text to append
 append_lines:
 	inc a
 	mov d, b
-	call _strlen		; length of text in C
-	call find_line	; address in D
+	call _strlen		; length of text in c
+	call find_line	; address in d
 	mov di, d
 	mov si, d
-append_lines_L0:
+append_lines_l0:
 	lodsb
-	cmp al, $0A
-	jne append_lines_L0
-; now SI points to char after \n
+	cmp al, $0a
+	jne append_lines_l0
+; now si points to char after \n
 ; start copying chars from there to beginning of deleted line
-; copy till we find NULL
-append_lines_L1:
+; copy till we find null
+append_lines_l1:
 	lodsb
 	stosb
 	cmp al, 0
-	jne append_lines_L1
+	jne append_lines_l1
 append_lines_end:
 	ret
 
 cmd_append:
 	mov a, [txt_buffer_ptr]
 	mov d, a
-cmd_append_L0:
+cmd_append_l0:
 	call _gets		; read new line
 	mov si, d
 	mov di, s_dot
@@ -176,19 +176,19 @@ cmd_append_L0:
 	je cmd_append_end
 	mov a, [txt_buffer_ptr]
 	mov si, a
-cmd_append_L1:		; look for NULL termination
+cmd_append_l1:		; look for null termination
 	lodsb
 	cmp al, 0
-	jne cmd_append_L1
+	jne cmd_append_l1
 	lea d, [si + -1]
-	mov al, $0A
+	mov al, $0a
 	mov [d], al
 	lea d, [si + 0]
 	mov al, 0
 	mov [d], al
 	mov a, d
 	mov [txt_buffer_ptr], a
-	jmp cmd_append_L0
+	jmp cmd_append_l0
 cmd_append_end:
 	mov al, 0
 	mov [d], al
@@ -206,47 +206,47 @@ cmd_quit:
 ; fourth line\n
 cmd_delete:
 	mov a, [end]		; get starting line
-cmd_delete_L0:
+cmd_delete_l0:
 	call delete_line		
 	mov b, [start]
 	cmp a, b
 	je cmd_delete_end
 	dec a
-	jmp cmd_delete_L0
+	jmp cmd_delete_l0
 cmd_delete_end:
 ; set text pointer to the end of file
 	mov si, text_buffer
-cmd_delete_L1:
+cmd_delete_l1:
 	lodsb
 	cmp al, 0
-	jne cmd_delete_L1
+	jne cmd_delete_l1
 	mov a, si
 	dec a
 	mov [txt_buffer_ptr], a
 	ret
 	
 ; find address of line beginning
-; find EOL address
-; start copying chars from EOL into beginning of required line
-; stop when reache NULL
-; A = line to delete
+; find eol address
+; start copying chars from eol into beginning of required line
+; stop when reache null
+; a = line to delete
 delete_line:
 	push a
-	call find_line	; address in D
+	call find_line	; address in d
 	mov di, d
 	mov si, d
-delete_line_L0:
+delete_line_l0:
 	lodsb
-	cmp al, $0A
-	jne delete_line_L0
-; now SI points to char after \n
+	cmp al, $0a
+	jne delete_line_l0
+; now si points to char after \n
 ; start copying chars from there to beginning of deleted line
-; copy till we find NULL
-delete_line_L1:
+; copy till we find null
+delete_line_l1:
 	lodsb
 	stosb
 	cmp al, 0
-	jne delete_line_L1
+	jne delete_line_l1
 delete_line_end:
 	pop a
 	ret
@@ -262,7 +262,7 @@ cmd_open:
 	mov a, c				; find size of buffer
 	add a, text_buffer
 	mov d, a
-	mov al, $0A
+	mov al, $0a
 	mov [d], al
 	inc d
 	mov al, 0
@@ -301,70 +301,70 @@ cmd_list:
 
 cmd_print:
 	mov a, [start]		; get starting line
-cmd_print_L0:
-	call find_line		; address in D
-	call printline		; print line at D	
+cmd_print_l0:
+	call find_line		; address in d
+	call printline		; print line at d	
 	mov b, [end]
 	cmp a, b
 	je cmd_print_end
 	inc a
-	jmp cmd_print_L0
+	jmp cmd_print_l0
 cmd_print_end:
 	ret
 
 cmd_print_numbered:
 	mov a, [start]		; get starting line
-cmd_print_numbered_L0:
+cmd_print_numbered_l0:
 	push a
 	call print_u16d
-	mov ah, $09			; TAB
+	mov ah, $09			; tab
 	call _putchar
 	pop a
-	call find_line		; address in D
-	call printline		; print line at D	
+	call find_line		; address in d
+	call printline		; print line at d	
 	mov b, [end]
 	cmp a, b
 	je cmd_print_numbered_end
 	inc a
-	jmp cmd_print_numbered_L0
+	jmp cmd_print_numbered_l0
 cmd_print_numbered_end:
 	ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PRINT LINE
-; pointer in D
+; print line
+; pointer in d
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 printline:
 	push a
 	push d
-printline_L0:
+printline_l0:
 	mov al, [d]
 	mov ah, al
 	call _putchar
-	cmp al, $0A
+	cmp al, $0a
 	je printline_end
 	inc d
-	jmp printline_L0
+	jmp printline_l0
 printline_end:
 	pop d
 	pop a
 	ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; INPUTS
-; A = line number
-; OUTPUTS
-; D = line address
+; inputs
+; a = line number
+; outputs
+; d = line address
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 find_line:
 	push a
 	push b
 	mov b, text_buffer
 	mov [prog], b
-find_line_L0:
+find_line_l0:
 	cmp a, 1
 	je find_line_end
 	call get_line
 	dec a
-	jmp find_line_L0
+	jmp find_line_l0
 find_line_end:
 	mov a, [prog]
 	mov d, a
@@ -374,18 +374,18 @@ find_line_end:
 
 
 ; find total number of lines
-; A = total
+; a = total
 total_lines:
 	mov b, 0
 	mov si, text_buffer
-total_lines_L0:
+total_lines_l0:
 	lodsb
 	cmp al, 0
 	je total_lines_end
-	cmp al, $0A
-	jne total_lines_L0
+	cmp al, $0a
+	jne total_lines_l0
 	inc b
-	jmp total_lines_L0
+	jmp total_lines_l0
 total_lines_end:
 	mov a, b
 	ret

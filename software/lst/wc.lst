@@ -34,20 +34,16 @@
 0019   0414 10 77 0B    	mov a, transient_data
 0020   0417 42 64 06    	mov [prog], a
 0021   041A 38 00 00    	mov c, 0
-0022   041D             L0:
+0022   041D             l0:
 0023   041D 07 C5 04    	call get_token
 0024   0420 1D 67 06    	mov al, [tok]
-wc.asm line 0025: Label not found: (TOK_END)
-wc.asm line 0025: Unused data in MS byte of argument. (200)
-0025   0423 B9 00       	cmp al, TOK_END
+0025   0423 B9 14       	cmp al, tok_end
 0026   0425 C6 34 04    	je cmd_wc_end
 0027   0428 1D 66 06    	mov al, [toktyp]
-wc.asm line 0028: Label not found: (TOKTYP_IDENTIFIER)
-wc.asm line 0028: Unused data in MS byte of argument. (200)
-0028   042B B9 00       	cmp al, TOKTYP_IDENTIFIER
-0029   042D C7 1D 04    	jne L0
+0028   042B B9 00       	cmp al, toktyp_identifier
+0029   042D C7 1D 04    	jne l0
 0030   0430 78          	inc c
-0031   0431 0A 1D 04    	jmp L0
+0031   0431 0A 1D 04    	jmp l0
 0032   0434             
 0033   0434             cmd_wc_end:
 0034   0434 12          	mov a, c
@@ -1427,4 +1423,4 @@ wc.asm line 0028: Unused data in MS byte of argument. (200)
 0048   0B77             
 0049   0B77             
 0050   0B77             
-tasm: Number of errors = 4
+tasm: Number of errors = 0

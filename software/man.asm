@@ -9,7 +9,7 @@ cmd_man:
   mov [prog], a			; move tokennizer pointer to the beginning of the arguments area (address 0)
   call get_token
   mov al, [tok]
-  cmp al, TOK_END
+  cmp al, tok_end
   je cmd_man_fail
 
   mov si, manpath

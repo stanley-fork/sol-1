@@ -19,16 +19,16 @@ cmd_wc:
 	mov a, transient_data
 	mov [prog], a
 	mov c, 0
-L0:
+l0:
 	call get_token
 	mov al, [tok]
-	cmp al, TOK_END
+	cmp al, tok_end
 	je cmd_wc_end
 	mov al, [toktyp]
-	cmp al, TOKTYP_IDENTIFIER
-	jne L0
+	cmp al, toktyp_identifier
+	jne l0
 	inc c
-	jmp L0
+	jmp l0
 
 cmd_wc_end:
 	mov a, c

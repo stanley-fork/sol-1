@@ -27,8 +27,7 @@
 0012   0403 42 75 06    	mov [prog], a			; move tokennizer pointer to the beginning of the arguments area (address 0)
 0013   0406 07 D6 04    	call get_token
 0014   0409             
-cat.asm line 0015: Label not found: (TOK_ANGLE)
-0015   0409 BC 78 06 00 	cmp byte[tok], TOK_ANGLE
+0015   0409 BC 78 06 07 	cmp byte[tok], tok_angle
 0016   040D C6 34 04    	je cmd_cat_write
 0017   0410             cmd_cat_read:
 0018   0410 07 5C 06    	call _putback
@@ -41,9 +40,7 @@ cat.asm line 0015: Label not found: (TOK_ANGLE)
 0025   0424 07 8D 09    	call _puts					; print textfile to stdout
 0026   0427 07 D6 04    	call get_token
 0027   042A 1D 78 06    	mov al, [tok]
-cat.asm line 0028: Label not found: (TOK_END)
-cat.asm line 0028: Unused data in MS byte of argument. (200)
-0028   042D B9 00       	cmp al, TOK_END
+0028   042D B9 14       	cmp al, tok_end
 0029   042F C7 10 04    	jne cmd_cat_read
 0030   0432 05 0B       	syscall sys_terminate_proc
 0031   0434             cmd_cat_write:
@@ -1427,4 +1424,4 @@ cat.asm line 0028: Unused data in MS byte of argument. (200)
 0049   0B88             .end
 0050   0B88             
 0051   0B88             
-tasm: Number of errors = 3
+tasm: Number of errors = 0

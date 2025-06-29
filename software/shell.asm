@@ -1,12 +1,12 @@
 .include "lib/kernel.exp"
 
-STACK_BEGIN:  .equ $F7FF  ; beginning of stack
+stack_begin:  .equ $f7ff  ; beginning of stack
 
 .org text_org      ; origin at 1024
 
 shell_main:  
-  mov bp, STACK_BEGIN
-  mov sp, STACK_BEGIN
+  mov bp, stack_begin
+  mov sp, stack_begin
 
 ; open config file
 ; example: path=/usr/bin;
@@ -31,7 +31,7 @@ shell_main:
   mov [prog], a
   call cmd_shell
 
-shell_L0:
+shell_l0:
   mov d, s_sol1
   call _puts
   mov al, 18
@@ -43,32 +43,32 @@ shell_L0:
   mov [prog], a      ; reset tokenizer buffer pointer
   call _gets            ; get command
   call cmd_parser
-  jmp shell_L0
+  jmp shell_l0
 
 cmd_parser:
   call get_token          ; get command into tokstr
   mov di, commands
   cla
   mov [parser_index], a    ; reset commands index
-parser_L0:
+parser_l0:
   mov si, tokstr
   call _strcmp
   je parser_cmd_equal
-parser_L0_L0:
+parser_l0_l0:
   lea d, [di + 0]
   cmp byte[d], 0
-  je parser_L0_L0_exit      ; run through the keyword until finding NULL
+  je parser_l0_l0_exit      ; run through the keyword until finding null
   add di, 1
-  jmp parser_L0_L0
-parser_L0_L0_exit:
-  add di, 1        ; then skip NULL byte at the end 
+  jmp parser_l0_l0
+parser_l0_l0_exit:
+  add di, 1        ; then skip null byte at the end 
   mov a, [parser_index]
   add a, 2
   mov [parser_index], a      ; increase commands table index
   lea d, [di + 0]
   cmp byte[d], 0
   je parser_cmd_not_found
-  jmp parser_L0
+  jmp parser_l0
 parser_cmd_equal:
   call printnl
   mov a, [parser_index]      ; get the keyword pointer
@@ -76,7 +76,7 @@ parser_cmd_equal:
   call printnl
 parser_retry:
   call get_token
-  cmp byte[tok], TOK_SEMI
+  cmp byte[tok], tok_semi
   je cmd_parser
   call _putback
   ret
@@ -87,9 +87,9 @@ parser_cmd_not_found:
   ret
 
 ; inputs:
-; D = filename ptr
-; SI = entry name ptr
-; DI = output value string ptr
+; d = filename ptr
+; si = entry name ptr
+; di = output value string ptr
 read_config:
   push di
   push si
@@ -99,34 +99,34 @@ read_config:
   mov a, shell_transient_area
   mov [prog], a
   pop si
-read_config_L0:
+read_config_l0:
   call get_token
-  cmp byte[tok], TOK_END
-  je read_config_EOF
+  cmp byte[tok], tok_end
+  je read_config_eof
   mov di, tokstr
   call _strcmp
   je read_config_found_entry
-read_config_L0_L0:
+read_config_l0_l0:
   call get_token
-  cmp byte[tok], TOK_SEMI
-  je read_config_L0
-  jmp read_config_L0_L0
+  cmp byte[tok], tok_semi
+  je read_config_l0
+  jmp read_config_l0_l0
 read_config_found_entry:
   call get_token      ; bypass '=' sign
   pop di
   mov a, [prog]
   mov si, a
-read_conf_L1:
+read_conf_l1:
   lodsb
-  cmp al, $3B        ; ';'
-  je read_config_EOF_2
+  cmp al, $3b        ; ';'
+  je read_config_eof_2
   stosb
-  jmp read_conf_L1
-read_config_EOF:
+  jmp read_conf_l1
+read_config_eof:
   pop di
-read_config_EOF_2:
+read_config_eof_2:
   mov al, 0
-  stosb          ; terminate value with NULL
+  stosb          ; terminate value with null
   ret
 
 ;  sol shell
@@ -146,33 +146,33 @@ cmd_shell:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; CD
+;; cd
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; search for given directory inside current dir
-; if found, read its LBA, and switch directories
+; if found, read its lba, and switch directories
 ; example:  cd /usr/bin; ls
 ;       cd /usr/bin;
 ;      cd /usr/bin
 cmd_cd:
   call get_token
   mov al, [tok]
-  cmp al, TOK_END
+  cmp al, tok_end
   je cmd_cd_gotohome
-  cmp al, TOK_SEMI
+  cmp al, tok_semi
   je cmd_cd_gotohome
-  cmp al, TOK_TILDE
+  cmp al, tok_tilde
   je cmd_cd_gotohome
   call _putback
   call get_path    ; get the path for the cd command
 cmd_cd_syscall:
   mov d, tokstr
   mov al, 19
-  syscall sys_filesystem  ; get dirID in A
-  cmp a, $FFFF
+  syscall sys_filesystem  ; get dirid in a
+  cmp a, $ffff
   je cmd_cd_fail
   mov b, a
   mov al, 3
-  syscall sys_filesystem  ; set dir to B
+  syscall sys_filesystem  ; set dir to b
 
   ret
 cmd_cd_gotohome:
@@ -185,13 +185,13 @@ cmd_cd_fail:
   ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; EXEC/OPEN PROGRAM/FILE
+;; exec/open program/file
 ;; 'filename' maps to '$path/filename'
 ;; './file' or '/a/directory/file' loads a file directly
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 cmd_exec:
-  cmp byte[tok], TOK_END
-  je cmd_exec_ret    ; check for NULL input
+  cmp byte[tok], tok_end
+  je cmd_exec_ret    ; check for null input
   call get_path    ; get file path 
   mov a, [prog]
   push a        ; save argument pointer
@@ -204,7 +204,7 @@ cmd_exec:
   je cmd_exec_abs
   mov a, path
   mov [prog], a    ; set token pointer to $path beginning
-cmd_exec_L0:
+cmd_exec_l0:
   call get_path    ; get a path option
   mov si, tokstr
   mov di, temp_data
@@ -217,12 +217,12 @@ cmd_exec_L0:
   call _strcat      ; now glue the given filename to the total path
   mov d, temp_data
   mov al, 21
-  syscall sys_filesystem  ; now we check whether such a file exists. success code is given in A. if 0, file does not exist
+  syscall sys_filesystem  ; now we check whether such a file exists. success code is given in a. if 0, file does not exist
   cmp a, 0
   jne cmd_exec_path_exists
   call get_token
-  cmp byte[tok], TOK_SEMI
-  jne cmd_exec_L0    ; if not ';' at the end, then token must be a separator. so try another path
+  cmp byte[tok], tok_semi
+  jne cmd_exec_l0    ; if not ';' at the end, then token must be a separator. so try another path
   jmp cmd_exec_unknown
 cmd_exec_path_exists:
   pop a        ; retrieve token pointer which points to the arguments given

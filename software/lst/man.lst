@@ -24,9 +24,7 @@
 0009   0409 42 7F 08      mov [prog], a			; move tokennizer pointer to the beginning of the arguments area (address 0)
 0010   040C 07 E0 06      call get_token
 0011   040F 1D 82 08      mov al, [tok]
-man.asm line 0012: Label not found: (TOK_END)
-man.asm line 0012: Unused data in MS byte of argument. (200)
-0012   0412 B9 00         cmp al, TOK_END
+0012   0412 B9 14         cmp al, tok_end
 0013   0414 C6 41 04      je cmd_man_fail
 0014   0417             
 0015   0417 FD 4D 43 04   mov si, manpath
@@ -1545,4 +1543,4 @@ man.asm line 0012: Unused data in MS byte of argument. (200)
 0038   0D92             
 0039   0D92             transient_area:
 0040   0D92             
-0041   0D92             .endtasm: Number of errors = 2
+0041   0D92             .endtasm: Number of errors = 0

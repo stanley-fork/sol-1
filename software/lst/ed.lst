@@ -37,9 +37,7 @@
 0022   040B 42 E0 0E    	mov [prog], a
 0023   040E 07 41 0D    	call get_token
 0024   0411 1D E3 0E    	mov al, [tok]
-ed.asm line 0025: Label not found: (TOK_END)
-ed.asm line 0025: Unused data in MS byte of argument. (200)
-0025   0414 B9 00       	cmp al, TOK_END
+0025   0414 B9 14       	cmp al, tok_end
 0026   0416 C6 4D 04    	je no_filename_given	; no filename given as argument
 0027   0419             
 0028   0419 07 C7 0E    	call _putback
@@ -53,7 +51,7 @@ ed.asm line 0025: Unused data in MS byte of argument. (200)
 0036   0430 12          	mov a, c				; find size of buffer
 0037   0431 53 EA 21    	add a, text_buffer
 0038   0434 3C          	mov d, a
-0039   0435 19 0A       	mov al, $0A
+0039   0435 19 0A       	mov al, $0a
 0040   0437 3E          	mov [d], al
 0041   0438 79          	inc d
 0042   0439 19 00       	mov al, 0
@@ -70,12 +68,12 @@ ed.asm line 0025: Unused data in MS byte of argument. (200)
 0053   044D             no_filename_given:
 0054   044D 3B 5D 04    	mov d, ss
 0055   0450 07 BB 0A    	call _puts
-0056   0453             main_L0:
+0056   0453             main_l0:
 0057   0453 F2 E4 0E 00 	mov byte [tokstr], 0			; clear tokstr (so that enter doesnt repeat last shell command)
 0058   0457 07 6B 04    	call command_parser
-0059   045A 0A 53 04    	jmp main_L0
-0060   045D 0A 48 65 6C ss:.db "\nHello World\n",0
-0060   0461 6C 6F 20 57 
+0059   045A 0A 53 04    	jmp main_l0
+0060   045D 0A 68 65 6C ss:.db "\nhello world\n",0
+0060   0461 6C 6F 20 77 
 0060   0465 6F 72 6C 64 
 0060   0469 0A 00 
 0061   046B             ; ,p
@@ -105,22 +103,20 @@ ed.asm line 0025: Unused data in MS byte of argument. (200)
 0085   049B             parser_hasrange:
 0086   049B 07 7C 0E    	call get_number			; range start
 0087   049E 3B E4 0E    	mov d, tokstr
-0088   04A1 07 8B 0A    	call _strtoint			; convert range to integer in A
+0088   04A1 07 8B 0A    	call _strtoint			; convert range to integer in a
 0089   04A4 42 E6 0F    	mov [start], a			; save range start
 0090   04A7 42 E8 0F    	mov [end], a			; save end too in case the range end is not given
 0091   04AA             
 0092   04AA 07 41 0D    	call get_token
 0093   04AD 1D E3 0E    	mov al, [tok]
-ed.asm line 0094: Label not found: (TOK_COMMA)
-ed.asm line 0094: Unused data in MS byte of argument. (200)
-0094   04B0 B9 00       	cmp al, TOK_COMMA
+0094   04B0 B9 0B       	cmp al, tok_comma
 0095   04B2 C6 B8 04    	je parser_range_end
 0096   04B5 0A C7 04    	jmp parser_start		; not a comma, so it must be a command
 0097   04B8             
 0098   04B8             parser_range_end:
 0099   04B8 07 7C 0E    	call get_number			; range end
 0100   04BB 3B E4 0E    	mov d, tokstr
-0101   04BE 07 8B 0A    	call _strtoint			; convert range to integer in A
+0101   04BE 07 8B 0A    	call _strtoint			; convert range to integer in a
 0102   04C1 42 E8 0F    	mov [end], a			; save range start
 0103   04C4             
 0104   04C4             get_command:
@@ -129,19 +125,19 @@ ed.asm line 0094: Unused data in MS byte of argument. (200)
 0107   04C7 FD 4F 80 08 	mov di, keywords
 0108   04CB 10 00 00    	mov a, 0
 0109   04CE 42 E4 0F    	mov [parser_index], a		; reset keywords index
-0110   04D1             parser_L2:
+0110   04D1             parser_l2:
 0111   04D1 FD 4D E4 0E 	mov si, tokstr
 0112   04D5 07 FE 08    	call _strcmp
 0113   04D8 C6 02 05    	je parser_cmd_equal
-0114   04DB             parser_L2_L0:
+0114   04DB             parser_l2_l0:
 0115   04DB FC 00 00    	lea d, [di + 0]
 0116   04DE 1E          	mov al, [d]
 0117   04DF B9 00       	cmp al, 0
-0118   04E1 C6 EA 04    	je parser_L2_L0_exit			; run through the keyword until finding NULL
+0118   04E1 C6 EA 04    	je parser_l2_l0_exit			; run through the keyword until finding null
 0119   04E4 D4 01 00    	add di, 1
-0120   04E7 0A DB 04    	jmp parser_L2_L0
-0121   04EA             parser_L2_L0_exit:
-0122   04EA D4 01 00    	add di, 1				; then skip NULL byte at the end 
+0120   04E7 0A DB 04    	jmp parser_l2_l0
+0121   04EA             parser_l2_l0_exit:
+0122   04EA D4 01 00    	add di, 1				; then skip null byte at the end 
 0123   04ED 14 E4 0F    	mov a, [parser_index]
 0124   04F0 53 02 00    	add a, 2
 0125   04F3 42 E4 0F    	mov [parser_index], a			; increase keywords table index
@@ -149,13 +145,13 @@ ed.asm line 0094: Unused data in MS byte of argument. (200)
 0127   04F9 1E          	mov al, [d]
 0128   04FA B9 00       	cmp al, 0
 0129   04FC C6 14 05    	je parser_cmd_not_found
-0130   04FF 0A D1 04    	jmp parser_L2
+0130   04FF 0A D1 04    	jmp parser_l2
 0131   0502             parser_cmd_equal:
-0132   0502 10 00 0D    	mov a, $0D00
+0132   0502 10 00 0D    	mov a, $0d00
 0133   0505 05 03       	syscall sys_io				; print carriage return
 0134   0507 14 E4 0F    	mov a, [parser_index]			; get the keyword pointer
 0135   050A FD 07 93 08 	call [a + keyword_pointers]		; execute command
-0136   050E 10 00 0D    	mov a, $0D00
+0136   050E 10 00 0D    	mov a, $0d00
 0137   0511 05 03       	syscall sys_io				; print carriage return
 0138   0513 09          	ret
 0139   0514             parser_cmd_not_found:
@@ -163,34 +159,34 @@ ed.asm line 0094: Unused data in MS byte of argument. (200)
 0141   0516 07 8F 09    	call _putchar
 0142   0519 09          	ret
 0143   051A             
-0144   051A             ; A = line to append after
-0145   051A             ; B = address of text to append
+0144   051A             ; a = line to append after
+0145   051A             ; b = address of text to append
 0146   051A             append_lines:
 0147   051A 77          	inc a
 0148   051B 74          	mov d, b
-0149   051C 07 EE 08    	call _strlen		; length of text in C
-0150   051F 07 46 06    	call find_line	; address in D
+0149   051C 07 EE 08    	call _strlen		; length of text in c
+0150   051F 07 46 06    	call find_line	; address in d
 0151   0522 FD 50       	mov di, d
 0152   0524 FD 4E       	mov si, d
-0153   0526             append_lines_L0:
+0153   0526             append_lines_l0:
 0154   0526 F6          	lodsb
-0155   0527 B9 0A       	cmp al, $0A
-0156   0529 C7 26 05    	jne append_lines_L0
-0157   052C             ; now SI points to char after \n
+0155   0527 B9 0A       	cmp al, $0a
+0156   0529 C7 26 05    	jne append_lines_l0
+0157   052C             ; now si points to char after \n
 0158   052C             ; start copying chars from there to beginning of deleted line
-0159   052C             ; copy till we find NULL
-0160   052C             append_lines_L1:
+0159   052C             ; copy till we find null
+0160   052C             append_lines_l1:
 0161   052C F6          	lodsb
 0162   052D F7          	stosb
 0163   052E B9 00       	cmp al, 0
-0164   0530 C7 2C 05    	jne append_lines_L1
+0164   0530 C7 2C 05    	jne append_lines_l1
 0165   0533             append_lines_end:
 0166   0533 09          	ret
 0167   0534             
 0168   0534             cmd_append:
 0169   0534 14 7C 08    	mov a, [txt_buffer_ptr]
 0170   0537 3C          	mov d, a
-0171   0538             cmd_append_L0:
+0171   0538             cmd_append_l0:
 0172   0538 07 96 09    	call _gets		; read new line
 0173   053B FD 4E       	mov si, d
 0174   053D FD 4F 7E 08 	mov di, s_dot
@@ -198,19 +194,19 @@ ed.asm line 0094: Unused data in MS byte of argument. (200)
 0176   0544 C6 64 05    	je cmd_append_end
 0177   0547 14 7C 08    	mov a, [txt_buffer_ptr]
 0178   054A 4D          	mov si, a
-0179   054B             cmd_append_L1:		; look for NULL termination
+0179   054B             cmd_append_l1:		; look for null termination
 0180   054B F6          	lodsb
 0181   054C B9 00       	cmp al, 0
-0182   054E C7 4B 05    	jne cmd_append_L1
+0182   054E C7 4B 05    	jne cmd_append_l1
 0183   0551 FB FF FF    	lea d, [si + -1]
-0184   0554 19 0A       	mov al, $0A
+0184   0554 19 0A       	mov al, $0a
 0185   0556 3E          	mov [d], al
 0186   0557 FB 00 00    	lea d, [si + 0]
 0187   055A 19 00       	mov al, 0
 0188   055C 3E          	mov [d], al
 0189   055D 13          	mov a, d
 0190   055E 42 7C 08    	mov [txt_buffer_ptr], a
-0191   0561 0A 38 05    	jmp cmd_append_L0
+0191   0561 0A 38 05    	jmp cmd_append_l0
 0192   0564             cmd_append_end:
 0193   0564 19 00       	mov al, 0
 0194   0566 3E          	mov [d], al
@@ -228,47 +224,47 @@ ed.asm line 0094: Unused data in MS byte of argument. (200)
 0206   056B             ; fourth line\n
 0207   056B             cmd_delete:
 0208   056B 14 E8 0F    	mov a, [end]		; get starting line
-0209   056E             cmd_delete_L0:
+0209   056E             cmd_delete_l0:
 0210   056E 07 8C 05    	call delete_line		
 0211   0571 29 E6 0F    	mov b, [start]
 0212   0574 B0          	cmp a, b
 0213   0575 C6 7C 05    	je cmd_delete_end
 0214   0578 7D          	dec a
-0215   0579 0A 6E 05    	jmp cmd_delete_L0
+0215   0579 0A 6E 05    	jmp cmd_delete_l0
 0216   057C             cmd_delete_end:
 0217   057C             ; set text pointer to the end of file
 0218   057C FD 4D EA 21 	mov si, text_buffer
-0219   0580             cmd_delete_L1:
+0219   0580             cmd_delete_l1:
 0220   0580 F6          	lodsb
 0221   0581 B9 00       	cmp al, 0
-0222   0583 C7 80 05    	jne cmd_delete_L1
+0222   0583 C7 80 05    	jne cmd_delete_l1
 0223   0586 4E          	mov a, si
 0224   0587 7D          	dec a
 0225   0588 42 7C 08    	mov [txt_buffer_ptr], a
 0226   058B 09          	ret
 0227   058C             	
 0228   058C             ; find address of line beginning
-0229   058C             ; find EOL address
-0230   058C             ; start copying chars from EOL into beginning of required line
-0231   058C             ; stop when reache NULL
-0232   058C             ; A = line to delete
+0229   058C             ; find eol address
+0230   058C             ; start copying chars from eol into beginning of required line
+0231   058C             ; stop when reache null
+0232   058C             ; a = line to delete
 0233   058C             delete_line:
 0234   058C D7          	push a
-0235   058D 07 46 06    	call find_line	; address in D
+0235   058D 07 46 06    	call find_line	; address in d
 0236   0590 FD 50       	mov di, d
 0237   0592 FD 4E       	mov si, d
-0238   0594             delete_line_L0:
+0238   0594             delete_line_l0:
 0239   0594 F6          	lodsb
-0240   0595 B9 0A       	cmp al, $0A
-0241   0597 C7 94 05    	jne delete_line_L0
-0242   059A             ; now SI points to char after \n
+0240   0595 B9 0A       	cmp al, $0a
+0241   0597 C7 94 05    	jne delete_line_l0
+0242   059A             ; now si points to char after \n
 0243   059A             ; start copying chars from there to beginning of deleted line
-0244   059A             ; copy till we find NULL
-0245   059A             delete_line_L1:
+0244   059A             ; copy till we find null
+0245   059A             delete_line_l1:
 0246   059A F6          	lodsb
 0247   059B F7          	stosb
 0248   059C B9 00       	cmp al, 0
-0249   059E C7 9A 05    	jne delete_line_L1
+0249   059E C7 9A 05    	jne delete_line_l1
 0250   05A1             delete_line_end:
 0251   05A1 E4          	pop a
 0252   05A2 09          	ret
@@ -284,7 +280,7 @@ ed.asm line 0094: Unused data in MS byte of argument. (200)
 0262   05B7 12          	mov a, c				; find size of buffer
 0263   05B8 53 EA 21    	add a, text_buffer
 0264   05BB 3C          	mov d, a
-0265   05BC 19 0A       	mov al, $0A
+0265   05BC 19 0A       	mov al, $0a
 0266   05BE 3E          	mov [d], al
 0267   05BF 79          	inc d
 0268   05C0 19 00       	mov al, 0
@@ -323,70 +319,70 @@ ed.asm line 0094: Unused data in MS byte of argument. (200)
 0301   05FF             
 0302   05FF             cmd_print:
 0303   05FF 14 E6 0F    	mov a, [start]		; get starting line
-0304   0602             cmd_print_L0:
-0305   0602 07 46 06    	call find_line		; address in D
-0306   0605 07 33 06    	call printline		; print line at D	
+0304   0602             cmd_print_l0:
+0305   0602 07 46 06    	call find_line		; address in d
+0306   0605 07 33 06    	call printline		; print line at d	
 0307   0608 29 E8 0F    	mov b, [end]
 0308   060B B0          	cmp a, b
 0309   060C C6 13 06    	je cmd_print_end
 0310   060F 77          	inc a
-0311   0610 0A 02 06    	jmp cmd_print_L0
+0311   0610 0A 02 06    	jmp cmd_print_l0
 0312   0613             cmd_print_end:
 0313   0613 09          	ret
 0314   0614             
 0315   0614             cmd_print_numbered:
 0316   0614 14 E6 0F    	mov a, [start]		; get starting line
-0317   0617             cmd_print_numbered_L0:
+0317   0617             cmd_print_numbered_l0:
 0318   0617 D7          	push a
 0319   0618 07 E4 0A    	call print_u16d
-0320   061B 22 09       	mov ah, $09			; TAB
+0320   061B 22 09       	mov ah, $09			; tab
 0321   061D 07 8F 09    	call _putchar
 0322   0620 E4          	pop a
-0323   0621 07 46 06    	call find_line		; address in D
-0324   0624 07 33 06    	call printline		; print line at D	
+0323   0621 07 46 06    	call find_line		; address in d
+0324   0624 07 33 06    	call printline		; print line at d	
 0325   0627 29 E8 0F    	mov b, [end]
 0326   062A B0          	cmp a, b
 0327   062B C6 32 06    	je cmd_print_numbered_end
 0328   062E 77          	inc a
-0329   062F 0A 17 06    	jmp cmd_print_numbered_L0
+0329   062F 0A 17 06    	jmp cmd_print_numbered_l0
 0330   0632             cmd_print_numbered_end:
 0331   0632 09          	ret
 0332   0633             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-0333   0633             ; PRINT LINE
-0334   0633             ; pointer in D
+0333   0633             ; print line
+0334   0633             ; pointer in d
 0335   0633             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 0336   0633             printline:
 0337   0633 D7          	push a
 0338   0634 DA          	push d
-0339   0635             printline_L0:
+0339   0635             printline_l0:
 0340   0635 1E          	mov al, [d]
 0341   0636 23          	mov ah, al
 0342   0637 07 8F 09    	call _putchar
-0343   063A B9 0A       	cmp al, $0A
+0343   063A B9 0A       	cmp al, $0a
 0344   063C C6 43 06    	je printline_end
 0345   063F 79          	inc d
-0346   0640 0A 35 06    	jmp printline_L0
+0346   0640 0A 35 06    	jmp printline_l0
 0347   0643             printline_end:
 0348   0643 E7          	pop d
 0349   0644 E4          	pop a
 0350   0645 09          	ret
 0351   0646             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-0352   0646             ; INPUTS
-0353   0646             ; A = line number
-0354   0646             ; OUTPUTS
-0355   0646             ; D = line address
+0352   0646             ; inputs
+0353   0646             ; a = line number
+0354   0646             ; outputs
+0355   0646             ; d = line address
 0356   0646             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 0357   0646             find_line:
 0358   0646 D7          	push a
 0359   0647 D8          	push b
 0360   0648 26 EA 21    	mov b, text_buffer
 0361   064B FD 42 E0 0E 	mov [prog], b
-0362   064F             find_line_L0:
+0362   064F             find_line_l0:
 0363   064F AF 01 00    	cmp a, 1
 0364   0652 C6 5C 06    	je find_line_end
 0365   0655 07 1C 0D    	call get_line
 0366   0658 7D          	dec a
-0367   0659 0A 4F 06    	jmp find_line_L0
+0367   0659 0A 4F 06    	jmp find_line_l0
 0368   065C             find_line_end:
 0369   065C 14 E0 0E    	mov a, [prog]
 0370   065F 3C          	mov d, a
@@ -396,18 +392,18 @@ ed.asm line 0094: Unused data in MS byte of argument. (200)
 0374   0663             
 0375   0663             
 0376   0663             ; find total number of lines
-0377   0663             ; A = total
+0377   0663             ; a = total
 0378   0663             total_lines:
 0379   0663 26 00 00    	mov b, 0
 0380   0666 FD 4D EA 21 	mov si, text_buffer
-0381   066A             total_lines_L0:
+0381   066A             total_lines_l0:
 0382   066A F6          	lodsb
 0383   066B B9 00       	cmp al, 0
 0384   066D C6 7A 06    	je total_lines_end
-0385   0670 B9 0A       	cmp al, $0A
-0386   0672 C7 6A 06    	jne total_lines_L0
+0385   0670 B9 0A       	cmp al, $0a
+0386   0672 C7 6A 06    	jne total_lines_l0
 0387   0675 FD 77       	inc b
-0388   0677 0A 6A 06    	jmp total_lines_L0
+0388   0677 0A 6A 06    	jmp total_lines_l0
 0389   067A             total_lines_end:
 0390   067A 11          	mov a, b
 0391   067B 09          	ret
@@ -3095,4 +3091,4 @@ ed.asm line 0094: Unused data in MS byte of argument. (200)
 0436   21EB             
 0437   21EB             .end
 0438   21EB             
-tasm: Number of errors = 4
+tasm: Number of errors = 0

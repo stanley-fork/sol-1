@@ -1,0 +1,9 @@
+sys_break        .EQU  $0000
+sys_rtc          .EQU  $0001
+sys_ide          .EQU  $0002
+sys_io           .EQU  $0003
+sys_datetime     .EQU  $0004
+sys_reboot       .EQU  $0005
+sys_system       .EQU  $0006
+sys_fdc          .EQU  $0007
+text_org         .EQU  $0400

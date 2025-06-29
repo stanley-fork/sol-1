@@ -10,16 +10,16 @@ primes:
 	mov [prog], a
 	call get_token
 	mov al, [tok]
-	cmp al, TOK_END
+	cmp al, tok_end
 	je bad_args
 	mov d, tokstr
 	call _strtoint
 	mov [max], a
 	
 	mov a, 2
-primes_L1:
+primes_l1:
 	mov c, 2	
-primes_L2:
+primes_l2:
 	push a
 	mov b, c
 	div a, b
@@ -27,7 +27,7 @@ primes_L2:
 	jz divisible
 	inc c
 	pop a
-	jmp primes_L2		
+	jmp primes_l2		
 divisible:
 	pop a
 	cmp a, c
@@ -50,10 +50,10 @@ isprime:
 	mov b, [max]
 	cmp a, b
 	jgeu primes_ret
-	jmp primes_L1
+	jmp primes_l1
 notprime:
 	inc a
-	jmp primes_L1		
+	jmp primes_l1		
 primes_ret:
 	syscall sys_terminate_proc
 

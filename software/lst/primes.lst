@@ -25,18 +25,16 @@
 0010   040B 42 09 0A    	mov [prog], a
 0011   040E 07 6A 08    	call get_token
 0012   0411 1D 0C 0A    	mov al, [tok]
-primes.asm line 0013: Label not found: (TOK_END)
-primes.asm line 0013: Unused data in MS byte of argument. (200)
-0013   0414 B9 00       	cmp al, TOK_END
+0013   0414 B9 14       	cmp al, tok_end
 0014   0416 C6 64 04    	je bad_args
 0015   0419 3B 0D 0A    	mov d, tokstr
 0016   041C 07 51 06    	call _strtoint
 0017   041F 42 C1 0B    	mov [max], a
 0018   0422             	
 0019   0422 10 02 00    	mov a, 2
-0020   0425             primes_L1:
+0020   0425             primes_l1:
 0021   0425 38 02 00    	mov c, 2	
-0022   0428             primes_L2:
+0022   0428             primes_l2:
 0023   0428 D7          	push a
 0024   0429 28          	mov b, c
 0025   042A AE          	div a, b
@@ -44,7 +42,7 @@ primes.asm line 0013: Unused data in MS byte of argument. (200)
 0027   042E C6 36 04    	jz divisible
 0028   0431 78          	inc c
 0029   0432 E4          	pop a
-0030   0433 0A 28 04    	jmp primes_L2		
+0030   0433 0A 28 04    	jmp primes_l2		
 0031   0436             divisible:
 0032   0436 E4          	pop a
 0033   0437 B1          	cmp a, c
@@ -67,10 +65,10 @@ primes.asm line 0013: Unused data in MS byte of argument. (200)
 0050   0454 29 C1 0B    	mov b, [max]
 0051   0457 B0          	cmp a, b
 0052   0458 C9 62 04    	jgeu primes_ret
-0053   045B 0A 25 04    	jmp primes_L1
+0053   045B 0A 25 04    	jmp primes_l1
 0054   045E             notprime:
 0055   045E 77          	inc a
-0056   045F 0A 25 04    	jmp primes_L1		
+0056   045F 0A 25 04    	jmp primes_l1		
 0057   0462             primes_ret:
 0058   0462 05 0B       	syscall sys_terminate_proc
 0059   0464             
@@ -1463,4 +1461,4 @@ primes.asm line 0013: Unused data in MS byte of argument. (200)
 0074   0BE2 00 
 0075   0BE3             			
 0076   0BE3             .end
-tasm: Number of errors = 2
+tasm: Number of errors = 0

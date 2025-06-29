@@ -15,13 +15,13 @@
 0014+  0000             sys_fdc          .EQU  $000d
 0015+  0000             text_org         .EQU  $0400
 0002   0000             
-0003   0000             STACK_BEGIN:  .equ $F7FF  ; beginning of stack
+0003   0000             stack_begin:  .equ $f7ff  ; beginning of stack
 0004   0000             
 0005   0400             .org text_org      ; origin at 1024
 0006   0400             
 0007   0400             shell_main:  
-0008   0400 FD 49 FF F7   mov bp, STACK_BEGIN
-0009   0404 FD 47 FF F7   mov sp, STACK_BEGIN
+0008   0400 FD 49 FF F7   mov bp, stack_begin
+0009   0404 FD 47 FF F7   mov sp, stack_begin
 0010   0408             
 0011   0408             ; open config file
 0012   0408             ; example: path=/usr/bin;
@@ -46,7 +46,7 @@
 0031   0430 42 8E 13      mov [prog], a
 0032   0433 07 FF 04      call cmd_shell
 0033   0436             
-0034   0436             shell_L0:
+0034   0436             shell_l0:
 0035   0436 3B 4B 07      mov d, s_sol1
 0036   0439 07 69 0F      call _puts
 0037   043C 19 12         mov al, 18
@@ -58,32 +58,32 @@
 0043   044A 42 8E 13      mov [prog], a      ; reset tokenizer buffer pointer
 0044   044D 07 44 0E      call _gets            ; get command
 0045   0450 07 56 04      call cmd_parser
-0046   0453 0A 36 04      jmp shell_L0
+0046   0453 0A 36 04      jmp shell_l0
 0047   0456             
 0048   0456             cmd_parser:
 0049   0456 07 EF 11      call get_token          ; get command into tokstr
 0050   0459 FD 4F F3 05   mov di, commands
 0051   045D FD 10         cla
 0052   045F 42 53 09      mov [parser_index], a    ; reset commands index
-0053   0462             parser_L0:
+0053   0462             parser_l0:
 0054   0462 FD 4D 92 13   mov si, tokstr
 0055   0466 07 AC 0D      call _strcmp
 0056   0469 C6 91 04      je parser_cmd_equal
-0057   046C             parser_L0_L0:
+0057   046C             parser_l0_l0:
 0058   046C FC 00 00      lea d, [di + 0]
 0059   046F BD 00         cmp byte[d], 0
-0060   0471 C6 7A 04      je parser_L0_L0_exit      ; run through the keyword until finding NULL
+0060   0471 C6 7A 04      je parser_l0_l0_exit      ; run through the keyword until finding null
 0061   0474 D4 01 00      add di, 1
-0062   0477 0A 6C 04      jmp parser_L0_L0
-0063   047A             parser_L0_L0_exit:
-0064   047A D4 01 00      add di, 1        ; then skip NULL byte at the end 
+0062   0477 0A 6C 04      jmp parser_l0_l0
+0063   047A             parser_l0_l0_exit:
+0064   047A D4 01 00      add di, 1        ; then skip null byte at the end 
 0065   047D 14 53 09      mov a, [parser_index]
 0066   0480 53 02 00      add a, 2
 0067   0483 42 53 09      mov [parser_index], a      ; increase commands table index
 0068   0486 FC 00 00      lea d, [di + 0]
 0069   0489 BD 00         cmp byte[d], 0
 0070   048B C6 AC 04      je parser_cmd_not_found
-0071   048E 0A 62 04      jmp parser_L0
+0071   048E 0A 62 04      jmp parser_l0
 0072   0491             parser_cmd_equal:
 0073   0491 07 16 0F      call printnl
 0074   0494 14 53 09      mov a, [parser_index]      ; get the keyword pointer
@@ -91,8 +91,7 @@
 0076   049B 07 16 0F      call printnl
 0077   049E             parser_retry:
 0078   049E 07 EF 11      call get_token
-shell.asm line 0079: Label not found: (TOK_SEMI)
-0079   04A1 BC 91 13 00   cmp byte[tok], TOK_SEMI
+0079   04A1 BC 91 13 06   cmp byte[tok], tok_semi
 0080   04A5 C6 56 04      je cmd_parser
 0081   04A8 07 75 13      call _putback
 0082   04AB 09            ret
@@ -103,9 +102,9 @@ shell.asm line 0079: Label not found: (TOK_SEMI)
 0087   04B5 09            ret
 0088   04B6             
 0089   04B6             ; inputs:
-0090   04B6             ; D = filename ptr
-0091   04B6             ; SI = entry name ptr
-0092   04B6             ; DI = output value string ptr
+0090   04B6             ; d = filename ptr
+0091   04B6             ; si = entry name ptr
+0092   04B6             ; di = output value string ptr
 0093   04B6             read_config:
 0094   04B6 E3            push di
 0095   04B7 E2            push si
@@ -115,36 +114,34 @@ shell.asm line 0079: Label not found: (TOK_SEMI)
 0099   04C0 10 92 14      mov a, shell_transient_area
 0100   04C3 42 8E 13      mov [prog], a
 0101   04C6 EF            pop si
-0102   04C7             read_config_L0:
+0102   04C7             read_config_l0:
 0103   04C7 07 EF 11      call get_token
-shell.asm line 0104: Label not found: (TOK_END)
-0104   04CA BC 91 13 00   cmp byte[tok], TOK_END
-0105   04CE C6 FA 04      je read_config_EOF
+0104   04CA BC 91 13 14   cmp byte[tok], tok_end
+0105   04CE C6 FA 04      je read_config_eof
 0106   04D1 FD 4F 92 13   mov di, tokstr
 0107   04D5 07 AC 0D      call _strcmp
 0108   04D8 C6 E8 04      je read_config_found_entry
-0109   04DB             read_config_L0_L0:
+0109   04DB             read_config_l0_l0:
 0110   04DB 07 EF 11      call get_token
-shell.asm line 0111: Label not found: (TOK_SEMI)
-0111   04DE BC 91 13 00   cmp byte[tok], TOK_SEMI
-0112   04E2 C6 C7 04      je read_config_L0
-0113   04E5 0A DB 04      jmp read_config_L0_L0
+0111   04DE BC 91 13 06   cmp byte[tok], tok_semi
+0112   04E2 C6 C7 04      je read_config_l0
+0113   04E5 0A DB 04      jmp read_config_l0_l0
 0114   04E8             read_config_found_entry:
 0115   04E8 07 EF 11      call get_token      ; bypass '=' sign
 0116   04EB F0            pop di
 0117   04EC 14 8E 13      mov a, [prog]
 0118   04EF 4D            mov si, a
-0119   04F0             read_conf_L1:
+0119   04F0             read_conf_l1:
 0120   04F0 F6            lodsb
-0121   04F1 B9 3B         cmp al, $3B        ; ';'
-0122   04F3 C6 FB 04      je read_config_EOF_2
+0121   04F1 B9 3B         cmp al, $3b        ; ';'
+0122   04F3 C6 FB 04      je read_config_eof_2
 0123   04F6 F7            stosb
-0124   04F7 0A F0 04      jmp read_conf_L1
-0125   04FA             read_config_EOF:
+0124   04F7 0A F0 04      jmp read_conf_l1
+0125   04FA             read_config_eof:
 0126   04FA F0            pop di
-0127   04FB             read_config_EOF_2:
+0127   04FB             read_config_eof_2:
 0128   04FB 19 00         mov al, 0
-0129   04FD F7            stosb          ; terminate value with NULL
+0129   04FD F7            stosb          ; terminate value with null
 0130   04FE 09            ret
 0131   04FF             
 0132   04FF             ;  sol shell
@@ -164,39 +161,33 @@ shell.asm line 0111: Label not found: (TOK_SEMI)
 0146   051A 09            ret
 0147   051B             
 0148   051B             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-0149   051B             ;; CD
+0149   051B             ;; cd
 0150   051B             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 0151   051B             ; search for given directory inside current dir
-0152   051B             ; if found, read its LBA, and switch directories
+0152   051B             ; if found, read its lba, and switch directories
 0153   051B             ; example:  cd /usr/bin; ls
 0154   051B             ;       cd /usr/bin;
 0155   051B             ;      cd /usr/bin
 0156   051B             cmd_cd:
 0157   051B 07 EF 11      call get_token
 0158   051E 1D 91 13      mov al, [tok]
-shell.asm line 0159: Label not found: (TOK_END)
-shell.asm line 0159: Unused data in MS byte of argument. (200)
-0159   0521 B9 00         cmp al, TOK_END
+0159   0521 B9 14         cmp al, tok_end
 0160   0523 C6 49 05      je cmd_cd_gotohome
-shell.asm line 0161: Label not found: (TOK_SEMI)
-shell.asm line 0161: Unused data in MS byte of argument. (200)
-0161   0526 B9 00         cmp al, TOK_SEMI
+0161   0526 B9 06         cmp al, tok_semi
 0162   0528 C6 49 05      je cmd_cd_gotohome
-shell.asm line 0163: Label not found: (TOK_TILDE)
-shell.asm line 0163: Unused data in MS byte of argument. (200)
-0163   052B B9 00         cmp al, TOK_TILDE
+0163   052B B9 08         cmp al, tok_tilde
 0164   052D C6 49 05      je cmd_cd_gotohome
 0165   0530 07 75 13      call _putback
 0166   0533 07 98 11      call get_path    ; get the path for the cd command
 0167   0536             cmd_cd_syscall:
 0168   0536 3B 92 13      mov d, tokstr
 0169   0539 19 13         mov al, 19
-0170   053B 05 04         syscall sys_filesystem  ; get dirID in A
-0171   053D AF FF FF      cmp a, $FFFF
+0170   053B 05 04         syscall sys_filesystem  ; get dirid in a
+0171   053D AF FF FF      cmp a, $ffff
 0172   0540 C6 5A 05      je cmd_cd_fail
 0173   0543 27            mov b, a
 0174   0544 19 03         mov al, 3
-0175   0546 05 04         syscall sys_filesystem  ; set dir to B
+0175   0546 05 04         syscall sys_filesystem  ; set dir to b
 0176   0548             
 0177   0548 09            ret
 0178   0549             cmd_cd_gotohome:
@@ -209,14 +200,13 @@ shell.asm line 0163: Unused data in MS byte of argument. (200)
 0185   055A 09            ret
 0186   055B             
 0187   055B             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-0188   055B             ;; EXEC/OPEN PROGRAM/FILE
+0188   055B             ;; exec/open program/file
 0189   055B             ;; 'filename' maps to '$path/filename'
 0190   055B             ;; './file' or '/a/directory/file' loads a file directly
 0191   055B             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 0192   055B             cmd_exec:
-shell.asm line 0193: Label not found: (TOK_END)
-0193   055B BC 91 13 00   cmp byte[tok], TOK_END
-0194   055F C6 E5 05      je cmd_exec_ret    ; check for NULL input
+0193   055B BC 91 13 14   cmp byte[tok], tok_end
+0194   055F C6 E5 05      je cmd_exec_ret    ; check for null input
 0195   0562 07 98 11      call get_path    ; get file path 
 0196   0565 14 8E 13      mov a, [prog]
 0197   0568 D7            push a        ; save argument pointer
@@ -229,7 +219,7 @@ shell.asm line 0193: Label not found: (TOK_END)
 0204   057F C6 D6 05      je cmd_exec_abs
 0205   0582 10 86 06      mov a, path
 0206   0585 42 8E 13      mov [prog], a    ; set token pointer to $path beginning
-0207   0588             cmd_exec_L0:
+0207   0588             cmd_exec_l0:
 0208   0588 07 98 11      call get_path    ; get a path option
 0209   058B FD 4D 92 13   mov si, tokstr
 0210   058F FD 4F 55 0B   mov di, temp_data
@@ -242,13 +232,12 @@ shell.asm line 0193: Label not found: (TOK_END)
 0217   05A9 07 CF 0D      call _strcat      ; now glue the given filename to the total path
 0218   05AC 3B 55 0B      mov d, temp_data
 0219   05AF 19 15         mov al, 21
-0220   05B1 05 04         syscall sys_filesystem  ; now we check whether such a file exists. success code is given in A. if 0, file does not exist
+0220   05B1 05 04         syscall sys_filesystem  ; now we check whether such a file exists. success code is given in a. if 0, file does not exist
 0221   05B3 AF 00 00      cmp a, 0
 0222   05B6 C7 C6 05      jne cmd_exec_path_exists
 0223   05B9 07 EF 11      call get_token
-shell.asm line 0224: Label not found: (TOK_SEMI)
-0224   05BC BC 91 13 00   cmp byte[tok], TOK_SEMI
-0225   05C0 C7 88 05      jne cmd_exec_L0    ; if not ';' at the end, then token must be a separator. so try another path
+0224   05BC BC 91 13 06   cmp byte[tok], tok_semi
+0225   05C0 C7 88 05      jne cmd_exec_l0    ; if not ';' at the end, then token must be a separator. so try another path
 0226   05C3 0A E6 05      jmp cmd_exec_unknown
 0227   05C6             cmd_exec_path_exists:
 0228   05C6 E4            pop a        ; retrieve token pointer which points to the arguments given
@@ -2133,4 +2122,4 @@ shell.asm line 0224: Label not found: (TOK_SEMI)
 0289   1492             shell_transient_area:  ; shell transient data area
 0290   1492             
 0291   1492             .end
-tasm: Number of errors = 11
+tasm: Number of errors = 0

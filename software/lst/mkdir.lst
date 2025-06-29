@@ -25,16 +25,15 @@
 0010   0400             cmd_mkdir:
 0011   0400 10 00 00    	mov a, 0
 0012   0403 42 49 06    	mov [prog], a
-0013   0406             cmd_mkdir_L0:
+0013   0406             cmd_mkdir_l0:
 0014   0406 07 AA 04    	call get_token
-mkdir.asm line 0015: Label not found: (TOKTYP_IDENTIFIER)
-0015   0409 BC 4B 06 00 	cmp byte[toktyp], TOKTYP_IDENTIFIER
+0015   0409 BC 4B 06 00 	cmp byte[toktyp], toktyp_identifier
 0016   040D C7 1A 04    	jne cmd_mkdir_end
 0017   0410             ; execute mkdir command
 0018   0410 3B 4D 06    	mov d, tokstr
 0019   0413 19 02       	mov al, 2
 0020   0415 05 04       	syscall sys_filesystem
-0021   0417 0A 06 04    	jmp cmd_mkdir_L0
+0021   0417 0A 06 04    	jmp cmd_mkdir_l0
 0022   041A             cmd_mkdir_end:
 0023   041A 07 30 06    	call _putback		; if token was not an identifier, then put it back
 0024   041D             
@@ -1408,4 +1407,4 @@ mkdir.asm line 0015: Label not found: (TOKTYP_IDENTIFIER)
 0032   0B5C             .end
 0033   0B5C             
 0034   0B5C             
-tasm: Number of errors = 1
+tasm: Number of errors = 0

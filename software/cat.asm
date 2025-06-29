@@ -12,7 +12,7 @@ cmd_cat:
 	mov [prog], a			; move tokennizer pointer to the beginning of the arguments area (address 0)
 	call get_token
 
-	cmp byte[tok], TOK_ANGLE
+	cmp byte[tok], tok_angle
 	je cmd_cat_write
 cmd_cat_read:
 	call _putback
@@ -25,7 +25,7 @@ cmd_cat_read:
 	call _puts					; print textfile to stdout
 	call get_token
 	mov al, [tok]
-	cmp al, TOK_END
+	cmp al, tok_end
 	jne cmd_cat_read
 	syscall sys_terminate_proc
 cmd_cat_write:

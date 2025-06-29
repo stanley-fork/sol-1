@@ -12,9 +12,6 @@ main:
 
   mov d, s_irq1
   call _puts
-  mov d, fdc_irq_event
-  mov al, 4
-  syscall sys_system    ; read fdc irq
   call print_u8x        ; print irq event
   call printnl
 

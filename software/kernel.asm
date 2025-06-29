@@ -232,8 +232,6 @@ int_4:
 int_5:
   sysret
 
-s_fdc_irq: .db "\nIRQ0 Executed.\n", 0
-
 ; ------------------------------------------------------------------------------------------------------------------;
 ; process swapping
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -388,12 +386,14 @@ syscall_fdc_force_int:
 syscall_fdc_format:
   mov [_fdc_track], bl
   mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
-  call fdc_wait_64us
 ;fdc_wait_busy_high:
 ;  mov al, [_fdc_wd_stat_cmd]      ; 
 ;  test al, $01                ; 
 ;  jz fdc_wait_busy_high
   mov si, transient_area
+  lodsb
+  mov [_fdc_data], al      ; 10   
+  call fdc_wait_64us
 fdc_format_drq:
   mov al, [_fdc_stat_cmd]  ; 10
   test al, $01                ; 4
@@ -466,11 +466,13 @@ syscall_fdc_write_sect:
   mov al, ah
   mov [_fdc_track], al
   mov byte [_fdc_stat_cmd], %10101010            ; 101, 0:single sector, 1: disable spinup, 0: no delay, 1: no precomp, 0: normal data mark
-  call fdc_wait_64us
 ;fdc_wait_busy_high2:
-;  mov al, [_fdc_wd_stat_cmd]      ; 
-;  test al, $01                ; 
+;  mov al, [_fdc_wd_stat_cmd]    
+;  test al, $01                
 ;  jz fdc_wait_busy_high2
+  lodsb                      
+  mov [_fdc_data], al      
+  call fdc_wait_64us
 fdc_write_sect_l0: ; for each byte, we need to wait for drq to be high
   mov al, [_fdc_stat_cmd]  ; 10
   test al, $01                ; 4
@@ -580,7 +582,7 @@ fdc_footer_drq_loop:
 ; call u16 is 14 cycles long
 ; 160 - 5 - 14 = 
 fdc_wait_64us:
-  mov cl, 1                       ; 5 cycles
+  mov cl, 13                       ; 5 cycles
 fdc_wait_64_loop:
   dec cl                           ; 3 cycles
   jnz fdc_wait_64_loop             ; 8 cycles
@@ -1278,7 +1280,7 @@ file_system_jmptbl:
   .dw fs_cat                    ; 8
   .dw fs_rmdir                  ; 9
   .dw fs_rm                     ; 10
-  .dw fs_starcom                ; 11
+  .dw 0                         ; 11
   .dw 0                         ; 12
   .dw 0                         ; 13
   .dw fs_chmod                  ; 14
@@ -1978,91 +1980,6 @@ fs_ls_end:
   call print_u8d
   call printnl
   sysret
-
-
-;------------------------------------------------------------------------------------------------------;
-; create new textfile
-;------------------------------------------------------------------------------------------------------;
-; file structure:
-; 512 bytes header
-; header used to tell whether the block is free
-; d = content pointer in user space
-; c = file size
-; todo: i cant remember what starcom is about. i dont think it works anyhow and needs revising/deleting
-fs_starcom:
-	mov si, d
-	mov di, transient_area
-  add c, 512   ; add 512 to c to include file header which contains the filename
-	load					; load data from user-space
-	call fs_find_empty_block	; look for empty data blocks
-	push b				; save empty block lba
-  mov g, b
-;create header file by grabbing file name from parameter	
-	mov d, transient_area + 512			; pointer to file contents
-	push c							; save length
-	mov al, 1
-	mov [transient_area], al					; mark sectors as used (not null)
-	mov d, transient_area
-  mov a, c
-  mov b, 512
-  div a, b
-  inc b         ; inc b as the division will most likely have a remainder
-	mov ah, bl		; number of sectors to write, which is the result of the division of file size / 512 (small enough to fit in bl)
-	mov c, 0      ; lba 
-  mov b, g      ; lba 
-	call ide_write_sect			; write sectors
-; now we add the file to the current directory!
-fs_starcom_add_to_dir:	
-	mov a, [current_dir_id]
-	inc a
-	mov b, a					; metadata sector
-	mov c, 0
-	mov g, b					; save lba
-	mov d, scrap_sector
-	mov ah, $01			  ; 1 sector
-	call ide_read_sect		; read metadata sector
-fs_starcom_add_to_dir_l2:
-	cmp byte[d], 0
-	je fs_starcom_add_to_dir_null
-	add d, fst_entry_size
-	jmp fs_starcom_add_to_dir_l2		; we look for a null entry here but dont check for limits. 
-fs_starcom_add_to_dir_null:
-	mov si, transient_area + 1		; filename located after the data block 'used' marker byte
-	mov di, d
-	call _strcpy			; copy file name
-	add d, 24			; skip name
-	mov al, %00000111	; type=file, execute, write, read
-	mov [d], al			
-	add d, 3
-	pop a
-  sub a, 512
-	mov [d], a ; file size
-	sub d, 2
-	pop b				; get file lba
-	mov [d], b			; save lba	
-; set file creation date	
-	add d, 4
-	mov al, 4
-	syscall sys_rtc
-	mov al, ah
-	mov [d], al			; set day
-	inc d
-	mov al, 5
-	syscall sys_rtc
-	mov al, ah
-	mov [d], al			; set month
-	inc d
-	mov al, 6
-	syscall sys_rtc
-	mov al, ah
-	mov [d], al			; set year
-; write sector into disk for new directory entry
-	mov b, g
-	mov c, 0
-	mov d, scrap_sector
-	mov ah, $01			; disk write, 1 sector
-	call ide_write_sect		; write sector
-	sysret
 
 ;------------------------------------------------------------------------------------------------------;
 ; finds an empty data block
@@ -2949,8 +2866,9 @@ s_week:
   .db "fri", 0 
   .db "sat", 0
 
+s_fdc_irq: .db "\nIRQ0 Executed.\n", 0
 s_fdc_config:
-  .db "\n\rselecting diskette drive 0, side 0, single density, head loaded\n\r", 0
+  .db "\nselecting diskette drive 0, side 0, single density, head loaded\n", 0
 
 proc_state_table:   
   .fill 16 * 20, 0  ; for 15 processes max

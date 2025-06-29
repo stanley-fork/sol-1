@@ -12,7 +12,7 @@ cmd_rm:
 	mov a, 0
 	mov [prog], a
 	call get_token
-	cmp byte[toktyp], TOKTYP_IDENTIFIER
+	cmp byte[toktyp], toktyp_identifier
 	jne cmd_end
 ; execute rm command
 	mov d, tokstr
@@ -20,7 +20,7 @@ cmd_rm:
 	syscall sys_filesystem
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; CREATE NEW BINARY FILE
+;; create new binary file
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; search for first null block
 cmd_mkbin:

@@ -27,8 +27,7 @@
 0012   0400 10 00 00    	mov a, 0
 0013   0403 42 61 06    	mov [prog], a
 0014   0406 07 C2 04    	call get_token
-rmkbin.asm line 0015: Label not found: (TOKTYP_IDENTIFIER)
-0015   0409 BC 63 06 00 	cmp byte[toktyp], TOKTYP_IDENTIFIER
+0015   0409 BC 63 06 00 	cmp byte[toktyp], toktyp_identifier
 0016   040D C7 2F 04    	jne cmd_end
 0017   0410             ; execute rm command
 0018   0410 3B 65 06    	mov d, tokstr
@@ -36,7 +35,7 @@ rmkbin.asm line 0015: Label not found: (TOKTYP_IDENTIFIER)
 0020   0415 05 04       	syscall sys_filesystem
 0021   0417             
 0022   0417             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-0023   0417             ;; CREATE NEW BINARY FILE
+0023   0417             ;; create new binary file
 0024   0417             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 0025   0417             ; search for first null block
 0026   0417             cmd_mkbin:
@@ -1422,4 +1421,4 @@ rmkbin.asm line 0015: Label not found: (TOKTYP_IDENTIFIER)
 0046   0B74             .end
 0047   0B74             
 0048   0B74             
-tasm: Number of errors = 1
+tasm: Number of errors = 0

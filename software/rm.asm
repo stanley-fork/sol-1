@@ -10,15 +10,15 @@
 cmd_rm:	
 	mov a, 0
 	mov [prog], a
-cmd_rm_L0:
+cmd_rm_l0:
 	call get_token
-	cmp byte[toktyp], TOKTYP_IDENTIFIER
+	cmp byte[toktyp], toktyp_identifier
 	jne cmd_rm_end
 ; execute rm command
 	mov d, tokstr
 	mov al, 10
 	syscall sys_filesystem
-	jmp cmd_rm_L0
+	jmp cmd_rm_l0
 cmd_rm_end:
 	call _putback		; if token was not an identifier, then put it back
 
