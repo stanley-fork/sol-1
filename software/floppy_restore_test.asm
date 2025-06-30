@@ -82,6 +82,7 @@ format:
   jmp menu
 read_track:
   mov al, 6
+  mov di, transient_data
   syscall sys_fdc
   jmp menu
 read_sect:
@@ -94,6 +95,10 @@ read_sect:
   call scan_u8x ; in al 
   mov bl, al
   mov al, 7
+  mov di, transient_area
+  mov d, transient_area
+  mov b, 128
+  call cmd_hexd
   syscall sys_fdc
   jmp menu
 fdc_write_sec:
@@ -106,6 +111,7 @@ fdc_write_sec:
   call scan_u8x ; in al
   mov bl, al
   mov al, 8
+  mov si, fdc_sec_data
   syscall sys_fdc
   jmp menu
 fdc_options:
@@ -233,6 +239,18 @@ str1:    .db "\nwaiting...\n", 0
 s1:      .db "\ntrack: ", 0
 s2:      .db "\nsector: ", 0
 ss3:     .db "\nvalue: ", 0
+
+fdc_sec_data:
+  .db $ff, $ee, $e0, $55, $66, $33, $42, $aa, $ae, $67, $23, $11, $23, $56, $88, $99,
+  .db $1f, $2e, $40, $53, $63, $43, $52, $1a, $a4, $67, $03, $31, $43, $56, $48, $f9,
+  .db $2f, $3e, $50, $57, $62, $53, $21, $2a, $a3, $17, $73, $41, $53, $46, $38, $b9,
+  .db $6f, $4e, $20, $56, $67, $63, $20, $6a, $a2, $27, $53, $61, $23, $16, $28, $e9,
+  .db $af, $7e, $10, $52, $62, $73, $18, $5a, $a1, $37, $43, $51, $13, $26, $18, $a9,
+  .db $6f, $3e, $90, $51, $63, $03, $18, $4a, $a5, $67, $33, $41, $43, $36, $68, $c9,
+  .db $8f, $5e, $60, $55, $68, $23, $18, $3a, $a3, $57, $23, $31, $73, $36, $48, $b9,
+  .db $2f, $1e, $40, $53, $69, $13, $19, $3a, $a1, $48, $23, $21, $53, $46, $38, $a9
+
+transient_data: .db 0
 
 .include "lib/stdio.asm"
 .end

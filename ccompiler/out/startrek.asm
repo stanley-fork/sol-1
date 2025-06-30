@@ -1,9 +1,10 @@
 ; --- FILENAME: games/startrek.c
+; --- DATE:     30-06-2025 at 00:58:00
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
-.org text_org
 
 ; --- BEGIN TEXT SEGMENT
+.org text_org
 main:
   mov bp, $FFE0 ;
   mov sp, $FFE0 ; Make space for argc(2 bytes) and for 10 pointers in argv (local variables)
@@ -2343,7 +2344,7 @@ new_quadrant:
 ; --- END TERMS
   pop d
   mov [d], b
-; map[quad_y][quad_x] = map[quad_y][quad_x] |  0x1000		/* Set if this sector was mapped */           ; 
+; map[quad_y][quad_x] = map[quad_y][quad_x] |  0x1000		           ; 
   mov d, _map_data ; $map
   push a
   push d
@@ -4084,6 +4085,7 @@ _same_signs_96:
   lea d, [bp + -23] ; $x
   mov b, [d]
   mov c, 0
+  mov c, 0
   add32 cb, ga
   mov a, b
   mov g, c
@@ -4195,6 +4197,7 @@ _same_signs_104:
   mov g, c
   lea d, [bp + -25] ; $y
   mov b, [d]
+  mov c, 0
   mov c, 0
   add32 cb, ga
   mov a, b
@@ -4350,6 +4353,7 @@ _same_signs_114:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   sub32 ga, cb
   mov b, a
   mov c, g
@@ -4411,6 +4415,7 @@ _same_signs_118:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   sub32 ga, cb
   mov b, a
   mov c, g
@@ -6329,7 +6334,7 @@ _if155_cond:
   cmp b, 0
   je _if155_else
 _if155_TRUE:
-; map[i][j] = map[i][j] |  0x1000		/* Set if this sector was mapped */           ; 
+; map[i][j] = map[i][j] |  0x1000		           ; 
   mov d, _map_data ; $map
   push a
   push d
@@ -6654,6 +6659,7 @@ _if160_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sle
   pop g
@@ -6679,6 +6685,7 @@ _if161_cond:
   mov b, [d + 2] ; Upper Word of the Long Int
   mov c, b ; And place it into C
   mov b, [d] ; Lower Word in B
+  mov g, 0
   sub32 ga, cb
   mov b, a
   mov c, g
@@ -6690,6 +6697,7 @@ _if161_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   slt ; <
   pop g
@@ -6724,6 +6732,7 @@ _if161_exit:
   mov b, [d + 2] ; Upper Word of the Long Int
   mov c, b ; And place it into C
   mov b, [d] ; Lower Word in B
+  mov g, 0
   sub32 ga, cb
   mov b, a
   mov c, g
@@ -9605,7 +9614,7 @@ _for218_block:
   call printf
   add sp, 2
 ; --- END FUNCTION CALL
-; if (map[i][j] &  0x1000		/* Set if this sector was mapped */           ) 
+; if (map[i][j] &  0x1000		           ) 
 _if219_cond:
   mov d, _map_data ; $map
   push a
@@ -11091,6 +11100,7 @@ _same_signs_310:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -11238,6 +11248,7 @@ _same_signs_486:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -11514,6 +11525,7 @@ _same_signs_543:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -11661,6 +11673,7 @@ _same_signs_719:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -12239,6 +12252,7 @@ _if748_TRUE:
   call get_rand
   add sp, 2
 ; --- END FUNCTION CALL
+  mov c, 0
   add32 cb, ga
   pop g
   pop a
@@ -12558,6 +12572,7 @@ _if762_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000014
+  mov c, 0
   cmp32 ga, cb
   sgeu
   pop g
@@ -12623,6 +12638,7 @@ _if765_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000002
+  mov c, 0
   cmp32 ga, cb
   sgu
   pop g
@@ -12672,6 +12688,7 @@ _if765_TRUE:
   mov b, [d + 2] ; Upper Word of the Long Int
   mov c, b ; And place it into C
   mov b, [d] ; Lower Word in B
+  mov g, 0
   sub32 ga, cb
   mov b, a
   mov c, g
@@ -12684,6 +12701,7 @@ _if765_TRUE:
   call get_rand
   add sp, 2
 ; --- END FUNCTION CALL
+  mov c, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -14981,14 +14999,6 @@ _switch802_default:
   add sp, 2
 ; --- END FUNCTION CALL
 _switch802_exit:
-; format_p++; 
-  lea d, [bp + -3] ; $format_p
-  mov b, [d]
-  mov c, 0
-  inc b
-  lea d, [bp + -3] ; $format_p
-  mov [d], b
-  dec b
   jmp _if801_exit
 _if801_else:
 ; putchar(*format_p); 
@@ -15004,6 +15014,8 @@ _if801_else:
   call putchar
   add sp, 1
 ; --- END FUNCTION CALL
+_if801_exit:
+_if800_exit:
 ; format_p++; 
   lea d, [bp + -3] ; $format_p
   mov b, [d]
@@ -15012,8 +15024,6 @@ _if801_else:
   lea d, [bp + -3] ; $format_p
   mov [d], b
   dec b
-_if801_exit:
-_if800_exit:
 _for799_update:
   jmp _for799_cond
 _for799_exit:
@@ -15045,6 +15055,7 @@ _if806_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   slt ; <
   pop g
@@ -15091,6 +15102,7 @@ _if807_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -15124,6 +15136,7 @@ _while808_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgt
   pop g
@@ -15166,6 +15179,7 @@ _while808_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -15291,6 +15305,7 @@ _if816_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -15323,6 +15338,7 @@ _while817_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgu
   pop g
@@ -15365,6 +15381,7 @@ _while817_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS

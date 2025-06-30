@@ -1170,7 +1170,6 @@ void insert(char *destination, char *new_text){
   }
 }
 
-// hello world my name is sol-1.
 void delete(char *start, int len){
   char *p;
   int length;

@@ -261,55 +261,8 @@ int_4:
 int_5:
   sysret
 
-; ------------------------------------------------------------------------------------------------------------------;
-; process swapping
-; ------------------------------------------------------------------------------------------------------------------;
+; timer irq
 int_6:  
-  pusha                             ; save all registers into kernel stack
-  mov ah, 0
-  mov al, [active_proc_index]
-  shl a                             ; x2
-  mov a, [proc_table_convert + a]   ; get process state start index
-  mov di, a
-  mov a, sp
-  inc a
-  mov si, a
-  mov c, 20
-  rep movsb                         ; save process state!
-; restore kernel stack position to point before interrupt arrived
-  add sp, 20
-; now load next process in queue
-  mov al, [active_proc_index]
-  mov bl, [nbr_active_procs]
-  cmp al, bl
-  je int6_cycle_back
-  inc al                            ; next process is next in the series
-  jmp int6_continue
-int6_cycle_back:
-  mov al, 1                         ; next process = process 1
-int6_continue:
-  mov [active_proc_index], al       ; set next active proc
-
-; calculate LUT entry for next process
-  mov ah, 0
-  shl a                             ; x2
-  mov a, [proc_table_convert + a]   ; get process state start index  
-  
-  mov si, a                         ; source is proc state block
-  mov a, sp
-  sub a, 19
-  mov di, a                         ; destination is kernel stack
-; restore SP
-  dec a
-  mov sp, a
-  mov c, 20
-  rep movsb
-; set vm process
-  mov al, [active_proc_index]
-  setptb
-  mov byte[_timer_c_0], 0           ; load counter 0 low byte
-  mov byte[_timer_c_0], $10         ; load counter 0 high byte
-  popa
   sysret
 
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -423,10 +376,6 @@ syscall_fdc_force_int:
 syscall_fdc_format:
   mov [_fdc_track], bl
   mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
-;fdc_wait_busy_high:
-;  mov al, [_fdc_wd_stat_cmd]      ; 
-;  test al, $01                ; 
-;  jz fdc_wait_busy_high
   mov si, transient_area
   lodsb
   mov [_fdc_data], al      ; 10   
@@ -443,13 +392,11 @@ fdc_format_drq:
 fdc_format_end:
   sysret
 
+; di = destination in user space
 syscall_fdc_read_track:
   mov byte [_fdc_stat_cmd], %11101000
   call fdc_wait_64us
-;fdc_wait_busy_high1:
-;  mov al, [_fdc_wd_stat_cmd]      ; 
-;  test al, $01                    ; 
-;  jz fdc_wait_busy_high1
+  push di
   mov di, transient_area
 fdc_read_track_l0: ; for each byte, we need to wait for drq to be high
   mov al, [_fdc_stat_cmd]      ; 
@@ -466,10 +413,15 @@ fdc_read_track_l0: ; for each byte, we need to wait for drq to be high
 fdc_read_track_end:
   mov a, di
   sub a, transient_area
+  pop di
+  mov si, transient_area
+  mov c, 40 + 169 * 16 + 450  ; copy track over to user space
+  store
   sysret
 
 ; sector in bl
 ; track in bh
+; di = user space destination
 syscall_fdc_read_sect:
   mov a, b
   mov [_fdc_sector], al
@@ -477,10 +429,7 @@ syscall_fdc_read_sect:
   mov [_fdc_track], al
   mov byte [_fdc_stat_cmd], %10001000
   call fdc_wait_64us
-;fdc_wait_busy_high2:
-;  mov al, [_fdc_wd_stat_cmd]      ; 
-;  test al, $01                ; 
-;  jz fdc_wait_busy_high2
+  push di
   mov di, transient_area
 fdc_read_sect_l0: ; for each byte, we need to wait for drq to be high
   mov al, [_fdc_stat_cmd]      ; read lost data flag 10+3+5+8+5+8
@@ -494,6 +443,10 @@ fdc_read_sect_l0: ; for each byte, we need to wait for drq to be high
 fdc_read_sect_end:
   mov a, di
   sub a, transient_area
+  pop di
+  mov si, transient_area
+  mov c, 128  ; copy sector over to user space
+  store
   sysret
 
 ; sector in al
@@ -504,22 +457,21 @@ syscall_fdc_write_sect:
   mov [_fdc_sector], al
   mov al, ah
   mov [_fdc_track], al
+  mov di, transient_area    ; si = data source, di = destination 
+  mov c, 128
+  load                    ; transfer data to kernel space!
   mov byte [_fdc_stat_cmd], %10101010            ; 101, 0:single sector, 1: disable spinup, 0: no delay, 1: no precomp, 0: normal data mark
-;fdc_wait_busy_high2:
-;  mov al, [_fdc_wd_stat_cmd]    
-;  test al, $01                
-;  jz fdc_wait_busy_high2
   lodsb                      
   mov [_fdc_data], al      
   call fdc_wait_64us
 fdc_write_sect_l0: ; for each byte, we need to wait for drq to be high
-  mov al, [_fdc_stat_cmd]  ; 10
-  test al, $01                ; 4
+  mov al, [_fdc_stat_cmd]         ; 10
+  test al, $01                    ; 4
   jz fdc_write_sect_end           ; 8
-  test al, $02                ; 4
-  jz fdc_write_sect_l0           ; 8
-  lodsb                       ; 7
-  mov [_fdc_data], al      ; 10   
+  test al, $02                    ; 4
+  jz fdc_write_sect_l0            ; 8
+  lodsb                           ; 7
+  mov [_fdc_data], al             ; 10   
   jmp fdc_write_sect_l0
 fdc_write_sect_end:
   sysret
@@ -1056,31 +1008,14 @@ set_date:
 ; ah = number of sectors
 ; cb = lba bytes 3..0
 ; ------------------------------------------------------------------------------------------------------------------;
-s_syscall_ide_dbg0: .db "> syscall_ide called: ", 0
 ide_serv_tbl:
   .dw ide_reset
   .dw ide_sleep
   .dw ide_read_sect_wrapper
   .dw ide_write_sect_wrapper
 syscall_ide:
-  push bl
-  mov bl, [sys_debug_mode]
-  ; debug block
-  cmp bl, 0
-  pop bl
-  je syscall_ide_jmp
-  push d
-  push bl
-  mov d, s_syscall_ide_dbg0
-  call _puts
-  mov bl, al
-  call print_u8x
-  call printnl
-  pop bl
-  pop d
-syscall_ide_jmp:
   jmp [ide_serv_tbl + al]    
-  
+
 ide_reset:      
   mov byte[_ide_r7], 4            ; reset ide
   call ide_wait                   ; wait for ide ready             
@@ -2797,15 +2732,15 @@ sys_debug_mode:
 sys_echo_on:
   .db 1
 sys_uart0_lcr:
-  .db $07 ; 8 data bits, 2 stop bit, no parity
+  .db %00001111 ; 8 data bits, 2 stop bits, enable parity, odd parity
 sys_uart0_inten:
   .db 1
 sys_uart0_fifoen:
   .db 0
 sys_uart0_div0:
-  .db 12  ;
+  .db 3
 sys_uart0_div1:
-  .db 0   ; default baud = 9600
+  .db 0   ; default baud = 38400
 ; baud  divisor
 ; 50    2304
 ; 110   1047

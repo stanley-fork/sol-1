@@ -25745,8 +25745,7 @@
   }
 }
 
-0xF0, "pop di
-  "{
+0xF0, "pop di"{
   0{
     next = next_offset
     offset = 1

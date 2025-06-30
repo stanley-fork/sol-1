@@ -511,7 +511,7 @@ void error(const char* format, ...);
 
 void parse_file();
 void parse_instruction();
-void parse_cycle();
+int parse_cycle();
 
 void initialize_microcode_defaults();
 void set_microcode_field_defaults();

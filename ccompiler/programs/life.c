@@ -30,40 +30,6 @@ char currState[HEIGHT][WIDTH] = {
 ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '
 };
 
-void show(void){
-	int i, j;
-
-	for(i = 0; i < HEIGHT; i++){
-		for(j = 0; j < WIDTH; j++){
-			currState[i][j] == '@' ? printf("@ ") : printf(". ");
-		}
-		printf("\n\r");
-	}
-}
-
-int alive(int i, int j){
-	if(currState[i][j] == '@') return 1;
-	else return 0;
-}
-
-int neighbours(int i, int j){
-	int count;
-  
-	count = 0;
-
-	if(currState[i+-1][j] == '@')			count++;
-	if(currState[i+-1][j+-1] == '@') 	count++;
-	if(currState[i+-1][j+1] == '@') 	count++;
-	if(currState[i][j+-1] == '@') 		count++;
-	if(currState[i][j+1] == '@') 			count++;
-
-	if(currState[i+1][j+-1] == '@') 	count++;
-	if(currState[i+1][j] == '@') 			count++;
-	if(currState[i+1][j+1] == '@') 		count++;
-
-	return count;
-}
-
 int main(void){
 	int i, j;
   int n;
@@ -77,7 +43,15 @@ int main(void){
 	for(;;){
 		for(i = 1; i < HEIGHT+-1; i++){
 			for(j = 1; j < WIDTH+-1; j++){
-        n = neighbours(i, j);
+				n = 0;
+				if(currState[i+-1][j] == '@')			n++;
+				if(currState[i+-1][j+-1] == '@') 	n++;
+				if(currState[i+-1][j+1] == '@') 	n++;
+				if(currState[i][j+-1] == '@') 		n++;
+				if(currState[i][j+1] == '@') 			n++;
+				if(currState[i+1][j+-1] == '@') 	n++;
+				if(currState[i+1][j] == '@') 			n++;
+				if(currState[i+1][j+1] == '@') 		n++;
 				if(n < 2 || n > 3) nextState[i][j] = ' ';
 	      else if(n == 3) nextState[i][j] = '@';
 			}
@@ -88,7 +62,12 @@ int main(void){
 			}
     }
 		printf(clear);
-		show();
+		for(i = 0; i < HEIGHT; i++){
+			for(j = 0; j < WIDTH; j++){
+				currState[i][j] == '@' ? printf("@ ") : printf(". ");
+			}
+			printf("\n\r");
+		}
 		puts("\n\rPress CTRL+C to quit.\n\r");
 	}
 }

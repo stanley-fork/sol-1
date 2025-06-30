@@ -255,19 +255,30 @@ void parse_file(){
 
 void parse_instruction(void){
   int opcode;
+  int instr_len0 = 0;
+  int instr_len1 = 0;
+  char instr_name[256];
+  int found_second_instr = 0;
+  int cycle;
+
   get_toktype(INTEGER_CONST, "Instruction opcode expected: %s", token);
   opcode = current_instr = int_const;
   get_tok(COMMA, "Comma expected.");
   get_toktype(STRING_CONST, "Instruction mnemonic expected.");
-  printf("  %s, 0x%x,\n", token, opcode);
+  strcpy(instr_name, string_const);
   get_tok(OPENING_BRACE, "Opening brace expected.");
 
   do{
     just_get(); if(tok == CLOSING_BRACE) break;
     back();
-    parse_cycle();
+    cycle = parse_cycle();
+    if(cycle == 16) found_second_instr = 1;
     total_nbr_micro_instructions++;
+    if(found_second_instr == 0) instr_len0++;
+    else instr_len1++;
   } while(tok_type != END);
+
+  printf("  %40s, %02xh, %3d, %3d\n", instr_name, opcode, instr_len0, instr_len1);
 }
 
 void initialize_microcode_defaults(){
@@ -364,7 +375,7 @@ void set_microcode_field_defaults(){
 }
 
 
-void parse_cycle(void){
+int parse_cycle(void){
   char *temp_prog;
   get_toktype(INTEGER_CONST, "Instruction cycle expected.");
   current_cycle = int_const;
@@ -969,6 +980,8 @@ void parse_cycle(void){
   microcode_binary[current_instr][current_cycle][11] = (u_pagetable_we << 7)       | (u_ptb_wrt << 6)        | (u_clear_all_irqs << 5)  | (u_irq_ack << 4)       | (u_mar_in_src << 3)       | (u_irq_masks_wrt << 2) | (u_irq_vector_wrt << 1) | 0x01;
   microcode_binary[current_instr][current_cycle][12] = (u_gh_wrt << 7)             | (u_gl_wrt << 6)           /* unused */               /* unused */             /* unused */                /* unused */           | (u_force_user_ptb << 1) | (u_mdr_to_pagetable_buffer_en);
   microcode_binary[current_instr][current_cycle][13] = u_immediate;
+
+  return current_cycle;
 }
 
 void process_include(){
