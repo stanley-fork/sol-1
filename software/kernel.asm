@@ -423,10 +423,9 @@ fdc_read_track_end:
 ; track in bh
 ; di = user space destination
 syscall_fdc_read_sect:
-  mov a, b
-  mov [_fdc_sector], al
-  mov al, ah
-  mov [_fdc_track], al
+  mov [_fdc_sector], bl
+  mov bl, bh
+  mov [_fdc_track], bl
   mov byte [_fdc_stat_cmd], %10001000
   call fdc_wait_64us
   push di
@@ -453,10 +452,9 @@ fdc_read_sect_end:
 ; track in ah
 ; data pointer in si
 syscall_fdc_write_sect:
-  mov a, b
-  mov [_fdc_sector], al
-  mov al, ah
-  mov [_fdc_track], al
+  mov [_fdc_sector], bl
+  mov bl, bh
+  mov [_fdc_track], bl
   mov di, transient_area    ; si = data source, di = destination 
   mov c, 128
   load                    ; transfer data to kernel space!

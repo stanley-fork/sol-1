@@ -36,9 +36,9 @@ menu:
   cmp ah, '2'
   je restore
   cmp ah, '3'
-  je status1
+  je status0
   cmp ah, '4'
-  je status2
+  je status1
   cmp ah, '5'
   je format
   cmp ah, '6'
@@ -50,41 +50,54 @@ menu:
   cmp ah, '9'
   je fdc_write_sec
   jmp menu
+
 restore:
-  mov al, 0
+  mov al, sys_fdc_restore
   syscall sys_fdc
   jmp menu
 step:
-  mov al, 1
+  mov al, sys_fdc_step
   syscall sys_fdc
   jmp menu
 step_in:
-  mov al, 2
+  mov al, sys_fdc_step_in
   syscall sys_fdc
   jmp menu
 step_out:
-  mov al, 3
+  mov al, sys_fdc_step_out
   syscall sys_fdc
   jmp menu
 seek:
-  mov al, 4
+  mov al, sys_fdc_seek
   syscall sys_fdc
   jmp menu
+
 format:
   mov d, s_track
   call _puts
   call scan_u8x   ; in al
   mov bl, al      ; track needs to be in bl
-  mov al, 5
+  mov al, sys_fdc_format
   syscall sys_fdc
   mov d, s_format_done
   call _puts
   jmp menu
+
 read_track:
-  mov al, 6
-  mov di, transient_data
+  mov al, sys_fdc_read_track
+  mov di, transient_area
   syscall sys_fdc
+  mov a, di
+  mov d, a
+  mov b, 3100
+  call printnl
+  call cmd_hexd
+  call printnl
   jmp menu
+
+read_addr:
+  jmp menu
+
 read_sect:
   mov d, s1
   call _puts
@@ -94,13 +107,14 @@ read_sect:
   call _puts
   call scan_u8x ; in al 
   mov bl, al
-  mov al, 7
+  mov al, sys_fdc_read_sect
   mov di, transient_area
   mov d, transient_area
   mov b, 128
   call cmd_hexd
   syscall sys_fdc
   jmp menu
+
 fdc_write_sec:
   mov d, s1
   call _puts
@@ -110,10 +124,11 @@ fdc_write_sec:
   call _puts
   call scan_u8x ; in al
   mov bl, al
-  mov al, 8
+  mov al, sys_fdc_write_sect
   mov si, fdc_sec_data
   syscall sys_fdc
   jmp menu
+
 fdc_options:
   mov d, ss3
   call _puts
@@ -122,22 +137,25 @@ fdc_options:
   mov al, 2
   syscall sys_system
   jmp menu
+
+status0:
+  call printnl
+  mov al, sys_fdc_status0
+  syscall sys_fdc
+  mov bl, al
+  call print_u8x   ; print bl
+  call printnl
+  jmp menu
+
 status1:
   call printnl
-  mov al, 11       ; getparam call
+  mov al, sys_fdc_status1
   syscall sys_fdc
   mov bl, al
   call print_u8x   ; print bl
   call printnl
   jmp menu
-status2:
-  call printnl
-  mov al, 12      ; getparam call
-  syscall sys_fdc
-  mov bl, al
-  call print_u8x   ; print bl
-  call printnl
-  jmp menu
+
 
 ; b : len
 ; d: data address
@@ -250,7 +268,7 @@ fdc_sec_data:
   .db $8f, $5e, $60, $55, $68, $23, $18, $3a, $a3, $57, $23, $31, $73, $36, $48, $b9,
   .db $2f, $1e, $40, $53, $69, $13, $19, $3a, $a1, $48, $23, $21, $53, $46, $38, $a9
 
-transient_data: .db 0
+transient_area: .db 0
 
 .include "lib/stdio.asm"
 .end
