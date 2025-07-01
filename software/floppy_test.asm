@@ -19,11 +19,6 @@ main:
 
   mov d, str0
   call _puts
-  ; First, select drive 1 and de-select drive 0
-  mov d, $FFC0
-  mov al, 2       ; setparam call
-  mov bl, %00001010     ; %00001001 : turn LED on, disable double density, select side 0, select drive 0, do not select drive 1
-  syscall sys_system
 
 menu:
   mov d, s_menu
@@ -132,6 +127,7 @@ fdc_options:
   call scan_u8x
   mov bl, al
   mov al, 2
+  mov d, _fdc_config
   syscall sys_system
   jmp menu
 
@@ -220,6 +216,8 @@ print_base:
   jmp back
   ret
 
+.include "lib/stdio.asm"
+
 start:   .dw 0
 length:  .dw 1024
 
@@ -257,5 +255,4 @@ fdc_sec_data:
 
 transient_area: .db 0
 
-.include "lib/stdio.asm"
 .end

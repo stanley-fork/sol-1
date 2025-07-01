@@ -112,6 +112,7 @@ uint16_t main(void){
   try_create_file("qs",        "../ccompiler/out/obj/qs.obj",     bin_id, 0x07);
   try_create_file("cowsay",    "../software/obj/cowsay.obj",      bin_id, 0x07);
   try_create_file("sieve",     "../software/obj/sieve.obj",       bin_id, 0x07);
+  try_create_file("fdc",       "../software/obj/floppy_test.obj", bin_id, 0x07);
                                                                                        
   // /bin0                                                                             
   try_create_file("shell",     "../software/obj/shell.obj",       bin0_id, 0x07);

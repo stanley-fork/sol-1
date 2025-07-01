@@ -11,6 +11,9 @@ fdc_al_write_sect .EQU  $0009
 fdc_al_force_int .EQU  $000a
 fdc_al_status0   .EQU  $000b
 fdc_al_status1   .EQU  $000c
+noname._fdc_config .EQU  $ffc0
+noname._fdc_status_0 .EQU  $ffc1
+noname._fdc_stat_cmd .EQU  $ffc8
 sys_break        .EQU  $0000
 sys_rtc          .EQU  $0001
 sys_ide          .EQU  $0002

@@ -228,6 +228,10 @@ fdc_al_status1      .equ 12
 .export sys_system
 .export sys_fdc
 
+.export _fdc_config        
+.export _fdc_status_0      
+.export _fdc_stat_cmd     
+
 ; exports of aliases for individual 'al' options for FDC system calls
 .export fdc_al_restore
 .export fdc_al_step
@@ -248,8 +252,6 @@ fdc_al_status1      .equ 12
 ; ------------------------------------------------------------------------------------------------------------------;
 ; 5.25" floppy drive controller irq
 int_0_fdc:
-  mov d, s_fdc_irq
-  call _puts
   sysret
 int_1:
   sysret
@@ -351,8 +353,8 @@ syscall_fdc_status1:
 
 syscall_fdc_restore:
   call fdc_wait_not_busy
-  mov byte [_fdc_track], $00 ; reset track
   mov byte [_fdc_stat_cmd], %00001000
+  mov byte [_fdc_track], $00 ; reset track
   sysret
 
 syscall_fdc_step:
@@ -373,7 +375,7 @@ syscall_fdc_step_out:
 ; bl: desired track
 syscall_fdc_seek:
   call fdc_wait_not_busy
-  mov [_fdc_data], bl ; set desired track to 39
+  mov [_fdc_data], bl ; set desired track to bl
   mov byte [_fdc_stat_cmd], %00011000 ; seek command
   sysret
 
@@ -383,24 +385,15 @@ syscall_fdc_read_addr:
 syscall_fdc_force_int:
   sysret
 
-fdc_wait_not_busy:
-  push al
-  mov al, [_fdc_stat_cmd]   
-  test al, $01               
-  jnz fdc_wait_not_busy          
-  pop al
-  ret
-
 ; when writing the actual code for formatting multiple tracks, remember to change the track number byte
 ; in the ram formatting block because they are all set as 00 right now
 ; bl: track number
 syscall_fdc_format:
+  call fdc_format_mem
   call fdc_wait_not_busy
   mov [_fdc_track], bl
-  mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
   mov si, transient_area
-  lodsb
-  mov [_fdc_data], al      ; 10   
+  mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
   call fdc_wait_64us
 fdc_format_drq:
   mov al, [_fdc_stat_cmd]     ; 10
@@ -486,8 +479,6 @@ syscall_fdc_write_sect:
   load                    ; transfer data to kernel space!
   mov si, transient_area
   mov byte [_fdc_stat_cmd], %10101010            ; 101, 0:single sector, 1: disable spinup, 0: no delay, 1: no precomp, 0: normal data mark
-  lodsb                      
-  mov [_fdc_data], al      
   call fdc_wait_64us
 fdc_write_sect_l0: ; for each byte, we need to wait for drq to be high
   mov al, [_fdc_stat_cmd]         ; 10
@@ -500,6 +491,14 @@ fdc_write_sect_l0: ; for each byte, we need to wait for drq to be high
   jmp fdc_write_sect_l0
 fdc_write_sect_end:
   sysret
+
+fdc_wait_not_busy:
+  push al
+  mov al, [_fdc_stat_cmd]   
+  test al, $01               
+  jnz fdc_wait_not_busy          
+  pop al
+  ret
 
 fdc_format_mem:
   mov d, 1
@@ -2729,12 +2728,14 @@ kernel_reset_vector:
   mov al, 2
   syscall sys_io                ; enable uart in interrupt mode
 
-  mov d, s_fdc_config
-  call _puts
-  mov byte [_fdc_config], %00011110  ; %00001001 : turn led on / head load, disable double density, select side 0, select drive 0, do not select drive 1
-  
   mov d, s_kernel_started
   call _puts
+
+  mov d, s_fdc_config
+  call _puts
+  mov byte [_fdc_config], %00001110  ; %00001001 : turn led on / head load, disable double density, select side 0, select drive 0, do not select drive 1
+  mov byte [_fdc_stat_cmd], %00001000     ; leave this restore command in order to clear BUSY flag
+  mov byte [_fdc_track], $00 ; reset track
 
   mov al, 16
   syscall sys_filesystem        ; set root dirid
