@@ -6,7 +6,8 @@
 ; sys_fdc_step_in
 ; sys_fdc_step_out
 ; sys_fdc_seek
-; sys_fdc_format
+; sys_fdc_format_128
+; sys_fdc_format_512
 ; sys_fdc_read_addr
 ; sys_fdc_read_track
 ; sys_fdc_read_sect
@@ -35,15 +36,19 @@ menu:
   cmp ah, '4'
   je status1
   cmp ah, '5'
-  je format
+  je format_128
   cmp ah, '6'
-  je read_track
+  je format_512
   cmp ah, '7'
-  je read_sect
+  je read_track
   cmp ah, '8'
-  je fdc_options
+  je read_sect
   cmp ah, '9'
-  je fdc_write_sec
+  je fdc_options
+  cmp ah, 'A'
+  je fdc_write_sec_128
+  cmp ah, 'B'
+  je fdc_write_sec_512
   jmp menu
 
 restore:
@@ -67,12 +72,23 @@ seek:
   syscall sys_fdc
   jmp menu
 
-format:
+format_128:
   mov d, s_track
   call _puts
   call scan_u8x   ; in al
   mov bl, al      ; track needs to be in bl
-  mov al, fdc_al_format
+  mov al, fdc_al_format_128
+  syscall sys_fdc
+  mov d, s_format_done
+  call _puts
+  jmp menu
+
+format_512:
+  mov d, s_track
+  call _puts
+  call scan_u8x   ; in al
+  mov bl, al      ; track needs to be in bl
+  mov al, fdc_al_format_512
   syscall sys_fdc
   mov d, s_format_done
   call _puts
@@ -107,7 +123,7 @@ read_sect:
   call cmd_hexd
   jmp menu
 
-fdc_write_sec:
+fdc_write_sec_128:
   mov d, s1
   call _puts
   call scan_u8x
@@ -116,8 +132,22 @@ fdc_write_sec:
   call _puts
   call scan_u8x ; in al
   mov bl, al
-  mov al, fdc_al_write_sect
-  mov si, fdc_sec_data
+  mov al, fdc_al_write_sect_128
+  mov si, fdc_sec_data_128
+  syscall sys_fdc
+  jmp menu
+
+fdc_write_sec_512:
+  mov d, s1
+  call _puts
+  call scan_u8x
+  mov bh, al
+  mov d, s2
+  call _puts
+  call scan_u8x ; in al
+  mov bl, al
+  mov al, fdc_al_write_sect_512
+  mov si, fdc_sec_data_512
   syscall sys_fdc
   jmp menu
 
@@ -229,11 +259,13 @@ s_menu:  .db "\n0. step in\n"
          .db "2. restore\n", 
          .db "3. read status 1\n", 
          .db "4. read status 2\n", 
-         .db "5. format track\n", 
-         .db "6. read track\n", 
-         .db "7. read sector\n", 
-         .db "8. config\n", 
-         .db "9. write sector\n", 
+         .db "5. format track 128\n", 
+         .db "6. format track 512\n", 
+         .db "7. read track\n", 
+         .db "8. read sector\n", 
+         .db "9. config\n", 
+         .db "A. write 128 byte sector\n", 
+         .db "B. write 512 byte sector\n", 
          .db "\nselect option: ", 0
 
 s_format_done: .db "\nformat done.\n", 0
@@ -243,7 +275,40 @@ s1:      .db "\ntrack: ", 0
 s2:      .db "\nsector: ", 0
 ss3:     .db "\nvalue: ", 0
 
-fdc_sec_data:
+fdc_sec_data_128:
+  .db $ff, $ee, $e0, $55, $66, $33, $42, $aa, $ae, $67, $23, $11, $23, $56, $88, $99,
+  .db $1f, $2e, $40, $53, $63, $43, $52, $1a, $a4, $67, $03, $31, $43, $56, $48, $f9,
+  .db $2f, $3e, $50, $57, $62, $53, $21, $2a, $a3, $17, $73, $41, $53, $46, $38, $b9,
+  .db $6f, $4e, $20, $56, $67, $63, $20, $6a, $a2, $27, $53, $61, $23, $16, $28, $e9,
+  .db $af, $7e, $10, $52, $62, $73, $18, $5a, $a1, $37, $43, $51, $13, $26, $18, $a9,
+  .db $6f, $3e, $90, $51, $63, $03, $18, $4a, $a5, $67, $33, $41, $43, $36, $68, $c9,
+  .db $8f, $5e, $60, $55, $68, $23, $18, $3a, $a3, $57, $23, $31, $73, $36, $48, $b9,
+  .db $2f, $1e, $40, $53, $69, $13, $19, $3a, $a1, $48, $23, $21, $53, $46, $38, $a9
+fdc_sec_data_512:
+  .db $ff, $ee, $e0, $55, $66, $33, $42, $aa, $ae, $67, $23, $11, $23, $56, $88, $99,
+  .db $1f, $2e, $40, $53, $63, $43, $52, $1a, $a4, $67, $03, $31, $43, $56, $48, $f9,
+  .db $2f, $3e, $50, $57, $62, $53, $21, $2a, $a3, $17, $73, $41, $53, $46, $38, $b9,
+  .db $6f, $4e, $20, $56, $67, $63, $20, $6a, $a2, $27, $53, $61, $23, $16, $28, $e9,
+  .db $af, $7e, $10, $52, $62, $73, $18, $5a, $a1, $37, $43, $51, $13, $26, $18, $a9,
+  .db $6f, $3e, $90, $51, $63, $03, $18, $4a, $a5, $67, $33, $41, $43, $36, $68, $c9,
+  .db $8f, $5e, $60, $55, $68, $23, $18, $3a, $a3, $57, $23, $31, $73, $36, $48, $b9,
+  .db $2f, $1e, $40, $53, $69, $13, $19, $3a, $a1, $48, $23, $21, $53, $46, $38, $a9,
+  .db $ff, $ee, $e0, $55, $66, $33, $42, $aa, $ae, $67, $23, $11, $23, $56, $88, $99,
+  .db $1f, $2e, $40, $53, $63, $43, $52, $1a, $a4, $67, $03, $31, $43, $56, $48, $f9,
+  .db $2f, $3e, $50, $57, $62, $53, $21, $2a, $a3, $17, $73, $41, $53, $46, $38, $b9,
+  .db $6f, $4e, $20, $56, $67, $63, $20, $6a, $a2, $27, $53, $61, $23, $16, $28, $e9,
+  .db $af, $7e, $10, $52, $62, $73, $18, $5a, $a1, $37, $43, $51, $13, $26, $18, $a9,
+  .db $6f, $3e, $90, $51, $63, $03, $18, $4a, $a5, $67, $33, $41, $43, $36, $68, $c9,
+  .db $8f, $5e, $60, $55, $68, $23, $18, $3a, $a3, $57, $23, $31, $73, $36, $48, $b9,
+  .db $2f, $1e, $40, $53, $69, $13, $19, $3a, $a1, $48, $23, $21, $53, $46, $38, $a9,
+  .db $ff, $ee, $e0, $55, $66, $33, $42, $aa, $ae, $67, $23, $11, $23, $56, $88, $99,
+  .db $1f, $2e, $40, $53, $63, $43, $52, $1a, $a4, $67, $03, $31, $43, $56, $48, $f9,
+  .db $2f, $3e, $50, $57, $62, $53, $21, $2a, $a3, $17, $73, $41, $53, $46, $38, $b9,
+  .db $6f, $4e, $20, $56, $67, $63, $20, $6a, $a2, $27, $53, $61, $23, $16, $28, $e9,
+  .db $af, $7e, $10, $52, $62, $73, $18, $5a, $a1, $37, $43, $51, $13, $26, $18, $a9,
+  .db $6f, $3e, $90, $51, $63, $03, $18, $4a, $a5, $67, $33, $41, $43, $36, $68, $c9,
+  .db $8f, $5e, $60, $55, $68, $23, $18, $3a, $a3, $57, $23, $31, $73, $36, $48, $b9,
+  .db $2f, $1e, $40, $53, $69, $13, $19, $3a, $a1, $48, $23, $21, $53, $46, $38, $a9,
   .db $ff, $ee, $e0, $55, $66, $33, $42, $aa, $ae, $67, $23, $11, $23, $56, $88, $99,
   .db $1f, $2e, $40, $53, $63, $43, $52, $1a, $a4, $67, $03, $31, $43, $56, $48, $f9,
   .db $2f, $3e, $50, $57, $62, $53, $21, $2a, $a3, $17, $73, $41, $53, $46, $38, $b9,

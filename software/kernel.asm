@@ -200,14 +200,15 @@ fdc_al_step         .equ 1
 fdc_al_step_in      .equ 2
 fdc_al_step_out     .equ 3
 fdc_al_seek         .equ 4
-fdc_al_format       .equ 5
-fdc_al_read_addr    .equ 6
-fdc_al_read_track   .equ 7
-fdc_al_read_sect    .equ 8
-fdc_al_write_sect   .equ 9
-fdc_al_force_int    .equ 10
-fdc_al_status0      .equ 11
-fdc_al_status1      .equ 12
+fdc_al_format_128   .equ 5
+fdc_al_format_512   .equ 6
+fdc_al_read_addr    .equ 7
+fdc_al_read_track   .equ 8
+fdc_al_read_sect    .equ 9
+fdc_al_write_sect   .equ 10
+fdc_al_force_int    .equ 11
+fdc_al_status0      .equ 12
+fdc_al_status1      .equ 13
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; alias exports
@@ -238,7 +239,8 @@ fdc_al_status1      .equ 12
 .export fdc_al_step_in
 .export fdc_al_step_out
 .export fdc_al_seek
-.export fdc_al_format
+.export fdc_al_format_128
+.export fdc_al_format_512
 .export fdc_al_read_addr
 .export fdc_al_read_track
 .export fdc_al_read_sect
@@ -332,7 +334,7 @@ fdc_jmptbl:
   .dw syscall_fdc_step_in
   .dw syscall_fdc_step_out
   .dw syscall_fdc_seek
-  .dw syscall_fdc_format
+  .dw syscall_fdc_format_128
   .dw syscall_fdc_read_addr
   .dw syscall_fdc_read_track
   .dw syscall_fdc_read_sect
@@ -388,8 +390,8 @@ syscall_fdc_force_int:
 ; when writing the actual code for formatting multiple tracks, remember to change the track number byte
 ; in the ram formatting block because they are all set as 00 right now
 ; bl: track number
-syscall_fdc_format:
-  call fdc_format_mem
+syscall_fdc_format_128:
+  call fdc_format_mem_128
   call fdc_wait_not_busy
   mov [_fdc_track], bl
   mov si, transient_area
@@ -500,7 +502,7 @@ fdc_wait_not_busy:
   pop al
   ret
 
-fdc_format_mem:
+fdc_format_mem_128:
   mov d, 1
   mov di, transient_area
 ; 40 * FF
@@ -581,6 +583,98 @@ fdc_l13:
 ; check whether we did this 16 times
   inc d
   cmp d, 17
+  jne fdc_inner_loop
+; 500 bytes of FF for end filler. wd1770 writes these until it finishes, so the number varies. usually it writes ~450 bytes
+  mov c, 500
+  mov al, $ff
+fdc_format_footer:
+fdc_footer_drq_loop:
+  stosb
+  dec c
+  jnz fdc_footer_drq_loop
+  ret
+
+fdc_format_mem_512:
+  mov d, 1
+  mov di, transient_area
+; 40 * FF
+  mov c, 40
+  mov al, $ff
+fdc_l0: 
+  stosb
+  dec c
+  jnz fdc_l0
+; 6 * 00
+fdc_inner_loop:
+  mov c, 6
+  mov al, $00
+fdc_l1:
+  stosb
+  dec c
+  jnz fdc_l1
+; FE address mark
+fdc_l2:
+  mov al, $fe
+  stosb
+; track number
+fdc_l3:
+  mov al, $00
+  stosb
+; side number
+fdc_l4:
+  mov al, $00
+  stosb
+; sector number
+fdc_l5:
+  mov a, d
+  stosb
+; sector length 512 bytes
+fdc_l6:
+  mov al, $02
+  stosb
+; 2 crc's
+fdc_l7:
+  mov al, $f7
+  stosb
+; 11 times $ff
+  mov c, 11
+  mov al, $ff
+fdc_l8:
+  stosb
+  dec c
+  jnz fdc_l8
+; 6 times 00
+  mov c, 6
+  mov al, $00
+fdc_l9:
+  stosb
+  dec c
+  jnz fdc_l9
+; FB data address mark
+  mov al, $fb
+fdc_l10:
+  stosb
+; 128 bytes sector data
+  mov c, 128
+  mov al, $E5
+fdc_l11:
+  stosb
+  dec c
+  jnz fdc_l11
+; 2 crc's
+fdc_l12:
+  mov al, $f7
+  stosb
+; 10 * $FF
+  mov c, 10
+  mov al, $ff
+fdc_l13:
+  stosb
+  dec c
+  jnz fdc_l13
+; check whether we did this 16 times
+  inc d
+  cmp d, 5
   jne fdc_inner_loop
 ; 500 bytes of FF for end filler. wd1770 writes these until it finishes, so the number varies. usually it writes ~450 bytes
   mov c, 500

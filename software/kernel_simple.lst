@@ -1,0 +1,3495 @@
+0001   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0002   0000             ; Solarium - Sol-1 Homebrew Minicomputer Operating System Kernel.
+0003   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0004   0000             
+0005   0000             ; Memory Map
+0006   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0007   0000             ; 0000 ... 7FFF - ROM SPACE
+0008   0000             ; 8000 ... F7FF - RAM SPACE
+0009   0000             ; F7FF          - Stack root
+0010   0000             
+0011   0000             ; I/O MAP
+0012   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0013   0000             ; FF80 - UART 0 (16550)
+0014   0000             ; FF90 - UART 1 (16550)
+0015   0000             ; FFA0 - RTC    (M48T02)
+0016   0000             ; FFB0 - PIO 0  (8255)
+0017   0000             ; FFC0 - FDD    (5.25" Floppy Drive Block)
+0018   0000             ;   - FFC0      Output Port (377 Flip-Flop)                  
+0019   0000             ;   - FFC1      Input Port  (244 Buffer)                     
+0020   0000             ;   - FFC8      WD1770 Status/Command    
+0021   0000             ;   - FFC9      WD1770 Track Register
+0022   0000             ;   - FFCA      WD1770 Sector Register
+0023   0000             ;   - FFCB      WD1770 Data Register
+0024   0000             ;      
+0025   0000             ; FFD0 - IDE    (Compact Flash / PATA)
+0026   0000             ; FFE0 - Timer  (8253)
+0027   0000             ; FFF0 - BIOS CONFIGURATION NV-RAM STORE AREA
+0028   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0029   0000             
+0030   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0031   0000             ; System Constants
+0032   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0033   0000             _UART0_DATA       .equ $FF80            ; data
+0034   0000             _UART0_DLAB_0     .equ $FF80            ; divisor latch low byte
+0035   0000             _UART0_DLAB_1     .equ $FF81            ; divisor latch high byte
+0036   0000             _UART0_IER        .equ $FF81            ; Interrupt enable register
+0037   0000             _UART0_FCR        .equ $FF82            ; FIFO control register
+0038   0000             _UART0_LCR        .equ $FF83            ; line control register
+0039   0000             _UART0_LSR        .equ $FF85            ; line status register
+0040   0000             
+0041   0000             _UART1_DATA       .equ $FF90            ; data
+0042   0000             _UART1_DLAB_0     .equ $FF90            ; divisor latch low byte
+0043   0000             _UART1_DLAB_1     .equ $FF91            ; divisor latch high byte
+0044   0000             _UART1_IER        .equ $FF91            ; Interrupt enable register
+0045   0000             _UART1_FCR        .equ $FF92            ; FIFO control register
+0046   0000             _UART1_LCR        .equ $FF93            ; line control register
+0047   0000             _UART1_LSR        .equ $FF95            ; line status register
+0048   0000             
+0049   0000             _ide_BASE         .equ $FFD0            ; ide base
+0050   0000             _ide_R0           .equ _ide_BASE + 0    ; data port
+0051   0000             _ide_R1           .equ _ide_BASE + 1    ; read: error code, write: feature
+0052   0000             _ide_R2           .equ _ide_BASE + 2    ; number of sectors to transfer
+0053   0000             _ide_R3           .equ _ide_BASE + 3    ; sector address lba 0 [0:7]
+0054   0000             _ide_R4           .equ _ide_BASE + 4    ; sector address lba 1 [8:15]
+0055   0000             _ide_R5           .equ _ide_BASE + 5    ; sector address lba 2 [16:23]
+0056   0000             _ide_R6           .equ _ide_BASE + 6    ; sector address lba 3 [24:27 (lsb)]
+0057   0000             _ide_R7           .equ _ide_BASE + 7    ; read: status, write: command       
+0058   0000             
+0059   0000             _7SEG_DISPLAY     .equ $FFB0            ; bios post code hex display (2 digits) (connected to pio a)
+0060   0000             _BIOS_POST_CTRL   .equ $FFB3            ; bios post display control register, 80h = as output
+0061   0000             _PIO_A            .equ $FFB0    
+0062   0000             _PIO_B            .equ $FFB1
+0063   0000             _PIO_C            .equ $FFB2
+0064   0000             _PIO_CONTROL      .equ $FFB3            ; pio control port
+0065   0000             
+0066   0000             _FDC_CONFIG       .equ $FFC0            ; 0 = select_0, 1 = select_1, 2 = side_select, 3 = dden, 4 = in_use_or_head_load, 5 = wd1770_rst
+0067   0000             _FDC_STATUS_1     .equ $FFC1            ; 0 = drq, 1 = ready
+0068   0000             _FDC_WD_STAT_CMD  .equ $FFC8            ; status / command register
+0069   0000             _FDC_WD_TRACK     .equ $FFC9            ; track register
+0070   0000             _FDC_WD_SECTOR    .equ $FFCA            ; sector register
+0071   0000             _FDC_WD_DATA      .equ $FFCB            ; data register
+0072   0000             
+0073   0000             _TIMER_C_0        .equ $FFE0            ; timer counter 0
+0074   0000             _TIMER_C_1        .equ $FFE1            ; timer counter 1
+0075   0000             _TIMER_C_2        .equ $FFE2            ; timer counter 2
+0076   0000             _TIMER_CTRL       .equ $FFE3            ; timer control register
+0077   0000             
+0078   0000             STACK_BEGIN       .equ $F7FF            ; beginning of stack
+0079   0000             FIFO_SIZE         .equ 1024
+0080   0000             
+0081   0000             text_org          .equ $400             ; code origin address for all user processes
+0082   0000             
+0083   0000             
+0084   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0085   0000             ; GLOBAL SYSTEM VARIABLES
+0086   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0087   0000             
+0088   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0089   0000             ; IRQ table
+0090   0000             ; highest priority at lowest address
+0091   0000             ; ------------------------------------------------------------------------------------------------------------------;
+0092   0000 2C 00       .dw int_0_fdc
+0093   0002 2C 00       .dw int_1
+0094   0004 2C 00       .dw int_2
+0095   0006 2C 00       .dw int_3
+0096   0008 2C 00       .dw int_4
+0097   000A 2C 00       .dw int_5
+0098   000C 2C 00       .dw int_6
+0099   000E 2C 00       .dw int_7_uart0
+0100   0010             
+0101   0010             ; ------------------------------------------------------------------------------------------------------------------;
+0102   0010             ; kernel reset vector
+0103   0010             ; ------------------------------------------------------------------------------------------------------------------;
+0104   0010 99 00       .dw kernel_reset_vector
+0105   0012             
+0106   0012             ; ------------------------------------------------------------------------------------------------------------------;
+0107   0012             ; exception vector table
+0108   0012             ; total of 7 entries, starting at address $0012
+0109   0012             ; ------------------------------------------------------------------------------------------------------------------;
+0110   0012 93 00       .dw trap_privilege
+0111   0014 93 00       .dw trap_div_zero
+0112   0016 93 00       .dw trap_undef_opcode
+0113   0018 00 00       .dw 0
+0114   001A 00 00       .dw 0
+0115   001C 00 00       .dw 0
+0116   001E 00 00       .dw 0
+0117   0020             
+0118   0020             ; ------------------------------------------------------------------------------------------------------------------;
+0119   0020             ; system call vector table
+0120   0020             ; starts at address $0020
+0121   0020             ; ------------------------------------------------------------------------------------------------------------------;
+0122   0020 99 00       .dw syscall_io
+0123   0022 93 00       .dw syscall_reboot
+0124   0024 39 00       .dw syscall_fdc_format
+0125   0026 2C 00       .dw syscall_fdc_read
+0126   0028 39 00       .dw syscall_fdc_read_sec
+0127   002A 47 00       .dw syscall_fdc_write_sec
+0128   002C             
+0129   002C             ; ------------------------------------------------------------------------------------------------------------------;
+0130   002C             ; system call aliases
+0131   002C             ; ------------------------------------------------------------------------------------------------------------------;
+0132   002C             sys_io               .equ 0
+0133   002C             sys_reboot           .equ 1
+0134   002C             sys_fdc_format       .equ 2
+0135   002C             sys_fdc_read         .equ 3
+0136   002C             sys_fdc_read_sec     .equ 4
+0137   002C             sys_fdc_write_sec    .equ 5
+0138   002C             
+0139   002C             ; ------------------------------------------------------------------------------------------------------------------;
+0140   002C             ; IRQs' code block
+0141   002C             ; ------------------------------------------------------------------------------------------------------------------;
+0142   002C             ; 5.25" Floppy Drive Controller IRQ
+0143   002C             int_0_fdc:
+0144   002C               sysret
+kernel_simple.asm line 0144: unrecognized instruction.          (SYSRET)
+0145   002C             int_1:
+0146   002C               sysret
+kernel_simple.asm line 0146: unrecognized instruction.          (SYSRET)
+0147   002C             int_2:
+0148   002C               sysret
+kernel_simple.asm line 0148: unrecognized instruction.          (SYSRET)
+0149   002C             int_3:
+0150   002C               sysret
+kernel_simple.asm line 0150: unrecognized instruction.          (SYSRET)
+0151   002C             int_4:
+0152   002C               sysret
+kernel_simple.asm line 0152: unrecognized instruction.          (SYSRET)
+0153   002C             int_5:
+0154   002C               sysret
+kernel_simple.asm line 0154: unrecognized instruction.          (SYSRET)
+0155   002C             
+0156   002C             ; ------------------------------------------------------------------------------------------------------------------;
+0157   002C             ; process swapping
+0158   002C             ; ------------------------------------------------------------------------------------------------------------------;
+0159   002C             int_6:  
+0160   002C               sysret
+kernel_simple.asm line 0160: unrecognized instruction.          (SYSRET)
+0161   002C             
+0162   002C             ; ------------------------------------------------------------------------------------------------------------------;
+0163   002C             ; UART0 Interrupt
+0164   002C             ; ------------------------------------------------------------------------------------------------------------------;
+0165   002C             int_7_uart0:
+0166   002C               push a
+kernel_simple.asm line 0166: unrecognized instruction.          (PUSH)
+0167   002C               push d
+kernel_simple.asm line 0167: unrecognized instruction.          (PUSH)
+0168   002C               pushf
+kernel_simple.asm line 0168: unrecognized instruction.          (PUSHF)
+0169   002C               mov a, [fifo_in]
+kernel_simple.asm line 0169: unrecognized instruction.          (MOV)
+0170   002C               mov d, a
+kernel_simple.asm line 0170: unrecognized instruction.          (MOV)
+0171   002C               mov al, [_UART0_DATA]       ; get character
+kernel_simple.asm line 0171: unrecognized instruction.          (MOV)
+0172   002C               mov [d], al                 ; add to fifo
+kernel_simple.asm line 0172: unrecognized instruction.          (MOV)
+0173   002C               mov a, [fifo_in]
+kernel_simple.asm line 0173: unrecognized instruction.          (MOV)
+0174   002C               inc a
+kernel_simple.asm line 0174: unrecognized instruction.          (INC)
+0175   002C               cmp a, fifo + FIFO_SIZE     ; check if pointer reached the end of the fifo
+kernel_simple.asm line 0175: unrecognized instruction.          (CMP)
+0176   002C               jne int_7_continue
+kernel_simple.asm line 0176: unrecognized instruction.          (JNE)
+0177   002C               mov a, fifo  
+kernel_simple.asm line 0177: unrecognized instruction.          (MOV)
+0178   002C             int_7_continue:  
+0179   002C               mov [fifo_in], a            ; update fifo pointer
+kernel_simple.asm line 0179: unrecognized instruction.          (MOV)
+0180   002C               popf
+kernel_simple.asm line 0180: unrecognized instruction.          (POPF)
+0181   002C               pop d
+kernel_simple.asm line 0181: unrecognized instruction.          (POP)
+0182   002C               pop a  
+kernel_simple.asm line 0182: unrecognized instruction.          (POP)
+0183   002C               sysret
+kernel_simple.asm line 0183: unrecognized instruction.          (SYSRET)
+0184   002C             
+0185   002C             
+0186   002C             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0187   002C             ; floppy drive system calls
+0188   002C             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0189   002C             ; data for formatting a floppy drive in single density mode (128 bytes per sector):
+0190   002C             ; fdc_40_FF:
+0191   002C             ;   .fill 40,  $FF    ; or 00                                                                                
+0192   002C             ; fdc_128_format_inner:
+0193   002C             ;   .fill 6,   $00    ;                                                                            <--|        
+0194   002C             ;   .fill 1,   $FE    ; ID Address Mark                                                               |        
+0195   002C             ;   .fill 1,   $00    ; Track Number  0 thru 39                                                       |                    
+0196   002C             ;   .fill 1,   $00    ; Side Number 00 or 01                                                          |                
+0197   002C             ;   .fill 1,   $01    ; Sector Number  0x01 through 0x10                                              |                              
+0198   002C             ;   .fill 1,   $00    ; Sector Length                                                                 |                        
+0199   002C             ;   .fill 1,   $F7    ; 2 CRC's Written                                                               | Write 16 times                 
+0200   002C             ;   .fill 11,  $FF    ; or 00                                                                         |                      
+0201   002C             ;   .fill 6,   $00    ;                                                                               |                        
+0202   002C             ;   .fill 1,   $FB    ; Data Address Mark                                                             |                                  
+0203   002C             ;   .fill 128, $E5    ; Data (IBM uses E5)                                                            |                                      
+0204   002C             ;   .fill 1,   $F7    ; 2 CRC's Written                                                               |                                                        
+0205   002C             ;   .fill 10,  $FF    ; or 00                                                                      <--|                                                  
+0206   002C             ; fdc_128_format_end:
+0207   002C             ;   .fill 369, $FF    ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
+0208   002C             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0209   002C             ; _FDC_CONFIG       .equ $FFC0 
+0210   002C             ; _FDC_STATUS_1     .equ $FFC1
+0211   002C             ; _FDC_WD_STAT_CMD  .equ $FFC8
+0212   002C             ; _FDC_WD_TRACK     .equ $FFC9
+0213   002C             ; _FDC_WD_SECTOR    .equ $FFCA
+0214   002C             ; _FDC_WD_DATA      .equ $FFCB
+0215   002C             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0216   002C             
+0217   002C             syscall_fdc_read:
+0218   002C               mov al, [_FDC_WD_DATA]      ; read data register to clear any errors
+kernel_simple.asm line 0218: unrecognized instruction.          (MOV)
+0219   002C               mov al, [_FDC_WD_STAT_CMD]      ; read status register to clear any errors
+kernel_simple.asm line 0219: unrecognized instruction.          (MOV)
+0220   002C               mov al, %11101100         
+kernel_simple.asm line 0220: unrecognized instruction.          (MOV)
+0221   002C               mov [_FDC_WD_STAT_CMD], al
+kernel_simple.asm line 0221: unrecognized instruction.          (MOV)
+0222   002C               call fdc_wait_64us
+kernel_simple.asm line 0222: unrecognized instruction.          (CALL)
+0223   002C             
+0224   002C             ;fdc_wait_busy_high1:
+0225   002C             ;  mov al, [_FDC_WD_STAT_CMD]      ; 
+0226   002C             ;  test al, $01                ; 
+0227   002C             ;  jz fdc_wait_busy_high1
+0228   002C             
+0229   002C               mov di, transient_area
+kernel_simple.asm line 0229: unrecognized instruction.          (MOV)
+0230   002C             fdc_read_loop: ; for each byte, we need to wait for DRQ to be high
+0231   002C               mov al, [_FDC_WD_STAT_CMD]      ; 
+kernel_simple.asm line 0231: unrecognized instruction.          (MOV)
+0232   002C               test al, $01                ; check busy bit
+kernel_simple.asm line 0232: unrecognized instruction.          (TEST)
+0233   002C               jz fdc_read_end
+kernel_simple.asm line 0233: unrecognized instruction.          (JZ)
+0234   002C               test al, $02                ; check drq bit
+kernel_simple.asm line 0234: unrecognized instruction.          (TEST)
+0235   002C               jz fdc_read_loop
+kernel_simple.asm line 0235: unrecognized instruction.          (JZ)
+0236   002C               mov al, [_FDC_WD_DATA]     ; 
+kernel_simple.asm line 0236: unrecognized instruction.          (MOV)
+0237   002C               stosb
+kernel_simple.asm line 0237: unrecognized instruction.          (STOSB)
+0238   002C               jmp fdc_read_loop
+kernel_simple.asm line 0238: unrecognized instruction.          (JMP)
+0239   002C             
+0240   002C             ;we need to check if writing to data reg causes a spurious read. so lets check inside the writing loop, how many times we actually write the bytes
+0241   002C             ;say the 40 byte loop. if we find that we only write ~20 times, then this indcates this problem.
+0242   002C             ;because for every write, if it also reads, then that clears DRQ, so we need to wait for next DRQ.
+0243   002C             fdc_read_end:
+0244   002C               mov a, di
+kernel_simple.asm line 0244: unrecognized instruction.          (MOV)
+0245   002C               sub a, transient_area
+kernel_simple.asm line 0245: unrecognized instruction.          (SUB)
+0246   002C               mov d, sss
+kernel_simple.asm line 0246: unrecognized instruction.          (MOV)
+0247   002C               call _puts
+kernel_simple.asm line 0247: unrecognized instruction.          (CALL)
+0248   002C               call print_u16d
+kernel_simple.asm line 0248: unrecognized instruction.          (CALL)
+0249   002C               call printnl
+kernel_simple.asm line 0249: unrecognized instruction.          (CALL)
+0250   002C               mov b, 3090
+kernel_simple.asm line 0250: unrecognized instruction.          (MOV)
+0251   002C               call cmd_hexd
+kernel_simple.asm line 0251: unrecognized instruction.          (CALL)
+0252   002C               sysret
+kernel_simple.asm line 0252: unrecognized instruction.          (SYSRET)
+0253   002C 0A 74 72 61 sss:.db "\ntrack read\n", 0
+0253   0030 63 6B 20 72 
+0253   0034 65 61 64 0A 
+0253   0038 00 
+0254   0039             
+0255   0039             
+0256   0039             ; sector in al
+0257   0039             ; track in ah
+0258   0039             syscall_fdc_read_sec:
+0259   0039               mov [_FDC_WD_SECTOR], al
+kernel_simple.asm line 0259: unrecognized instruction.          (MOV)
+0260   0039               mov al, ah
+kernel_simple.asm line 0260: unrecognized instruction.          (MOV)
+0261   0039               mov [_FDC_WD_TRACK], al
+kernel_simple.asm line 0261: unrecognized instruction.          (MOV)
+0262   0039               mov al, %10001100         
+kernel_simple.asm line 0262: unrecognized instruction.          (MOV)
+0263   0039               mov [_FDC_WD_STAT_CMD], al
+kernel_simple.asm line 0263: unrecognized instruction.          (MOV)
+0264   0039               call fdc_wait_64us
+kernel_simple.asm line 0264: unrecognized instruction.          (CALL)
+0265   0039             ;fdc_wait_busy_high2:
+0266   0039             ;  mov al, [_FDC_WD_STAT_CMD]      ; 
+0267   0039             ;  test al, $01                ; 
+0268   0039             ;  jz fdc_wait_busy_high2
+0269   0039               mov di, transient_area
+kernel_simple.asm line 0269: unrecognized instruction.          (MOV)
+0270   0039             fdc_read_loop2: ; for each byte, we need to wait for DRQ to be high
+0271   0039               mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag 10+3+5+8+5+8
+kernel_simple.asm line 0271: unrecognized instruction.          (MOV)
+0272   0039               test al, $01                ; check drq bit
+kernel_simple.asm line 0272: unrecognized instruction.          (TEST)
+0273   0039               jz fdc_read_end2
+kernel_simple.asm line 0273: unrecognized instruction.          (JZ)
+0274   0039               test al, $02                ; check drq bit
+kernel_simple.asm line 0274: unrecognized instruction.          (TEST)
+0275   0039               jz fdc_read_loop2
+kernel_simple.asm line 0275: unrecognized instruction.          (JZ)
+0276   0039               mov al, [_FDC_WD_DATA]     ; 
+kernel_simple.asm line 0276: unrecognized instruction.          (MOV)
+0277   0039               stosb
+kernel_simple.asm line 0277: unrecognized instruction.          (STOSB)
+0278   0039               jmp fdc_read_loop2
+kernel_simple.asm line 0278: unrecognized instruction.          (JMP)
+0279   0039             fdc_read_end2:
+0280   0039               mov a, di
+kernel_simple.asm line 0280: unrecognized instruction.          (MOV)
+0281   0039               sub a, transient_area
+kernel_simple.asm line 0281: unrecognized instruction.          (SUB)
+0282   0039               mov d, sss
+kernel_simple.asm line 0282: unrecognized instruction.          (MOV)
+0283   0039               call _puts
+kernel_simple.asm line 0283: unrecognized instruction.          (CALL)
+0284   0039               call print_u16d
+kernel_simple.asm line 0284: unrecognized instruction.          (CALL)
+0285   0039               call printnl
+kernel_simple.asm line 0285: unrecognized instruction.          (CALL)
+0286   0039               mov b, 128
+kernel_simple.asm line 0286: unrecognized instruction.          (MOV)
+0287   0039               call cmd_hexd
+kernel_simple.asm line 0287: unrecognized instruction.          (CALL)
+0288   0039               sysret
+kernel_simple.asm line 0288: unrecognized instruction.          (SYSRET)
+0289   0039             
+0290   0039             ; when writing the actual code for formatting multiple tracks, remember to change the track number byte
+0291   0039             ; in the RAM formatting block because they are all set as 00 right now
+0292   0039             ; bl: track number
+0293   0039             syscall_fdc_format:
+0294   0039               mov [_FDC_WD_TRACK], bl
+kernel_simple.asm line 0294: unrecognized instruction.          (MOV)
+0295   0039               mov d, s_format_begin
+kernel_simple.asm line 0295: unrecognized instruction.          (MOV)
+0296   0039               call _puts
+kernel_simple.asm line 0296: unrecognized instruction.          (CALL)
+0297   0039               mov al, [_FDC_WD_DATA]      ; read data register to clear any errors
+kernel_simple.asm line 0297: unrecognized instruction.          (MOV)
+0298   0039               mov al, [_FDC_WD_STAT_CMD]      ; read status register to clear any errors
+kernel_simple.asm line 0298: unrecognized instruction.          (MOV)
+0299   0039             fdc_header_loop_start:
+0300   0039               mov al, %11111110               ; Write Track Command: {1111, 0: Enable Spin-up Seq, 1: Settling Delay, 1: No Write Precompensation, 0}
+kernel_simple.asm line 0300: unrecognized instruction.          (MOV)
+0301   0039               mov [_FDC_WD_STAT_CMD], al
+kernel_simple.asm line 0301: unrecognized instruction.          (MOV)
+0302   0039             ; write the first data block for formatting which is 40 bytes of 0xFF:
+0303   0039               call fdc_wait_64us
+kernel_simple.asm line 0303: unrecognized instruction.          (CALL)
+0304   0039             
+0305   0039             
+0306   0039             ;fdc_wait_busy_high:
+0307   0039             ;  mov al, [_FDC_WD_STAT_CMD]      ; 
+0308   0039             ;  test al, $01                ; 
+0309   0039             ;  jz fdc_wait_busy_high
+0310   0039             
+0311   0039               mov si, transient_area
+kernel_simple.asm line 0311: unrecognized instruction.          (MOV)
+0312   0039             fdc_format_drq:
+0313   0039               mov al, [_FDC_WD_STAT_CMD]  ; 10
+kernel_simple.asm line 0313: unrecognized instruction.          (MOV)
+0314   0039               test al, $01                ; 4
+kernel_simple.asm line 0314: unrecognized instruction.          (TEST)
+0315   0039               jz fdc_format_end           ; 8
+kernel_simple.asm line 0315: unrecognized instruction.          (JZ)
+0316   0039               test al, $02                ; 4
+kernel_simple.asm line 0316: unrecognized instruction.          (TEST)
+0317   0039               jz fdc_format_drq           ; 8
+kernel_simple.asm line 0317: unrecognized instruction.          (JZ)
+0318   0039               lodsb                       ; 7
+kernel_simple.asm line 0318: unrecognized instruction.          (LODSB)
+0319   0039               mov [_FDC_WD_DATA], al      ; 10   
+kernel_simple.asm line 0319: unrecognized instruction.          (MOV)
+0320   0039               jmp fdc_format_drq
+kernel_simple.asm line 0320: unrecognized instruction.          (JMP)
+0321   0039             fdc_format_end:
+0322   0039               mov d, sss1
+kernel_simple.asm line 0322: unrecognized instruction.          (MOV)
+0323   0039               call _puts
+kernel_simple.asm line 0323: unrecognized instruction.          (CALL)
+0324   0039               sysret
+kernel_simple.asm line 0324: unrecognized instruction.          (SYSRET)
+0325   0039             
+0326   0039 0A 66 6F 72 sss1:.db "\nformat done\n", 0
+0326   003D 6D 61 74 20 
+0326   0041 64 6F 6E 65 
+0326   0045 0A 00 
+0327   0047             
+0328   0047             
+0329   0047             ; sector in al
+0330   0047             ; track in ah
+0331   0047             syscall_fdc_write_sec:
+0332   0047               mov [_FDC_WD_SECTOR], al
+kernel_simple.asm line 0332: unrecognized instruction.          (MOV)
+0333   0047               mov al, ah
+kernel_simple.asm line 0333: unrecognized instruction.          (MOV)
+0334   0047               mov [_FDC_WD_TRACK], al
+kernel_simple.asm line 0334: unrecognized instruction.          (MOV)
+0335   0047               mov al, %10101110         
+kernel_simple.asm line 0335: unrecognized instruction.          (MOV)
+0336   0047               mov [_FDC_WD_STAT_CMD], al
+kernel_simple.asm line 0336: unrecognized instruction.          (MOV)
+0337   0047               call fdc_wait_64us
+kernel_simple.asm line 0337: unrecognized instruction.          (CALL)
+0338   0047             ;fdc_wait_busy_high2:
+0339   0047             ;  mov al, [_FDC_WD_STAT_CMD]      ; 
+0340   0047             ;  test al, $01                ; 
+0341   0047             ;  jz fdc_wait_busy_high2
+0342   0047               mov al, $55
+kernel_simple.asm line 0342: unrecognized instruction.          (MOV)
+0343   0047             fdc_write_loop2: ; for each byte, we need to wait for DRQ to be high
+0344   0047               mov al, [_FDC_WD_STAT_CMD]      ; read lost data flag 10+3+5+8+5+8
+kernel_simple.asm line 0344: unrecognized instruction.          (MOV)
+0345   0047               test al, $01                ; check drq bit
+kernel_simple.asm line 0345: unrecognized instruction.          (TEST)
+0346   0047               jz fdc_write_end
+kernel_simple.asm line 0346: unrecognized instruction.          (JZ)
+0347   0047               test al, $02                ; check drq bit
+kernel_simple.asm line 0347: unrecognized instruction.          (TEST)
+0348   0047               jz fdc_write_loop2
+kernel_simple.asm line 0348: unrecognized instruction.          (JZ)
+0349   0047               mov [_FDC_WD_DATA], al     ; 
+kernel_simple.asm line 0349: unrecognized instruction.          (MOV)
+0350   0047               xor al, $ff
+kernel_simple.asm line 0350: unrecognized instruction.          (XOR)
+0351   0047               jmp fdc_write_loop2
+kernel_simple.asm line 0351: unrecognized instruction.          (JMP)
+0352   0047             fdc_write_end:
+0353   0047               mov d, sss2
+kernel_simple.asm line 0353: unrecognized instruction.          (MOV)
+0354   0047               call _puts
+kernel_simple.asm line 0354: unrecognized instruction.          (CALL)
+0355   0047               sysret
+kernel_simple.asm line 0355: unrecognized instruction.          (SYSRET)
+0356   0047 0A 73 65 63 sss2:.db "\nsector written\n",0
+0356   004B 74 6F 72 20 
+0356   004F 77 72 69 74 
+0356   0053 74 65 6E 0A 
+0356   0057 00 
+0357   0058             
+0358   0058             
+0359   0058             
+0360   0058             fdc_format_mem:
+0361   0058               mov d, 1
+kernel_simple.asm line 0361: unrecognized instruction.          (MOV)
+0362   0058               mov di, transient_area
+kernel_simple.asm line 0362: unrecognized instruction.          (MOV)
+0363   0058               mov c, 40
+kernel_simple.asm line 0363: unrecognized instruction.          (MOV)
+0364   0058               mov al, $FF
+kernel_simple.asm line 0364: unrecognized instruction.          (MOV)
+0365   0058             fdc_l0: 
+0366   0058               stosb
+kernel_simple.asm line 0366: unrecognized instruction.          (STOSB)
+0367   0058               dec c
+kernel_simple.asm line 0367: unrecognized instruction.          (DEC)
+0368   0058               jnz fdc_l0
+kernel_simple.asm line 0368: unrecognized instruction.          (JNZ)
+0369   0058             
+0370   0058             fdc_inner_loop:
+0371   0058               mov c, 6
+kernel_simple.asm line 0371: unrecognized instruction.          (MOV)
+0372   0058               mov al, $00
+kernel_simple.asm line 0372: unrecognized instruction.          (MOV)
+0373   0058             fdc_l1:
+0374   0058               stosb
+kernel_simple.asm line 0374: unrecognized instruction.          (STOSB)
+0375   0058               dec c
+kernel_simple.asm line 0375: unrecognized instruction.          (DEC)
+0376   0058               jnz fdc_l1
+kernel_simple.asm line 0376: unrecognized instruction.          (JNZ)
+0377   0058             
+0378   0058             ; address mark
+0379   0058             fdc_l2:
+0380   0058               mov al, $FE
+kernel_simple.asm line 0380: unrecognized instruction.          (MOV)
+0381   0058               stosb
+kernel_simple.asm line 0381: unrecognized instruction.          (STOSB)
+0382   0058             
+0383   0058             ; track number
+0384   0058             fdc_l3:
+0385   0058               mov al, $00
+kernel_simple.asm line 0385: unrecognized instruction.          (MOV)
+0386   0058               stosb
+kernel_simple.asm line 0386: unrecognized instruction.          (STOSB)
+0387   0058             
+0388   0058             ; side number
+0389   0058             fdc_l4:
+0390   0058               mov al, $00
+kernel_simple.asm line 0390: unrecognized instruction.          (MOV)
+0391   0058               stosb
+kernel_simple.asm line 0391: unrecognized instruction.          (STOSB)
+0392   0058             
+0393   0058             ; sector number
+0394   0058             fdc_l5:
+0395   0058               mov a, d
+kernel_simple.asm line 0395: unrecognized instruction.          (MOV)
+0396   0058               stosb
+kernel_simple.asm line 0396: unrecognized instruction.          (STOSB)
+0397   0058             
+0398   0058             ; sector length 128 bytes
+0399   0058             fdc_l6:
+0400   0058               mov al, $00
+kernel_simple.asm line 0400: unrecognized instruction.          (MOV)
+0401   0058               stosb
+kernel_simple.asm line 0401: unrecognized instruction.          (STOSB)
+0402   0058             
+0403   0058             ; 2 crc's
+0404   0058             fdc_l7:
+0405   0058               mov al, $F7
+kernel_simple.asm line 0405: unrecognized instruction.          (MOV)
+0406   0058               stosb
+kernel_simple.asm line 0406: unrecognized instruction.          (STOSB)
+0407   0058             
+0408   0058             ; 11 times $FF
+0409   0058               mov c, 11
+kernel_simple.asm line 0409: unrecognized instruction.          (MOV)
+0410   0058               mov al, $FF
+kernel_simple.asm line 0410: unrecognized instruction.          (MOV)
+0411   0058             fdc_l8:
+0412   0058               stosb
+kernel_simple.asm line 0412: unrecognized instruction.          (STOSB)
+0413   0058               dec c
+kernel_simple.asm line 0413: unrecognized instruction.          (DEC)
+0414   0058               jnz fdc_l8
+kernel_simple.asm line 0414: unrecognized instruction.          (JNZ)
+0415   0058             
+0416   0058             ; 6 times 00
+0417   0058               mov c, 6
+kernel_simple.asm line 0417: unrecognized instruction.          (MOV)
+0418   0058               mov al, $00
+kernel_simple.asm line 0418: unrecognized instruction.          (MOV)
+0419   0058             fdc_l9:
+0420   0058               stosb
+kernel_simple.asm line 0420: unrecognized instruction.          (STOSB)
+0421   0058               dec c
+kernel_simple.asm line 0421: unrecognized instruction.          (DEC)
+0422   0058               jnz fdc_l9
+kernel_simple.asm line 0422: unrecognized instruction.          (JNZ)
+0423   0058             
+0424   0058             ; data address mark
+0425   0058               mov al, $FB
+kernel_simple.asm line 0425: unrecognized instruction.          (MOV)
+0426   0058             fdc_l10:
+0427   0058               stosb
+kernel_simple.asm line 0427: unrecognized instruction.          (STOSB)
+0428   0058             
+0429   0058             ; sector data
+0430   0058               mov c, 0
+kernel_simple.asm line 0430: unrecognized instruction.          (MOV)
+0431   0058             fdc_l11:
+0432   0058               mov al, cl
+kernel_simple.asm line 0432: unrecognized instruction.          (MOV)
+0433   0058               stosb
+kernel_simple.asm line 0433: unrecognized instruction.          (STOSB)
+0434   0058               inc c
+kernel_simple.asm line 0434: unrecognized instruction.          (INC)
+0435   0058               cmp c, 128
+kernel_simple.asm line 0435: unrecognized instruction.          (CMP)
+0436   0058               jne fdc_l11
+kernel_simple.asm line 0436: unrecognized instruction.          (JNE)
+0437   0058             
+0438   0058             ; 2 crc's
+0439   0058             fdc_l12:
+0440   0058               mov al, $F7
+kernel_simple.asm line 0440: unrecognized instruction.          (MOV)
+0441   0058               stosb
+kernel_simple.asm line 0441: unrecognized instruction.          (STOSB)
+0442   0058             
+0443   0058             ; 10 times $FF
+0444   0058               mov c, 10
+kernel_simple.asm line 0444: unrecognized instruction.          (MOV)
+0445   0058               mov al, $FF
+kernel_simple.asm line 0445: unrecognized instruction.          (MOV)
+0446   0058             fdc_l13:
+0447   0058               stosb
+kernel_simple.asm line 0447: unrecognized instruction.          (STOSB)
+0448   0058               dec c
+kernel_simple.asm line 0448: unrecognized instruction.          (DEC)
+0449   0058               jnz fdc_l13
+kernel_simple.asm line 0449: unrecognized instruction.          (JNZ)
+0450   0058             
+0451   0058             ; check whether we did this 16 times
+0452   0058               inc d
+kernel_simple.asm line 0452: unrecognized instruction.          (INC)
+0453   0058               cmp d, 17
+kernel_simple.asm line 0453: unrecognized instruction.          (CMP)
+0454   0058               jne fdc_inner_loop
+kernel_simple.asm line 0454: unrecognized instruction.          (JNE)
+0455   0058             
+0456   0058             ; loop ~369 times
+0457   0058               mov c, 400
+kernel_simple.asm line 0457: unrecognized instruction.          (MOV)
+0458   0058               mov al, $FF
+kernel_simple.asm line 0458: unrecognized instruction.          (MOV)
+0459   0058             fdc_format_footer:
+0460   0058             fdc_footer_drq_loop:
+0461   0058               stosb
+kernel_simple.asm line 0461: unrecognized instruction.          (STOSB)
+0462   0058               dec c
+kernel_simple.asm line 0462: unrecognized instruction.          (DEC)
+0463   0058               jnz fdc_footer_drq_loop
+kernel_simple.asm line 0463: unrecognized instruction.          (JNZ)
+0464   0058             
+0465   0058               ret
+kernel_simple.asm line 0465: unrecognized instruction.          (RET)
+0466   0058             
+0467   0058             ; fetch is 2 cycles long when 'display_reg_load' is false.
+0468   0058             ; 64us amounts to 160 cycles of the 2.5MHz clock
+0469   0058             ; call u16 is 14 cycles long
+0470   0058             ; 160 - 5 - 14 = 
+0471   0058             fdc_wait_64us:
+0472   0058               mov cl, 1                       ; 5 cycles
+kernel_simple.asm line 0472: unrecognized instruction.          (MOV)
+0473   0058             fdc_wait_64_loop:
+0474   0058               dec cl                           ; 3 cycles
+kernel_simple.asm line 0474: unrecognized instruction.          (DEC)
+0475   0058               jnz fdc_wait_64_loop             ; 8 cycles
+kernel_simple.asm line 0475: unrecognized instruction.          (JNZ)
+0476   0058               ret
+kernel_simple.asm line 0476: unrecognized instruction.          (RET)
+0477   0058             
+0478   0058 00          fdc_irq: .db 0
+0479   0059 0A 66 6F 72 s_format_begin:   .db "\nformatting starting...\n", 0
+0479   005D 6D 61 74 74 
+0479   0061 69 6E 67 20 
+0479   0065 73 74 61 72 
+0479   0069 74 69 6E 67 
+0479   006D 2E 2E 2E 0A 
+0479   0071 00 
+0480   0072 0A 66 6F 72 s_format_done:    .db "\nformatting done.\n", 0
+0480   0076 6D 61 74 74 
+0480   007A 69 6E 67 20 
+0480   007E 64 6F 6E 65 
+0480   0082 2E 0A 00 
+0481   0085 0A 66 64 63 s_fdc_status:     .db "\nfdc status: ", 0
+0481   0089 20 73 74 61 
+0481   008D 74 75 73 3A 
+0481   0091 20 00 
+0482   0093             
+0483   0093             ; REBOOT SYSTEM
+0484   0093             syscall_reboot:
+0485   0093               push word $FFFF 
+kernel_simple.asm line 0485: unrecognized instruction.          (PUSH)
+0486   0093               push byte %00000000             ; dma_ack = 0, interrupts disabled, mode = supervisor, paging = off, halt=0, display_reg_load=0, dir=0
+kernel_simple.asm line 0486: unrecognized instruction.          (PUSH)
+0487   0093               push word BIOS_RESET_VECTOR     ; and then push RESET VECTOR of the shell to the stack
+kernel_simple.asm line 0487: unrecognized instruction.          (PUSH)
+0488   0093               sysret
+kernel_simple.asm line 0488: unrecognized instruction.          (SYSRET)
+0489   0093             
+0490   0093             ; ------------------------------------------------------------------------------------------------------------------;
+0491   0093             ; exceptions code block
+0492   0093             ; ------------------------------------------------------------------------------------------------------------------;
+0493   0093             ; privilege exception
+0494   0093             ; ------------------------------------------------------------------------------------------------------------------;
+0495   0093             trap_privilege:
+0496   0093               jmp syscall_reboot
+kernel_simple.asm line 0496: unrecognized instruction.          (JMP)
+0497   0093               push d
+kernel_simple.asm line 0497: unrecognized instruction.          (PUSH)
+0498   0093               mov d, s_priviledge
+kernel_simple.asm line 0498: unrecognized instruction.          (MOV)
+0499   0093               call _puts
+kernel_simple.asm line 0499: unrecognized instruction.          (CALL)
+0500   0093               pop d
+kernel_simple.asm line 0500: unrecognized instruction.          (POP)
+0501   0093               sysret
+kernel_simple.asm line 0501: unrecognized instruction.          (SYSRET)
+0502   0093             
+0503   0093             ; ------------------------------------------------------------------------------------------------------------------;
+0504   0093             ; divide by zero exception
+0505   0093             ; ------------------------------------------------------------------------------------------------------------------;
+0506   0093             trap_div_zero:
+0507   0093               push a
+kernel_simple.asm line 0507: unrecognized instruction.          (PUSH)
+0508   0093               push d
+kernel_simple.asm line 0508: unrecognized instruction.          (PUSH)
+0509   0093               pushf
+kernel_simple.asm line 0509: unrecognized instruction.          (PUSHF)
+0510   0093               mov d, s_divzero
+kernel_simple.asm line 0510: unrecognized instruction.          (MOV)
+0511   0093               call _puts
+kernel_simple.asm line 0511: unrecognized instruction.          (CALL)
+0512   0093               popf
+kernel_simple.asm line 0512: unrecognized instruction.          (POPF)
+0513   0093               pop d
+kernel_simple.asm line 0513: unrecognized instruction.          (POP)
+0514   0093               pop a
+kernel_simple.asm line 0514: unrecognized instruction.          (POP)
+0515   0093               sysret ; enable interrupts
+kernel_simple.asm line 0515: unrecognized instruction.          (SYSRET)
+0516   0093             
+0517   0093             ; ------------------------------------------------------------------------------------------------------------------;
+0518   0093             ; undefined opcode exception
+0519   0093             ; ------------------------------------------------------------------------------------------------------------------;
+0520   0093             trap_undef_opcode:
+0521   0093               sysret
+kernel_simple.asm line 0521: unrecognized instruction.          (SYSRET)
+0522   0093             
+0523   0093             
+0524   0093             
+0525   0093             ;----------------------------------------------------------------------------------------------------;
+0526   0093             ; IO Syscall
+0527   0093             ;----------------------------------------------------------------------------------------------------;
+0528   0093             ; Baud  Divisor
+0529   0093             ; 50    2304
+0530   0093             ; 110   1047
+0531   0093             ; 300    384
+0532   0093             ; 600    192
+0533   0093             ; 1200    96
+0534   0093             ; 9600    12
+0535   0093             ; 19200    6
+0536   0093             ; 38400    3
+0537   0093             syscall_io_jmp:
+0538   0093 99 00         .dw syscall_io_putchar
+0539   0095 99 00         .dw syscall_io_getch
+0540   0097 99 00         .dw syscall_io_uart_setup
+0541   0099             syscall_io:
+0542   0099               jmp [syscall_io_jmp + al]
+kernel_simple.asm line 0542: unrecognized instruction.          (JMP)
+0543   0099             ; bit7 is the Divisor Latch Access Bit (DLAB). It must be set high (logic 1) to access the Divisor Latches
+0544   0099             ; of the Baud Generator during a Read or Write operation. It must be set low (logic 0) to access the Receiver
+0545   0099             ; Buffer, the Transmitter Holding Register, or the Interrupt Enable Register.
+0546   0099             syscall_io_uart_setup:
+0547   0099               mov al, [sys_uart0_lcr]
+kernel_simple.asm line 0547: unrecognized instruction.          (MOV)
+0548   0099               or al, $80                ; set DLAB access bit
+kernel_simple.asm line 0548: unrecognized instruction.          (OR)
+0549   0099               mov [_UART0_LCR], al      ; 8 data, 2 stop, no parity by default
+kernel_simple.asm line 0549: unrecognized instruction.          (MOV)
+0550   0099               mov al, [sys_uart0_div0]
+kernel_simple.asm line 0550: unrecognized instruction.          (MOV)
+0551   0099               mov [_UART0_DLAB_0], al   ; divisor latch byte 0
+kernel_simple.asm line 0551: unrecognized instruction.          (MOV)
+0552   0099               mov al, [sys_uart0_div1]
+kernel_simple.asm line 0552: unrecognized instruction.          (MOV)
+0553   0099               mov [_UART0_DLAB_1], al   ; divisor latch byte 1      
+kernel_simple.asm line 0553: unrecognized instruction.          (MOV)
+0554   0099             
+0555   0099               mov al, [sys_uart0_lcr]
+kernel_simple.asm line 0555: unrecognized instruction.          (MOV)
+0556   0099               and al, $7F               ; clear DLAB access bit 
+kernel_simple.asm line 0556: unrecognized instruction.          (AND)
+0557   0099               mov [_UART0_LCR], al
+kernel_simple.asm line 0557: unrecognized instruction.          (MOV)
+0558   0099               mov al, [sys_uart0_inten]
+kernel_simple.asm line 0558: unrecognized instruction.          (MOV)
+0559   0099               mov [_UART0_IER], al      ; interrupts
+kernel_simple.asm line 0559: unrecognized instruction.          (MOV)
+0560   0099               mov al, [sys_uart0_fifoen]
+kernel_simple.asm line 0560: unrecognized instruction.          (MOV)
+0561   0099               mov [_UART0_FCR], al      ; FIFO control
+kernel_simple.asm line 0561: unrecognized instruction.          (MOV)
+0562   0099               sysret
+kernel_simple.asm line 0562: unrecognized instruction.          (SYSRET)
+0563   0099             
+0564   0099             ; char in ah
+0565   0099             syscall_io_putchar:
+0566   0099             syscall_io_putchar_L0:
+0567   0099               mov al, [_UART0_LSR]         ; read Line Status Register
+kernel_simple.asm line 0567: unrecognized instruction.          (MOV)
+0568   0099               and al, $20
+kernel_simple.asm line 0568: unrecognized instruction.          (AND)
+0569   0099               jz syscall_io_putchar_L0    
+kernel_simple.asm line 0569: unrecognized instruction.          (JZ)
+0570   0099               mov al, ah
+kernel_simple.asm line 0570: unrecognized instruction.          (MOV)
+0571   0099               mov [_UART0_DATA], al        ; write char to Transmitter Holding Register
+kernel_simple.asm line 0571: unrecognized instruction.          (MOV)
+0572   0099               sysret
+kernel_simple.asm line 0572: unrecognized instruction.          (SYSRET)
+0573   0099             
+0574   0099             ; char in ah
+0575   0099             ; al = sucess code
+0576   0099             syscall_io_getch:
+0577   0099               push b
+kernel_simple.asm line 0577: unrecognized instruction.          (PUSH)
+0578   0099               push d
+kernel_simple.asm line 0578: unrecognized instruction.          (PUSH)
+0579   0099               sti
+kernel_simple.asm line 0579: unrecognized instruction.          (STI)
+0580   0099             syscall_io_getch_L0:  
+0581   0099               mov a, [fifo_out]
+kernel_simple.asm line 0581: unrecognized instruction.          (MOV)
+0582   0099               mov b, [fifo_in]
+kernel_simple.asm line 0582: unrecognized instruction.          (MOV)
+0583   0099               cmp a, b
+kernel_simple.asm line 0583: unrecognized instruction.          (CMP)
+0584   0099               je syscall_io_getch_L0
+kernel_simple.asm line 0584: unrecognized instruction.          (JE)
+0585   0099               mov d, a
+kernel_simple.asm line 0585: unrecognized instruction.          (MOV)
+0586   0099               inc a
+kernel_simple.asm line 0586: unrecognized instruction.          (INC)
+0587   0099               cmp a, fifo + FIFO_SIZE      ; check if pointer reached the end of the fifo
+kernel_simple.asm line 0587: unrecognized instruction.          (CMP)
+0588   0099               jne syscall_io_getch_cont
+kernel_simple.asm line 0588: unrecognized instruction.          (JNE)
+0589   0099               mov a, fifo  
+kernel_simple.asm line 0589: unrecognized instruction.          (MOV)
+0590   0099             syscall_io_getch_cont:  
+0591   0099               mov [fifo_out], a             ; update fifo pointer
+kernel_simple.asm line 0591: unrecognized instruction.          (MOV)
+0592   0099               mov al, [d]                   ; get char
+kernel_simple.asm line 0592: unrecognized instruction.          (MOV)
+0593   0099               mov ah, al
+kernel_simple.asm line 0593: unrecognized instruction.          (MOV)
+0594   0099               mov al, [sys_echo_on]
+kernel_simple.asm line 0594: unrecognized instruction.          (MOV)
+0595   0099               cmp al, 1
+kernel_simple.asm line 0595: unrecognized instruction.          (CMP)
+0596   0099               jne syscall_io_getch_noecho 
+kernel_simple.asm line 0596: unrecognized instruction.          (JNE)
+0597   0099             ; here we just echo the char back to the console
+0598   0099             syscall_io_getch_echo_L0:
+0599   0099               mov al, [_UART0_LSR]         ; read Line Status Register
+kernel_simple.asm line 0599: unrecognized instruction.          (MOV)
+0600   0099               and al, $20                 ; isolate Transmitter Empty
+kernel_simple.asm line 0600: unrecognized instruction.          (AND)
+0601   0099               jz syscall_io_getch_echo_L0
+kernel_simple.asm line 0601: unrecognized instruction.          (JZ)
+0602   0099               mov al, ah
+kernel_simple.asm line 0602: unrecognized instruction.          (MOV)
+0603   0099               mov [_UART0_DATA], al        ; write char to Transmitter Holding Register
+kernel_simple.asm line 0603: unrecognized instruction.          (MOV)
+0604   0099             syscall_io_getch_noecho:
+0605   0099               mov al, 1                    ; AL = 1 means a char successfully received
+kernel_simple.asm line 0605: unrecognized instruction.          (MOV)
+0606   0099               pop d
+kernel_simple.asm line 0606: unrecognized instruction.          (POP)
+0607   0099               pop b
+kernel_simple.asm line 0607: unrecognized instruction.          (POP)
+0608   0099               sysret
+kernel_simple.asm line 0608: unrecognized instruction.          (SYSRET)
+0609   0099             
+0610   0099             
+0611   0099             
+0612   0099             
+0613   0099             
+0614   0099             
+0615   0099             ; ---------------------------------------------------------------------
+0616   0099             ; kernel reset vector
+0617   0099             ; ---------------------------------------------------------------------
+0618   0099             kernel_reset_vector:  
+0619   0099               mov bp, STACK_BEGIN
+kernel_simple.asm line 0619: unrecognized instruction.          (MOV)
+0620   0099               mov sp, STACK_BEGIN
+kernel_simple.asm line 0620: unrecognized instruction.          (MOV)
+0621   0099               
+0622   0099               mov al, %10000000             ; mask out timer interrupt
+kernel_simple.asm line 0622: unrecognized instruction.          (MOV)
+0623   0099               stomsk                        
+kernel_simple.asm line 0623: unrecognized instruction.          (STOMSK)
+0624   0099               sti  
+kernel_simple.asm line 0624: unrecognized instruction.          (STI)
+0625   0099             
+0626   0099               lodstat
+kernel_simple.asm line 0626: unrecognized instruction.          (LODSTAT)
+0627   0099               and al, %11011111             ; disable display register loading
+kernel_simple.asm line 0627: unrecognized instruction.          (AND)
+0628   0099               stostat
+kernel_simple.asm line 0628: unrecognized instruction.          (STOSTAT)
+0629   0099               
+0630   0099             ; reset fifo pointers
+0631   0099               mov a, fifo
+kernel_simple.asm line 0631: unrecognized instruction.          (MOV)
+0632   0099               mov d, fifo_in
+kernel_simple.asm line 0632: unrecognized instruction.          (MOV)
+0633   0099               mov [d], a
+kernel_simple.asm line 0633: unrecognized instruction.          (MOV)
+0634   0099               mov d, fifo_out
+kernel_simple.asm line 0634: unrecognized instruction.          (MOV)
+0635   0099               mov [d], a  
+kernel_simple.asm line 0635: unrecognized instruction.          (MOV)
+0636   0099               mov al, 2
+kernel_simple.asm line 0636: unrecognized instruction.          (MOV)
+0637   0099               syscall sys_io                ; enable uart in interrupt mode
+kernel_simple.asm line 0637: unrecognized instruction.          (SYSCALL)
+0638   0099               
+0639   0099               mov d, s_kernel_started
+kernel_simple.asm line 0639: unrecognized instruction.          (MOV)
+0640   0099               call _puts
+kernel_simple.asm line 0640: unrecognized instruction.          (CALL)
+0641   0099             
+0642   0099               mov d, str0
+kernel_simple.asm line 0642: unrecognized instruction.          (MOV)
+0643   0099               call _puts
+kernel_simple.asm line 0643: unrecognized instruction.          (CALL)
+0644   0099               ; First, select drive 1 and de-select drive 0
+0645   0099               mov d, $FFC0
+kernel_simple.asm line 0645: unrecognized instruction.          (MOV)
+0646   0099               mov bl, %00001110     ; %00001001 : turn LED on, disable double density, select side 0, select drive 0, do not select drive 1
+kernel_simple.asm line 0646: unrecognized instruction.          (MOV)
+0647   0099               mov [d], bl
+kernel_simple.asm line 0647: unrecognized instruction.          (MOV)
+0648   0099             
+0649   0099             
+0650   0099             menu:
+0651   0099               mov d, s_menu
+kernel_simple.asm line 0651: unrecognized instruction.          (MOV)
+0652   0099               call _puts
+kernel_simple.asm line 0652: unrecognized instruction.          (CALL)
+0653   0099               call getch
+kernel_simple.asm line 0653: unrecognized instruction.          (CALL)
+0654   0099               cmp ah, '0'
+kernel_simple.asm line 0654: unrecognized instruction.          (CMP)
+0655   0099               je step_in
+kernel_simple.asm line 0655: unrecognized instruction.          (JE)
+0656   0099               cmp ah, '1'
+kernel_simple.asm line 0656: unrecognized instruction.          (CMP)
+0657   0099               je step_out
+kernel_simple.asm line 0657: unrecognized instruction.          (JE)
+0658   0099               cmp ah, '2'
+kernel_simple.asm line 0658: unrecognized instruction.          (CMP)
+0659   0099               je restore
+kernel_simple.asm line 0659: unrecognized instruction.          (JE)
+0660   0099               cmp ah, '3'
+kernel_simple.asm line 0660: unrecognized instruction.          (CMP)
+0661   0099               je status1
+kernel_simple.asm line 0661: unrecognized instruction.          (JE)
+0662   0099               cmp ah, '4'
+kernel_simple.asm line 0662: unrecognized instruction.          (CMP)
+0663   0099               je status2
+kernel_simple.asm line 0663: unrecognized instruction.          (JE)
+0664   0099               cmp ah, '5'
+kernel_simple.asm line 0664: unrecognized instruction.          (CMP)
+0665   0099               je format
+kernel_simple.asm line 0665: unrecognized instruction.          (JE)
+0666   0099               cmp ah, '6'
+kernel_simple.asm line 0666: unrecognized instruction.          (CMP)
+0667   0099               je read
+kernel_simple.asm line 0667: unrecognized instruction.          (JE)
+0668   0099               cmp ah, '7'
+kernel_simple.asm line 0668: unrecognized instruction.          (CMP)
+0669   0099               je read_sec
+kernel_simple.asm line 0669: unrecognized instruction.          (JE)
+0670   0099               cmp ah, '8'
+kernel_simple.asm line 0670: unrecognized instruction.          (CMP)
+0671   0099               je fdc_options
+kernel_simple.asm line 0671: unrecognized instruction.          (JE)
+0672   0099               cmp ah, '9'
+kernel_simple.asm line 0672: unrecognized instruction.          (CMP)
+0673   0099               je fdc_write_sec
+kernel_simple.asm line 0673: unrecognized instruction.          (JE)
+0674   0099               jmp menu
+kernel_simple.asm line 0674: unrecognized instruction.          (JMP)
+0675   0099             step_in:
+0676   0099               mov d, $FFC8    ; wd1770
+kernel_simple.asm line 0676: unrecognized instruction.          (MOV)
+0677   0099               mov al, 2       ; setparam call
+kernel_simple.asm line 0677: unrecognized instruction.          (MOV)
+0678   0099               mov bl, %01010011     ; step in
+kernel_simple.asm line 0678: unrecognized instruction.          (MOV)
+0679   0099               mov [d], bl
+kernel_simple.asm line 0679: unrecognized instruction.          (MOV)
+0680   0099               jmp menu
+kernel_simple.asm line 0680: unrecognized instruction.          (JMP)
+0681   0099             restore:
+0682   0099             ; send restore command
+0683   0099               mov d, $FFC8    ; wd1770
+kernel_simple.asm line 0683: unrecognized instruction.          (MOV)
+0684   0099               mov al, 2       ; setparam call
+kernel_simple.asm line 0684: unrecognized instruction.          (MOV)
+0685   0099               mov bl, $03     ; restore command, 30ms rate
+kernel_simple.asm line 0685: unrecognized instruction.          (MOV)
+0686   0099               mov [d], bl
+kernel_simple.asm line 0686: unrecognized instruction.          (MOV)
+0687   0099               jmp menu
+kernel_simple.asm line 0687: unrecognized instruction.          (JMP)
+0688   0099             step_out:
+0689   0099               mov d, $FFC8    ; wd1770
+kernel_simple.asm line 0689: unrecognized instruction.          (MOV)
+0690   0099               mov al, 2       ; setparam call
+kernel_simple.asm line 0690: unrecognized instruction.          (MOV)
+0691   0099               mov bl, %01110011     ; step out
+kernel_simple.asm line 0691: unrecognized instruction.          (MOV)
+0692   0099               mov [d], bl
+kernel_simple.asm line 0692: unrecognized instruction.          (MOV)
+0693   0099               jmp menu
+kernel_simple.asm line 0693: unrecognized instruction.          (JMP)
+0694   0099             status1:
+0695   0099               call printnl
+kernel_simple.asm line 0695: unrecognized instruction.          (CALL)
+0696   0099               mov d, $FFC1    ; wd1770 status 1
+kernel_simple.asm line 0696: unrecognized instruction.          (MOV)
+0697   0099               mov al, 4       ; getparam call
+kernel_simple.asm line 0697: unrecognized instruction.          (MOV)
+0698   0099               mov bl, [d]
+kernel_simple.asm line 0698: unrecognized instruction.          (MOV)
+0699   0099               call print_u8x   ; print bl
+kernel_simple.asm line 0699: unrecognized instruction.          (CALL)
+0700   0099               call printnl
+kernel_simple.asm line 0700: unrecognized instruction.          (CALL)
+0701   0099               jmp menu
+kernel_simple.asm line 0701: unrecognized instruction.          (JMP)
+0702   0099             status2:
+0703   0099               call printnl
+kernel_simple.asm line 0703: unrecognized instruction.          (CALL)
+0704   0099               mov d, $FFC8    ; wd1770 status 
+kernel_simple.asm line 0704: unrecognized instruction.          (MOV)
+0705   0099               mov al, 4       ; getparam call
+kernel_simple.asm line 0705: unrecognized instruction.          (MOV)
+0706   0099               mov bl, [d]
+kernel_simple.asm line 0706: unrecognized instruction.          (MOV)
+0707   0099               call print_u8x   ; print bl
+kernel_simple.asm line 0707: unrecognized instruction.          (CALL)
+0708   0099               call printnl
+kernel_simple.asm line 0708: unrecognized instruction.          (CALL)
+0709   0099               jmp menu
+kernel_simple.asm line 0709: unrecognized instruction.          (JMP)
+0710   0099             format:
+0711   0099               call fdc_format_mem ; fill ram with format
+kernel_simple.asm line 0711: unrecognized instruction.          (CALL)
+0712   0099               mov d, s_track
+kernel_simple.asm line 0712: unrecognized instruction.          (MOV)
+0713   0099               call _puts
+kernel_simple.asm line 0713: unrecognized instruction.          (CALL)
+0714   0099               call scan_u8x   ; in al
+kernel_simple.asm line 0714: unrecognized instruction.          (CALL)
+0715   0099               mov bl, al      ; track needs to be in bl
+kernel_simple.asm line 0715: unrecognized instruction.          (MOV)
+0716   0099               mov al, 0       ; 0 = format
+kernel_simple.asm line 0716: unrecognized instruction.          (MOV)
+0717   0099               syscall sys_fdc_format
+kernel_simple.asm line 0717: unrecognized instruction.          (SYSCALL)
+0718   0099               mov d, s_format_done
+kernel_simple.asm line 0718: unrecognized instruction.          (MOV)
+0719   0099               call _puts
+kernel_simple.asm line 0719: unrecognized instruction.          (CALL)
+0720   0099               jmp menu
+kernel_simple.asm line 0720: unrecognized instruction.          (JMP)
+0721   0099             read:
+0722   0099               mov di, transient_area
+kernel_simple.asm line 0722: unrecognized instruction.          (MOV)
+0723   0099               mov c, 4000
+kernel_simple.asm line 0723: unrecognized instruction.          (MOV)
+0724   0099               mov al, $33
+kernel_simple.asm line 0724: unrecognized instruction.          (MOV)
+0725   0099             read_l0:
+0726   0099               stosb
+kernel_simple.asm line 0726: unrecognized instruction.          (STOSB)
+0727   0099               dec c
+kernel_simple.asm line 0727: unrecognized instruction.          (DEC)
+0728   0099               jnz read_l0
+kernel_simple.asm line 0728: unrecognized instruction.          (JNZ)
+0729   0099               syscall sys_fdc_read
+kernel_simple.asm line 0729: unrecognized instruction.          (SYSCALL)
+0730   0099               jmp menu
+kernel_simple.asm line 0730: unrecognized instruction.          (JMP)
+0731   0099             read_sec:
+0732   0099               mov di, transient_area
+kernel_simple.asm line 0732: unrecognized instruction.          (MOV)
+0733   0099               mov c, 128
+kernel_simple.asm line 0733: unrecognized instruction.          (MOV)
+0734   0099               mov al, $55
+kernel_simple.asm line 0734: unrecognized instruction.          (MOV)
+0735   0099             read_l1:
+0736   0099               stosb
+kernel_simple.asm line 0736: unrecognized instruction.          (STOSB)
+0737   0099               dec c
+kernel_simple.asm line 0737: unrecognized instruction.          (DEC)
+0738   0099               jnz read_l1
+kernel_simple.asm line 0738: unrecognized instruction.          (JNZ)
+0739   0099               mov d, s1
+kernel_simple.asm line 0739: unrecognized instruction.          (MOV)
+0740   0099               call _puts
+kernel_simple.asm line 0740: unrecognized instruction.          (CALL)
+0741   0099               call scan_u8x
+kernel_simple.asm line 0741: unrecognized instruction.          (CALL)
+0742   0099               mov ah, al
+kernel_simple.asm line 0742: unrecognized instruction.          (MOV)
+0743   0099               mov d, s2
+kernel_simple.asm line 0743: unrecognized instruction.          (MOV)
+0744   0099               call _puts
+kernel_simple.asm line 0744: unrecognized instruction.          (CALL)
+0745   0099               call scan_u8x ; in al 
+kernel_simple.asm line 0745: unrecognized instruction.          (CALL)
+0746   0099               syscall sys_fdc_read_sec
+kernel_simple.asm line 0746: unrecognized instruction.          (SYSCALL)
+0747   0099               jmp menu
+kernel_simple.asm line 0747: unrecognized instruction.          (JMP)
+0748   0099 0A 74 72 61 s1:.db "\ntrack: ", 0
+0748   009D 63 6B 3A 20 
+0748   00A1 00 
+0749   00A2 0A 73 65 63 s2:.db "\nsector: ", 0
+0749   00A6 74 6F 72 3A 
+0749   00AA 20 00 
+0750   00AC 0A 76 61 6C ss3:.db "\nvalue: ", 0
+0750   00B0 75 65 3A 20 
+0750   00B4 00 
+0751   00B5             
+0752   00B5             
+0753   00B5             fdc_write_sec:
+0754   00B5               mov d, s1
+kernel_simple.asm line 0754: unrecognized instruction.          (MOV)
+0755   00B5               call _puts
+kernel_simple.asm line 0755: unrecognized instruction.          (CALL)
+0756   00B5               call scan_u8x
+kernel_simple.asm line 0756: unrecognized instruction.          (CALL)
+0757   00B5               mov ah, al
+kernel_simple.asm line 0757: unrecognized instruction.          (MOV)
+0758   00B5               mov d, s2
+kernel_simple.asm line 0758: unrecognized instruction.          (MOV)
+0759   00B5               call _puts
+kernel_simple.asm line 0759: unrecognized instruction.          (CALL)
+0760   00B5               call scan_u8x ; in al
+kernel_simple.asm line 0760: unrecognized instruction.          (CALL)
+0761   00B5               syscall sys_fdc_write_sec
+kernel_simple.asm line 0761: unrecognized instruction.          (SYSCALL)
+0762   00B5               jmp menu
+kernel_simple.asm line 0762: unrecognized instruction.          (JMP)
+0763   00B5             
+0764   00B5             fdc_options:
+0765   00B5               mov d, ss3
+kernel_simple.asm line 0765: unrecognized instruction.          (MOV)
+0766   00B5               call _puts
+kernel_simple.asm line 0766: unrecognized instruction.          (CALL)
+0767   00B5               call scan_u8x
+kernel_simple.asm line 0767: unrecognized instruction.          (CALL)
+0768   00B5               mov [_FDC_CONFIG], al
+kernel_simple.asm line 0768: unrecognized instruction.          (MOV)
+0769   00B5               jmp menu
+kernel_simple.asm line 0769: unrecognized instruction.          (JMP)
+0770   00B5             
+0771   00B5             ; b : len
+0772   00B5             cmd_hexd:
+0773   00B5               mov a, transient_area
+kernel_simple.asm line 0773: unrecognized instruction.          (MOV)
+0774   00B5               mov [start], a
+kernel_simple.asm line 0774: unrecognized instruction.          (MOV)
+0775   00B5               mov a, b
+kernel_simple.asm line 0775: unrecognized instruction.          (MOV)
+0776   00B5               mov [length], a
+kernel_simple.asm line 0776: unrecognized instruction.          (MOV)
+0777   00B5             
+0778   00B5             	mov a, [start]
+kernel_simple.asm line 0778: unrecognized instruction.          (MOV)
+0779   00B5               mov d, a        ; dump pointer in d
+kernel_simple.asm line 0779: unrecognized instruction.          (MOV)
+0780   00B5               mov c, 0
+kernel_simple.asm line 0780: unrecognized instruction.          (MOV)
+0781   00B5             dump_loop:
+0782   00B5               mov al, cl
+kernel_simple.asm line 0782: unrecognized instruction.          (MOV)
+0783   00B5               and al, $0F
+kernel_simple.asm line 0783: unrecognized instruction.          (AND)
+0784   00B5               jz print_base
+kernel_simple.asm line 0784: unrecognized instruction.          (JZ)
+0785   00B5             back:
+0786   00B5               mov al, [d]        ; read byte
+kernel_simple.asm line 0786: unrecognized instruction.          (MOV)
+0787   00B5               mov bl, al
+kernel_simple.asm line 0787: unrecognized instruction.          (MOV)
+0788   00B5               call print_u8x
+kernel_simple.asm line 0788: unrecognized instruction.          (CALL)
+0789   00B5               mov a, $2000
+kernel_simple.asm line 0789: unrecognized instruction.          (MOV)
+0790   00B5               syscall sys_io      ; space
+kernel_simple.asm line 0790: unrecognized instruction.          (SYSCALL)
+0791   00B5               mov al, cl
+kernel_simple.asm line 0791: unrecognized instruction.          (MOV)
+0792   00B5               and al, $0F
+kernel_simple.asm line 0792: unrecognized instruction.          (AND)
+0793   00B5               cmp al, $0F
+kernel_simple.asm line 0793: unrecognized instruction.          (CMP)
+0794   00B5               je print_ascii
+kernel_simple.asm line 0794: unrecognized instruction.          (JE)
+0795   00B5             back1:
+0796   00B5               inc d
+kernel_simple.asm line 0796: unrecognized instruction.          (INC)
+0797   00B5               inc c
+kernel_simple.asm line 0797: unrecognized instruction.          (INC)
+0798   00B5               mov a, [length]
+kernel_simple.asm line 0798: unrecognized instruction.          (MOV)
+0799   00B5               cmp a, c
+kernel_simple.asm line 0799: unrecognized instruction.          (CMP)
+0800   00B5               jne dump_loop
+kernel_simple.asm line 0800: unrecognized instruction.          (JNE)
+0801   00B5               
+0802   00B5               mov a, $0A00
+kernel_simple.asm line 0802: unrecognized instruction.          (MOV)
+0803   00B5               syscall sys_io
+kernel_simple.asm line 0803: unrecognized instruction.          (SYSCALL)
+0804   00B5               mov a, $0D00
+kernel_simple.asm line 0804: unrecognized instruction.          (MOV)
+0805   00B5               syscall sys_io
+kernel_simple.asm line 0805: unrecognized instruction.          (SYSCALL)
+0806   00B5               ;call printnl
+0807   00B5             
+0808   00B5               ret
+kernel_simple.asm line 0808: unrecognized instruction.          (RET)
+0809   00B5             print_ascii:
+0810   00B5               sub d, 16
+kernel_simple.asm line 0810: unrecognized instruction.          (SUB)
+0811   00B5               mov b, 16
+kernel_simple.asm line 0811: unrecognized instruction.          (MOV)
+0812   00B5             print_ascii_L:
+0813   00B5               inc d
+kernel_simple.asm line 0813: unrecognized instruction.          (INC)
+0814   00B5               mov al, [d]        ; read byte
+kernel_simple.asm line 0814: unrecognized instruction.          (MOV)
+0815   00B5               cmp al, $20
+kernel_simple.asm line 0815: unrecognized instruction.          (CMP)
+0816   00B5               jlu dot
+kernel_simple.asm line 0816: unrecognized instruction.          (JLU)
+0817   00B5               cmp al, $7E
+kernel_simple.asm line 0817: unrecognized instruction.          (CMP)
+0818   00B5               jleu ascii
+kernel_simple.asm line 0818: unrecognized instruction.          (JLEU)
+0819   00B5             dot:
+0820   00B5               mov a, $2E00
+kernel_simple.asm line 0820: unrecognized instruction.          (MOV)
+0821   00B5               syscall sys_io
+kernel_simple.asm line 0821: unrecognized instruction.          (SYSCALL)
+0822   00B5               jmp ascii_continue
+kernel_simple.asm line 0822: unrecognized instruction.          (JMP)
+0823   00B5             ascii:
+0824   00B5               mov ah, al
+kernel_simple.asm line 0824: unrecognized instruction.          (MOV)
+0825   00B5               mov al, 0
+kernel_simple.asm line 0825: unrecognized instruction.          (MOV)
+0826   00B5               syscall sys_io
+kernel_simple.asm line 0826: unrecognized instruction.          (SYSCALL)
+0827   00B5             ascii_continue:
+0828   00B5               loopb print_ascii_L
+kernel_simple.asm line 0828: unrecognized instruction.          (LOOPB)
+0829   00B5               jmp back1
+kernel_simple.asm line 0829: unrecognized instruction.          (JMP)
+0830   00B5             print_base:
+0831   00B5               mov a, $0A00
+kernel_simple.asm line 0831: unrecognized instruction.          (MOV)
+0832   00B5               syscall sys_io
+kernel_simple.asm line 0832: unrecognized instruction.          (SYSCALL)
+0833   00B5               mov a, $0D00
+kernel_simple.asm line 0833: unrecognized instruction.          (MOV)
+0834   00B5               syscall sys_io
+kernel_simple.asm line 0834: unrecognized instruction.          (SYSCALL)
+0835   00B5               mov b, d
+kernel_simple.asm line 0835: unrecognized instruction.          (MOV)
+0836   00B5               sub b, transient_area
+kernel_simple.asm line 0836: unrecognized instruction.          (SUB)
+0837   00B5               call print_u16x        ; display row
+kernel_simple.asm line 0837: unrecognized instruction.          (CALL)
+0838   00B5               add b, transient_area
+kernel_simple.asm line 0838: unrecognized instruction.          (ADD)
+0839   00B5               mov a, $2000
+kernel_simple.asm line 0839: unrecognized instruction.          (MOV)
+0840   00B5               syscall sys_io
+kernel_simple.asm line 0840: unrecognized instruction.          (SYSCALL)
+0841   00B5               jmp back
+kernel_simple.asm line 0841: unrecognized instruction.          (JMP)
+0842   00B5             
+0843   00B5               ret
+kernel_simple.asm line 0843: unrecognized instruction.          (RET)
+0844   00B5             
+0845   00B5 00 00       start:  .dw 0
+0846   00B7 00 04       length: .dw 1024
+0847   00B9             
+0848   00B9             
+0849   00B9 0A 74 72 61 s_track: .db "\ntrack: ", 0
+0849   00BD 63 6B 3A 20 
+0849   00C1 00 
+0850   00C2             
+0851   00C2 0A 30 2E 20 s_menu: .db "\n0. step in\n"
+0851   00C6 73 74 65 70 
+0851   00CA 20 69 6E 0A 
+0852   00CE 31 2E 20 73         .db "1. step out\n", 
+0852   00D2 74 65 70 20 
+0852   00D6 6F 75 74 0A 
+0853   00DA 32 2E 20 72         .db "2. restore\n", 
+0853   00DE 65 73 74 6F 
+0853   00E2 72 65 0A 
+0854   00E5 33 2E 20 72         .db "3. read status 1\n", 
+0854   00E9 65 61 64 20 
+0854   00ED 73 74 61 74 
+0854   00F1 75 73 20 31 
+0854   00F5 0A 
+0855   00F6 34 2E 20 72         .db "4. read status 2\n", 
+0855   00FA 65 61 64 20 
+0855   00FE 73 74 61 74 
+0855   0102 75 73 20 32 
+0855   0106 0A 
+0856   0107 35 2E 20 66         .db "5. format track\n", 
+0856   010B 6F 72 6D 61 
+0856   010F 74 20 74 72 
+0856   0113 61 63 6B 0A 
+0857   0117 36 2E 20 72         .db "6. read track\n", 
+0857   011B 65 61 64 20 
+0857   011F 74 72 61 63 
+0857   0123 6B 0A 
+0858   0125 37 2E 20 72         .db "7. read sector\n", 
+0858   0129 65 61 64 20 
+0858   012D 73 65 63 74 
+0858   0131 6F 72 0A 
+0859   0134 38 2E 20 63         .db "8. config\n", 
+0859   0138 6F 6E 66 69 
+0859   013C 67 0A 
+0860   013E 39 2E 20 77         .db "9. write sector\n", 
+0860   0142 72 69 74 65 
+0860   0146 20 73 65 63 
+0860   014A 74 6F 72 0A 
+0861   014E 0A 73 65 6C         .db "\nselect option: ", 0
+0861   0152 65 63 74 20 
+0861   0156 6F 70 74 69 
+0861   015A 6F 6E 3A 20 
+0861   015E 00 
+0862   015F             
+0863   015F 0A 73 65 6C str0:   .db "\nselecting drive 1...\n", 0
+0863   0163 65 63 74 69 
+0863   0167 6E 67 20 64 
+0863   016B 72 69 76 65 
+0863   016F 20 31 2E 2E 
+0863   0173 2E 0A 00 
+0864   0176 0A 77 61 69 str1:   .db "\nwaiting...\n", 0
+0864   017A 74 69 6E 67 
+0864   017E 2E 2E 2E 0A 
+0864   0182 00 
+0865   0183             
+0866   0183             
+0867   0183             
+0868   0183             ; FILE INCLUDES
+0869   0183             .include "bios.exp"         ; to obtain the BIOS_RESET_VECTOR location (for reboots)
+0001+  0183             BIOS_RESET_VECTOR .EQU  $01c0
+0002+  0183             IDE_buffer       .EQU  $8204
+0003+  0183             boot_origin      .EQU  $8004
+0004+  0183             bios_uart        .EQU  $0002
+0005+  0183             bios_ide         .EQU  $0003
+0870   0183             .include "lib/stdio.asm"
+0001+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0002+  0183             ; stdio.s
+0003+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0004+  0183             .include "lib/string.asm"
+0001++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0002++ 0183             ; string.s
+0003++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0004++ 0183             
+0005++ 0183             
+0006++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0007++ 0183             ; _strrev
+0008++ 0183             ; reverse a string
+0009++ 0183             ; D = string address
+0010++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0011++ 0183             ; 01234
+0012++ 0183             _strrev:
+0013++ 0183             	pusha
+lib/string.asm line 0013: unrecognized instruction.          (PUSHA)
+0014++ 0183             	call _strlen	; length in C
+lib/string.asm line 0014: unrecognized instruction.          (CALL)
+0015++ 0183             	mov a, c
+lib/string.asm line 0015: unrecognized instruction.          (MOV)
+0016++ 0183             	cmp a, 1
+lib/string.asm line 0016: unrecognized instruction.          (CMP)
+0017++ 0183             	jleu _strrev_end	; check string length. string len must be > 1
+lib/string.asm line 0017: unrecognized instruction.          (JLEU)
+0018++ 0183             	dec a
+lib/string.asm line 0018: unrecognized instruction.          (DEC)
+0019++ 0183             	mov si, d	; beginning of string
+lib/string.asm line 0019: unrecognized instruction.          (MOV)
+0020++ 0183             	mov di, d	; beginning of string (for destinations)
+lib/string.asm line 0020: unrecognized instruction.          (MOV)
+0021++ 0183             	add d, a	; end of string
+lib/string.asm line 0021: unrecognized instruction.          (ADD)
+0022++ 0183             	mov a, c
+lib/string.asm line 0022: unrecognized instruction.          (MOV)
+0023++ 0183             	shr a		; divide by 2
+lib/string.asm line 0023: unrecognized instruction.          (SHR)
+0024++ 0183             	mov c, a	; C now counts the steps
+lib/string.asm line 0024: unrecognized instruction.          (MOV)
+0025++ 0183             _strrev_L0:
+0026++ 0183             	mov bl, [d]	; save load right-side char into BL
+lib/string.asm line 0026: unrecognized instruction.          (MOV)
+0027++ 0183             	lodsb		; load left-side char into AL; increase SI
+lib/string.asm line 0027: unrecognized instruction.          (LODSB)
+0028++ 0183             	mov [d], al	; store left char into right side
+lib/string.asm line 0028: unrecognized instruction.          (MOV)
+0029++ 0183             	mov al, bl
+lib/string.asm line 0029: unrecognized instruction.          (MOV)
+0030++ 0183             	stosb		; store right-side char into left-side; increase DI
+lib/string.asm line 0030: unrecognized instruction.          (STOSB)
+0031++ 0183             	dec c
+lib/string.asm line 0031: unrecognized instruction.          (DEC)
+0032++ 0183             	dec d
+lib/string.asm line 0032: unrecognized instruction.          (DEC)
+0033++ 0183             	cmp c, 0
+lib/string.asm line 0033: unrecognized instruction.          (CMP)
+0034++ 0183             	jne _strrev_L0
+lib/string.asm line 0034: unrecognized instruction.          (JNE)
+0035++ 0183             _strrev_end:
+0036++ 0183             	popa
+lib/string.asm line 0036: unrecognized instruction.          (POPA)
+0037++ 0183             	ret
+lib/string.asm line 0037: unrecognized instruction.          (RET)
+0038++ 0183             	
+0039++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0040++ 0183             ; _strchr
+0041++ 0183             ; search string in D for char in AL
+0042++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0043++ 0183             _strchr:
+0044++ 0183             _strchr_L0:
+0045++ 0183             	mov bl, [d]
+lib/string.asm line 0045: unrecognized instruction.          (MOV)
+0046++ 0183             	cmp bl, 0
+lib/string.asm line 0046: unrecognized instruction.          (CMP)
+0047++ 0183             	je _strchr_end
+lib/string.asm line 0047: unrecognized instruction.          (JE)
+0048++ 0183             	cmp al, bl
+lib/string.asm line 0048: unrecognized instruction.          (CMP)
+0049++ 0183             	je _strchr_end
+lib/string.asm line 0049: unrecognized instruction.          (JE)
+0050++ 0183             	inc d
+lib/string.asm line 0050: unrecognized instruction.          (INC)
+0051++ 0183             	jmp _strchr_L0
+lib/string.asm line 0051: unrecognized instruction.          (JMP)
+0052++ 0183             _strchr_end:
+0053++ 0183             	mov al, bl
+lib/string.asm line 0053: unrecognized instruction.          (MOV)
+0054++ 0183             	ret
+lib/string.asm line 0054: unrecognized instruction.          (RET)
+0055++ 0183             
+0056++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0057++ 0183             ; _strstr
+0058++ 0183             ; find sub-string
+0059++ 0183             ; str1 in SI
+0060++ 0183             ; str2 in DI
+0061++ 0183             ; SI points to end of source string
+0062++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0063++ 0183             _strstr:
+0064++ 0183             	push al
+lib/string.asm line 0064: unrecognized instruction.          (PUSH)
+0065++ 0183             	push d
+lib/string.asm line 0065: unrecognized instruction.          (PUSH)
+0066++ 0183             	push di
+lib/string.asm line 0066: unrecognized instruction.          (PUSH)
+0067++ 0183             _strstr_loop:
+0068++ 0183             	cmpsb					; compare a byte of the strings
+lib/string.asm line 0068: unrecognized instruction.          (CMPSB)
+0069++ 0183             	jne _strstr_ret
+lib/string.asm line 0069: unrecognized instruction.          (JNE)
+0070++ 0183             	lea d, [di + 0]
+lib/string.asm line 0070: unrecognized instruction.          (LEA)
+0071++ 0183             	cmp byte[d], 0				; check if at end of string (null)
+lib/string.asm line 0071: unrecognized instruction.          (CMP)
+0072++ 0183             	jne _strstr_loop				; equal chars but not at end
+lib/string.asm line 0072: unrecognized instruction.          (JNE)
+0073++ 0183             _strstr_ret:
+0074++ 0183             	pop di
+lib/string.asm line 0074: unrecognized instruction.          (POP)
+0075++ 0183             	pop d
+lib/string.asm line 0075: unrecognized instruction.          (POP)
+0076++ 0183             	pop al
+lib/string.asm line 0076: unrecognized instruction.          (POP)
+0077++ 0183             	ret
+lib/string.asm line 0077: unrecognized instruction.          (RET)
+0078++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0079++ 0183             ; length of null terminated string
+0080++ 0183             ; result in C
+0081++ 0183             ; pointer in D
+0082++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0083++ 0183             _strlen:
+0084++ 0183             	push d
+lib/string.asm line 0084: unrecognized instruction.          (PUSH)
+0085++ 0183             	mov c, 0
+lib/string.asm line 0085: unrecognized instruction.          (MOV)
+0086++ 0183             _strlen_L1:
+0087++ 0183             	cmp byte [d], 0
+lib/string.asm line 0087: unrecognized instruction.          (CMP)
+0088++ 0183             	je _strlen_ret
+lib/string.asm line 0088: unrecognized instruction.          (JE)
+0089++ 0183             	inc d
+lib/string.asm line 0089: unrecognized instruction.          (INC)
+0090++ 0183             	inc c
+lib/string.asm line 0090: unrecognized instruction.          (INC)
+0091++ 0183             	jmp _strlen_L1
+lib/string.asm line 0091: unrecognized instruction.          (JMP)
+0092++ 0183             _strlen_ret:
+0093++ 0183             	pop d
+lib/string.asm line 0093: unrecognized instruction.          (POP)
+0094++ 0183             	ret
+lib/string.asm line 0094: unrecognized instruction.          (RET)
+0095++ 0183             
+0096++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0097++ 0183             ; STRCMP
+0098++ 0183             ; compare two strings
+0099++ 0183             ; str1 in SI
+0100++ 0183             ; str2 in DI
+0101++ 0183             ; CREATE A STRING COMPAIRON INSTRUCION ?????
+0102++ 0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0103++ 0183             _strcmp:
+0104++ 0183             	push al
+lib/string.asm line 0104: unrecognized instruction.          (PUSH)
+0105++ 0183             	push d
+lib/string.asm line 0105: unrecognized instruction.          (PUSH)
+0106++ 0183             	push di
+lib/string.asm line 0106: unrecognized instruction.          (PUSH)
+0107++ 0183             	push si
+lib/string.asm line 0107: unrecognized instruction.          (PUSH)
+0108++ 0183             _strcmp_loop:
+0109++ 0183             	cmpsb					; compare a byte of the strings
+lib/string.asm line 0109: unrecognized instruction.          (CMPSB)
+0110++ 0183             	jne _strcmp_ret
+lib/string.asm line 0110: unrecognized instruction.          (JNE)
+0111++ 0183             	lea d, [si +- 1]
+lib/string.asm line 0111: unrecognized instruction.          (LEA)
+0112++ 0183             	cmp byte[d], 0				; check if at end of string (null)
+lib/string.asm line 0112: unrecognized instruction.          (CMP)
+0113++ 0183             	jne _strcmp_loop				; equal chars but not at end
+lib/string.asm line 0113: unrecognized instruction.          (JNE)
+0114++ 0183             _strcmp_ret:
+0115++ 0183             	pop si
+lib/string.asm line 0115: unrecognized instruction.          (POP)
+0116++ 0183             	pop di
+lib/string.asm line 0116: unrecognized instruction.          (POP)
+0117++ 0183             	pop d
+lib/string.asm line 0117: unrecognized instruction.          (POP)
+0118++ 0183             	pop al
+lib/string.asm line 0118: unrecognized instruction.          (POP)
+0119++ 0183             	ret
+lib/string.asm line 0119: unrecognized instruction.          (RET)
+0120++ 0183             
+0121++ 0183             
+0122++ 0183             ; STRCPY
+0123++ 0183             ; copy null terminated string from SI to DI
+0124++ 0183             ; source in SI
+0125++ 0183             ; destination in DI
+0126++ 0183             _strcpy:
+0127++ 0183             	push si
+lib/string.asm line 0127: unrecognized instruction.          (PUSH)
+0128++ 0183             	push di
+lib/string.asm line 0128: unrecognized instruction.          (PUSH)
+0129++ 0183             	push al
+lib/string.asm line 0129: unrecognized instruction.          (PUSH)
+0130++ 0183             _strcpy_L1:
+0131++ 0183             	lodsb
+lib/string.asm line 0131: unrecognized instruction.          (LODSB)
+0132++ 0183             	stosb
+lib/string.asm line 0132: unrecognized instruction.          (STOSB)
+0133++ 0183             	cmp al, 0
+lib/string.asm line 0133: unrecognized instruction.          (CMP)
+0134++ 0183             	jne _strcpy_L1
+lib/string.asm line 0134: unrecognized instruction.          (JNE)
+0135++ 0183             _strcpy_end:
+0136++ 0183             	pop al
+lib/string.asm line 0136: unrecognized instruction.          (POP)
+0137++ 0183             	pop di
+lib/string.asm line 0137: unrecognized instruction.          (POP)
+0138++ 0183             	pop si
+lib/string.asm line 0138: unrecognized instruction.          (POP)
+0139++ 0183             	ret
+lib/string.asm line 0139: unrecognized instruction.          (RET)
+0140++ 0183             
+0141++ 0183             ; STRCAT
+0142++ 0183             ; concatenate a NULL terminated string into string at DI, from string at SI
+0143++ 0183             ; source in SI
+0144++ 0183             ; destination in DI
+0145++ 0183             _strcat:
+0146++ 0183             	push si
+lib/string.asm line 0146: unrecognized instruction.          (PUSH)
+0147++ 0183             	push di
+lib/string.asm line 0147: unrecognized instruction.          (PUSH)
+0148++ 0183             	push a
+lib/string.asm line 0148: unrecognized instruction.          (PUSH)
+0149++ 0183             	push d
+lib/string.asm line 0149: unrecognized instruction.          (PUSH)
+0150++ 0183             	mov a, di
+lib/string.asm line 0150: unrecognized instruction.          (MOV)
+0151++ 0183             	mov d, a
+lib/string.asm line 0151: unrecognized instruction.          (MOV)
+0152++ 0183             _strcat_goto_end_L1:
+0153++ 0183             	cmp byte[d], 0
+lib/string.asm line 0153: unrecognized instruction.          (CMP)
+0154++ 0183             	je _strcat_start
+lib/string.asm line 0154: unrecognized instruction.          (JE)
+0155++ 0183             	inc d
+lib/string.asm line 0155: unrecognized instruction.          (INC)
+0156++ 0183             	jmp _strcat_goto_end_L1
+lib/string.asm line 0156: unrecognized instruction.          (JMP)
+0157++ 0183             _strcat_start:
+0158++ 0183             	mov di, d
+lib/string.asm line 0158: unrecognized instruction.          (MOV)
+0159++ 0183             _strcat_L1:
+0160++ 0183             	lodsb
+lib/string.asm line 0160: unrecognized instruction.          (LODSB)
+0161++ 0183             	stosb
+lib/string.asm line 0161: unrecognized instruction.          (STOSB)
+0162++ 0183             	cmp al, 0
+lib/string.asm line 0162: unrecognized instruction.          (CMP)
+0163++ 0183             	jne _strcat_L1
+lib/string.asm line 0163: unrecognized instruction.          (JNE)
+0164++ 0183             _strcat_end:
+0165++ 0183             	pop d
+lib/string.asm line 0165: unrecognized instruction.          (POP)
+0166++ 0183             	pop a
+lib/string.asm line 0166: unrecognized instruction.          (POP)
+0167++ 0183             	pop di
+lib/string.asm line 0167: unrecognized instruction.          (POP)
+0168++ 0183             	pop si
+lib/string.asm line 0168: unrecognized instruction.          (POP)
+0169++ 0183             	ret
+lib/string.asm line 0169: unrecognized instruction.          (RET)
+0170++ 0183             
+0171++ 0183             
+0005+  0183             
+0006+  0183             
+0007+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0008+  0183             ; CONVERT ASCII 'O'..'F' TO INTEGER 0..15
+0009+  0183             ; ASCII in BL
+0010+  0183             ; result in AL
+0011+  0183             ; ascii for F = 0100 0110
+0012+  0183             ; ascii for 9 = 0011 1001
+0013+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0014+  0183             hex_ascii_encode:
+0015+  0183               mov al, bl
+lib/stdio.asm line 0015: unrecognized instruction.          (MOV)
+0016+  0183               test al, $40        ; test if letter or number
+lib/stdio.asm line 0016: unrecognized instruction.          (TEST)
+0017+  0183               jnz hex_letter
+lib/stdio.asm line 0017: unrecognized instruction.          (JNZ)
+0018+  0183               and al, $0F        ; get number
+lib/stdio.asm line 0018: unrecognized instruction.          (AND)
+0019+  0183               ret
+lib/stdio.asm line 0019: unrecognized instruction.          (RET)
+0020+  0183             hex_letter:
+0021+  0183               and al, $0F        ; get letter
+lib/stdio.asm line 0021: unrecognized instruction.          (AND)
+0022+  0183               add al, 9
+lib/stdio.asm line 0022: unrecognized instruction.          (ADD)
+0023+  0183               ret
+lib/stdio.asm line 0023: unrecognized instruction.          (RET)
+0024+  0183             
+0025+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0026+  0183             ; ATOI
+0027+  0183             ; 2 letter hex string in B
+0028+  0183             ; 8bit integer returned in AL
+0029+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0030+  0183             _atoi:
+0031+  0183               push b
+lib/stdio.asm line 0031: unrecognized instruction.          (PUSH)
+0032+  0183               call hex_ascii_encode      ; convert BL to 4bit code in AL
+lib/stdio.asm line 0032: unrecognized instruction.          (CALL)
+0033+  0183               mov bl, bh
+lib/stdio.asm line 0033: unrecognized instruction.          (MOV)
+0034+  0183               push al          ; save a
+lib/stdio.asm line 0034: unrecognized instruction.          (PUSH)
+0035+  0183               call hex_ascii_encode
+lib/stdio.asm line 0035: unrecognized instruction.          (CALL)
+0036+  0183               pop bl  
+lib/stdio.asm line 0036: unrecognized instruction.          (POP)
+0037+  0183               shl al, 4
+lib/stdio.asm line 0037: unrecognized instruction.          (SHL)
+0038+  0183               or al, bl
+lib/stdio.asm line 0038: unrecognized instruction.          (OR)
+0039+  0183               pop b
+lib/stdio.asm line 0039: unrecognized instruction.          (POP)
+0040+  0183               ret  
+lib/stdio.asm line 0040: unrecognized instruction.          (RET)
+0041+  0183             
+0042+  0183             
+0043+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0044+  0183             ; scanf
+0045+  0183             ; no need for explanations!
+0046+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0047+  0183             scanf:
+0048+  0183               ret
+lib/stdio.asm line 0048: unrecognized instruction.          (RET)
+0049+  0183             
+0050+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0051+  0183             ; ITOA
+0052+  0183             ; 8bit value in BL
+0053+  0183             ; 2 byte ASCII result in A
+0054+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0055+  0183             _itoa:
+0056+  0183               push d
+lib/stdio.asm line 0056: unrecognized instruction.          (PUSH)
+0057+  0183               push b
+lib/stdio.asm line 0057: unrecognized instruction.          (PUSH)
+0058+  0183               mov bh, 0
+lib/stdio.asm line 0058: unrecognized instruction.          (MOV)
+0059+  0183               shr bl, 4  
+lib/stdio.asm line 0059: unrecognized instruction.          (SHR)
+0060+  0183               mov d, b
+lib/stdio.asm line 0060: unrecognized instruction.          (MOV)
+0061+  0183               mov al, [d + s_hex_digits]
+lib/stdio.asm line 0061: unrecognized instruction.          (MOV)
+0062+  0183               mov ah, al
+lib/stdio.asm line 0062: unrecognized instruction.          (MOV)
+0063+  0183               
+0064+  0183               pop b
+lib/stdio.asm line 0064: unrecognized instruction.          (POP)
+0065+  0183               push b
+lib/stdio.asm line 0065: unrecognized instruction.          (PUSH)
+0066+  0183               mov bh, 0
+lib/stdio.asm line 0066: unrecognized instruction.          (MOV)
+0067+  0183               and bl, $0F
+lib/stdio.asm line 0067: unrecognized instruction.          (AND)
+0068+  0183               mov d, b
+lib/stdio.asm line 0068: unrecognized instruction.          (MOV)
+0069+  0183               mov al, [d + s_hex_digits]
+lib/stdio.asm line 0069: unrecognized instruction.          (MOV)
+0070+  0183               pop b
+lib/stdio.asm line 0070: unrecognized instruction.          (POP)
+0071+  0183               pop d
+lib/stdio.asm line 0071: unrecognized instruction.          (POP)
+0072+  0183               ret
+lib/stdio.asm line 0072: unrecognized instruction.          (RET)
+0073+  0183             
+0074+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0075+  0183             ; HEX STRING TO BINARY
+0076+  0183             ; di = destination address
+0077+  0183             ; si = source
+0078+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0079+  0183             _hex_to_int:
+0080+  0183             _hex_to_int_L1:
+0081+  0183               lodsb          ; load from [SI] to AL
+lib/stdio.asm line 0081: unrecognized instruction.          (LODSB)
+0082+  0183               cmp al, 0        ; check if ASCII 0
+lib/stdio.asm line 0082: unrecognized instruction.          (CMP)
+0083+  0183               jz _hex_to_int_ret
+lib/stdio.asm line 0083: unrecognized instruction.          (JZ)
+0084+  0183               mov bh, al
+lib/stdio.asm line 0084: unrecognized instruction.          (MOV)
+0085+  0183               lodsb
+lib/stdio.asm line 0085: unrecognized instruction.          (LODSB)
+0086+  0183               mov bl, al
+lib/stdio.asm line 0086: unrecognized instruction.          (MOV)
+0087+  0183               call _atoi        ; convert ASCII byte in B to int (to AL)
+lib/stdio.asm line 0087: unrecognized instruction.          (CALL)
+0088+  0183               stosb          ; store AL to [DI]
+lib/stdio.asm line 0088: unrecognized instruction.          (STOSB)
+0089+  0183               jmp _hex_to_int_L1
+lib/stdio.asm line 0089: unrecognized instruction.          (JMP)
+0090+  0183             _hex_to_int_ret:
+0091+  0183               ret    
+lib/stdio.asm line 0091: unrecognized instruction.          (RET)
+0092+  0183             
+0093+  0183             
+0094+  0183             
+0095+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0096+  0183             ; GETCHAR
+0097+  0183             ; char in ah
+0098+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0099+  0183             getch:
+0100+  0183               push al
+lib/stdio.asm line 0100: unrecognized instruction.          (PUSH)
+0101+  0183             getch_retry:
+0102+  0183               mov al, 1
+lib/stdio.asm line 0102: unrecognized instruction.          (MOV)
+0103+  0183               syscall sys_io      ; receive in AH
+lib/stdio.asm line 0103: unrecognized instruction.          (SYSCALL)
+0104+  0183               pop al
+lib/stdio.asm line 0104: unrecognized instruction.          (POP)
+0105+  0183               ret
+lib/stdio.asm line 0105: unrecognized instruction.          (RET)
+0106+  0183             
+0107+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0108+  0183             ; PUTCHAR
+0109+  0183             ; char in ah
+0110+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0111+  0183             _putchar:
+0112+  0183               push al
+lib/stdio.asm line 0112: unrecognized instruction.          (PUSH)
+0113+  0183               mov al, 0
+lib/stdio.asm line 0113: unrecognized instruction.          (MOV)
+0114+  0183               syscall sys_io      ; char in AH
+lib/stdio.asm line 0114: unrecognized instruction.          (SYSCALL)
+0115+  0183               pop al
+lib/stdio.asm line 0115: unrecognized instruction.          (POP)
+0116+  0183               ret
+lib/stdio.asm line 0116: unrecognized instruction.          (RET)
+0117+  0183             
+0118+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0119+  0183             ;; INPUT A STRING
+0120+  0183             ;; terminates with null
+0121+  0183             ;; pointer in D
+0122+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0123+  0183             _gets:
+0124+  0183               push a
+lib/stdio.asm line 0124: unrecognized instruction.          (PUSH)
+0125+  0183               push d
+lib/stdio.asm line 0125: unrecognized instruction.          (PUSH)
+0126+  0183             _gets_loop:
+0127+  0183               mov al, 1
+lib/stdio.asm line 0127: unrecognized instruction.          (MOV)
+0128+  0183               syscall sys_io      ; receive in AH
+lib/stdio.asm line 0128: unrecognized instruction.          (SYSCALL)
+0129+  0183               cmp ah, 27
+lib/stdio.asm line 0129: unrecognized instruction.          (CMP)
+0130+  0183               je _gets_ansi_esc
+lib/stdio.asm line 0130: unrecognized instruction.          (JE)
+0131+  0183               cmp ah, $0A        ; LF
+lib/stdio.asm line 0131: unrecognized instruction.          (CMP)
+0132+  0183               je _gets_end
+lib/stdio.asm line 0132: unrecognized instruction.          (JE)
+0133+  0183               cmp ah, $0D        ; CR
+lib/stdio.asm line 0133: unrecognized instruction.          (CMP)
+0134+  0183               je _gets_end
+lib/stdio.asm line 0134: unrecognized instruction.          (JE)
+0135+  0183               cmp ah, $5C        ; '\\'
+lib/stdio.asm line 0135: unrecognized instruction.          (CMP)
+0136+  0183               je _gets_escape
+lib/stdio.asm line 0136: unrecognized instruction.          (JE)
+0137+  0183               cmp ah, $08      ; check for backspace
+lib/stdio.asm line 0137: unrecognized instruction.          (CMP)
+0138+  0183               je _gets_backspace
+lib/stdio.asm line 0138: unrecognized instruction.          (JE)
+0139+  0183               mov al, ah
+lib/stdio.asm line 0139: unrecognized instruction.          (MOV)
+0140+  0183               mov [d], al
+lib/stdio.asm line 0140: unrecognized instruction.          (MOV)
+0141+  0183               inc d
+lib/stdio.asm line 0141: unrecognized instruction.          (INC)
+0142+  0183               jmp _gets_loop
+lib/stdio.asm line 0142: unrecognized instruction.          (JMP)
+0143+  0183             _gets_backspace:
+0144+  0183               dec d
+lib/stdio.asm line 0144: unrecognized instruction.          (DEC)
+0145+  0183               jmp _gets_loop
+lib/stdio.asm line 0145: unrecognized instruction.          (JMP)
+0146+  0183             _gets_ansi_esc:
+0147+  0183               mov al, 1
+lib/stdio.asm line 0147: unrecognized instruction.          (MOV)
+0148+  0183               syscall sys_io        ; receive in AH without echo
+lib/stdio.asm line 0148: unrecognized instruction.          (SYSCALL)
+0149+  0183               cmp ah, '['
+lib/stdio.asm line 0149: unrecognized instruction.          (CMP)
+0150+  0183               jne _gets_loop
+lib/stdio.asm line 0150: unrecognized instruction.          (JNE)
+0151+  0183               mov al, 1
+lib/stdio.asm line 0151: unrecognized instruction.          (MOV)
+0152+  0183               syscall sys_io          ; receive in AH without echo
+lib/stdio.asm line 0152: unrecognized instruction.          (SYSCALL)
+0153+  0183               cmp ah, 'D'
+lib/stdio.asm line 0153: unrecognized instruction.          (CMP)
+0154+  0183               je _gets_left_arrow
+lib/stdio.asm line 0154: unrecognized instruction.          (JE)
+0155+  0183               cmp ah, 'C'
+lib/stdio.asm line 0155: unrecognized instruction.          (CMP)
+0156+  0183               je _gets_right_arrow
+lib/stdio.asm line 0156: unrecognized instruction.          (JE)
+0157+  0183               jmp _gets_loop
+lib/stdio.asm line 0157: unrecognized instruction.          (JMP)
+0158+  0183             _gets_left_arrow:
+0159+  0183               dec d
+lib/stdio.asm line 0159: unrecognized instruction.          (DEC)
+0160+  0183               jmp _gets_loop
+lib/stdio.asm line 0160: unrecognized instruction.          (JMP)
+0161+  0183             _gets_right_arrow:
+0162+  0183               inc d
+lib/stdio.asm line 0162: unrecognized instruction.          (INC)
+0163+  0183               jmp _gets_loop
+lib/stdio.asm line 0163: unrecognized instruction.          (JMP)
+0164+  0183             _gets_escape:
+0165+  0183               mov al, 1
+lib/stdio.asm line 0165: unrecognized instruction.          (MOV)
+0166+  0183               syscall sys_io      ; receive in AH
+lib/stdio.asm line 0166: unrecognized instruction.          (SYSCALL)
+0167+  0183               cmp ah, 'n'
+lib/stdio.asm line 0167: unrecognized instruction.          (CMP)
+0168+  0183               je _gets_LF
+lib/stdio.asm line 0168: unrecognized instruction.          (JE)
+0169+  0183               cmp ah, 'r'
+lib/stdio.asm line 0169: unrecognized instruction.          (CMP)
+0170+  0183               je _gets_CR
+lib/stdio.asm line 0170: unrecognized instruction.          (JE)
+0171+  0183               cmp ah, '0'
+lib/stdio.asm line 0171: unrecognized instruction.          (CMP)
+0172+  0183               je _gets_NULL
+lib/stdio.asm line 0172: unrecognized instruction.          (JE)
+0173+  0183               cmp ah, $5C  ; '\'
+lib/stdio.asm line 0173: unrecognized instruction.          (CMP)
+0174+  0183               je _gets_slash
+lib/stdio.asm line 0174: unrecognized instruction.          (JE)
+0175+  0183               mov al, ah        ; if not a known escape, it is just a normal letter
+lib/stdio.asm line 0175: unrecognized instruction.          (MOV)
+0176+  0183               mov [d], al
+lib/stdio.asm line 0176: unrecognized instruction.          (MOV)
+0177+  0183               inc d
+lib/stdio.asm line 0177: unrecognized instruction.          (INC)
+0178+  0183               jmp _gets_loop
+lib/stdio.asm line 0178: unrecognized instruction.          (JMP)
+0179+  0183             _gets_slash:
+0180+  0183               mov al, $5C
+lib/stdio.asm line 0180: unrecognized instruction.          (MOV)
+0181+  0183               mov [d], al
+lib/stdio.asm line 0181: unrecognized instruction.          (MOV)
+0182+  0183               inc d
+lib/stdio.asm line 0182: unrecognized instruction.          (INC)
+0183+  0183               jmp _gets_loop
+lib/stdio.asm line 0183: unrecognized instruction.          (JMP)
+0184+  0183             _gets_LF:
+0185+  0183               mov al, $0A
+lib/stdio.asm line 0185: unrecognized instruction.          (MOV)
+0186+  0183               mov [d], al
+lib/stdio.asm line 0186: unrecognized instruction.          (MOV)
+0187+  0183               inc d
+lib/stdio.asm line 0187: unrecognized instruction.          (INC)
+0188+  0183               jmp _gets_loop
+lib/stdio.asm line 0188: unrecognized instruction.          (JMP)
+0189+  0183             _gets_CR:
+0190+  0183               mov al, $0D
+lib/stdio.asm line 0190: unrecognized instruction.          (MOV)
+0191+  0183               mov [d], al
+lib/stdio.asm line 0191: unrecognized instruction.          (MOV)
+0192+  0183               inc d
+lib/stdio.asm line 0192: unrecognized instruction.          (INC)
+0193+  0183               jmp _gets_loop
+lib/stdio.asm line 0193: unrecognized instruction.          (JMP)
+0194+  0183             _gets_NULL:
+0195+  0183               mov al, $00
+lib/stdio.asm line 0195: unrecognized instruction.          (MOV)
+0196+  0183               mov [d], al
+lib/stdio.asm line 0196: unrecognized instruction.          (MOV)
+0197+  0183               inc d
+lib/stdio.asm line 0197: unrecognized instruction.          (INC)
+0198+  0183               jmp _gets_loop
+lib/stdio.asm line 0198: unrecognized instruction.          (JMP)
+0199+  0183             _gets_end:
+0200+  0183               mov al, 0
+lib/stdio.asm line 0200: unrecognized instruction.          (MOV)
+0201+  0183               mov [d], al        ; terminate string
+lib/stdio.asm line 0201: unrecognized instruction.          (MOV)
+0202+  0183               pop d
+lib/stdio.asm line 0202: unrecognized instruction.          (POP)
+0203+  0183               pop a
+lib/stdio.asm line 0203: unrecognized instruction.          (POP)
+0204+  0183               ret
+lib/stdio.asm line 0204: unrecognized instruction.          (RET)
+0205+  0183             
+0206+  0183             
+0207+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0208+  0183             ;; INPUT TEXT
+0209+  0183             ;; terminated with CTRL+D
+0210+  0183             ;; pointer in D
+0211+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0212+  0183             _gettxt:
+0213+  0183               push a
+lib/stdio.asm line 0213: unrecognized instruction.          (PUSH)
+0214+  0183               push d
+lib/stdio.asm line 0214: unrecognized instruction.          (PUSH)
+0215+  0183             _gettxt_loop:
+0216+  0183               mov al, 1
+lib/stdio.asm line 0216: unrecognized instruction.          (MOV)
+0217+  0183               syscall sys_io      ; receive in AH
+lib/stdio.asm line 0217: unrecognized instruction.          (SYSCALL)
+0218+  0183               cmp ah, 4      ; EOT
+lib/stdio.asm line 0218: unrecognized instruction.          (CMP)
+0219+  0183               je _gettxt_end
+lib/stdio.asm line 0219: unrecognized instruction.          (JE)
+0220+  0183               cmp ah, $08      ; check for backspace
+lib/stdio.asm line 0220: unrecognized instruction.          (CMP)
+0221+  0183               je _gettxt_backspace
+lib/stdio.asm line 0221: unrecognized instruction.          (JE)
+0222+  0183               cmp ah, $5C        ; '\'
+lib/stdio.asm line 0222: unrecognized instruction.          (CMP)
+0223+  0183               je _gettxt_escape
+lib/stdio.asm line 0223: unrecognized instruction.          (JE)
+0224+  0183               mov al, ah
+lib/stdio.asm line 0224: unrecognized instruction.          (MOV)
+0225+  0183               mov [d], al
+lib/stdio.asm line 0225: unrecognized instruction.          (MOV)
+0226+  0183               inc d
+lib/stdio.asm line 0226: unrecognized instruction.          (INC)
+0227+  0183               jmp _gettxt_loop
+lib/stdio.asm line 0227: unrecognized instruction.          (JMP)
+0228+  0183             _gettxt_escape:
+0229+  0183               mov al, 1
+lib/stdio.asm line 0229: unrecognized instruction.          (MOV)
+0230+  0183               syscall sys_io      ; receive in AH
+lib/stdio.asm line 0230: unrecognized instruction.          (SYSCALL)
+0231+  0183               cmp ah, 'n'
+lib/stdio.asm line 0231: unrecognized instruction.          (CMP)
+0232+  0183               je _gettxt_LF
+lib/stdio.asm line 0232: unrecognized instruction.          (JE)
+0233+  0183               cmp ah, 'r'
+lib/stdio.asm line 0233: unrecognized instruction.          (CMP)
+0234+  0183               je _gettxt_CR
+lib/stdio.asm line 0234: unrecognized instruction.          (JE)
+0235+  0183               mov al, ah        ; if not a known escape, it is just a normal letter
+lib/stdio.asm line 0235: unrecognized instruction.          (MOV)
+0236+  0183               mov [d], al
+lib/stdio.asm line 0236: unrecognized instruction.          (MOV)
+0237+  0183               inc d
+lib/stdio.asm line 0237: unrecognized instruction.          (INC)
+0238+  0183               jmp _gettxt_loop
+lib/stdio.asm line 0238: unrecognized instruction.          (JMP)
+0239+  0183             _gettxt_LF:
+0240+  0183               mov al, $0A
+lib/stdio.asm line 0240: unrecognized instruction.          (MOV)
+0241+  0183               mov [d], al
+lib/stdio.asm line 0241: unrecognized instruction.          (MOV)
+0242+  0183               inc d
+lib/stdio.asm line 0242: unrecognized instruction.          (INC)
+0243+  0183               jmp _gettxt_loop
+lib/stdio.asm line 0243: unrecognized instruction.          (JMP)
+0244+  0183             _gettxt_CR:
+0245+  0183               mov al, $0D
+lib/stdio.asm line 0245: unrecognized instruction.          (MOV)
+0246+  0183               mov [d], al
+lib/stdio.asm line 0246: unrecognized instruction.          (MOV)
+0247+  0183               inc d
+lib/stdio.asm line 0247: unrecognized instruction.          (INC)
+0248+  0183               jmp _gettxt_loop
+lib/stdio.asm line 0248: unrecognized instruction.          (JMP)
+0249+  0183             _gettxt_backspace:
+0250+  0183               dec d
+lib/stdio.asm line 0250: unrecognized instruction.          (DEC)
+0251+  0183               jmp _gettxt_loop
+lib/stdio.asm line 0251: unrecognized instruction.          (JMP)
+0252+  0183             _gettxt_end:
+0253+  0183               mov al, 0
+lib/stdio.asm line 0253: unrecognized instruction.          (MOV)
+0254+  0183               mov [d], al        ; terminate string
+lib/stdio.asm line 0254: unrecognized instruction.          (MOV)
+0255+  0183               pop d
+lib/stdio.asm line 0255: unrecognized instruction.          (POP)
+0256+  0183               pop a
+lib/stdio.asm line 0256: unrecognized instruction.          (POP)
+0257+  0183               ret
+lib/stdio.asm line 0257: unrecognized instruction.          (RET)
+0258+  0183             
+0259+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0260+  0183             ; PRINT NEW LINE
+0261+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0262+  0183             printnl:
+0263+  0183               push a
+lib/stdio.asm line 0263: unrecognized instruction.          (PUSH)
+0264+  0183               mov a, $0A00
+lib/stdio.asm line 0264: unrecognized instruction.          (MOV)
+0265+  0183               syscall sys_io
+lib/stdio.asm line 0265: unrecognized instruction.          (SYSCALL)
+0266+  0183               mov a, $0D00
+lib/stdio.asm line 0266: unrecognized instruction.          (MOV)
+0267+  0183               syscall sys_io
+lib/stdio.asm line 0267: unrecognized instruction.          (SYSCALL)
+0268+  0183               pop a
+lib/stdio.asm line 0268: unrecognized instruction.          (POP)
+0269+  0183               ret
+lib/stdio.asm line 0269: unrecognized instruction.          (RET)
+0270+  0183             
+0271+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0272+  0183             ; _strtoint
+0273+  0183             ; 4 digit hex string number in d
+0274+  0183             ; integer returned in A
+0275+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0276+  0183             _strtointx:
+0277+  0183               push b
+lib/stdio.asm line 0277: unrecognized instruction.          (PUSH)
+0278+  0183               mov bl, [d]
+lib/stdio.asm line 0278: unrecognized instruction.          (MOV)
+0279+  0183               mov bh, bl
+lib/stdio.asm line 0279: unrecognized instruction.          (MOV)
+0280+  0183               mov bl, [d + 1]
+lib/stdio.asm line 0280: unrecognized instruction.          (MOV)
+0281+  0183               call _atoi        ; convert to int in AL
+lib/stdio.asm line 0281: unrecognized instruction.          (CALL)
+0282+  0183               mov ah, al        ; move to AH
+lib/stdio.asm line 0282: unrecognized instruction.          (MOV)
+0283+  0183               mov bl, [d + 2]
+lib/stdio.asm line 0283: unrecognized instruction.          (MOV)
+0284+  0183               mov bh, bl
+lib/stdio.asm line 0284: unrecognized instruction.          (MOV)
+0285+  0183               mov bl, [d + 3]
+lib/stdio.asm line 0285: unrecognized instruction.          (MOV)
+0286+  0183               call _atoi        ; convert to int in AL
+lib/stdio.asm line 0286: unrecognized instruction.          (CALL)
+0287+  0183               pop b
+lib/stdio.asm line 0287: unrecognized instruction.          (POP)
+0288+  0183               ret
+lib/stdio.asm line 0288: unrecognized instruction.          (RET)
+0289+  0183             
+0290+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0291+  0183             ; _strtoint
+0292+  0183             ; 5 digit base10 string number in d
+0293+  0183             ; integer returned in A
+0294+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0295+  0183             _strtoint:
+0296+  0183               push si
+lib/stdio.asm line 0296: unrecognized instruction.          (PUSH)
+0297+  0183               push b
+lib/stdio.asm line 0297: unrecognized instruction.          (PUSH)
+0298+  0183               push c
+lib/stdio.asm line 0298: unrecognized instruction.          (PUSH)
+0299+  0183               push d
+lib/stdio.asm line 0299: unrecognized instruction.          (PUSH)
+0300+  0183               call _strlen      ; get string length in C
+lib/stdio.asm line 0300: unrecognized instruction.          (CALL)
+0301+  0183               dec c
+lib/stdio.asm line 0301: unrecognized instruction.          (DEC)
+0302+  0183               mov si, d
+lib/stdio.asm line 0302: unrecognized instruction.          (MOV)
+0303+  0183               mov a, c
+lib/stdio.asm line 0303: unrecognized instruction.          (MOV)
+0304+  0183               shl a
+lib/stdio.asm line 0304: unrecognized instruction.          (SHL)
+0305+  0183               mov d, table_power
+lib/stdio.asm line 0305: unrecognized instruction.          (MOV)
+0306+  0183               add d, a
+lib/stdio.asm line 0306: unrecognized instruction.          (ADD)
+0307+  0183               mov c, 0
+lib/stdio.asm line 0307: unrecognized instruction.          (MOV)
+0308+  0183             _strtoint_L0:
+0309+  0183               lodsb      ; load ASCII to al
+lib/stdio.asm line 0309: unrecognized instruction.          (LODSB)
+0310+  0183               cmp al, 0
+lib/stdio.asm line 0310: unrecognized instruction.          (CMP)
+0311+  0183               je _strtoint_end
+lib/stdio.asm line 0311: unrecognized instruction.          (JE)
+0312+  0183               sub al, $30    ; make into integer
+lib/stdio.asm line 0312: unrecognized instruction.          (SUB)
+0313+  0183               mov ah, 0
+lib/stdio.asm line 0313: unrecognized instruction.          (MOV)
+0314+  0183               mov b, [d]
+lib/stdio.asm line 0314: unrecognized instruction.          (MOV)
+0315+  0183               mul a, b      ; result in B since it fits in 16bits
+lib/stdio.asm line 0315: unrecognized instruction.          (MUL)
+0316+  0183               mov a, b
+lib/stdio.asm line 0316: unrecognized instruction.          (MOV)
+0317+  0183               mov b, c
+lib/stdio.asm line 0317: unrecognized instruction.          (MOV)
+0318+  0183               add a, b
+lib/stdio.asm line 0318: unrecognized instruction.          (ADD)
+0319+  0183               mov c, a
+lib/stdio.asm line 0319: unrecognized instruction.          (MOV)
+0320+  0183               sub d, 2
+lib/stdio.asm line 0320: unrecognized instruction.          (SUB)
+0321+  0183               jmp _strtoint_L0
+lib/stdio.asm line 0321: unrecognized instruction.          (JMP)
+0322+  0183             _strtoint_end:
+0323+  0183               mov a, c
+lib/stdio.asm line 0323: unrecognized instruction.          (MOV)
+0324+  0183               pop d
+lib/stdio.asm line 0324: unrecognized instruction.          (POP)
+0325+  0183               pop c
+lib/stdio.asm line 0325: unrecognized instruction.          (POP)
+0326+  0183               pop b
+lib/stdio.asm line 0326: unrecognized instruction.          (POP)
+0327+  0183               pop si
+lib/stdio.asm line 0327: unrecognized instruction.          (POP)
+0328+  0183               ret
+lib/stdio.asm line 0328: unrecognized instruction.          (RET)
+0329+  0183             
+0330+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0331+  0183             ; PRINT NULL TERMINATED STRING
+0332+  0183             ; pointer in D
+0333+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0334+  0183             _puts:
+0335+  0183               push a
+lib/stdio.asm line 0335: unrecognized instruction.          (PUSH)
+0336+  0183               push d
+lib/stdio.asm line 0336: unrecognized instruction.          (PUSH)
+0337+  0183             _puts_L1:
+0338+  0183               mov al, [d]
+lib/stdio.asm line 0338: unrecognized instruction.          (MOV)
+0339+  0183               cmp al, 0
+lib/stdio.asm line 0339: unrecognized instruction.          (CMP)
+0340+  0183               jz _puts_END
+lib/stdio.asm line 0340: unrecognized instruction.          (JZ)
+0341+  0183               mov ah, al
+lib/stdio.asm line 0341: unrecognized instruction.          (MOV)
+0342+  0183               mov al, 0
+lib/stdio.asm line 0342: unrecognized instruction.          (MOV)
+0343+  0183               syscall sys_io
+lib/stdio.asm line 0343: unrecognized instruction.          (SYSCALL)
+0344+  0183               inc d
+lib/stdio.asm line 0344: unrecognized instruction.          (INC)
+0345+  0183               jmp _puts_L1
+lib/stdio.asm line 0345: unrecognized instruction.          (JMP)
+0346+  0183             _puts_END:
+0347+  0183               pop d
+lib/stdio.asm line 0347: unrecognized instruction.          (POP)
+0348+  0183               pop a
+lib/stdio.asm line 0348: unrecognized instruction.          (POP)
+0349+  0183               ret
+lib/stdio.asm line 0349: unrecognized instruction.          (RET)
+0350+  0183             
+0351+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0352+  0183             ; PRINT N SIZE STRING
+0353+  0183             ; pointer in D
+0354+  0183             ; size in C
+0355+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0356+  0183             _putsn:
+0357+  0183               push al
+lib/stdio.asm line 0357: unrecognized instruction.          (PUSH)
+0358+  0183               push d
+lib/stdio.asm line 0358: unrecognized instruction.          (PUSH)
+0359+  0183               push c
+lib/stdio.asm line 0359: unrecognized instruction.          (PUSH)
+0360+  0183             _putsn_L0:
+0361+  0183               mov al, [d]
+lib/stdio.asm line 0361: unrecognized instruction.          (MOV)
+0362+  0183               mov ah, al
+lib/stdio.asm line 0362: unrecognized instruction.          (MOV)
+0363+  0183               mov al, 0
+lib/stdio.asm line 0363: unrecognized instruction.          (MOV)
+0364+  0183               syscall sys_io
+lib/stdio.asm line 0364: unrecognized instruction.          (SYSCALL)
+0365+  0183               inc d
+lib/stdio.asm line 0365: unrecognized instruction.          (INC)
+0366+  0183               dec c  
+lib/stdio.asm line 0366: unrecognized instruction.          (DEC)
+0367+  0183               cmp c, 0
+lib/stdio.asm line 0367: unrecognized instruction.          (CMP)
+0368+  0183               jne _putsn_L0
+lib/stdio.asm line 0368: unrecognized instruction.          (JNE)
+0369+  0183             _putsn_end:
+0370+  0183               pop c
+lib/stdio.asm line 0370: unrecognized instruction.          (POP)
+0371+  0183               pop d
+lib/stdio.asm line 0371: unrecognized instruction.          (POP)
+0372+  0183               pop al
+lib/stdio.asm line 0372: unrecognized instruction.          (POP)
+0373+  0183               ret
+lib/stdio.asm line 0373: unrecognized instruction.          (RET)
+0374+  0183             
+0375+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0376+  0183             ; print 16bit decimal number
+0377+  0183             ; input number in A
+0378+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0379+  0183             print_u16d:
+0380+  0183               push a
+lib/stdio.asm line 0380: unrecognized instruction.          (PUSH)
+0381+  0183               push b
+lib/stdio.asm line 0381: unrecognized instruction.          (PUSH)
+0382+  0183               push g
+lib/stdio.asm line 0382: unrecognized instruction.          (PUSH)
+0383+  0183               mov b, 10000
+lib/stdio.asm line 0383: unrecognized instruction.          (MOV)
+0384+  0183               div a, b      ; get 10000's coeff.
+lib/stdio.asm line 0384: unrecognized instruction.          (DIV)
+0385+  0183               call print_number
+lib/stdio.asm line 0385: unrecognized instruction.          (CALL)
+0386+  0183               mov a, b
+lib/stdio.asm line 0386: unrecognized instruction.          (MOV)
+0387+  0183               mov b, 1000
+lib/stdio.asm line 0387: unrecognized instruction.          (MOV)
+0388+  0183               div a, b      ; get 1000's coeff.
+lib/stdio.asm line 0388: unrecognized instruction.          (DIV)
+0389+  0183               call print_number
+lib/stdio.asm line 0389: unrecognized instruction.          (CALL)
+0390+  0183               mov a, b
+lib/stdio.asm line 0390: unrecognized instruction.          (MOV)
+0391+  0183               mov b, 100
+lib/stdio.asm line 0391: unrecognized instruction.          (MOV)
+0392+  0183               div a, b
+lib/stdio.asm line 0392: unrecognized instruction.          (DIV)
+0393+  0183               call print_number
+lib/stdio.asm line 0393: unrecognized instruction.          (CALL)
+0394+  0183               mov a, b
+lib/stdio.asm line 0394: unrecognized instruction.          (MOV)
+0395+  0183               mov b, 10
+lib/stdio.asm line 0395: unrecognized instruction.          (MOV)
+0396+  0183               div a, b
+lib/stdio.asm line 0396: unrecognized instruction.          (DIV)
+0397+  0183               call print_number
+lib/stdio.asm line 0397: unrecognized instruction.          (CALL)
+0398+  0183               mov al, bl      ; 1's coeff in bl
+lib/stdio.asm line 0398: unrecognized instruction.          (MOV)
+0399+  0183               call print_number
+lib/stdio.asm line 0399: unrecognized instruction.          (CALL)
+0400+  0183               pop g
+lib/stdio.asm line 0400: unrecognized instruction.          (POP)
+0401+  0183               pop b
+lib/stdio.asm line 0401: unrecognized instruction.          (POP)
+0402+  0183               pop a
+lib/stdio.asm line 0402: unrecognized instruction.          (POP)
+0403+  0183               ret
+lib/stdio.asm line 0403: unrecognized instruction.          (RET)
+0404+  0183             
+0405+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0406+  0183             ; print AL
+0407+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0408+  0183             print_number:
+0409+  0183               add al, $30
+lib/stdio.asm line 0409: unrecognized instruction.          (ADD)
+0410+  0183               mov ah, al
+lib/stdio.asm line 0410: unrecognized instruction.          (MOV)
+0411+  0183               call _putchar
+lib/stdio.asm line 0411: unrecognized instruction.          (CALL)
+0412+  0183               ret
+lib/stdio.asm line 0412: unrecognized instruction.          (RET)
+0413+  0183             
+0414+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0415+  0183             ; PRINT 16BIT HEX INTEGER
+0416+  0183             ; integer value in reg B
+0417+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0418+  0183             print_u16x:
+0419+  0183               push a
+lib/stdio.asm line 0419: unrecognized instruction.          (PUSH)
+0420+  0183               push b
+lib/stdio.asm line 0420: unrecognized instruction.          (PUSH)
+0421+  0183               push bl
+lib/stdio.asm line 0421: unrecognized instruction.          (PUSH)
+0422+  0183               mov bl, bh
+lib/stdio.asm line 0422: unrecognized instruction.          (MOV)
+0423+  0183               call _itoa        ; convert bh to char in A
+lib/stdio.asm line 0423: unrecognized instruction.          (CALL)
+0424+  0183               mov bl, al        ; save al
+lib/stdio.asm line 0424: unrecognized instruction.          (MOV)
+0425+  0183               mov al, 0
+lib/stdio.asm line 0425: unrecognized instruction.          (MOV)
+0426+  0183               syscall sys_io        ; display AH
+lib/stdio.asm line 0426: unrecognized instruction.          (SYSCALL)
+0427+  0183               mov ah, bl        ; retrieve al
+lib/stdio.asm line 0427: unrecognized instruction.          (MOV)
+0428+  0183               mov al, 0
+lib/stdio.asm line 0428: unrecognized instruction.          (MOV)
+0429+  0183               syscall sys_io        ; display AL
+lib/stdio.asm line 0429: unrecognized instruction.          (SYSCALL)
+0430+  0183             
+0431+  0183               pop bl
+lib/stdio.asm line 0431: unrecognized instruction.          (POP)
+0432+  0183               call _itoa        ; convert bh to char in A
+lib/stdio.asm line 0432: unrecognized instruction.          (CALL)
+0433+  0183               mov bl, al        ; save al
+lib/stdio.asm line 0433: unrecognized instruction.          (MOV)
+0434+  0183               mov al, 0
+lib/stdio.asm line 0434: unrecognized instruction.          (MOV)
+0435+  0183               syscall sys_io        ; display AH
+lib/stdio.asm line 0435: unrecognized instruction.          (SYSCALL)
+0436+  0183               mov ah, bl        ; retrieve al
+lib/stdio.asm line 0436: unrecognized instruction.          (MOV)
+0437+  0183               mov al, 0
+lib/stdio.asm line 0437: unrecognized instruction.          (MOV)
+0438+  0183               syscall sys_io        ; display AL
+lib/stdio.asm line 0438: unrecognized instruction.          (SYSCALL)
+0439+  0183             
+0440+  0183               pop b
+lib/stdio.asm line 0440: unrecognized instruction.          (POP)
+0441+  0183               pop a
+lib/stdio.asm line 0441: unrecognized instruction.          (POP)
+0442+  0183               ret
+lib/stdio.asm line 0442: unrecognized instruction.          (RET)
+0443+  0183             
+0444+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0445+  0183             ; INPUT 16BIT HEX INTEGER
+0446+  0183             ; read 16bit integer into A
+0447+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0448+  0183             scan_u16x:
+0449+  0183               enter 16
+lib/stdio.asm line 0449: unrecognized instruction.          (ENTER)
+0450+  0183               push b
+lib/stdio.asm line 0450: unrecognized instruction.          (PUSH)
+0451+  0183               push d
+lib/stdio.asm line 0451: unrecognized instruction.          (PUSH)
+0452+  0183             
+0453+  0183               lea d, [bp + -15]
+lib/stdio.asm line 0453: unrecognized instruction.          (LEA)
+0454+  0183               call _gets        ; get number
+lib/stdio.asm line 0454: unrecognized instruction.          (CALL)
+0455+  0183             
+0456+  0183               mov bl, [d]
+lib/stdio.asm line 0456: unrecognized instruction.          (MOV)
+0457+  0183               mov bh, bl
+lib/stdio.asm line 0457: unrecognized instruction.          (MOV)
+0458+  0183               mov bl, [d + 1]
+lib/stdio.asm line 0458: unrecognized instruction.          (MOV)
+0459+  0183               call _atoi        ; convert to int in AL
+lib/stdio.asm line 0459: unrecognized instruction.          (CALL)
+0460+  0183               mov ah, al        ; move to AH
+lib/stdio.asm line 0460: unrecognized instruction.          (MOV)
+0461+  0183             
+0462+  0183               mov bl, [d + 2]
+lib/stdio.asm line 0462: unrecognized instruction.          (MOV)
+0463+  0183               mov bh, bl
+lib/stdio.asm line 0463: unrecognized instruction.          (MOV)
+0464+  0183               mov bl, [d + 3]
+lib/stdio.asm line 0464: unrecognized instruction.          (MOV)
+0465+  0183               call _atoi        ; convert to int in AL
+lib/stdio.asm line 0465: unrecognized instruction.          (CALL)
+0466+  0183             
+0467+  0183               pop d
+lib/stdio.asm line 0467: unrecognized instruction.          (POP)
+0468+  0183               pop b
+lib/stdio.asm line 0468: unrecognized instruction.          (POP)
+0469+  0183               leave
+lib/stdio.asm line 0469: unrecognized instruction.          (LEAVE)
+0470+  0183               ret
+lib/stdio.asm line 0470: unrecognized instruction.          (RET)
+0471+  0183             
+0472+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0473+  0183             ; PRINT 8bit HEX INTEGER
+0474+  0183             ; integer value in reg bl
+0475+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0476+  0183             print_u8x:
+0477+  0183               push a
+lib/stdio.asm line 0477: unrecognized instruction.          (PUSH)
+0478+  0183               push bl
+lib/stdio.asm line 0478: unrecognized instruction.          (PUSH)
+0479+  0183             
+0480+  0183               call _itoa        ; convert bl to char in A
+lib/stdio.asm line 0480: unrecognized instruction.          (CALL)
+0481+  0183               mov bl, al        ; save al
+lib/stdio.asm line 0481: unrecognized instruction.          (MOV)
+0482+  0183               mov al, 0
+lib/stdio.asm line 0482: unrecognized instruction.          (MOV)
+0483+  0183               syscall sys_io        ; display AH
+lib/stdio.asm line 0483: unrecognized instruction.          (SYSCALL)
+0484+  0183               mov ah, bl        ; retrieve al
+lib/stdio.asm line 0484: unrecognized instruction.          (MOV)
+0485+  0183               mov al, 0
+lib/stdio.asm line 0485: unrecognized instruction.          (MOV)
+0486+  0183               syscall sys_io        ; display AL
+lib/stdio.asm line 0486: unrecognized instruction.          (SYSCALL)
+0487+  0183             
+0488+  0183               pop bl
+lib/stdio.asm line 0488: unrecognized instruction.          (POP)
+0489+  0183               pop a
+lib/stdio.asm line 0489: unrecognized instruction.          (POP)
+0490+  0183               ret
+lib/stdio.asm line 0490: unrecognized instruction.          (RET)
+0491+  0183             
+0492+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0493+  0183             ; print 8bit decimal unsigned number
+0494+  0183             ; input number in AL
+0495+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0496+  0183             print_u8d:
+0497+  0183               push a
+lib/stdio.asm line 0497: unrecognized instruction.          (PUSH)
+0498+  0183               push b
+lib/stdio.asm line 0498: unrecognized instruction.          (PUSH)
+0499+  0183               push g
+lib/stdio.asm line 0499: unrecognized instruction.          (PUSH)
+0500+  0183               mov ah, 0
+lib/stdio.asm line 0500: unrecognized instruction.          (MOV)
+0501+  0183               mov b, 100
+lib/stdio.asm line 0501: unrecognized instruction.          (MOV)
+0502+  0183               div a, b
+lib/stdio.asm line 0502: unrecognized instruction.          (DIV)
+0503+  0183               push b      ; save remainder
+lib/stdio.asm line 0503: unrecognized instruction.          (PUSH)
+0504+  0183               cmp al, 0
+lib/stdio.asm line 0504: unrecognized instruction.          (CMP)
+0505+  0183               je skip100
+lib/stdio.asm line 0505: unrecognized instruction.          (JE)
+0506+  0183               add al, $30
+lib/stdio.asm line 0506: unrecognized instruction.          (ADD)
+0507+  0183               mov ah, al
+lib/stdio.asm line 0507: unrecognized instruction.          (MOV)
+0508+  0183               mov al, 0
+lib/stdio.asm line 0508: unrecognized instruction.          (MOV)
+0509+  0183               syscall sys_io  ; print coeff
+lib/stdio.asm line 0509: unrecognized instruction.          (SYSCALL)
+0510+  0183             skip100:
+0511+  0183               pop a
+lib/stdio.asm line 0511: unrecognized instruction.          (POP)
+0512+  0183               mov ah, 0
+lib/stdio.asm line 0512: unrecognized instruction.          (MOV)
+0513+  0183               mov b, 10
+lib/stdio.asm line 0513: unrecognized instruction.          (MOV)
+0514+  0183               div a, b
+lib/stdio.asm line 0514: unrecognized instruction.          (DIV)
+0515+  0183               push b      ; save remainder
+lib/stdio.asm line 0515: unrecognized instruction.          (PUSH)
+0516+  0183               cmp al, 0
+lib/stdio.asm line 0516: unrecognized instruction.          (CMP)
+0517+  0183               je skip10
+lib/stdio.asm line 0517: unrecognized instruction.          (JE)
+0518+  0183               add al, $30
+lib/stdio.asm line 0518: unrecognized instruction.          (ADD)
+0519+  0183               mov ah, al
+lib/stdio.asm line 0519: unrecognized instruction.          (MOV)
+0520+  0183               mov al, 0
+lib/stdio.asm line 0520: unrecognized instruction.          (MOV)
+0521+  0183               syscall sys_io  ; print coeff
+lib/stdio.asm line 0521: unrecognized instruction.          (SYSCALL)
+0522+  0183             skip10:
+0523+  0183               pop a
+lib/stdio.asm line 0523: unrecognized instruction.          (POP)
+0524+  0183               mov al, bl
+lib/stdio.asm line 0524: unrecognized instruction.          (MOV)
+0525+  0183               add al, $30
+lib/stdio.asm line 0525: unrecognized instruction.          (ADD)
+0526+  0183               mov ah, al
+lib/stdio.asm line 0526: unrecognized instruction.          (MOV)
+0527+  0183               mov al, 0
+lib/stdio.asm line 0527: unrecognized instruction.          (MOV)
+0528+  0183               syscall sys_io  ; print coeff
+lib/stdio.asm line 0528: unrecognized instruction.          (SYSCALL)
+0529+  0183               pop g
+lib/stdio.asm line 0529: unrecognized instruction.          (POP)
+0530+  0183               pop b
+lib/stdio.asm line 0530: unrecognized instruction.          (POP)
+0531+  0183               pop a
+lib/stdio.asm line 0531: unrecognized instruction.          (POP)
+0532+  0183               ret
+lib/stdio.asm line 0532: unrecognized instruction.          (RET)
+0533+  0183             
+0534+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0535+  0183             ; INPUT 8BIT HEX INTEGER
+0536+  0183             ; read 8bit integer into AL
+0537+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0538+  0183             scan_u8x:
+0539+  0183               enter 4
+lib/stdio.asm line 0539: unrecognized instruction.          (ENTER)
+0540+  0183               push b
+lib/stdio.asm line 0540: unrecognized instruction.          (PUSH)
+0541+  0183               push d
+lib/stdio.asm line 0541: unrecognized instruction.          (PUSH)
+0542+  0183             
+0543+  0183               lea d, [bp + -3]
+lib/stdio.asm line 0543: unrecognized instruction.          (LEA)
+0544+  0183               call _gets        ; get number
+lib/stdio.asm line 0544: unrecognized instruction.          (CALL)
+0545+  0183             
+0546+  0183               mov bl, [d]
+lib/stdio.asm line 0546: unrecognized instruction.          (MOV)
+0547+  0183               mov bh, bl
+lib/stdio.asm line 0547: unrecognized instruction.          (MOV)
+0548+  0183               mov bl, [d + 1]
+lib/stdio.asm line 0548: unrecognized instruction.          (MOV)
+0549+  0183               call _atoi        ; convert to int in AL
+lib/stdio.asm line 0549: unrecognized instruction.          (CALL)
+0550+  0183             
+0551+  0183               pop d
+lib/stdio.asm line 0551: unrecognized instruction.          (POP)
+0552+  0183               pop b
+lib/stdio.asm line 0552: unrecognized instruction.          (POP)
+0553+  0183               leave
+lib/stdio.asm line 0553: unrecognized instruction.          (LEAVE)
+0554+  0183               ret
+lib/stdio.asm line 0554: unrecognized instruction.          (RET)
+0555+  0183             
+0556+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0557+  0183             ; input decimal number
+0558+  0183             ; result in A
+0559+  0183             ; 655'\0'
+0560+  0183             ; low--------high
+0561+  0183             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0562+  0183             scan_u16d:
+0563+  0183               enter 8
+lib/stdio.asm line 0563: unrecognized instruction.          (ENTER)
+0564+  0183               push si
+lib/stdio.asm line 0564: unrecognized instruction.          (PUSH)
+0565+  0183               push b
+lib/stdio.asm line 0565: unrecognized instruction.          (PUSH)
+0566+  0183               push c
+lib/stdio.asm line 0566: unrecognized instruction.          (PUSH)
+0567+  0183               push d
+lib/stdio.asm line 0567: unrecognized instruction.          (PUSH)
+0568+  0183               lea d, [bp +- 7]
+lib/stdio.asm line 0568: unrecognized instruction.          (LEA)
+0569+  0183               call _gets
+lib/stdio.asm line 0569: unrecognized instruction.          (CALL)
+0570+  0183               call _strlen      ; get string length in C
+lib/stdio.asm line 0570: unrecognized instruction.          (CALL)
+0571+  0183               dec c
+lib/stdio.asm line 0571: unrecognized instruction.          (DEC)
+0572+  0183               mov si, d
+lib/stdio.asm line 0572: unrecognized instruction.          (MOV)
+0573+  0183               mov a, c
+lib/stdio.asm line 0573: unrecognized instruction.          (MOV)
+0574+  0183               shl a
+lib/stdio.asm line 0574: unrecognized instruction.          (SHL)
+0575+  0183               mov d, table_power
+lib/stdio.asm line 0575: unrecognized instruction.          (MOV)
+0576+  0183               add d, a
+lib/stdio.asm line 0576: unrecognized instruction.          (ADD)
+0577+  0183               mov c, 0
+lib/stdio.asm line 0577: unrecognized instruction.          (MOV)
+0578+  0183             mul_loop:
+0579+  0183               lodsb      ; load ASCII to al
+lib/stdio.asm line 0579: unrecognized instruction.          (LODSB)
+0580+  0183               cmp al, 0
+lib/stdio.asm line 0580: unrecognized instruction.          (CMP)
+0581+  0183               je mul_exit
+lib/stdio.asm line 0581: unrecognized instruction.          (JE)
+0582+  0183               sub al, $30    ; make into integer
+lib/stdio.asm line 0582: unrecognized instruction.          (SUB)
+0583+  0183               mov ah, 0
+lib/stdio.asm line 0583: unrecognized instruction.          (MOV)
+0584+  0183               mov b, [d]
+lib/stdio.asm line 0584: unrecognized instruction.          (MOV)
+0585+  0183               mul a, b      ; result in B since it fits in 16bits
+lib/stdio.asm line 0585: unrecognized instruction.          (MUL)
+0586+  0183               mov a, b
+lib/stdio.asm line 0586: unrecognized instruction.          (MOV)
+0587+  0183               mov b, c
+lib/stdio.asm line 0587: unrecognized instruction.          (MOV)
+0588+  0183               add a, b
+lib/stdio.asm line 0588: unrecognized instruction.          (ADD)
+0589+  0183               mov c, a
+lib/stdio.asm line 0589: unrecognized instruction.          (MOV)
+0590+  0183               sub d, 2
+lib/stdio.asm line 0590: unrecognized instruction.          (SUB)
+0591+  0183               jmp mul_loop
+lib/stdio.asm line 0591: unrecognized instruction.          (JMP)
+0592+  0183             mul_exit:
+0593+  0183               mov a, c
+lib/stdio.asm line 0593: unrecognized instruction.          (MOV)
+0594+  0183               pop d
+lib/stdio.asm line 0594: unrecognized instruction.          (POP)
+0595+  0183               pop c
+lib/stdio.asm line 0595: unrecognized instruction.          (POP)
+0596+  0183               pop b
+lib/stdio.asm line 0596: unrecognized instruction.          (POP)
+0597+  0183               pop si
+lib/stdio.asm line 0597: unrecognized instruction.          (POP)
+0598+  0183               leave
+lib/stdio.asm line 0598: unrecognized instruction.          (LEAVE)
+0599+  0183               ret
+lib/stdio.asm line 0599: unrecognized instruction.          (RET)
+0600+  0183             
+0601+  0183             
+0602+  0183 30 31 32 33 s_hex_digits:    .db "0123456789ABCDEF"  
+0602+  0187 34 35 36 37 
+0602+  018B 38 39 41 42 
+0602+  018F 43 44 45 46 
+0603+  0193 1B 5B 32 4A s_telnet_clear:  .db "\033[2J\033[H", 0
+0603+  0197 1B 5B 48 00 
+0604+  019B             
+0605+  019B             table_power:
+0606+  019B 01 00         .dw 1
+0607+  019D 0A 00         .dw 10
+0608+  019F 64 00         .dw 100
+0609+  01A1 E8 03         .dw 1000
+0610+  01A3 10 27         .dw 100000871   01A5             .include "lib/ctype.asm"
+0001+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0002+  01A5             ; ctype.s
+0003+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0004+  01A5             
+0005+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0006+  01A5             ;; C character classification is an operation provided by a group of functions in the ANSI C Standard Library
+0007+  01A5             ;; for the C programming language. These functions are used to test characters for membership in a particular
+0008+  01A5             ;; class of characters, such as alphabetic characters, control characters, etc. Both single-byte, and wide
+0009+  01A5             ;; characters are supported.
+0010+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0011+  01A5             ;; _isalnum 
+0012+  01A5             ;; _isalpha 
+0013+  01A5             ;; islower 
+0014+  01A5             ;; isupper 
+0015+  01A5             ;; _isdigit 
+0016+  01A5             ;; isxdigit
+0017+  01A5             ;; iscntrl 
+0018+  01A5             ;; isgraph 
+0019+  01A5             ;; _isspace 
+0020+  01A5             ;; isblank 
+0021+  01A5             ;; isprint 
+0022+  01A5             ;; ispunct 
+0023+  01A5             ;; tolower 
+0024+  01A5             ;; toupper
+0025+  01A5             
+0026+  01A5             
+0027+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0028+  01A5             ;; IS ALPHANUMERIC
+0029+  01A5             ;; sets ZF according with result
+0030+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0031+  01A5             _isalnum:
+0032+  01A5             	call _isalpha
+lib/ctype.asm line 0032: unrecognized instruction.          (CALL)
+0033+  01A5             	je _isalnum_exit
+lib/ctype.asm line 0033: unrecognized instruction.          (JE)
+0034+  01A5             	call _isdigit
+lib/ctype.asm line 0034: unrecognized instruction.          (CALL)
+0035+  01A5             _isalnum_exit:
+0036+  01A5             	ret	
+lib/ctype.asm line 0036: unrecognized instruction.          (RET)
+0037+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0038+  01A5             ;; IS DIGIT
+0039+  01A5             ;; sets ZF according with result
+0040+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0041+  01A5             _isdigit:
+0042+  01A5             	push al
+lib/ctype.asm line 0042: unrecognized instruction.          (PUSH)
+0043+  01A5             	cmp al, '0'
+lib/ctype.asm line 0043: unrecognized instruction.          (CMP)
+0044+  01A5             	jlu _isdigit_false
+lib/ctype.asm line 0044: unrecognized instruction.          (JLU)
+0045+  01A5             	cmp al, '9'
+lib/ctype.asm line 0045: unrecognized instruction.          (CMP)
+0046+  01A5             	jgu _isdigit_false
+lib/ctype.asm line 0046: unrecognized instruction.          (JGU)
+0047+  01A5             	and al, 0	; set ZF
+lib/ctype.asm line 0047: unrecognized instruction.          (AND)
+0048+  01A5             	pop al
+lib/ctype.asm line 0048: unrecognized instruction.          (POP)
+0049+  01A5             	ret
+lib/ctype.asm line 0049: unrecognized instruction.          (RET)
+0050+  01A5             _isdigit_false:
+0051+  01A5             	or al, 1	; clear ZF
+lib/ctype.asm line 0051: unrecognized instruction.          (OR)
+0052+  01A5             	pop al
+lib/ctype.asm line 0052: unrecognized instruction.          (POP)
+0053+  01A5             	ret	
+lib/ctype.asm line 0053: unrecognized instruction.          (RET)
+0054+  01A5             	
+0055+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0056+  01A5             ;; IS ALPHA
+0057+  01A5             ;; sets ZF according with result
+0058+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0059+  01A5             _isalpha:
+0060+  01A5             	push al
+lib/ctype.asm line 0060: unrecognized instruction.          (PUSH)
+0061+  01A5             	cmp al, '_'
+lib/ctype.asm line 0061: unrecognized instruction.          (CMP)
+0062+  01A5             	je _isalpha_true
+lib/ctype.asm line 0062: unrecognized instruction.          (JE)
+0063+  01A5             	cmp al, '.'
+lib/ctype.asm line 0063: unrecognized instruction.          (CMP)
+0064+  01A5             	je _isalpha_true
+lib/ctype.asm line 0064: unrecognized instruction.          (JE)
+0065+  01A5             	cmp al, 'A'
+lib/ctype.asm line 0065: unrecognized instruction.          (CMP)
+0066+  01A5             	jlu _isalpha_false
+lib/ctype.asm line 0066: unrecognized instruction.          (JLU)
+0067+  01A5             	cmp al, 'z'
+lib/ctype.asm line 0067: unrecognized instruction.          (CMP)
+0068+  01A5             	jgu _isalpha_false
+lib/ctype.asm line 0068: unrecognized instruction.          (JGU)
+0069+  01A5             	cmp al, 'Z'
+lib/ctype.asm line 0069: unrecognized instruction.          (CMP)
+0070+  01A5             	jleu _isalpha_true
+lib/ctype.asm line 0070: unrecognized instruction.          (JLEU)
+0071+  01A5             	cmp al, 'a'
+lib/ctype.asm line 0071: unrecognized instruction.          (CMP)
+0072+  01A5             	jgeu _isalpha_true
+lib/ctype.asm line 0072: unrecognized instruction.          (JGEU)
+0073+  01A5             _isalpha_false:
+0074+  01A5             	or al, 1	; clear ZF
+lib/ctype.asm line 0074: unrecognized instruction.          (OR)
+0075+  01A5             	pop al
+lib/ctype.asm line 0075: unrecognized instruction.          (POP)
+0076+  01A5             	ret
+lib/ctype.asm line 0076: unrecognized instruction.          (RET)
+0077+  01A5             _isalpha_true:
+0078+  01A5             	and al, 0	; set ZF
+lib/ctype.asm line 0078: unrecognized instruction.          (AND)
+0079+  01A5             	pop al
+lib/ctype.asm line 0079: unrecognized instruction.          (POP)
+0080+  01A5             	ret
+lib/ctype.asm line 0080: unrecognized instruction.          (RET)
+0081+  01A5             
+0082+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0083+  01A5             ;; IS PATH-ALPHA
+0084+  01A5             ;; sets ZF according with result
+0085+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0086+  01A5             ispath:
+0087+  01A5             	push al
+lib/ctype.asm line 0087: unrecognized instruction.          (PUSH)
+0088+  01A5             	call _isdigit
+lib/ctype.asm line 0088: unrecognized instruction.          (CALL)
+0089+  01A5             	je ispath_true
+lib/ctype.asm line 0089: unrecognized instruction.          (JE)
+0090+  01A5             	cmp al, '_'
+lib/ctype.asm line 0090: unrecognized instruction.          (CMP)
+0091+  01A5             	je ispath_true
+lib/ctype.asm line 0091: unrecognized instruction.          (JE)
+0092+  01A5             	cmp al, '/'
+lib/ctype.asm line 0092: unrecognized instruction.          (CMP)
+0093+  01A5             	je ispath_true
+lib/ctype.asm line 0093: unrecognized instruction.          (JE)
+0094+  01A5             	cmp al, '.'
+lib/ctype.asm line 0094: unrecognized instruction.          (CMP)
+0095+  01A5             	je ispath_true
+lib/ctype.asm line 0095: unrecognized instruction.          (JE)
+0096+  01A5             	cmp al, 'A'
+lib/ctype.asm line 0096: unrecognized instruction.          (CMP)
+0097+  01A5             	jlu ispath_false
+lib/ctype.asm line 0097: unrecognized instruction.          (JLU)
+0098+  01A5             	cmp al, 'z'
+lib/ctype.asm line 0098: unrecognized instruction.          (CMP)
+0099+  01A5             	jgu ispath_false
+lib/ctype.asm line 0099: unrecognized instruction.          (JGU)
+0100+  01A5             	cmp al, 'Z'
+lib/ctype.asm line 0100: unrecognized instruction.          (CMP)
+0101+  01A5             	jleu ispath_true
+lib/ctype.asm line 0101: unrecognized instruction.          (JLEU)
+0102+  01A5             	cmp al, 'a'
+lib/ctype.asm line 0102: unrecognized instruction.          (CMP)
+0103+  01A5             	jgeu ispath_true
+lib/ctype.asm line 0103: unrecognized instruction.          (JGEU)
+0104+  01A5             ispath_false:
+0105+  01A5             	or al, 1	; clear ZF
+lib/ctype.asm line 0105: unrecognized instruction.          (OR)
+0106+  01A5             	pop al
+lib/ctype.asm line 0106: unrecognized instruction.          (POP)
+0107+  01A5             	ret
+lib/ctype.asm line 0107: unrecognized instruction.          (RET)
+0108+  01A5             ispath_true:
+0109+  01A5             	and al, 0	; set ZF
+lib/ctype.asm line 0109: unrecognized instruction.          (AND)
+0110+  01A5             	pop al
+lib/ctype.asm line 0110: unrecognized instruction.          (POP)
+0111+  01A5             	ret
+lib/ctype.asm line 0111: unrecognized instruction.          (RET)
+0112+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0113+  01A5             ;; IS SPACE
+0114+  01A5             ;; sets ZF according with result
+0115+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0116+  01A5             _isspace:
+0117+  01A5             	cmp al, $20		; ' '
+lib/ctype.asm line 0117: unrecognized instruction.          (CMP)
+0118+  01A5             	je _isspace_exit
+lib/ctype.asm line 0118: unrecognized instruction.          (JE)
+0119+  01A5             	cmp al, $09		; '\t'
+lib/ctype.asm line 0119: unrecognized instruction.          (CMP)
+0120+  01A5             	je _isspace_exit
+lib/ctype.asm line 0120: unrecognized instruction.          (JE)
+0121+  01A5             	cmp al, $0A		; '\n'
+lib/ctype.asm line 0121: unrecognized instruction.          (CMP)
+0122+  01A5             	je _isspace_exit
+lib/ctype.asm line 0122: unrecognized instruction.          (JE)
+0123+  01A5             	cmp al, $0D		; '\r'
+lib/ctype.asm line 0123: unrecognized instruction.          (CMP)
+0124+  01A5             	je _isspace_exit
+lib/ctype.asm line 0124: unrecognized instruction.          (JE)
+0125+  01A5             	cmp al, $0B		; '\v'
+lib/ctype.asm line 0125: unrecognized instruction.          (CMP)
+0126+  01A5             _isspace_exit:
+0127+  01A5             	ret	
+lib/ctype.asm line 0127: unrecognized instruction.          (RET)
+0128+  01A5             
+0129+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0130+  01A5             ; TO LOWER
+0131+  01A5             ; input in AL
+0132+  01A5             ; output in AL
+0133+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0134+  01A5             _to_lower:
+0135+  01A5             	cmp al, 'Z'
+lib/ctype.asm line 0135: unrecognized instruction.          (CMP)
+0136+  01A5             	jgu _to_lower_ret
+lib/ctype.asm line 0136: unrecognized instruction.          (JGU)
+0137+  01A5             	add al, $20				; convert to lower case
+lib/ctype.asm line 0137: unrecognized instruction.          (ADD)
+0138+  01A5             _to_lower_ret:
+0139+  01A5             	ret
+lib/ctype.asm line 0139: unrecognized instruction.          (RET)
+0140+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0141+  01A5             ; TO UPPER
+0142+  01A5             ; input in AL
+0143+  01A5             ; output in AL
+0144+  01A5             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0145+  01A5             _to_upper:
+0146+  01A5             	cmp al, 'a'
+lib/ctype.asm line 0146: unrecognized instruction.          (CMP)
+0147+  01A5             	jlu _to_upper_ret
+lib/ctype.asm line 0147: unrecognized instruction.          (JLU)
+0148+  01A5             	sub al, $20			; convert to upper case
+lib/ctype.asm line 0148: unrecognized instruction.          (SUB)
+0149+  01A5             _to_upper_ret:
+0150+  01A5             	ret
+lib/ctype.asm line 0150: unrecognized instruction.          (RET)
+0151+  01A5             
+0872   01A5             
+0873   01A5             ; kernel parameters
+0874   01A5             sys_echo_on:
+0875   01A5 01            .db 1
+0876   01A6             sys_uart0_lcr:
+0877   01A6 07            .db $07 ; 8 data bits, 2 stop bit, no parity
+0878   01A7             sys_uart0_inten:
+0879   01A7 01            .db 1
+0880   01A8             sys_uart0_fifoen:
+0881   01A8 00            .db 0
+0882   01A9             sys_uart0_div0:
+0883   01A9 0C            .db 12  ;
+0884   01AA             sys_uart0_div1:
+0885   01AA 00            .db 0   ; default baud = 9600
+0886   01AB             ; Baud  Divisor
+0887   01AB             ; 50    2304
+0888   01AB             ; 110   1047
+0889   01AB             ; 300    384
+0890   01AB             ; 600    192
+0891   01AB             ; 1200    96
+0892   01AB             ; 9600    12
+0893   01AB             ; 19200    6
+0894   01AB             ; 38400    3
+0895   01AB             
+0896   01AB             
+0897   01AB             fifo_in:
+0898   01AB 41 04         .dw fifo
+0899   01AD             fifo_out:
+0900   01AD 41 04         .dw fifo
+0901   01AF             
+0902   01AF             
+0903   01AF             s_kernel_started:
+0904   01AF 6B 65 72 6E   .db "kernel started(version 1.0)\n", 0
+0904   01B3 65 6C 20 73 
+0904   01B7 74 61 72 74 
+0904   01BB 65 64 28 76 
+0904   01BF 65 72 73 69 
+0904   01C3 6F 6E 20 31 
+0904   01C7 2E 30 29 0A 
+0904   01CB 00 
+0905   01CC             s_priviledge:
+0906   01CC 0A 65 78 63   .db "\nexception: privilege\n", 0
+0906   01D0 65 70 74 69 
+0906   01D4 6F 6E 3A 20 
+0906   01D8 70 72 69 76 
+0906   01DC 69 6C 65 67 
+0906   01E0 65 0A 00 
+0907   01E3             s_divzero:
+0908   01E3 0A 65 78 63   .db "\nexception: zero division\n", 0
+0908   01E7 65 70 74 69 
+0908   01EB 6F 6E 3A 20 
+0908   01EF 7A 65 72 6F 
+0908   01F3 20 64 69 76 
+0908   01F7 69 73 69 6F 
+0908   01FB 6E 0A 00 
+0909   01FE             
+0910   01FE             ; This is the format of a sector for the 128 byte per sector format.
+0911   01FE             ; Write the bracketed data 16 times per track.
+0912   01FE             ; The recommended single-density format with 128
+0913   01FE             ; bytes/sector is shown. In order to format a diskette,
+0914   01FE             ; the user issues the Write Track Command, and loads
+0915   01FE             ; the Data Register with the following values. For every
+0916   01FE             ; byte to be written, there is one Data Request.
+0917   01FE             fdc_irq_event:
+0918   01FE 00            .fill 1,  $00       ; keeps status of fdc irq event
+0919   01FF             fdc_128_format:                                                                       
+0920   01FF             fdc_40_FF:
+0921   01FF FF FF FF FF   .fill 40,  $FF    ; or 00                                                                                
+0921   0203 FF FF FF FF 
+0921   0207 FF FF FF FF 
+0921   020B FF FF FF FF 
+0921   020F FF FF FF FF 
+0921   0213 FF FF FF FF 
+0921   0217 FF FF FF FF 
+0921   021B FF FF FF FF 
+0921   021F FF FF FF FF 
+0921   0223 FF FF FF FF 
+0922   0227             fdc_128_format_inner:
+0923   0227 00 00 00 00   .fill 6,   $00    ;                                                                            <--|        
+0923   022B 00 00 
+0924   022D FE            .fill 1,   $FE    ; ID Address Mark                                                               |        
+0925   022E             fdc_128_format_track:
+0926   022E 00            .fill 1,   $00    ; Track Number   0 thru 39                                                      |                    
+0927   022F 00            .fill 1,   $00    ; Side Number 00 or 01                                                          |                
+0928   0230             fdc_128_format_sect:
+0929   0230 01            .fill 1,   $01    ; Sector Number  0x01 through 0x10                                              |                              
+0930   0231 00            .fill 1,   $00    ; Sector Length                                                                 |                        
+0931   0232 F7            .fill 1,   $F7    ; 2 CRC's Written                                                               | Write 16 times                 
+0932   0233 FF FF FF FF   .fill 11,  $FF    ; or 00                                                                         |                      
+0932   0237 FF FF FF FF 
+0932   023B FF FF FF 
+0933   023E 00 00 00 00   .fill 6,   $00    ;                                                                               |                        
+0933   0242 00 00 
+0934   0244 FB            .fill 1,   $FB    ; Data Address Mark                                                             |                                  
+0935   0245 E5 E5 E5 E5   .fill 128, $E5    ; Data (IBM uses E5)                                                            |                                      
+0935   0249 E5 E5 E5 E5 
+0935   024D E5 E5 E5 E5 
+0935   0251 E5 E5 E5 E5 
+0935   0255 E5 E5 E5 E5 
+0935   0259 E5 E5 E5 E5 
+0935   025D E5 E5 E5 E5 
+0935   0261 E5 E5 E5 E5 
+0935   0265 E5 E5 E5 E5 
+0935   0269 E5 E5 E5 E5 
+0935   026D E5 E5 E5 E5 
+0935   0271 E5 E5 E5 E5 
+0935   0275 E5 E5 E5 E5 
+0935   0279 E5 E5 E5 E5 
+0935   027D E5 E5 E5 E5 
+0935   0281 E5 E5 E5 E5 
+0935   0285 E5 E5 E5 E5 
+0935   0289 E5 E5 E5 E5 
+0935   028D E5 E5 E5 E5 
+0935   0291 E5 E5 E5 E5 
+0935   0295 E5 E5 E5 E5 
+0935   0299 E5 E5 E5 E5 
+0935   029D E5 E5 E5 E5 
+0935   02A1 E5 E5 E5 E5 
+0935   02A5 E5 E5 E5 E5 
+0935   02A9 E5 E5 E5 E5 
+0935   02AD E5 E5 E5 E5 
+0935   02B1 E5 E5 E5 E5 
+0935   02B5 E5 E5 E5 E5 
+0935   02B9 E5 E5 E5 E5 
+0935   02BD E5 E5 E5 E5 
+0935   02C1 E5 E5 E5 E5 
+0936   02C5 F7            .fill 1,   $F7    ; 2 CRC's Written                                                               |                                                        
+0937   02C6 FF FF FF FF   .fill 10,  $FF    ; or 00                                                                      <--|                                                  
+0937   02CA FF FF FF FF 
+0937   02CE FF FF 
+0938   02D0             fdc_128_format_end:
+0939   02D0 FF FF FF FF   .fill 369, $FF    ; or 00. Continue writing until wd1770 interrupts out. approx 369 bytes.                                                                
+0939   02D4 FF FF FF FF 
+0939   02D8 FF FF FF FF 
+0939   02DC FF FF FF FF 
+0939   02E0 FF FF FF FF 
+0939   02E4 FF FF FF FF 
+0939   02E8 FF FF FF FF 
+0939   02EC FF FF FF FF 
+0939   02F0 FF FF FF FF 
+0939   02F4 FF FF FF FF 
+0939   02F8 FF FF FF FF 
+0939   02FC FF FF FF FF 
+0939   0300 FF FF FF FF 
+0939   0304 FF FF FF FF 
+0939   0308 FF FF FF FF 
+0939   030C FF FF FF FF 
+0939   0310 FF FF FF FF 
+0939   0314 FF FF FF FF 
+0939   0318 FF FF FF FF 
+0939   031C FF FF FF FF 
+0939   0320 FF FF FF FF 
+0939   0324 FF FF FF FF 
+0939   0328 FF FF FF FF 
+0939   032C FF FF FF FF 
+0939   0330 FF FF FF FF 
+0939   0334 FF FF FF FF 
+0939   0338 FF FF FF FF 
+0939   033C FF FF FF FF 
+0939   0340 FF FF FF FF 
+0939   0344 FF FF FF FF 
+0939   0348 FF FF FF FF 
+0939   034C FF FF FF FF 
+0939   0350 FF FF FF FF 
+0939   0354 FF FF FF FF 
+0939   0358 FF FF FF FF 
+0939   035C FF FF FF FF 
+0939   0360 FF FF FF FF 
+0939   0364 FF FF FF FF 
+0939   0368 FF FF FF FF 
+0939   036C FF FF FF FF 
+0939   0370 FF FF FF FF 
+0939   0374 FF FF FF FF 
+0939   0378 FF FF FF FF 
+0939   037C FF FF FF FF 
+0939   0380 FF FF FF FF 
+0939   0384 FF FF FF FF 
+0939   0388 FF FF FF FF 
+0939   038C FF FF FF FF 
+0939   0390 FF FF FF FF 
+0939   0394 FF FF FF FF 
+0939   0398 FF FF FF FF 
+0939   039C FF FF FF FF 
+0939   03A0 FF FF FF FF 
+0939   03A4 FF FF FF FF 
+0939   03A8 FF FF FF FF 
+0939   03AC FF FF FF FF 
+0939   03B0 FF FF FF FF 
+0939   03B4 FF FF FF FF 
+0939   03B8 FF FF FF FF 
+0939   03BC FF FF FF FF 
+0939   03C0 FF FF FF FF 
+0939   03C4 FF FF FF FF 
+0939   03C8 FF FF FF FF 
+0939   03CC FF FF FF FF 
+0939   03D0 FF FF FF FF 
+0939   03D4 FF FF FF FF 
+0939   03D8 FF FF FF FF 
+0939   03DC FF FF FF FF 
+0939   03E0 FF FF FF FF 
+0939   03E4 FF FF FF FF 
+0939   03E8 FF FF FF FF 
+0939   03EC FF FF FF FF 
+0939   03F0 FF FF FF FF 
+0939   03F4 FF FF FF FF 
+0939   03F8 FF FF FF FF 
+0939   03FC FF FF FF FF 
+0939   0400 FF FF FF FF 
+0939   0404 FF FF FF FF 
+0939   0408 FF FF FF FF 
+0939   040C FF FF FF FF 
+0939   0410 FF FF FF FF 
+0939   0414 FF FF FF FF 
+0939   0418 FF FF FF FF 
+0939   041C FF FF FF FF 
+0939   0420 FF FF FF FF 
+0939   0424 FF FF FF FF 
+0939   0428 FF FF FF FF 
+0939   042C FF FF FF FF 
+0939   0430 FF FF FF FF 
+0939   0434 FF FF FF FF 
+0939   0438 FF FF FF FF 
+0939   043C FF FF FF FF 
+0939   0440 FF 
+0940   0441             
+0941   0441             fifo:
+0942   0441 FF FF FF FF   .fill FIFO_SIZE
+0942   0445 FF FF FF FF 
+0942   0449 FF FF FF FF 
+0942   044D FF FF FF FF 
+0942   0451 FF FF FF FF 
+0942   0455 FF FF FF FF 
+0942   0459 FF FF FF FF 
+0942   045D FF FF FF FF 
+0942   0461 FF FF FF FF 
+0942   0465 FF FF FF FF 
+0942   0469 FF FF FF FF 
+0942   046D FF FF FF FF 
+0942   0471 FF FF FF FF 
+0942   0475 FF FF FF FF 
+0942   0479 FF FF FF FF 
+0942   047D FF FF FF FF 
+0942   0481 FF FF FF FF 
+0942   0485 FF FF FF FF 
+0942   0489 FF FF FF FF 
+0942   048D FF FF FF FF 
+0942   0491 FF FF FF FF 
+0942   0495 FF FF FF FF 
+0942   0499 FF FF FF FF 
+0942   049D FF FF FF FF 
+0942   04A1 FF FF FF FF 
+0942   04A5 FF FF FF FF 
+0942   04A9 FF FF FF FF 
+0942   04AD FF FF FF FF 
+0942   04B1 FF FF FF FF 
+0942   04B5 FF FF FF FF 
+0942   04B9 FF FF FF FF 
+0942   04BD FF FF FF FF 
+0942   04C1 FF FF FF FF 
+0942   04C5 FF FF FF FF 
+0942   04C9 FF FF FF FF 
+0942   04CD FF FF FF FF 
+0942   04D1 FF FF FF FF 
+0942   04D5 FF FF FF FF 
+0942   04D9 FF FF FF FF 
+0942   04DD FF FF FF FF 
+0942   04E1 FF FF FF FF 
+0942   04E5 FF FF FF FF 
+0942   04E9 FF FF FF FF 
+0942   04ED FF FF FF FF 
+0942   04F1 FF FF FF FF 
+0942   04F5 FF FF FF FF 
+0942   04F9 FF FF FF FF 
+0942   04FD FF FF FF FF 
+0942   0501 FF FF FF FF 
+0942   0505 FF FF FF FF 
+0942   0509 FF FF FF FF 
+0942   050D FF FF FF FF 
+0942   0511 FF FF FF FF 
+0942   0515 FF FF FF FF 
+0942   0519 FF FF FF FF 
+0942   051D FF FF FF FF 
+0942   0521 FF FF FF FF 
+0942   0525 FF FF FF FF 
+0942   0529 FF FF FF FF 
+0942   052D FF FF FF FF 
+0942   0531 FF FF FF FF 
+0942   0535 FF FF FF FF 
+0942   0539 FF FF FF FF 
+0942   053D FF FF FF FF 
+0942   0541 FF FF FF FF 
+0942   0545 FF FF FF FF 
+0942   0549 FF FF FF FF 
+0942   054D FF FF FF FF 
+0942   0551 FF FF FF FF 
+0942   0555 FF FF FF FF 
+0942   0559 FF FF FF FF 
+0942   055D FF FF FF FF 
+0942   0561 FF FF FF FF 
+0942   0565 FF FF FF FF 
+0942   0569 FF FF FF FF 
+0942   056D FF FF FF FF 
+0942   0571 FF FF FF FF 
+0942   0575 FF FF FF FF 
+0942   0579 FF FF FF FF 
+0942   057D FF FF FF FF 
+0942   0581 FF FF FF FF 
+0942   0585 FF FF FF FF 
+0942   0589 FF FF FF FF 
+0942   058D FF FF FF FF 
+0942   0591 FF FF FF FF 
+0942   0595 FF FF FF FF 
+0942   0599 FF FF FF FF 
+0942   059D FF FF FF FF 
+0942   05A1 FF FF FF FF 
+0942   05A5 FF FF FF FF 
+0942   05A9 FF FF FF FF 
+0942   05AD FF FF FF FF 
+0942   05B1 FF FF FF FF 
+0942   05B5 FF FF FF FF 
+0942   05B9 FF FF FF FF 
+0942   05BD FF FF FF FF 
+0942   05C1 FF FF FF FF 
+0942   05C5 FF FF FF FF 
+0942   05C9 FF FF FF FF 
+0942   05CD FF FF FF FF 
+0942   05D1 FF FF FF FF 
+0942   05D5 FF FF FF FF 
+0942   05D9 FF FF FF FF 
+0942   05DD FF FF FF FF 
+0942   05E1 FF FF FF FF 
+0942   05E5 FF FF FF FF 
+0942   05E9 FF FF FF FF 
+0942   05ED FF FF FF FF 
+0942   05F1 FF FF FF FF 
+0942   05F5 FF FF FF FF 
+0942   05F9 FF FF FF FF 
+0942   05FD FF FF FF FF 
+0942   0601 FF FF FF FF 
+0942   0605 FF FF FF FF 
+0942   0609 FF FF FF FF 
+0942   060D FF FF FF FF 
+0942   0611 FF FF FF FF 
+0942   0615 FF FF FF FF 
+0942   0619 FF FF FF FF 
+0942   061D FF FF FF FF 
+0942   0621 FF FF FF FF 
+0942   0625 FF FF FF FF 
+0942   0629 FF FF FF FF 
+0942   062D FF FF FF FF 
+0942   0631 FF FF FF FF 
+0942   0635 FF FF FF FF 
+0942   0639 FF FF FF FF 
+0942   063D FF FF FF FF 
+0942   0641 FF FF FF FF 
+0942   0645 FF FF FF FF 
+0942   0649 FF FF FF FF 
+0942   064D FF FF FF FF 
+0942   0651 FF FF FF FF 
+0942   0655 FF FF FF FF 
+0942   0659 FF FF FF FF 
+0942   065D FF FF FF FF 
+0942   0661 FF FF FF FF 
+0942   0665 FF FF FF FF 
+0942   0669 FF FF FF FF 
+0942   066D FF FF FF FF 
+0942   0671 FF FF FF FF 
+0942   0675 FF FF FF FF 
+0942   0679 FF FF FF FF 
+0942   067D FF FF FF FF 
+0942   0681 FF FF FF FF 
+0942   0685 FF FF FF FF 
+0942   0689 FF FF FF FF 
+0942   068D FF FF FF FF 
+0942   0691 FF FF FF FF 
+0942   0695 FF FF FF FF 
+0942   0699 FF FF FF FF 
+0942   069D FF FF FF FF 
+0942   06A1 FF FF FF FF 
+0942   06A5 FF FF FF FF 
+0942   06A9 FF FF FF FF 
+0942   06AD FF FF FF FF 
+0942   06B1 FF FF FF FF 
+0942   06B5 FF FF FF FF 
+0942   06B9 FF FF FF FF 
+0942   06BD FF FF FF FF 
+0942   06C1 FF FF FF FF 
+0942   06C5 FF FF FF FF 
+0942   06C9 FF FF FF FF 
+0942   06CD FF FF FF FF 
+0942   06D1 FF FF FF FF 
+0942   06D5 FF FF FF FF 
+0942   06D9 FF FF FF FF 
+0942   06DD FF FF FF FF 
+0942   06E1 FF FF FF FF 
+0942   06E5 FF FF FF FF 
+0942   06E9 FF FF FF FF 
+0942   06ED FF FF FF FF 
+0942   06F1 FF FF FF FF 
+0942   06F5 FF FF FF FF 
+0942   06F9 FF FF FF FF 
+0942   06FD FF FF FF FF 
+0942   0701 FF FF FF FF 
+0942   0705 FF FF FF FF 
+0942   0709 FF FF FF FF 
+0942   070D FF FF FF FF 
+0942   0711 FF FF FF FF 
+0942   0715 FF FF FF FF 
+0942   0719 FF FF FF FF 
+0942   071D FF FF FF FF 
+0942   0721 FF FF FF FF 
+0942   0725 FF FF FF FF 
+0942   0729 FF FF FF FF 
+0942   072D FF FF FF FF 
+0942   0731 FF FF FF FF 
+0942   0735 FF FF FF FF 
+0942   0739 FF FF FF FF 
+0942   073D FF FF FF FF 
+0942   0741 FF FF FF FF 
+0942   0745 FF FF FF FF 
+0942   0749 FF FF FF FF 
+0942   074D FF FF FF FF 
+0942   0751 FF FF FF FF 
+0942   0755 FF FF FF FF 
+0942   0759 FF FF FF FF 
+0942   075D FF FF FF FF 
+0942   0761 FF FF FF FF 
+0942   0765 FF FF FF FF 
+0942   0769 FF FF FF FF 
+0942   076D FF FF FF FF 
+0942   0771 FF FF FF FF 
+0942   0775 FF FF FF FF 
+0942   0779 FF FF FF FF 
+0942   077D FF FF FF FF 
+0942   0781 FF FF FF FF 
+0942   0785 FF FF FF FF 
+0942   0789 FF FF FF FF 
+0942   078D FF FF FF FF 
+0942   0791 FF FF FF FF 
+0942   0795 FF FF FF FF 
+0942   0799 FF FF FF FF 
+0942   079D FF FF FF FF 
+0942   07A1 FF FF FF FF 
+0942   07A5 FF FF FF FF 
+0942   07A9 FF FF FF FF 
+0942   07AD FF FF FF FF 
+0942   07B1 FF FF FF FF 
+0942   07B5 FF FF FF FF 
+0942   07B9 FF FF FF FF 
+0942   07BD FF FF FF FF 
+0942   07C1 FF FF FF FF 
+0942   07C5 FF FF FF FF 
+0942   07C9 FF FF FF FF 
+0942   07CD FF FF FF FF 
+0942   07D1 FF FF FF FF 
+0942   07D5 FF FF FF FF 
+0942   07D9 FF FF FF FF 
+0942   07DD FF FF FF FF 
+0942   07E1 FF FF FF FF 
+0942   07E5 FF FF FF FF 
+0942   07E9 FF FF FF FF 
+0942   07ED FF FF FF FF 
+0942   07F1 FF FF FF FF 
+0942   07F5 FF FF FF FF 
+0942   07F9 FF FF FF FF 
+0942   07FD FF FF FF FF 
+0942   0801 FF FF FF FF 
+0942   0805 FF FF FF FF 
+0942   0809 FF FF FF FF 
+0942   080D FF FF FF FF 
+0942   0811 FF FF FF FF 
+0942   0815 FF FF FF FF 
+0942   0819 FF FF FF FF 
+0942   081D FF FF FF FF 
+0942   0821 FF FF FF FF 
+0942   0825 FF FF FF FF 
+0942   0829 FF FF FF FF 
+0942   082D FF FF FF FF 
+0942   0831 FF FF FF FF 
+0942   0835 FF FF FF FF 
+0942   0839 FF FF FF FF 
+0942   083D FF FF FF FF 
+0943   0841             
+0944   0841             scrap_sector:
+0945   0841 FF FF FF FF   .fill 512         ; scrap sector
+0945   0845 FF FF FF FF 
+0945   0849 FF FF FF FF 
+0945   084D FF FF FF FF 
+0945   0851 FF FF FF FF 
+0945   0855 FF FF FF FF 
+0945   0859 FF FF FF FF 
+0945   085D FF FF FF FF 
+0945   0861 FF FF FF FF 
+0945   0865 FF FF FF FF 
+0945   0869 FF FF FF FF 
+0945   086D FF FF FF FF 
+0945   0871 FF FF FF FF 
+0945   0875 FF FF FF FF 
+0945   0879 FF FF FF FF 
+0945   087D FF FF FF FF 
+0945   0881 FF FF FF FF 
+0945   0885 FF FF FF FF 
+0945   0889 FF FF FF FF 
+0945   088D FF FF FF FF 
+0945   0891 FF FF FF FF 
+0945   0895 FF FF FF FF 
+0945   0899 FF FF FF FF 
+0945   089D FF FF FF FF 
+0945   08A1 FF FF FF FF 
+0945   08A5 FF FF FF FF 
+0945   08A9 FF FF FF FF 
+0945   08AD FF FF FF FF 
+0945   08B1 FF FF FF FF 
+0945   08B5 FF FF FF FF 
+0945   08B9 FF FF FF FF 
+0945   08BD FF FF FF FF 
+0945   08C1 FF FF FF FF 
+0945   08C5 FF FF FF FF 
+0945   08C9 FF FF FF FF 
+0945   08CD FF FF FF FF 
+0945   08D1 FF FF FF FF 
+0945   08D5 FF FF FF FF 
+0945   08D9 FF FF FF FF 
+0945   08DD FF FF FF FF 
+0945   08E1 FF FF FF FF 
+0945   08E5 FF FF FF FF 
+0945   08E9 FF FF FF FF 
+0945   08ED FF FF FF FF 
+0945   08F1 FF FF FF FF 
+0945   08F5 FF FF FF FF 
+0945   08F9 FF FF FF FF 
+0945   08FD FF FF FF FF 
+0945   0901 FF FF FF FF 
+0945   0905 FF FF FF FF 
+0945   0909 FF FF FF FF 
+0945   090D FF FF FF FF 
+0945   0911 FF FF FF FF 
+0945   0915 FF FF FF FF 
+0945   0919 FF FF FF FF 
+0945   091D FF FF FF FF 
+0945   0921 FF FF FF FF 
+0945   0925 FF FF FF FF 
+0945   0929 FF FF FF FF 
+0945   092D FF FF FF FF 
+0945   0931 FF FF FF FF 
+0945   0935 FF FF FF FF 
+0945   0939 FF FF FF FF 
+0945   093D FF FF FF FF 
+0945   0941 FF FF FF FF 
+0945   0945 FF FF FF FF 
+0945   0949 FF FF FF FF 
+0945   094D FF FF FF FF 
+0945   0951 FF FF FF FF 
+0945   0955 FF FF FF FF 
+0945   0959 FF FF FF FF 
+0945   095D FF FF FF FF 
+0945   0961 FF FF FF FF 
+0945   0965 FF FF FF FF 
+0945   0969 FF FF FF FF 
+0945   096D FF FF FF FF 
+0945   0971 FF FF FF FF 
+0945   0975 FF FF FF FF 
+0945   0979 FF FF FF FF 
+0945   097D FF FF FF FF 
+0945   0981 FF FF FF FF 
+0945   0985 FF FF FF FF 
+0945   0989 FF FF FF FF 
+0945   098D FF FF FF FF 
+0945   0991 FF FF FF FF 
+0945   0995 FF FF FF FF 
+0945   0999 FF FF FF FF 
+0945   099D FF FF FF FF 
+0945   09A1 FF FF FF FF 
+0945   09A5 FF FF FF FF 
+0945   09A9 FF FF FF FF 
+0945   09AD FF FF FF FF 
+0945   09B1 FF FF FF FF 
+0945   09B5 FF FF FF FF 
+0945   09B9 FF FF FF FF 
+0945   09BD FF FF FF FF 
+0945   09C1 FF FF FF FF 
+0945   09C5 FF FF FF FF 
+0945   09C9 FF FF FF FF 
+0945   09CD FF FF FF FF 
+0945   09D1 FF FF FF FF 
+0945   09D5 FF FF FF FF 
+0945   09D9 FF FF FF FF 
+0945   09DD FF FF FF FF 
+0945   09E1 FF FF FF FF 
+0945   09E5 FF FF FF FF 
+0945   09E9 FF FF FF FF 
+0945   09ED FF FF FF FF 
+0945   09F1 FF FF FF FF 
+0945   09F5 FF FF FF FF 
+0945   09F9 FF FF FF FF 
+0945   09FD FF FF FF FF 
+0945   0A01 FF FF FF FF 
+0945   0A05 FF FF FF FF 
+0945   0A09 FF FF FF FF 
+0945   0A0D FF FF FF FF 
+0945   0A11 FF FF FF FF 
+0945   0A15 FF FF FF FF 
+0945   0A19 FF FF FF FF 
+0945   0A1D FF FF FF FF 
+0945   0A21 FF FF FF FF 
+0945   0A25 FF FF FF FF 
+0945   0A29 FF FF FF FF 
+0945   0A2D FF FF FF FF 
+0945   0A31 FF FF FF FF 
+0945   0A35 FF FF FF FF 
+0945   0A39 FF FF FF FF 
+0945   0A3D FF FF FF FF 
+0946   0A41             transient_area:
+0947   0A41 00            .db 0             ; beginning of the transient memory area. used for disk reads and other purposes    
+0948   0A42             
+0949   0A42             .end
+tasm: Number of errors = 996
