@@ -195,19 +195,19 @@ sys_system           .equ 12
 sys_fdc              .equ 13
 
 ; aliases for individual 'al' options for FDC system calls
-sys_fdc_restore      .equ 0
-sys_fdc_step         .equ 1
-sys_fdc_step_in      .equ 2
-sys_fdc_step_out     .equ 3
-sys_fdc_seek         .equ 4
-sys_fdc_format       .equ 5
-sys_fdc_read_addr    .equ 6
-sys_fdc_read_track   .equ 7
-sys_fdc_read_sect    .equ 8
-sys_fdc_write_sect   .equ 9
-sys_fdc_force_int    .equ 10
-sys_fdc_status0      .equ 11
-sys_fdc_status1      .equ 12
+fdc_al_restore      .equ 0
+fdc_al_step         .equ 1
+fdc_al_step_in      .equ 2
+fdc_al_step_out     .equ 3
+fdc_al_seek         .equ 4
+fdc_al_format       .equ 5
+fdc_al_read_addr    .equ 6
+fdc_al_read_track   .equ 7
+fdc_al_read_sect    .equ 8
+fdc_al_write_sect   .equ 9
+fdc_al_force_int    .equ 10
+fdc_al_status0      .equ 11
+fdc_al_status1      .equ 12
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; alias exports
@@ -229,19 +229,20 @@ sys_fdc_status1      .equ 12
 .export sys_fdc
 
 ; exports of aliases for individual 'al' options for FDC system calls
-.export sys_fdc_restore
-.export sys_fdc_step
-.export sys_fdc_step_in
-.export sys_fdc_step_out
-.export sys_fdc_seek
-.export sys_fdc_format
-.export sys_fdc_read_addr
-.export sys_fdc_read_track
-.export sys_fdc_read_sect
-.export sys_fdc_write_sect
-.export sys_fdc_force_int
-.export sys_fdc_status0
-.export sys_fdc_status1
+.export fdc_al_restore
+.export fdc_al_step
+.export fdc_al_step_in
+.export fdc_al_step_out
+.export fdc_al_seek
+.export fdc_al_format
+.export fdc_al_read_addr
+.export fdc_al_read_track
+.export fdc_al_read_sect
+.export fdc_al_write_sect
+.export fdc_al_force_int
+.export fdc_al_status0
+.export fdc_al_status1
+
 ; ------------------------------------------------------------------------------------------------------------------;
 ; irqs' code block
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -343,25 +344,37 @@ syscall_fdc:
 syscall_fdc_status0:
   mov al, [_fdc_status_0]
   sysret
+
 syscall_fdc_status1:
   mov al, [_fdc_stat_cmd]
   sysret
+
 syscall_fdc_restore:
+  call fdc_wait_not_busy
+  mov byte [_fdc_track], $00 ; reset track
   mov byte [_fdc_stat_cmd], %00001000
   sysret
 
 syscall_fdc_step:
+  call fdc_wait_not_busy
+  mov byte [_fdc_stat_cmd], %00111000
   sysret
 
 syscall_fdc_step_in:
+  call fdc_wait_not_busy
   mov byte [_fdc_stat_cmd], %01010000
   sysret
 
 syscall_fdc_step_out:
+  call fdc_wait_not_busy
   mov byte [_fdc_stat_cmd], %01111000
   sysret
 
+; bl: desired track
 syscall_fdc_seek:
+  call fdc_wait_not_busy
+  mov [_fdc_data], bl ; set desired track to 39
+  mov byte [_fdc_stat_cmd], %00011000 ; seek command
   sysret
 
 syscall_fdc_read_addr:
@@ -370,10 +383,19 @@ syscall_fdc_read_addr:
 syscall_fdc_force_int:
   sysret
 
+fdc_wait_not_busy:
+  push al
+  mov al, [_fdc_stat_cmd]   
+  test al, $01               
+  jnz fdc_wait_not_busy          
+  pop al
+  ret
+
 ; when writing the actual code for formatting multiple tracks, remember to change the track number byte
 ; in the ram formatting block because they are all set as 00 right now
 ; bl: track number
 syscall_fdc_format:
+  call fdc_wait_not_busy
   mov [_fdc_track], bl
   mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
   mov si, transient_area
@@ -392,12 +414,14 @@ fdc_format_drq:
 fdc_format_end:
   sysret
 
-; di = destination in user space
+; di : destination in user space
+; a  : returns number of read bytes
 syscall_fdc_read_track:
-  mov byte [_fdc_stat_cmd], %11101000
-  call fdc_wait_64us
+  call fdc_wait_not_busy
   push di
   mov di, transient_area
+  mov byte [_fdc_stat_cmd], %11101000
+  call fdc_wait_64us
 fdc_read_track_l0: ; for each byte, we need to wait for drq to be high
   mov al, [_fdc_stat_cmd]      ; 
   test al, $01                ; check busy bit
@@ -415,7 +439,7 @@ fdc_read_track_end:
   sub a, transient_area
   pop di
   mov si, transient_area
-  mov c, 40 + 169 * 16 + 450  ; copy track over to user space
+  mov c, a  ; copy track over to user space
   store
   sysret
 
@@ -423,12 +447,13 @@ fdc_read_track_end:
 ; track in bh
 ; di = user space destination
 syscall_fdc_read_sect:
+  call fdc_wait_not_busy
+  push di
   mov [_fdc_sector], bl
   mov bl, bh
   mov [_fdc_track], bl
   mov byte [_fdc_stat_cmd], %10001000
   call fdc_wait_64us
-  push di
   mov di, transient_area
 fdc_read_sect_l0: ; for each byte, we need to wait for drq to be high
   mov al, [_fdc_stat_cmd]      ; read lost data flag 10+3+5+8+5+8
@@ -444,7 +469,7 @@ fdc_read_sect_end:
   sub a, transient_area
   pop di
   mov si, transient_area
-  mov c, 128  ; copy sector over to user space
+  mov c, a  ; copy sector over to user space
   store
   sysret
 
@@ -452,12 +477,14 @@ fdc_read_sect_end:
 ; track in ah
 ; data pointer in si
 syscall_fdc_write_sect:
+  call fdc_wait_not_busy
   mov [_fdc_sector], bl
   mov bl, bh
   mov [_fdc_track], bl
   mov di, transient_area    ; si = data source, di = destination 
   mov c, 128
   load                    ; transfer data to kernel space!
+  mov si, transient_area
   mov byte [_fdc_stat_cmd], %10101010            ; 101, 0:single sector, 1: disable spinup, 0: no delay, 1: no precomp, 0: normal data mark
   lodsb                      
   mov [_fdc_data], al      

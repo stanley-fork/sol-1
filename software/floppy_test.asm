@@ -52,23 +52,23 @@ menu:
   jmp menu
 
 restore:
-  mov al, sys_fdc_restore
+  mov al, fdc_al_restore
   syscall sys_fdc
   jmp menu
 step:
-  mov al, sys_fdc_step
+  mov al, fdc_al_step
   syscall sys_fdc
   jmp menu
 step_in:
-  mov al, sys_fdc_step_in
+  mov al, fdc_al_step_in
   syscall sys_fdc
   jmp menu
 step_out:
-  mov al, sys_fdc_step_out
+  mov al, fdc_al_step_out
   syscall sys_fdc
   jmp menu
 seek:
-  mov al, sys_fdc_seek
+  mov al, fdc_al_seek
   syscall sys_fdc
   jmp menu
 
@@ -77,22 +77,19 @@ format:
   call _puts
   call scan_u8x   ; in al
   mov bl, al      ; track needs to be in bl
-  mov al, sys_fdc_format
+  mov al, fdc_al_format
   syscall sys_fdc
   mov d, s_format_done
   call _puts
   jmp menu
 
 read_track:
-  mov al, sys_fdc_read_track
+  mov al, fdc_al_read_track
   mov di, transient_area
   syscall sys_fdc
-  mov a, di
-  mov d, a
-  mov b, 3100
-  call printnl
+  mov b, a   ; number of bytes to output
+  mov d, transient_area
   call cmd_hexd
-  call printnl
   jmp menu
 
 read_addr:
@@ -107,12 +104,12 @@ read_sect:
   call _puts
   call scan_u8x ; in al 
   mov bl, al
-  mov al, sys_fdc_read_sect
+  mov al, fdc_al_read_sect
   mov di, transient_area
+  syscall sys_fdc
   mov d, transient_area
   mov b, 128
   call cmd_hexd
-  syscall sys_fdc
   jmp menu
 
 fdc_write_sec:
@@ -124,7 +121,7 @@ fdc_write_sec:
   call _puts
   call scan_u8x ; in al
   mov bl, al
-  mov al, sys_fdc_write_sect
+  mov al, fdc_al_write_sect
   mov si, fdc_sec_data
   syscall sys_fdc
   jmp menu
@@ -140,7 +137,7 @@ fdc_options:
 
 status0:
   call printnl
-  mov al, sys_fdc_status0
+  mov al, fdc_al_status0
   syscall sys_fdc
   mov bl, al
   call print_u8x   ; print bl
@@ -149,7 +146,7 @@ status0:
 
 status1:
   call printnl
-  mov al, sys_fdc_status1
+  mov al, fdc_al_status1
   syscall sys_fdc
   mov bl, al
   call print_u8x   ; print bl
@@ -160,10 +157,10 @@ status1:
 ; b : len
 ; d: data address
 cmd_hexd:
+  call printnl
   mov a, d
   mov [start], a
-  mov a, b
-  mov [length], a
+  mov [length], b
 
 	mov a, [start]
   mov d, a        ; dump pointer in d
@@ -188,13 +185,7 @@ back1:
   mov a, [length]
   cmp a, c
   jne dump_loop
-  
-  mov a, $0a00
-  syscall sys_io
-  mov a, $0d00
-  syscall sys_io
-  ;call printnl
-
+  call printnl
   ret
 
 print_ascii:
@@ -219,10 +210,7 @@ ascii_continue:
   loopb print_ascii_l
   jmp back1
 print_base:
-  mov a, $0a00
-  syscall sys_io
-  mov a, $0d00
-  syscall sys_io
+  call printnl
   mov b, d
   sub b, transient_area
   call print_u16x        ; display row
@@ -230,7 +218,6 @@ print_base:
   mov a, $2000
   syscall sys_io
   jmp back
-
   ret
 
 start:   .dw 0

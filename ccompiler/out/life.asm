@@ -1,5 +1,5 @@
 ; --- FILENAME: programs/life.c
-; --- DATE:     30-06-2025 at 19:35:17
+; --- DATE:     30-06-2025 at 23:26:11
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -13,7 +13,7 @@ main:
   sub sp, 2
 ; int n; 
   sub sp, 2
-; for(i = 0; i <  50      ; i++){ 
+; for(i = 0; i <  30      ; i++){ 
 _for1_init:
   lea d, [bp + -1] ; $i
   push d
@@ -27,7 +27,7 @@ _for1_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000032
+  mov32 cb, $0000001e
   cmp a, b
   slt ; < (signed)
   pop a
@@ -35,7 +35,7 @@ _for1_cond:
   cmp b, 0
   je _for1_exit
 _for1_block:
-; for(j = 0; j <   80     ; j++){ 
+; for(j = 0; j <   40     ; j++){ 
 _for2_init:
   lea d, [bp + -3] ; $j
   push d
@@ -49,7 +49,7 @@ _for2_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000050
+  mov32 cb, $00000028
   cmp a, b
   slt ; < (signed)
   pop a
@@ -65,7 +65,7 @@ _for2_block:
   mov b, [d]
   mov c, 0
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -81,7 +81,7 @@ _for2_block:
   mov b, [d]
   mov c, 0
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -120,7 +120,7 @@ _for1_exit:
 _for3_init:
 _for3_cond:
 _for3_block:
-; for(i = 1; i <  50      +-1; i++){ 
+; for(i = 1; i <  30      +-1; i++){ 
 _for4_init:
   lea d, [bp + -1] ; $i
   push d
@@ -134,7 +134,7 @@ _for4_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000032
+  mov32 cb, $0000001e
 ; --- START TERMS
   push a
   mov a, b
@@ -149,7 +149,7 @@ _for4_cond:
   cmp b, 0
   je _for4_exit
 _for4_block:
-; for(j = 1; j <   80     +-1; j++){ 
+; for(j = 1; j <   40     +-1; j++){ 
 _for5_init:
   lea d, [bp + -3] ; $j
   push d
@@ -163,7 +163,7 @@ _for5_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000050
+  mov32 cb, $00000028
 ; --- START TERMS
   push a
   mov a, b
@@ -200,7 +200,7 @@ _if6_cond:
   pop a
 ; --- END TERMS
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -249,7 +249,7 @@ _if7_cond:
   pop a
 ; --- END TERMS
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -305,7 +305,7 @@ _if8_cond:
   pop a
 ; --- END TERMS
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -354,7 +354,7 @@ _if9_cond:
   mov b, [d]
   mov c, 0
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -403,7 +403,7 @@ _if10_cond:
   mov b, [d]
   mov c, 0
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -459,7 +459,7 @@ _if11_cond:
   pop a
 ; --- END TERMS
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -515,7 +515,7 @@ _if12_cond:
   pop a
 ; --- END TERMS
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -564,7 +564,7 @@ _if13_cond:
   pop a
 ; --- END TERMS
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -645,7 +645,7 @@ _if14_TRUE:
   mov b, [d]
   mov c, 0
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -683,7 +683,7 @@ _if15_TRUE:
   mov b, [d]
   mov c, 0
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -720,7 +720,7 @@ _for4_update:
   mov b, a
   jmp _for4_cond
 _for4_exit:
-; for(i = 1; i <  50      +-1; i++){ 
+; for(i = 1; i <  30      +-1; i++){ 
 _for16_init:
   lea d, [bp + -1] ; $i
   push d
@@ -734,7 +734,7 @@ _for16_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000032
+  mov32 cb, $0000001e
 ; --- START TERMS
   push a
   mov a, b
@@ -749,7 +749,7 @@ _for16_cond:
   cmp b, 0
   je _for16_exit
 _for16_block:
-; for(j = 1; j <   80     +-1; j++){ 
+; for(j = 1; j <   40     +-1; j++){ 
 _for17_init:
   lea d, [bp + -3] ; $j
   push d
@@ -763,7 +763,7 @@ _for17_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000050
+  mov32 cb, $00000028
 ; --- START TERMS
   push a
   mov a, b
@@ -786,7 +786,7 @@ _for17_block:
   mov b, [d]
   mov c, 0
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -802,7 +802,7 @@ _for17_block:
   mov b, [d]
   mov c, 0
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -847,7 +847,7 @@ _for16_exit:
   call printf
   add sp, 2
 ; --- END FUNCTION CALL
-; for(i = 0; i <  50      ; i++){ 
+; for(i = 0; i <  30      ; i++){ 
 _for18_init:
   lea d, [bp + -1] ; $i
   push d
@@ -861,7 +861,7 @@ _for18_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000032
+  mov32 cb, $0000001e
   cmp a, b
   slt ; < (signed)
   pop a
@@ -869,7 +869,7 @@ _for18_cond:
   cmp b, 0
   je _for18_exit
 _for18_block:
-; for(j = 0; j <   80     ; j++){ 
+; for(j = 0; j <   40     ; j++){ 
 _for19_init:
   lea d, [bp + -3] ; $j
   push d
@@ -883,7 +883,7 @@ _for19_cond:
 ; --- START RELATIONAL
   push a
   mov a, b
-  mov32 cb, $00000050
+  mov32 cb, $00000028
   cmp a, b
   slt ; < (signed)
   pop a
@@ -900,7 +900,7 @@ _ternary20_cond:
   mov b, [d]
   mov c, 0
   pop d
-  mma 80 ; mov a, 80; mul a, b; add d, b
+  mma 40 ; mov a, 40; mul a, b; add d, b
   push d
   lea d, [bp + -3] ; $j
   mov b, [d]
@@ -2454,7 +2454,7 @@ _puts_END_puts:
 _clear_data: .db $1b,$5b,$32,$4a,$1b,$5b,$48,$00,
 
 .fill 3, 0
-_nextState_data: .fill 4000, 0
+_nextState_data: .fill 1200, 0
 _currState_data: .db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,
 .db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,
 .db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,
@@ -2507,7 +2507,7 @@ _currState_data: .db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 .db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,
 .db $20,
 
-.fill 3200, 0
+.fill 400, 0
 _s0: .db "@ ", 0
 _s1: .db ". ", 0
 _s2: .db "\n\r", 0
