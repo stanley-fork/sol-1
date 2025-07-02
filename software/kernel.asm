@@ -82,16 +82,72 @@ text_org          .equ $400          ; code origin address for all user processe
 
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; for the next iteration:
-; boot-sector(1) | inode-bitmap | rawdata-bitmap | inode-table | raw-disk-data
+; DISK LAYOUT:
+; | Metadata               | Size (bytes)    | Blocks (2048 bytes)              |
+; | ---------------------- | --------------- | -------------------------------- |
+; | Bootloader             | 512 bytes       | 0.25 (1 sector)                  |
+; | Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |
+; | Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |
+; | Block Bitmap           | 16,384 bytes    | 8 blocks                         |
+; | Inode Bitmap           | 2,048 bytes     | 1 block                          |
+; | Inode Table            | 2,097,152 bytes | 1024 blocks                      |
+; 
+; first 512 bytes: bootloader from 0 to 445, MBR partition table from 446 to 511 (64 bytes)
+; up to 4 partitions, each 16 bytes long
+; MBR:
+; Byte | Description
+; -----|----------------------------
+; 0    | Boot flag (0x80 active, 0x00 inactive)
+; 1-3  | Start CHS (head, sector, cylinder)
+; 4    | Partition type (filesystem ID)
+;   0x83 = Linux native (ext2/3/4)
+;   0x07 = NTFS/exFAT
+;   0x0B = FAT32 CHS
+;   0x0C = FAT32 LBA
+;   0x05 = Extended partition
+; 5-7  | End CHS
+; 8-11 | Start LBA (little endian)
+; 12-15| Size in sectors (little endian)
+; 
+; 
+; SUPERBLOCK:
+; | Field                 | Description                                  |
+; | --------------------- | -------------------------------------------- |
+; | `s_inodes_count`      | Total number of inodes in the filesystem     |
+; | `s_blocks_count`      | Total number of data blocks                  |
+; | `s_free_inodes_count` | Number of free inodes                        |
+; | `s_free_blocks_count` | Number of free blocks                        |
+; | `s_first_data_block`  | Block number of the first data block         |
+; | `s_log_block_size`    | Block size = 1024 << `s_log_block_size`      |
+; | `s_inode_size`        | Size of each inode (in bytes)                |
+; | `s_magic`             | Filesystem signature (`0xEF53` for ext2/3/4) |
+; | `s_mtime`             | Last mount time                              |
+; | `s_wtime`             | Last write time                              |
+; | `s_uuid`              | Unique ID of the filesystem                  |
+; | `s_volume_name`       | Label of the filesystem                      |
+; | `s_feature_flags`     | Compatibility flags                          |
+; 
+; 
+; 
+; inode for root dir is #2, #0 and #1 not used
+; bock size: 2048
+
 ; inode-table format:
-;  file-type(f, d)
-;  permissons
-;  link-count
-;  filesize
-;  time-stamps
-;  15 data block pointers
-;  single-indirect pointer
+; | Field         | Size (bytes) | Description                                                                                  |
+; | ------------- | ------------ | -------------------------------------------------------------------------------------------- |
+; | `mode`        | 2            | File type and permissions                                                                    |
+; | `uid`         | 2            | Owner user ID                                                                                |
+; | `size`        | 4            | Size of the file in bytes                                                                    |
+; | `atime`       | 4            | Last access time (timestamp)                                                                 |
+; | `ctime`       | 4            | Creation time (timestamp)                                                                    |
+; | `mtime`       | 4            | Last modification time (timestamp)                                                           |
+; | `dtime`       | 4            | Deletion time (timestamp)                                                                    |
+; | `gid`         | 2            | Group ID                                                                                     |
+; | `links_count` | 2            | Number of hard links                                                                         |
+; | `blocks`      | 4            | Number of 512-byte blocks allocated                                                          |
+; | `flags`       | 4            | File flags                                                                                   |
+; | `block`       | 15 x 4 = 60  | Pointers to data blocks (12 direct, 1 single indirect, 1 double indirect, 1 triple indirect) |
+
 
 ; file entry attributes
 ; filename (24)

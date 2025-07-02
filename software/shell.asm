@@ -43,6 +43,7 @@ shell_l0:
   mov [prog], a      ; reset tokenizer buffer pointer
   call _gets            ; get command
   call cmd_parser
+  call printnl
   jmp shell_l0
 
 cmd_parser:
