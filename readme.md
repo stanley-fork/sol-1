@@ -18,13 +18,15 @@ It is published here for educational purposes.
 ### Hardware
 - User and Kernel privilege modes, with up to 256 processes running in parallel.
 - Paged virtual memory, such that each process can have a total of 64KB RAM for itself.
-- Two serial ports (16550), a real time clock(M48T02), 2 parallel ports(8255), a programmable timer(8253), an IDE hard-drive interface(2.5 Inch HDD), and a sound chip(AY-3-8910).
+- Two serial ports (16550), a real time clock(M48T02), 2 parallel ports(8255), a programmable timer(8253), an IDE hard-drive interface(2.5 Inch HDD), a sound chip(AY-3-8910),
+5.25" floppy drive controller (WD1770).
 - 8 prioritized external interrupts
 - DMA channel
 - The sequencer is microcoded, with 15 ROMS operating horizontally
 - 8/16-Bit MUL and DIV instructions
 - Fast indexed string instructions in the spirit of x86's REP MOVSB, CMPSB, LODSB, STOSB, etc
 - 32bit IEEE 754 Floating Point Unit (Under Development)
+- 5.25" floppy drive :)
 
 ### Register Table
 #### General Purpose Registers
