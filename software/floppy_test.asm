@@ -42,12 +42,14 @@ menu:
   cmp ah, '7'
   je read_track
   cmp ah, '8'
-  je read_sect
+  je read_sect_128
   cmp ah, '9'
-  je fdc_options
+  je read_sect_512
   cmp ah, 'A'
-  je fdc_write_sec_128
+  je fdc_options
   cmp ah, 'B'
+  je fdc_write_sec_128
+  cmp ah, 'C'
   je fdc_write_sec_512
   jmp menu
 
@@ -106,7 +108,7 @@ read_track:
 read_addr:
   jmp menu
 
-read_sect:
+read_sect_128:
   mov d, s1
   call _puts
   call scan_u8x
@@ -123,6 +125,23 @@ read_sect:
   call cmd_hexd
   jmp menu
 
+read_sect_512:
+  mov d, s1
+  call _puts
+  call scan_u8x
+  mov bh, al
+  mov d, s2
+  call _puts
+  call scan_u8x ; in al 
+  mov bl, al
+  mov al, fdc_al_read_sect
+  mov di, transient_area
+  syscall sys_fdc
+  mov d, transient_area
+  mov b, 512
+  call cmd_hexd
+  jmp menu
+
 fdc_write_sec_128:
   mov d, s1
   call _puts
@@ -132,8 +151,9 @@ fdc_write_sec_128:
   call _puts
   call scan_u8x ; in al
   mov bl, al
-  mov al, fdc_al_write_sect_128
+  mov al, fdc_al_write_sect
   mov si, fdc_sec_data_128
+  mov c, 128
   syscall sys_fdc
   jmp menu
 
@@ -146,8 +166,9 @@ fdc_write_sec_512:
   call _puts
   call scan_u8x ; in al
   mov bl, al
-  mov al, fdc_al_write_sect_512
+  mov al, fdc_al_write_sect
   mov si, fdc_sec_data_512
+  mov c, 512
   syscall sys_fdc
   jmp menu
 
@@ -262,10 +283,11 @@ s_menu:  .db "\n0. step in\n"
          .db "5. format track 128\n", 
          .db "6. format track 512\n", 
          .db "7. read track\n", 
-         .db "8. read sector\n", 
-         .db "9. config\n", 
-         .db "A. write 128 byte sector\n", 
-         .db "B. write 512 byte sector\n", 
+         .db "8. read sector 128\n", 
+         .db "9. read sector 512\n", 
+         .db "A. config\n", 
+         .db "B. write 128 byte sector\n", 
+         .db "C. write 512 byte sector\n", 
          .db "\nselect option: ", 0
 
 s_format_done: .db "\nformat done.\n", 0

@@ -83,7 +83,7 @@ text_org          .equ $400          ; code origin address for all user processe
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; for the next iteration:
-; boot-sector(1) | kernel-sectors(32) | inode-bitmap | rawdata-bitmap | inode-table | raw-disk-data
+; boot-sector(1) | inode-bitmap | rawdata-bitmap | inode-table | raw-disk-data
 ; inode-table format:
 ;  file-type(f, d)
 ;  permissons
@@ -335,6 +335,7 @@ fdc_jmptbl:
   .dw syscall_fdc_step_out
   .dw syscall_fdc_seek
   .dw syscall_fdc_format_128
+  .dw syscall_fdc_format_512
   .dw syscall_fdc_read_addr
   .dw syscall_fdc_read_track
   .dw syscall_fdc_read_sect
@@ -355,7 +356,7 @@ syscall_fdc_status1:
 
 syscall_fdc_restore:
   call fdc_wait_not_busy
-  mov byte [_fdc_stat_cmd], %00001000
+  mov byte [_fdc_stat_cmd], %00001010
   mov byte [_fdc_track], $00 ; reset track
   sysret
 
@@ -397,16 +398,38 @@ syscall_fdc_format_128:
   mov si, transient_area
   mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
   call fdc_wait_64us
-fdc_format_drq:
+fdc_format_drq_128:
   mov al, [_fdc_stat_cmd]     ; 10
   test al, $01                ; 4
-  jz fdc_format_end           ; 8
+  jz fdc_format_end_128           ; 8
   test al, $02                ; 4
-  jz fdc_format_drq           ; 8
+  jz fdc_format_drq_128           ; 8
   lodsb                       ; 7
   mov [_fdc_data], al         ; 10   
-  jmp fdc_format_drq
-fdc_format_end:
+  jmp fdc_format_drq_128
+fdc_format_end_128:
+  sysret
+
+; when writing the actual code for formatting multiple tracks, remember to change the track number byte
+; in the ram formatting block because they are all set as 00 right now
+; bl: track number
+syscall_fdc_format_512:
+  call fdc_format_mem_512
+  call fdc_wait_not_busy
+  mov [_fdc_track], bl
+  mov si, transient_area
+  mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
+  call fdc_wait_64us
+fdc_format_drq_512:
+  mov al, [_fdc_stat_cmd]     ; 10
+  test al, $01                ; 4
+  jz fdc_format_end_512           ; 8
+  test al, $02                ; 4
+  jz fdc_format_drq_512           ; 8
+  lodsb                       ; 7
+  mov [_fdc_data], al         ; 10   
+  jmp fdc_format_drq_512
+fdc_format_end_512:
   sysret
 
 ; di : destination in user space
@@ -468,16 +491,17 @@ fdc_read_sect_end:
   store
   sysret
 
-; sector in al
-; track in ah
+; sector size in c
+; sector in bl
+; track in bh
 ; data pointer in si
 syscall_fdc_write_sect:
   call fdc_wait_not_busy
+  push c
   mov [_fdc_sector], bl
   mov bl, bh
   mov [_fdc_track], bl
   mov di, transient_area    ; si = data source, di = destination 
-  mov c, 128
   load                    ; transfer data to kernel space!
   mov si, transient_area
   mov byte [_fdc_stat_cmd], %10101010            ; 101, 0:single sector, 1: disable spinup, 0: no delay, 1: no precomp, 0: normal data mark
@@ -600,90 +624,90 @@ fdc_format_mem_512:
 ; 40 * FF
   mov c, 40
   mov al, $ff
-fdc_l0: 
+fdc_512_l0: 
   stosb
   dec c
-  jnz fdc_l0
+  jnz fdc_512_l0
 ; 6 * 00
-fdc_inner_loop:
+fdc_512_inner_loop:
   mov c, 6
   mov al, $00
-fdc_l1:
+fdc_512_l1:
   stosb
   dec c
-  jnz fdc_l1
+  jnz fdc_512_l1
 ; FE address mark
-fdc_l2:
+fdc_512_l2:
   mov al, $fe
   stosb
 ; track number
-fdc_l3:
+fdc_512_l3:
   mov al, $00
   stosb
 ; side number
-fdc_l4:
+fdc_512_l4:
   mov al, $00
   stosb
 ; sector number
-fdc_l5:
+fdc_512_l5:
   mov a, d
   stosb
 ; sector length 512 bytes
-fdc_l6:
+fdc_512_l6:
   mov al, $02
   stosb
 ; 2 crc's
-fdc_l7:
+fdc_512_l7:
   mov al, $f7
   stosb
 ; 11 times $ff
   mov c, 11
   mov al, $ff
-fdc_l8:
+fdc_512_l8:
   stosb
   dec c
-  jnz fdc_l8
+  jnz fdc_512_l8
 ; 6 times 00
   mov c, 6
   mov al, $00
-fdc_l9:
+fdc_512_l9:
   stosb
   dec c
-  jnz fdc_l9
+  jnz fdc_512_l9
 ; FB data address mark
   mov al, $fb
-fdc_l10:
+fdc_512_l10:
   stosb
 ; 128 bytes sector data
-  mov c, 128
+  mov c, 512
   mov al, $E5
-fdc_l11:
+fdc_512_l11:
   stosb
   dec c
-  jnz fdc_l11
+  jnz fdc_512_l11
 ; 2 crc's
-fdc_l12:
+fdc_512_l12:
   mov al, $f7
   stosb
 ; 10 * $FF
   mov c, 10
   mov al, $ff
-fdc_l13:
+fdc_512_l13:
   stosb
   dec c
-  jnz fdc_l13
+  jnz fdc_512_l13
 ; check whether we did this 16 times
   inc d
-  cmp d, 5
-  jne fdc_inner_loop
+  cmp d, 6
+  jne fdc_512_inner_loop
 ; 500 bytes of FF for end filler. wd1770 writes these until it finishes, so the number varies. usually it writes ~450 bytes
   mov c, 500
   mov al, $ff
-fdc_format_footer:
-fdc_footer_drq_loop:
+fdc_512_format_footer:
+fdc_512_footer_drq_loop:
   stosb
   dec c
-  jnz fdc_footer_drq_loop
+  jnz fdc_512_footer_drq_loop
   ret
 
 ; fetch is 2 cycles long when 'display_reg_load' is false.
