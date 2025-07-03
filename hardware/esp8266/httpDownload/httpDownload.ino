@@ -6,7 +6,7 @@
 
 // Serial Port
 uint16_t len;
-uint16_t baud = 9600;
+uint16_t baud = 38400;
 
 // Telnet
 const int  MAX_CLIENTS = 3;
@@ -16,7 +16,8 @@ WiFiClient serverClients[MAX_CLIENTS];
 void setup() {
   int total_delay=0;
   //ESP.wdtEnable(1000);  // 1 second watchdog timeout
-  Serial.begin(baud);
+  Serial.setRxBufferSize(1024);
+  Serial.begin(baud, SERIAL_8O2);
   WiFi.begin("", "");
   while (WiFi.status() != WL_CONNECTED){
     delay(1000);

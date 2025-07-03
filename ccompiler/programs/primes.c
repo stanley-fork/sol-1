@@ -19,6 +19,23 @@ void main(void){
 	return 0;
 }
 
+int sqrt(int n) {
+    if (n <= 1) {
+        return n;
+    }
+
+    int x;
+    int y;
+    x = n;
+    y = (x + n / x) / 2;
+
+    while (y < x) {
+        x = y;
+        y = (x + n / x) / 2;
+    }
+
+    return x;
+}
 void primes1(void){
 	unsigned int n, i, s, count, divides;
 

@@ -130,7 +130,7 @@ text_org          .equ $400          ; code origin address for all user processe
 ; 
 ; 
 ; inode for root dir is #2, #0 and #1 not used
-; bock size: 2048
+; block size: 2048
 
 ; inode-table format:
 ; | Field         | Size (bytes) | Description                                                                                  |

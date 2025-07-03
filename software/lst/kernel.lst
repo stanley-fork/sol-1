@@ -130,7 +130,7 @@
 0130   0000             ; 
 0131   0000             ; 
 0132   0000             ; inode for root dir is #2, #0 and #1 not used
-0133   0000             ; bock size: 2048
+0133   0000             ; block size: 2048
 0134   0000             
 0135   0000             ; inode-table format:
 0136   0000             ; | Field         | Size (bytes) | Description                                                                                  |
