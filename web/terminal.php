@@ -45,6 +45,10 @@ please ignore it. Alternatively you can connect directly via your local console 
 The address is sol-1.org at port 51515.
 Click 'Connect' below to visit the system.
 
+<iframe width="1500" height="800" src="https://youfiles.herokuapp.com/telnetclient/"></iframe>
+</pre>
+
+<!--
 <div id="fTelnetContainer" class="fTelnetContainer"></div>
 <script>document.write('<script src="//embed-v2.ftelnet.ca/js/ftelnet-loader.norip.noxfer.js?v=' + (new Date()).getTime() + '"><\/script>');</script>
 <script>
@@ -67,8 +71,9 @@ Click 'Connect' below to visit the system.
     Options.ScreenRows = 24;
     Options.SendLocation = false;
     var fTelnet = new fTelnetClient('fTelnetContainer', Options);
-</script>
-</pre>
+ </script>
+ -->
+
 </td>
 </tr>
 </table>
