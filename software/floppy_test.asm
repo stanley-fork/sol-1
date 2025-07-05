@@ -38,18 +38,22 @@ menu:
   cmp ah, '5'
   je format_128
   cmp ah, '6'
-  je format_512
+  je format_disk_128
   cmp ah, '7'
-  je read_track
+  je format_512
   cmp ah, '8'
-  je read_sect_128
+  je format_disk_512
   cmp ah, '9'
-  je read_sect_512
+  je read_track
   cmp ah, 'A'
-  je fdc_options
+  je read_sect_128
   cmp ah, 'B'
-  je fdc_write_sec_128
+  je read_sect_512
   cmp ah, 'C'
+  je fdc_options
+  cmp ah, 'D'
+  je fdc_write_sec_128
+  cmp ah, 'E'
   je fdc_write_sec_512
   jmp menu
 
@@ -85,12 +89,26 @@ format_128:
   call _puts
   jmp menu
 
+format_disk_128:
+  mov al, fdc_al_formatdisk_128
+  syscall sys_fdc
+  mov d, s_format_done
+  call _puts
+  jmp menu
+
 format_512:
   mov d, s_track
   call _puts
   call scan_u8x   ; in al
   mov bl, al      ; track needs to be in bl
   mov al, fdc_al_format_512
+  syscall sys_fdc
+  mov d, s_format_done
+  call _puts
+  jmp menu
+
+format_disk_512:
+  mov al, fdc_al_formatdisk_512
   syscall sys_fdc
   mov d, s_format_done
   call _puts
@@ -281,13 +299,15 @@ s_menu:  .db "\n0. step in\n"
          .db "3. read status 1\n", 
          .db "4. read status 2\n", 
          .db "5. format track 128\n", 
-         .db "6. format track 512\n", 
-         .db "7. read track\n", 
-         .db "8. read sector 128\n", 
-         .db "9. read sector 512\n", 
-         .db "A. config\n", 
-         .db "B. write 128 byte sector\n", 
-         .db "C. write 512 byte sector\n", 
+         .db "6. format disk 128\n", 
+         .db "7. format track 512\n", 
+         .db "8. format disk 512\n", 
+         .db "9. read track\n", 
+         .db "A. read sector 128\n", 
+         .db "B. read sector 512\n", 
+         .db "C. config\n", 
+         .db "D. write 128 byte sector\n", 
+         .db "E. write 512 byte sector\n", 
          .db "\nselect option: ", 0
 
 s_format_done: .db "\nformat done.\n", 0

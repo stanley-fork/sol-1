@@ -3873,7 +3873,6 @@
 }
 
 0x15, "mov a, [d] - add32 cb, ga"{
-  // mov mar, d
   0{
     next = next_offset
     offset = 1
@@ -3890,15 +3889,7 @@
     alu_mode = logic
     marh_wrt = true
   }
-  // start read
   2{
-    next = next_offset
-    offset = 1
-    rd = true
-  }
-  // second cycle of read, then write to mdrl
-  // update marl
-  3{
     next = next_offset
     offset = 1
     ucf_in_src = alu_final_cf
@@ -3909,9 +3900,9 @@
     mdr_in_src = databus
     mdrl_wrt = true
     marl_wrt = true
+    immediate = 1
   }
-  // update marh
-  4{
+  3{
     next = next_offset
     offset = 1
     alu_x = marh
@@ -3920,9 +3911,7 @@
     alu_cf_in_inv = true
     marh_wrt = true
   }
-  // start high byte read
-  // send low byte to a 
-  5{
+  4{
     next = next_offset
     offset = 1
     alu_op = y
@@ -3930,38 +3919,18 @@
     rd = true
     alu_y = mdrl
     al_wrt = true
-  }
-  // second cycle of read, and write to mdrh
-  // update marl
-  6{
-    next = next_offset
-    offset = 1
-    rd = true
     mdr_in_src = databus
     mdrh_wrt = true
-    ucf_in_src = alu_final_cf
-    alu_x = marl
-    alu_op = plus
-    alu_cf_out_inv = true
-    marl_wrt = true
   }
-  // update marh
-  7{
-    next = next_offset
-    offset = 1
-    alu_x = marh
-    alu_op = plus
-    alu_cf_in = ucf
-    alu_cf_in_inv = true
-    marh_wrt = true
-  }
-  // send mdrh to a
-  8{
+  5{
     next = next_fetch
     alu_op = y
     alu_mode = logic
     alu_y = mdrh  
     ah_wrt = true
+    marl_wrt = true
+    marh_wrt = true
+    mar_in_src = pc
   }
 
   16{

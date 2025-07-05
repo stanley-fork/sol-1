@@ -48,7 +48,7 @@ MOV A,B                         11    1    NOP      1
 MOV A,C                         12    1    NOP      1
 MOV A,D                         13    1    NOP      1
 MOV A,G                         12FD  2    NOP      1
-MOV A,[D]                       15    1    NOP      1
+MOV A,[D]                       15    1    NOP      1             ; updated to 2 RD cycles 
 MOV A,[A+@]                     B7    3    NOP      1
 MOV A,[@+A]                     B7    3    NOP      1
 MOV A,[D+@]                     16    3    NOP      1

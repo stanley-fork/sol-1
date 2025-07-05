@@ -1,5 +1,5 @@
 ; --- FILENAME: programs/primes.c
-; --- DATE:     04-07-2025 at 00:41:11
+; --- DATE:     05-07-2025 at 01:29:12
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -72,14 +72,14 @@ _if2_cond:
   cmp b, 0
   je _if2_exit
 _if2_TRUE:
-; printf("%d\n", i); 
+; printf("%u\n", i); 
 ; --- START FUNCTION CALL
   lea d, [bp + -3] ; $i
   mov b, [d]
   mov c, 0
   swp b
   push b
-  mov b, _s2 ; "%d\n"
+  mov b, _s2 ; "%u\n"
   swp b
   push b
   call printf
@@ -466,7 +466,7 @@ _if23_TRUE:
   mov c, 0
   swp b
   push b
-  mov b, _s2 ; "%d\n"
+  mov b, _s3 ; "%d\n"
   swp b
   push b
   call printf
@@ -903,7 +903,7 @@ _if37_TRUE:
 _if37_else:
 ; err("Unexpected format in printf."); 
 ; --- START FUNCTION CALL
-  mov b, _s3 ; "Unexpected format in printf."
+  mov b, _s4 ; "Unexpected format in printf."
   swp b
   push b
   call err
@@ -1087,7 +1087,7 @@ _switch34_case7:
 _switch34_default:
 ; print("Error: Unknown argument type.\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s4 ; "Error: Unknown argument type.\n"
+  mov b, _s5 ; "Error: Unknown argument type.\n"
   swp b
   push b
   call print
@@ -2258,9 +2258,10 @@ table_power_scann:
 _top: .fill 2, 0
 _s0: .db "Enter a number to find all prime numbers up to it: ", 0
 _s1: .db "Prime numbers are: \n", 0
-_s2: .db "%d\n", 0
-_s3: .db "Unexpected format in printf.", 0
-_s4: .db "Error: Unknown argument type.\n", 0
+_s2: .db "%u\n", 0
+_s3: .db "%d\n", 0
+_s4: .db "Unexpected format in printf.", 0
+_s5: .db "Error: Unknown argument type.\n", 0
 
 _heap_top: .dw _heap
 _heap: .db 0

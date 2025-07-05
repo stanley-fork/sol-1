@@ -75,8 +75,8 @@ _timer_c_1        .equ $ffe1         ; timer counter 1
 _timer_c_2        .equ $ffe2         ; timer counter 2
 _timer_ctrl       .equ $ffe3         ; timer control register
 
-stack_begin       .equ $f7ff         ; beginning of stack
-fifo_size         .equ 1024
+_stack_begin      .equ $f7ff         ; beginning of stack
+_fifo_size        .equ 4096
 
 text_org          .equ $400          ; code origin address for all user processes
 
@@ -257,14 +257,16 @@ fdc_al_step_in      .equ 2
 fdc_al_step_out     .equ 3
 fdc_al_seek         .equ 4
 fdc_al_format_128   .equ 5
-fdc_al_format_512   .equ 6
-fdc_al_read_addr    .equ 7
-fdc_al_read_track   .equ 8
-fdc_al_read_sect    .equ 9
-fdc_al_write_sect   .equ 10
-fdc_al_force_int    .equ 11
-fdc_al_status0      .equ 12
-fdc_al_status1      .equ 13
+fdc_al_formatdisk_128   .equ 6
+fdc_al_format_512   .equ 7
+fdc_al_formatdisk_512   .equ 8
+fdc_al_read_addr    .equ 9
+fdc_al_read_track   .equ 10
+fdc_al_read_sect    .equ 11
+fdc_al_write_sect   .equ 12
+fdc_al_force_int    .equ 13
+fdc_al_status0      .equ 14
+fdc_al_status1      .equ 15
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; alias exports
@@ -285,6 +287,8 @@ fdc_al_status1      .equ 13
 .export sys_system
 .export sys_fdc
 
+.export _7seg_display
+
 .export _fdc_config        
 .export _fdc_status_0      
 .export _fdc_stat_cmd     
@@ -296,7 +300,9 @@ fdc_al_status1      .equ 13
 .export fdc_al_step_out
 .export fdc_al_seek
 .export fdc_al_format_128
+.export fdc_al_formatdisk_128
 .export fdc_al_format_512
+.export fdc_al_formatdisk_512
 .export fdc_al_read_addr
 .export fdc_al_read_track
 .export fdc_al_read_sect
@@ -343,7 +349,9 @@ int_7_uart0:
   mov [d], al                 ; add to fifo
   mov a, [fifo_in]
   inc a
-  cmp a, fifo + fifo_size     ; check if pointer reached the end of the fifo
+  mov bl, ah
+  mov [_7seg_display], bl
+  cmp a, fifo + _fifo_size     ; check if pointer reached the end of the fifo
   jne int_7_continue
   mov a, fifo  
 int_7_continue:  
@@ -391,7 +399,9 @@ fdc_jmptbl:
   .dw syscall_fdc_step_out
   .dw syscall_fdc_seek
   .dw syscall_fdc_format_128
+  .dw syscall_fdc_formatdisk_128
   .dw syscall_fdc_format_512
+  .dw syscall_fdc_formatdisk_512
   .dw syscall_fdc_read_addr
   .dw syscall_fdc_read_track
   .dw syscall_fdc_read_sect
@@ -488,6 +498,58 @@ fdc_format_drq_512:
 fdc_format_end_512:
   sysret
 
+syscall_fdc_formatdisk_128:
+  mov bl, 0
+fdc_formatdisk128_l0:
+  call fdc_format_mem_128
+  call fdc_wait_not_busy
+  mov [_fdc_track], bl
+  mov si, transient_area
+  mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
+  call fdc_wait_64us
+fdc_formatdisk_drq_128:
+  mov al, [_fdc_stat_cmd]     ; 10
+  test al, $01                ; 4
+  jz fdc_formatdisk_end_128           ; 8
+  test al, $02                ; 4
+  jz fdc_formatdisk_drq_128           ; 8
+  lodsb                       ; 7
+  mov [_fdc_data], al         ; 10   
+  jmp fdc_formatdisk_drq_128
+fdc_formatdisk_end_128:
+  call fdc_wait_not_busy
+  mov byte [_fdc_stat_cmd], %01010000  ; step in
+  add bl, 1
+  cmp bl, 40
+  jne fdc_formatdisk128_l0
+  sysret
+
+syscall_fdc_formatdisk_512:
+  mov bl, 0
+fdc_formatdisk512_l0:
+  call fdc_format_mem_512
+  call fdc_wait_not_busy
+  mov [_fdc_track], bl
+  mov si, transient_area
+  mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
+  call fdc_wait_64us
+fdc_formatdisk_drq_512:
+  mov al, [_fdc_stat_cmd]     ; 10
+  test al, $01                ; 4
+  jz fdc_formatdisk_end_512           ; 8
+  test al, $02                ; 4
+  jz fdc_formatdisk_drq_512           ; 8
+  lodsb                       ; 7
+  mov [_fdc_data], al         ; 10   
+  jmp fdc_formatdisk_drq_512
+fdc_formatdisk_end_512:
+  call fdc_wait_not_busy
+  mov byte [_fdc_stat_cmd], %01010000   ; step in
+  add bl, 1
+  cmp bl, 40
+  jne fdc_formatdisk512_l0
+  sysret
+
 ; di : destination in user space
 ; a  : returns number of read bytes
 syscall_fdc_read_track:
@@ -553,7 +615,6 @@ fdc_read_sect_end:
 ; data pointer in si
 syscall_fdc_write_sect:
   call fdc_wait_not_busy
-  push c
   mov [_fdc_sector], bl
   mov bl, bh
   mov [_fdc_track], bl
@@ -582,6 +643,7 @@ fdc_wait_not_busy:
   pop al
   ret
 
+; track number in bl
 fdc_format_mem_128:
   mov d, 1
   mov di, transient_area
@@ -606,7 +668,7 @@ fdc_l2:
   stosb
 ; track number
 fdc_l3:
-  mov al, $00
+  mov al, bl  ; track number in bl
   stosb
 ; side number
 fdc_l4:
@@ -674,6 +736,7 @@ fdc_footer_drq_loop:
   jnz fdc_footer_drq_loop
   ret
 
+; track number in bl
 fdc_format_mem_512:
   mov d, 1
   mov di, transient_area
@@ -698,7 +761,7 @@ fdc_512_l2:
   stosb
 ; track number
 fdc_512_l3:
-  mov al, $00
+  mov al, bl ; track number was in bl
   stosb
 ; side number
 fdc_512_l4:
@@ -783,21 +846,21 @@ fdc_wait_64_loop:
 system_jmptbl:
   .dw system_uname
   .dw system_whoami
-  .dw system_setparam
+  .dw system_poke
   .dw system_bootloader_install
-  .dw system_getparam
+  .dw system_peek
 syscall_system:
   jmp [system_jmptbl + al]
 
 ; param register address in register d
 ; param value in register bl
-system_getparam:
+system_peek:
   mov bl, [d]
   sysret
 
 ; param register address in register d
 ; param value in register bl
-system_setparam:
+system_poke:
   mov [d], bl
   sysret
 
@@ -1387,7 +1450,7 @@ syscall_io_getch_l0:
   je syscall_io_getch_l0
   mov d, a
   inc a
-  cmp a, fifo + fifo_size      ; check if pointer reached the end of the fifo
+  cmp a, fifo + _fifo_size      ; check if pointer reached the end of the fifo
   jne syscall_io_getch_cont
   mov a, fifo  
 syscall_io_getch_cont:  
@@ -2882,8 +2945,8 @@ f_find:
 ; kernel reset vector
 ; ---------------------------------------------------------------------
 kernel_reset_vector:  
-  mov bp, stack_begin
-  mov sp, stack_begin
+  mov bp, _stack_begin
+  mov sp, _stack_begin
   
   mov al, %10000001             ; mask out timer interrupt for now - enable uart and fdc irqs 
   stomsk                        
@@ -3055,7 +3118,7 @@ filename:
 user_data:
   .fill 512, 0      ;  user space data
 fifo:
-  .fill fifo_size
+  .fill _fifo_size
 
 scrap_sector:
   .fill 512         ; scrap sector

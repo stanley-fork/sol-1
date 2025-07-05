@@ -12,7 +12,7 @@ void main(void){
 	printf("Prime numbers are: \n");
 	for (i = 2; i <= N; i++) {
 			if (isPrime(i)) {
-					printf("%d\n", i);
+					printf("%u\n", i);
 			}
 	}
 
