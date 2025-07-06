@@ -154,10 +154,8 @@ int_7:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 trap_privilege:
   push d
-
   mov d, s_priv1
   call _puts
-
   pop d
               ; enable interrupts
   sysret
@@ -256,10 +254,10 @@ uart_serv_tbl:
 uart_services:
   jmp [uart_serv_tbl + al]
 uart_init:
-  mov byte[_uart0_lcr], 83h      ; 8 data, 1 stop, no parity  , divisor latch = 1, uart address 3 = line control register
-  mov byte[_uart0_dlab_0], 12      ; baud = 9600
+  mov byte[_uart0_lcr], %10001111      ; 8 data, 2 stop, odd parity, divisor latch = 1, uart address 3 = line control register
+  mov byte[_uart0_dlab_0], 3      ; baud = 38400
   mov byte[_uart0_dlab_1], 0      ; divisor latch high byte = 0      
-  mov byte[_uart0_lcr], 3      ; divisor latch = 0, uart address 3 = line control register
+  mov byte[_uart0_lcr], %00001111      ; divisor latch = 0, uart address 3 = line control register
   mov byte[_uart0_ier], 0      ; disable all uart interrupts
   mov byte[_uart0_fcr], 0      ; disable fifo
   sysret

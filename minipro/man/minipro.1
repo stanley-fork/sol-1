@@ -1,7 +1,7 @@
-.TH MINIPRO 1 "11 April 2024 (v0.7)"
+.TH MINIPRO 1 "12 April 2025 (v0.7.3)"
 .SH NAME
 minipro \- A free and open command-line program for controlling chip
-programmers by Autoelectric / Xgecu.
+programmers by Xgecu.
 
 .SH DESCRIPTION
 .I minipro
@@ -28,7 +28,7 @@ List devices like this.
 .B \-q, --programmer <version>
 Force a programmer version when listing devices.
 .br
-Possible values (case insensitive): TL866A TL866II T48.
+Possible values (case insensitive): TL866A TL866II T48 T56.
 
 .TP
 .B \-Q, \--query_supported
@@ -43,7 +43,7 @@ Query the programmer version currently connected.
 Show device information.
 
 .TP
-.B \-D, \--get_id
+.B \-D, \--read_id
 Just read the chip ID and do nothing else (like reading the whole chip
 contents).  This is for use in scripts where you have for example
 several similar chips with different IDs and want to check if the
@@ -204,8 +204,16 @@ Update firmware.  See UPDATING FIRMWARE below.
 Set custom infoic.xml file.
 
 .TP
+.B \--logicic_out <filename>
+Write the results of a logic IC test to this file.
+
+.TP
 .B \--logicic <filename>
 Set custom logicic.xml file.
+
+.TP
+.B \--algorithms <filename>
+Set custom algorithm.xml file.  See ALGORITHMS below.
 
 .TP
 .B \-h, \--help
@@ -266,9 +274,7 @@ Use
 .B \-d <device>
 to view if those options are supported.
 
-
 .SH NOTES ON FILE FORMATS
-
 If the
 .B \-f
 or
@@ -292,10 +298,47 @@ or
 options.  The exact Intel hex format (ihex8, ihex16, or ihex32) are also
 automatically detected.
 
+.SH ALGORITHMS
+All the Xgecu programmers contain an FPGA chip (Field Programmable Gate
+Array) which does most of the low-level work of reading and writing
+various chips.  These FPGAs require bitstreams (algorithms) to be loaded
+before they're able to do any work.  The TL866A/CS, TL866II+, and T48
+keep their algorithms on a memory chip on the programmer's circuit
+boards and are updated whenever the programmer's firmware is updated.
+The T56 is different in that it requires its algorithms to be loaded
+from the controlling program.  Those algorithms are installed by the
+official Xgecu software to the host computer.  Because of the copyright
+on that package, the algorithms cannot be included in the minipro
+distribution.  Fortunately a script for doing that is provided.
+
+To allow
+.I minipro
+to get needed algorithms into a T58 programmer,
+.I dump-alg-minipro.bash
+is provided to download a copy of the official Xgecu software, extract
+the algorithms, and pack those data into "algorithm.xml".  If the
+algorithms were not installed right after
+.I minipro
+was installed, this script can be used directly.  It should have been
+installed when
+.I minipro
+was installed by whatever means.  First invoke
+.I minipro
+with the
+.B \-V
+or
+.B \--version
+option and see what directory is listed for "Share dir".  Suppose it's
+"/usr/local/share/minipro".  Invoke the script like this:
+
+.B dump-alg-minipro.bash /usr/local/share/minipro
+
+The script will then do its thing and install "algorithm.xml" to its
+proper place.
 
 .SH UPDATING FIRMWARE
 Firmware update files can be obtained from the manufacturer's website:
-http://www.autoelectric.cn.
+http://www.xgecu.com/en/.
 .br
 They can also be downloaded and extracted from the following repository:
 https://github.com/Kreeblah/XGecu_Software.
@@ -303,6 +346,10 @@ https://github.com/Kreeblah/XGecu_Software.
 For the TL866A/CS, use the "update.dat" file.
 .br
 For the TL866IOI+, use the "updateII.dat" file.
+.br
+For the T48, use the "UpdateT48.dat" file.
+.br
+For the T56, use the "updateT56.dat" file.
 
 .TP
 .B \-F <filename>
@@ -310,7 +357,6 @@ Update firmware.
 .B minipro
 will verify the firmware file and ask if you wish to proceed with
 writing the file to the programmer.
-
 
 .SH NOTES ON MEMORY TYPES
 If
@@ -326,6 +372,63 @@ is omitted and
 is specified, then
 .B -c code
 is assumed.
+
+.SH ADDING CUSTOM CHIPS
+Custom chips can be added in the
+.B infoic.xml
+file, but it must be noted that the since content is generated from the
+.B infoic.dll
+file , the custom chips should be added in a proper section of the xml file.
+
+Add any new chip as an
+.B <ic>
+section in a proper
+.B <custom name="MyCustom">
+section of the file.
+
+It must be also noted that the pinout is hardcoded in the device firmware, so if
+the chip has a custom pinout, the use of bit banging technique is required, limiting the
+functionality to only erading it as a PROM type.
+
+In this case, the
+.B <protocol_id>
+value must be set to
+.B 0x80000001
+and the
+.B <variant>
+value must be set to the pinout value defined in the
+.B prom_table
+array in
+.B prom.c
+file.
+
+For example, the D2364C PROM has a slightly different pinout than any DIP24 PROM, thus the pins has been
+exchanged in the prom.c file. The index 0x0b has been assigned to this pinout. So the resulting xml entry is:
+
+    <custom name="NEC">
+          <ic name="D2364C@DIP24"
+          type="1"
+          protocol_id="0x80000001"
+          variant="0x0c"
+          read_buffer_size="0x10"
+          write_buffer_size="0x00"
+          code_memory_size="0x2000"
+          data_memory_size="0x00"
+          data_memory2_size="0x00"
+          page_size="0x0000"
+          pages_per_block="0x0000"
+          chip_id="0x00000000"
+          voltages="0x0900"
+          pulse_delay="0x0000"
+          flags="0x00000000"
+          chip_info="0x0000"
+          pin_map="0x0017"
+          blank_value = "0x00"
+          package_details="0x18000000"
+          config="NULL"
+      />
+    </custom>
+
 
 .SH PIPES
 
@@ -390,16 +493,15 @@ The TL866A and TL866CS programmers appear to have a firmware bug such
 that if not quite enough current is provided to them from a USB port,
 then the programmer will fail to initialize itself or reset itself after
 an operation.  This problem seems to go hand-in-hand with newer USB 3.0
-/ xHCI ports.  This problem can be avoided by using a powered hub.
+/ xHCI ports and can be avoided by using a powered hub.
 
 .SH AUTHOR
 .I minipro
-was written by Valentin Dudouyt and is copyright 2014.  Many others
-have contributed code and bug reports.  Development is currently coordinated
-by David Griffith.
+was created by Valentin Dudouyt in 2014.  Many others have contributed
+code and bug reports.  Development is currently coordinated by David
+Griffith.
 
 .SH HARDWARE
-
 The TL866A/CS, TL866II+, T48, and T56 chip programmers are distributed by
 Xgecu, formerly Autoelectric.  Its website is
 .BR http://www.xgecu.com/en/.

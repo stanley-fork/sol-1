@@ -533,7 +533,7 @@ fdc_formatdisk128_l0:
   call fdc_wait_not_busy
   mov [_fdc_track], bl
   mov si, transient_area
-  mov byte [_fdc_stat_cmd], %11110010 ; write track command
+  mov byte [_fdc_stat_cmd], %11111010 ; write track command
   call fdc_wait_64us
 fdc_formatdisk_drq_128:
   mov al, [_fdc_stat_cmd]     ; 10
@@ -546,12 +546,11 @@ fdc_formatdisk_drq_128:
   jmp fdc_formatdisk_drq_128
 fdc_formatdisk_end_128:
   call fdc_wait_not_busy
-  call wait_1s
-  call wait_1s
-  call wait_1s
-  call wait_1s
-  call wait_1s
+  push b
+  mov b, 8
+  call wait_xs
   mov byte [_fdc_stat_cmd], %01010011  ; step in
+  pop b
   add bl, 1
   cmp bl, 40
   jne fdc_formatdisk128_l0
@@ -577,12 +576,11 @@ fdc_formatdisk_drq_512:
   jmp fdc_formatdisk_drq_512
 fdc_formatdisk_end_512:
   call fdc_wait_not_busy
-  call wait_1s
-  call wait_1s
-  call wait_1s
-  call wait_1s
-  call wait_1s
+  push b
+  mov b, 8
+  call wait_xs
   mov byte [_fdc_stat_cmd], %01010011   ; step in
+  pop b
   add bl, 1
   cmp bl, 40
   jne fdc_formatdisk512_l0
@@ -877,6 +875,16 @@ fdc_wait_64us:
 fdc_wait_64_loop:
   dec cl                           ; 3 cycles
   jnz fdc_wait_64_loop             ; 8 cycles
+  ret
+
+; number of seconds in b
+wait_xs:
+  cmp b, 0
+  je wait_xs_end
+  call wait_1s
+  dec b
+  jmp wait_xs
+wait_xs_end:
   ret
 
 wait_1s:

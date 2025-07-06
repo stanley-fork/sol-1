@@ -24,7 +24,7 @@ MANDIR ?= $(PREFIX)/share/man
 ##########################################################################
 
 NAME = minipro
-VERSION = 0.7
+VERSION = 0.7.3
 
 # If we're working from git, we have access to proper variables. If
 # not, make it clear that we're working from a release.
@@ -33,18 +33,17 @@ GIT_DIR ?= .git
 ifneq ($(and $(wildcard $(GIT_DIR)),$(shell which git)),)
         GIT_BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
         GIT_HASH = $(shell git rev-parse HEAD)
-        GIT_HASH_SHORT = $(shell git rev-parse --short HEAD)
         GIT_DATE = $(shell git show -s --format=%ci)
 else
-        GIT_BRANCH = $(shell echo "$Format:%D$" | sed s/^.*\>\\s*//)
-        GIT_HASH = "$Format:%H$"
-        GIT_HASH_SHORT = "$Format:%h$"
-        GIT_DATE = "$Format:%ci$"
+
+	GIT_BRANCH = $(shell echo "HEAD -> master, refs/merge-requests/268/head, refs/keep-around/9ffffbac99e3b3be8ecdf77dbe49ebfac67d86a0" | rev | cut -d" " -f1 | rev)
+        GIT_HASH = "9ffffbac99e3b3be8ecdf77dbe49ebfac67d86a0"
+        GIT_DATE = "2025-06-12 11:20:26 +0200"
 endif
 BUILD_DATE = $(shell date "+%Y-%m-%d %H:%M:%S %z")
-VERSION_HEADER = version.h
-VERSION_STRINGS = version.c
-VERSION_OBJ = version.o
+VERSION_HEADER = src/version.h
+VERSION_STRINGS = src/version.c
+VERSION_OBJ = src/version.o
 
 PKG_CONFIG := $(shell which pkg-config 2>/dev/null)
 ifeq ($(PKG_CONFIG),)
@@ -52,19 +51,24 @@ ifeq ($(PKG_CONFIG),)
 endif
 
 ifeq ($(OS),Windows_NT)
-    USB = usb_win.o
+    USB = src/usb_win.o
 else
-    USB = usb_nix.o
+    USB = src/usb_nix.o
 endif
 
-COMMON_OBJECTS=xml.o jedec.o ihex.o srec.o database.o bitbang.o prom.o \
-               minipro.o tl866a.o tl866iiplus.o t48.o t56.o version.o $(USB)
-OBJECTS=$(COMMON_OBJECTS) main.o
+COMMON_OBJECTS=src/xml.o src/jedec.o src/ihex.o src/srec.o src/database.o \
+		src/bitbang.o src/prom.o src/minipro.o src/tl866a.o \
+		src/tl866iiplus.o src/t48.o src/t56.o src/version.o \
+		src/cdecode.o src/cencode.o $(USB)
+OBJECTS=$(COMMON_OBJECTS) src/main.o
 PROGS=minipro
-STATIC_LIB=libminipro.a
+STATIC_LIB=src/libminipro.a
 MINIPRO=minipro
 INFOIC=infoic.xml
 LOGICIC=logicic.xml
+ALGORITHM=algorithm.xml
+DUMP_ALG=dump-alg-minipro.bash
+
 TESTS=$(wildcard tests/test_*.c);
 OBJCOPY?=objcopy
 
@@ -83,17 +87,22 @@ COMPLETIONS_INSTDIR=$(DESTDIR)$(COMPLETIONS_DIR)
 
 ifneq ($(OS),Windows_NT)
     libusb_CFLAGS := $(shell $(PKG_CONFIG) --cflags libusb-1.0)
+    zlib_CFLAGS := $(shell $(PKG_CONFIG) --cflags zlib)
     libusb_LIBS := $(shell $(PKG_CONFIG) --libs libusb-1.0)
-
+    zlib_LIBS := $(shell $(PKG_CONFIG) --libs zlib)
     ifeq ($(libusb_LIBS),)
         ERROR := $(error "libusb-1.0 not found")
     endif
-    override CFLAGS += $(libusb_CFLAGS)
-    override LIBS += $(libusb_LIBS) $(EXTRA_LIBS)
+    ifeq ($(zlib_LIBS),)
+        ERROR := $(error "zlib not found")
+    endif
+    override CFLAGS += $(libusb_CFLAGS) $(zlib_CFLAGS)
+    override LIBS += $(libusb_LIBS) $(zlib_LIBS) $(EXTRA_LIBS)
 else
 # Add Windows libs here
 override LIBS += -lsetupapi \
-                 -lwinusb
+                 -lwinusb \
+				 -lz
 endif
 
 
@@ -107,8 +116,8 @@ $(VERSION_HEADER):
 	@echo "#define VERSION \"$(VERSION)\"" >> $@
 	@echo "#define GIT_BRANCH \"$(GIT_BRANCH)\"" >> $@
 	@echo "#define GIT_HASH \"$(GIT_HASH)\"" >> $@
-	@echo "#define GIT_HASH_SHORT \"$(GIT_HASH_SHORT)\"" >> $@
 	@echo "#define GIT_DATE \"$(GIT_DATE)\"" >> $@
+	@echo "#define SHARE_INSTDIR \"$(SHARE_INSTDIR)\"" >>$@
 
 $(VERSION_STRINGS):
 	@echo "Creating $@"
@@ -120,8 +129,8 @@ $(VERSION_STRINGS):
 
 $(OBJECTS): $(VERSION_HEADER)
 
-minipro: $(VERSION_STRINGS) $(COMMON_OBJECTS) main.o
-	$(CC) $(LDFLAGS) $(COMMON_OBJECTS) main.o $(LIBS) -o $(MINIPRO)
+minipro: $(VERSION_STRINGS) $(OBJECTS)
+	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(MINIPRO)
 
 library: $(VERSION_STRINGS) $(COMMON_OBJECTS)
 	ar ru $(STATIC_LIB) $(VERSION_OBJ) $(COMMON_OBJECTS)
@@ -130,18 +139,31 @@ library: $(VERSION_STRINGS) $(COMMON_OBJECTS)
 clean:
 	rm -f $(OBJECTS) $(PROGS)
 	rm -f $(STATIC_LIB)
-	rm -f version.h version.c version.o
+	rm -f $(ALGORITHM)
+	rm -f firmware*.dat
+	rm -f src/version.h src/version.c src/version.o
+	rm -rf algorithm
 
 distclean: clean
+	rm -f *.rar
 	rm -rf $(DIST_DIR)*
+
+algorithm: $(ALGORITHM)
+$(ALGORITHM):
+	@./$(DUMP_ALG)
+
+install-algorithm: algorithm
+	cp $(ALGORITHM) $(SHARE_INSTDIR)
 
 install:
 	mkdir -p $(BIN_INSTDIR)
 	mkdir -p $(MAN_INSTDIR)
 	mkdir -p $(SHARE_INSTDIR)
 	cp $(MINIPRO) $(BIN_INSTDIR)/
+	cp $(DUMP_ALG) $(BIN_INSTDIR)/
 	cp $(INFOIC) $(SHARE_INSTDIR)/
 	cp $(LOGICIC) $(SHARE_INSTDIR)/
+
 	cp man/minipro.1 $(MAN_INSTDIR)/
 	if [ -n "$(UDEV_DIR)" ]; then \
 		mkdir -p $(UDEV_RULES_INSTDIR); \
@@ -158,6 +180,7 @@ uninstall:
 	rm -f $(BIN_INSTDIR)/$(MINIPRO)
 	rm -f $(SHARE_INSTDIR)/$(INFOIC)
 	rm -f $(SHARE_INSTDIR)/$(LOGICIC)
+	rm -f $(SHARE_INSTDIR)/$(ALGORITHM)
 	rm -f $(MAN_INSTDIR)/minipro.1
 	if [ -n "$(UDEV_DIR)" ]; then rm -f $(UDEV_RULES_INSTDIR)/60-minipro.rules; fi
 	if [ -n "$(UDEV_DIR)" ]; then rm -f $(UDEV_RULES_INSTDIR)/61-minipro-plugdev.rules; fi
@@ -194,4 +217,4 @@ else
 endif
 
 
-.PHONY: all dist distclean clean install test version-info
+.PHONY: all dist distclean clean install install-algorithm test version-info
