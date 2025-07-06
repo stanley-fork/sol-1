@@ -1,5 +1,5 @@
 ; --- FILENAME: programs/qs.c
-; --- DATE:     05-07-2025 at 13:16:10
+; --- DATE:     06-07-2025 at 12:03:21
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 

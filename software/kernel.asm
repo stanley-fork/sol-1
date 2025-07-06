@@ -78,6 +78,9 @@ _timer_ctrl       .equ $ffe3         ; timer control register
 _stack_begin      .equ $f7ff         ; beginning of stack
 _fifo_size        .equ 4096
 
+_mbr              .equ 446
+_superblock       .equ 512
+
 text_org          .equ $400          ; code origin address for all user processes
 
 
@@ -85,7 +88,7 @@ text_org          .equ $400          ; code origin address for all user processe
 ; DISK LAYOUT:
 ; | Metadata               | Size (bytes)    | Blocks (2048 bytes)              |
 ; | ---------------------- | --------------- | -------------------------------- |
-; | Bootloader             | 512 bytes       | 0.25 (1 sector)                  |
+; | Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |
 ; | Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |
 ; | Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |
 ; | Block Bitmap           | 16,384 bytes    | 8 blocks                         |
@@ -111,22 +114,21 @@ text_org          .equ $400          ; code origin address for all user processe
 ; 
 ; 
 ; SUPERBLOCK:
-; | Field                 | Description                                  |
-; | --------------------- | -------------------------------------------- |
-; | `s_inodes_count`      | Total number of inodes in the filesystem     |
-; | `s_blocks_count`      | Total number of data blocks                  |
-; | `s_free_inodes_count` | Number of free inodes                        |
-; | `s_free_blocks_count` | Number of free blocks                        |
-; | `s_first_data_block`  | Block number of the first data block         |
-; | `s_log_block_size`    | Block size = 1024 << `s_log_block_size`      |
-; | `s_inode_size`        | Size of each inode (in bytes)                |
-; | `s_magic`             | Filesystem signature (`0xEF53` for ext2/3/4) |
-; | `s_mtime`             | Last mount time                              |
-; | `s_wtime`             | Last write time                              |
-; | `s_uuid`              | Unique ID of the filesystem                  |
-; | `s_volume_name`       | Label of the filesystem                      |
-; | `s_feature_flags`     | Compatibility flags                          |
-; 
+; | Field                 | Description                              | Typical Size (bytes) | Notes                           |
+; | --------------------- | ---------------------------------------- | -------------------- | ------------------------------- |
+; | `s_inodes_count`      | Total number of inodes in the filesystem | 4                    | 32-bit unsigned int             |
+; | `s_blocks_count`      | Total number of data blocks              | 4                    | 32-bit unsigned int             |
+; | `s_free_inodes_count` | Number of free inodes                    | 4                    | 32-bit unsigned int             |
+; | `s_free_blocks_count` | Number of free blocks                    | 4                    | 32-bit unsigned int             |
+; | `s_first_data_block`  | Block number of the first data block     | 4                    | 32-bit unsigned int             |
+; | `s_log_block_size`    | Block size = 1024 << `s_log_block_size`  | 4                    | 32-bit unsigned int             |
+; | `s_inode_size`        | Size of each inode (in bytes)            | 2                    | 16-bit unsigned int             |
+; | `s_magic`             | Filesystem signature (`0xEF53`)          | 2                    | 16-bit unsigned int             |
+; | `s_mtime`             | Last mount time                          | 4                    | 32-bit unsigned int (Unix time) |
+; | `s_wtime`             | Last write time                          | 4                    | 32-bit unsigned int (Unix time) |
+; | `s_uuid`              | Unique ID of the filesystem              | 16                   | 128-bit UUID                    |
+; | `s_volume_name`       | Label of the filesystem                  | 16                   | Usually ASCII, padded           |
+; | `s_feature_flags`     | Compatibility flags                      | 4                    | 32-bit unsigned int             |
 ; 
 ; 
 ; inode for root dir is #2, #0 and #1 not used
@@ -370,6 +372,32 @@ ctrlz:
   jmp syscall_pause_proc      ; pause current process and go back to the shell
 
 ; ------------------------------------------------------------------------------------------------------------------;
+; ext2 file system
+; ------------------------------------------------------------------------------------------------------------------;
+sys_mkfs:
+; master boot record
+  mov byte[_mbr], $80
+  mov word[_mbr + 1], $0000
+  mov byte[_mbr + 3], $00
+  mov byte[_mbr + 4], $83  ; ext2
+  mov word[_mbr + 5], $0000   ;end CHS
+  mov byte[_mbr + 7], $00    
+  mov word[_mbr + 8], 1       ; start LBA of kernel
+  mov word[_mbr + 10], $0000
+  mov word[_mbr + 12], $0000       ; size = 65536 sectors = 32MB
+  mov word[_mbr + 13], $0001
+
+; superblock
+  mov word[_superblock], 2048
+  mov word[_superblock + 2], $0000
+  mov word[_superblock + 4], $2800
+  mov word[_superblock + 6], $0000
+
+; --- MBR signature ---
+  mov word [510], $AA55          ; Must be present for BIOS to boot
+
+
+; ------------------------------------------------------------------------------------------------------------------;
 ; floppy drive syscalls
 ; ------------------------------------------------------------------------------------------------------------------;
 ; data for formatting a floppy drive in single density mode (128 bytes per sector):
@@ -422,30 +450,30 @@ syscall_fdc_status1:
 
 syscall_fdc_restore:
   call fdc_wait_not_busy
-  mov byte [_fdc_stat_cmd], %00001010
+  mov byte [_fdc_stat_cmd], %00001011
   mov byte [_fdc_track], $00 ; reset track
   sysret
 
 syscall_fdc_step:
   call fdc_wait_not_busy
-  mov byte [_fdc_stat_cmd], %00111000
+  mov byte [_fdc_stat_cmd], %00111011
   sysret
 
 syscall_fdc_step_in:
   call fdc_wait_not_busy
-  mov byte [_fdc_stat_cmd], %01010000
+  mov byte [_fdc_stat_cmd], %01010011
   sysret
 
 syscall_fdc_step_out:
   call fdc_wait_not_busy
-  mov byte [_fdc_stat_cmd], %01111000
+  mov byte [_fdc_stat_cmd], %01111011
   sysret
 
 ; bl: desired track
 syscall_fdc_seek:
   call fdc_wait_not_busy
   mov [_fdc_data], bl ; set desired track to bl
-  mov byte [_fdc_stat_cmd], %00011000 ; seek command
+  mov byte [_fdc_stat_cmd], %00011011 ; seek command
   sysret
 
 syscall_fdc_read_addr:
@@ -505,7 +533,7 @@ fdc_formatdisk128_l0:
   call fdc_wait_not_busy
   mov [_fdc_track], bl
   mov si, transient_area
-  mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
+  mov byte [_fdc_stat_cmd], %11110010 ; write track command
   call fdc_wait_64us
 fdc_formatdisk_drq_128:
   mov al, [_fdc_stat_cmd]     ; 10
@@ -518,7 +546,12 @@ fdc_formatdisk_drq_128:
   jmp fdc_formatdisk_drq_128
 fdc_formatdisk_end_128:
   call fdc_wait_not_busy
-  mov byte [_fdc_stat_cmd], %01010000  ; step in
+  call wait_1s
+  call wait_1s
+  call wait_1s
+  call wait_1s
+  call wait_1s
+  mov byte [_fdc_stat_cmd], %01010011  ; step in
   add bl, 1
   cmp bl, 40
   jne fdc_formatdisk128_l0
@@ -531,7 +564,7 @@ fdc_formatdisk512_l0:
   call fdc_wait_not_busy
   mov [_fdc_track], bl
   mov si, transient_area
-  mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
+  mov byte [_fdc_stat_cmd], %11110010 ; write track command
   call fdc_wait_64us
 fdc_formatdisk_drq_512:
   mov al, [_fdc_stat_cmd]     ; 10
@@ -544,7 +577,12 @@ fdc_formatdisk_drq_512:
   jmp fdc_formatdisk_drq_512
 fdc_formatdisk_end_512:
   call fdc_wait_not_busy
-  mov byte [_fdc_stat_cmd], %01010000   ; step in
+  call wait_1s
+  call wait_1s
+  call wait_1s
+  call wait_1s
+  call wait_1s
+  mov byte [_fdc_stat_cmd], %01010011   ; step in
   add bl, 1
   cmp bl, 40
   jne fdc_formatdisk512_l0
@@ -637,9 +675,10 @@ fdc_write_sect_end:
 
 fdc_wait_not_busy:
   push al
+fdc_wait_not_busy_l0:
   mov al, [_fdc_stat_cmd]   
   test al, $01               
-  jnz fdc_wait_not_busy          
+  jnz fdc_wait_not_busy_l0          
   pop al
   ret
 
@@ -838,6 +877,21 @@ fdc_wait_64us:
 fdc_wait_64_loop:
   dec cl                           ; 3 cycles
   jnz fdc_wait_64_loop             ; 8 cycles
+  ret
+
+wait_1s:
+  push al
+  push c
+  mov al, 3
+wait_1s_l0:
+  mov c, 65535                       
+wait_1s_l1:
+  dec c        ; 4
+  jnz wait_1s_l1   ; 8
+  dec al
+  jnz wait_1s_l0
+  pop c
+  pop al
   ret
 
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -2970,8 +3024,8 @@ kernel_reset_vector:
 
   mov d, s_fdc_config
   call _puts
-  mov byte [_fdc_config], %00001110  ; %00001001 : turn led on / head load, disable double density, select side 0, select drive 0, do not select drive 1
-  mov byte [_fdc_stat_cmd], %00001000     ; leave this restore command in order to clear BUSY flag
+  mov byte [_fdc_config], %00001101  ; %00001001 : turn led on / head load, disable double density, select side 0, select drive 0, do not select drive 1
+  mov byte [_fdc_stat_cmd], %00001011     ; leave this restore command in order to clear BUSY flag
   mov byte [_fdc_track], $00 ; reset track
 
   mov al, 16
@@ -2981,7 +3035,6 @@ kernel_reset_vector:
   call _puts
   mov d, s_init_path
   syscall sys_create_proc       ; launch init as a new process
-
 
 ; file includes
 .include "bios.exp"         ; to obtain the bios_reset_vector location (for reboots)

@@ -131312,7 +131312,7 @@
 	)
 	(global_label "{address_bus[0..21] bus_mem_io page_present page_writeable}"
 		(shape bidirectional)
-		(at 1196.34 481.33 0)
+		(at 1196.34 481.33 90)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -131322,7 +131322,7 @@
 		)
 		(uuid "504a6333-ad60-4906-a2df-c347307fc53c")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 1261.3354 481.33 0)
+			(at 1196.34 416.3346 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -198074,10 +198074,10 @@
 			(uuid "e4ab039d-d884-4390-a1b9-9b815ac4e10b")
 		)
 		(pin "16"
-			(uuid "0c1c7504-6291-4acc-9690-cedb0c3960da")
+			(uuid "0c1c7504-6291-4acc-9690-cedb0c3960db")
 		)
 		(pin "8"
-			(uuid "f43f37cc-86e6-46d5-893a-0fbc666ddb8d")
+			(uuid "f43f37cc-86e6-46d5-893a-0fbc666ddb8e")
 		)
 		(instances
 			(project "main"
