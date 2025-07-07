@@ -1,0 +1,19 @@
+27 height cm
+20 depth cm
+36 width cm
+
+
+enclosure front:
+29 (11.5") height
+54.5cm (21.5") width
+
+
+
+FRONT PANEL:
+
+misc:            ide rd wr mio clk
+interrupts:      irq7 irq6 irq5 irq4 irq3 irq2 irq1 irq0
+databus;         d7 d6 d5 d4 d3 d2 d1 d0
+address bus:     a21 a20 a19 a18 a17 a16 a15 a14 a13 a12 a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 a1 a0
+page table base: ptb7 ptb6 ptb5 ptb4 ptb3 ptb2 ptb1 ptb0
+registers:       a b c d sp bp pc ir
