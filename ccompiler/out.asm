@@ -1,5 +1,5 @@
 ; --- FILENAME: programs/primes.c
-; --- DATE:     07-07-2025 at 11:42:44
+; --- DATE:     07-07-2025 at 12:20:20
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -11,9 +11,9 @@ main:
 ; unsigned int N, i; 
   sub sp, 2
   sub sp, 2
-; printf("Enter a number to find all prime numbers up to it: "); 
+; printf("Find primes up to: "); 
 ; --- START FUNCTION CALL
-  mov b, _s0 ; "Enter a number to find all prime numbers up to it: "
+  mov b, _s0 ; "Find primes up to: "
   swp b
   push b
   call printf
@@ -26,9 +26,9 @@ main:
   call scann
   pop d
   mov [d], b
-; printf("Prime numbers are: \n"); 
+; printf("\n"); 
 ; --- START FUNCTION CALL
-  mov b, _s1 ; "Prime numbers are: \n"
+  mov b, _s1 ; "\n"
   swp b
   push b
   call printf
@@ -115,7 +115,7 @@ _if3_cond:
   mov a, b
   mov32 cb, $00000001
   cmp a, b
-  sle ; <= (signed)
+  sleu ; <= (unsigned)
   pop a
 ; --- END RELATIONAL
   cmp b, 0
@@ -129,9 +129,9 @@ _if3_TRUE:
   ret
   jmp _if3_exit
 _if3_exit:
-; int x; 
+; unsigned int x; 
   sub sp, 2
-; int y; 
+; unsigned int y; 
   sub sp, 2
 ; x = n; 
   lea d, [bp + -1] ; $x
@@ -200,7 +200,7 @@ _while10_cond:
   mov b, [d]
   mov c, 0
   cmp a, b
-  slt ; < (signed)
+  slu ; < (unsigned)
   pop a
 ; --- END RELATIONAL
   cmp b, 0
@@ -2256,8 +2256,8 @@ table_power_scann:
 
 ; --- BEGIN DATA SEGMENT
 _top: .fill 2, 0
-_s0: .db "Enter a number to find all prime numbers up to it: ", 0
-_s1: .db "Prime numbers are: \n", 0
+_s0: .db "Find primes up to: ", 0
+_s1: .db "\n", 0
 _s2: .db "%u\n", 0
 _s3: .db "%d\n", 0
 _s4: .db "Unexpected format in printf.", 0

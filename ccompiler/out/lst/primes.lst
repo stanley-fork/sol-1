@@ -1,5 +1,5 @@
 0001   0000             ; --- FILENAME: programs/primes.c
-0002   0000             ; --- DATE:     07-07-2025 at 11:42:44
+0002   0000             ; --- DATE:     07-07-2025 at 12:20:20
 0003   0000             .include "lib/asm/kernel.exp"
 0001+  0000             fdc_al_restore   .EQU  $0000
 0002+  0000             fdc_al_step      .EQU  $0001
@@ -51,9 +51,9 @@
 0011   0408             ; unsigned int N, i; 
 0012   0408 52 02 00      sub sp, 2
 0013   040B 52 02 00      sub sp, 2
-0014   040E             ; printf("Enter a number to find all prime numbers up to it: "); 
+0014   040E             ; printf("Find primes up to: "); 
 0015   040E             ; --- START FUNCTION CALL
-0016   040E 26 2D 12      mov b, _s0 ; "Enter a number to find all prime numbers up to it: "
+0016   040E 26 2D 12      mov b, _s0 ; "Find primes up to: "
 0017   0411 FD AB         swp b
 0018   0413 D8            push b
 0019   0414 07 06 08      call printf
@@ -66,9 +66,9 @@
 0026   041E 07 1A 11      call scann
 0027   0421 E7            pop d
 0028   0422 FD 43         mov [d], b
-0029   0424             ; printf("Prime numbers are: \n"); 
+0029   0424             ; printf("\n"); 
 0030   0424             ; --- START FUNCTION CALL
-0031   0424 26 61 12      mov b, _s1 ; "Prime numbers are: \n"
+0031   0424 26 41 12      mov b, _s1 ; "\n"
 0032   0427 FD AB         swp b
 0033   0429 D8            push b
 0034   042A 07 06 08      call printf
@@ -120,7 +120,7 @@
 0079   0471 38 00 00      mov c, 0
 0080   0474 FD AB         swp b
 0081   0476 D8            push b
-0082   0477 26 76 12      mov b, _s2 ; "%u\n"
+0082   0477 26 43 12      mov b, _s2 ; "%u\n"
 0083   047A FD AB         swp b
 0084   047C D8            push b
 0085   047D 07 06 08      call printf
@@ -158,7 +158,7 @@
 0116   04AE FD 2E 01 00   mov32 cb, $00000001
 0116   04B2 00 00 
 0117   04B4 B0            cmp a, b
-0118   04B5 FD 74         sle ; <= (signed)
+0118   04B5 FD 76         sleu ; <= (unsigned)
 0119   04B7 E4            pop a
 0120   04B8             ; --- END RELATIONAL
 0121   04B8 C0 00 00      cmp b, 0
@@ -172,9 +172,9 @@
 0129   04C6 09            ret
 0130   04C7 0A CA 04      jmp _if3_exit
 0131   04CA             _if3_exit:
-0132   04CA             ; int x; 
+0132   04CA             ; unsigned int x; 
 0133   04CA 52 02 00      sub sp, 2
-0134   04CD             ; int y; 
+0134   04CD             ; unsigned int y; 
 0135   04CD 52 02 00      sub sp, 2
 0136   04D0             ; x = n; 
 0137   04D0 FA FF FF      lea d, [bp + -1] ; $x
@@ -244,7 +244,7 @@
 0200   0532 2A            mov b, [d]
 0201   0533 38 00 00      mov c, 0
 0202   0536 B0            cmp a, b
-0203   0537 FD 73         slt ; < (signed)
+0203   0537 FD 75         slu ; < (unsigned)
 0204   0539 E4            pop a
 0205   053A             ; --- END RELATIONAL
 0206   053A C0 00 00      cmp b, 0
@@ -519,7 +519,7 @@
 0466   06DB 38 00 00      mov c, 0
 0467   06DE FD AB         swp b
 0468   06E0 D8            push b
-0469   06E1 26 7A 12      mov b, _s3 ; "%d\n"
+0469   06E1 26 47 12      mov b, _s3 ; "%d\n"
 0470   06E4 FD AB         swp b
 0471   06E6 D8            push b
 0472   06E7 07 06 08      call printf
@@ -969,7 +969,7 @@
 0903   09A6             _if37_else:
 0904   09A6             ; err("Unexpected format in printf."); 
 0905   09A6             ; --- START FUNCTION CALL
-0906   09A6 26 7E 12      mov b, _s4 ; "Unexpected format in printf."
+0906   09A6 26 4B 12      mov b, _s4 ; "Unexpected format in printf."
 0907   09A9 FD AB         swp b
 0908   09AB D8            push b
 0909   09AC 07 31 0E      call err
@@ -1159,7 +1159,7 @@
 1087   0ABA             _switch34_default:
 1088   0ABA             ; print("Error: Unknown argument type.\n"); 
 1089   0ABA             ; --- START FUNCTION CALL
-1090   0ABA 26 9B 12      mov b, _s5 ; "Error: Unknown argument type.\n"
+1090   0ABA 26 68 12      mov b, _s5 ; "Error: Unknown argument type.\n"
 1091   0ABD FD AB         swp b
 1092   0ABF D8            push b
 1093   0AC0 07 46 0E      call print
@@ -2370,47 +2370,34 @@
 2256   122B             
 2257   122B             ; --- BEGIN DATA SEGMENT
 2258   122B 00 00       _top: .fill 2, 0
-2259   122D 45 6E 74 65 _s0: .db "Enter a number to find all prime numbers up to it: ", 0
-2259   1231 72 20 61 20 
-2259   1235 6E 75 6D 62 
-2259   1239 65 72 20 74 
-2259   123D 6F 20 66 69 
-2259   1241 6E 64 20 61 
-2259   1245 6C 6C 20 70 
-2259   1249 72 69 6D 65 
-2259   124D 20 6E 75 6D 
-2259   1251 62 65 72 73 
-2259   1255 20 75 70 20 
-2259   1259 74 6F 20 69 
-2259   125D 74 3A 20 00 
-2260   1261 50 72 69 6D _s1: .db "Prime numbers are: \n", 0
-2260   1265 65 20 6E 75 
-2260   1269 6D 62 65 72 
-2260   126D 73 20 61 72 
-2260   1271 65 3A 20 0A 
-2260   1275 00 
-2261   1276 25 75 0A 00 _s2: .db "%u\n", 0
-2262   127A 25 64 0A 00 _s3: .db "%d\n", 0
-2263   127E 55 6E 65 78 _s4: .db "Unexpected format in printf.", 0
-2263   1282 70 65 63 74 
-2263   1286 65 64 20 66 
-2263   128A 6F 72 6D 61 
-2263   128E 74 20 69 6E 
-2263   1292 20 70 72 69 
-2263   1296 6E 74 66 2E 
-2263   129A 00 
-2264   129B 45 72 72 6F _s5: .db "Error: Unknown argument type.\n", 0
-2264   129F 72 3A 20 55 
-2264   12A3 6E 6B 6E 6F 
-2264   12A7 77 6E 20 61 
-2264   12AB 72 67 75 6D 
-2264   12AF 65 6E 74 20 
-2264   12B3 74 79 70 65 
-2264   12B7 2E 0A 00 
-2265   12BA             
-2266   12BA BC 12       _heap_top: .dw _heap
-2267   12BC 00          _heap: .db 0
-2268   12BD             ; --- END DATA SEGMENT
-2269   12BD             
-2270   12BD             .end
+2259   122D 46 69 6E 64 _s0: .db "Find primes up to: ", 0
+2259   1231 20 70 72 69 
+2259   1235 6D 65 73 20 
+2259   1239 75 70 20 74 
+2259   123D 6F 3A 20 00 
+2260   1241 0A 00       _s1: .db "\n", 0
+2261   1243 25 75 0A 00 _s2: .db "%u\n", 0
+2262   1247 25 64 0A 00 _s3: .db "%d\n", 0
+2263   124B 55 6E 65 78 _s4: .db "Unexpected format in printf.", 0
+2263   124F 70 65 63 74 
+2263   1253 65 64 20 66 
+2263   1257 6F 72 6D 61 
+2263   125B 74 20 69 6E 
+2263   125F 20 70 72 69 
+2263   1263 6E 74 66 2E 
+2263   1267 00 
+2264   1268 45 72 72 6F _s5: .db "Error: Unknown argument type.\n", 0
+2264   126C 72 3A 20 55 
+2264   1270 6E 6B 6E 6F 
+2264   1274 77 6E 20 61 
+2264   1278 72 67 75 6D 
+2264   127C 65 6E 74 20 
+2264   1280 74 79 70 65 
+2264   1284 2E 0A 00 
+2265   1287             
+2266   1287 89 12       _heap_top: .dw _heap
+2267   1289 00          _heap: .db 0
+2268   128A             ; --- END DATA SEGMENT
+2269   128A             
+2270   128A             .end
 tasm: Number of errors = 0

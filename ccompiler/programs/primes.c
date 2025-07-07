@@ -6,10 +6,10 @@ unsigned int top;
 void main(void){
 	unsigned int N, i;
 
-	printf("Enter a number to find all prime numbers up to it: ");
+	printf("Find primes up to: ");
 	N = scann();
 
-	printf("Prime numbers are: \n");
+	printf("\n");
 	for (i = 2; i <= N; i++) {
 			if (isPrime(i)) {
 					printf("%u\n", i);
@@ -19,13 +19,13 @@ void main(void){
 	return 0;
 }
 
-int sqrt(int n) {
+unsigned int sqrt(unsigned int n) {
     if (n <= 1) {
         return n;
     }
 
-    int x;
-    int y;
+    unsigned int x;
+    unsigned int y;
     x = n;
     y = (x + n / x) / 2;
 
@@ -36,6 +36,7 @@ int sqrt(int n) {
 
     return x;
 }
+
 void primes1(void){
 	unsigned int n, i, s, count, divides;
 
@@ -72,5 +73,3 @@ char isPrime(unsigned int num) {
 	}
 	return 1;
 }
-
-

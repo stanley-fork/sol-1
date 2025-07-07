@@ -253,6 +253,7 @@ uart_serv_tbl:
   .dw uart_receive_e
 uart_services:
   jmp [uart_serv_tbl + al]
+
 uart_init:
   mov byte[_uart0_lcr], %10001111      ; 8 data, 2 stop, odd parity, divisor latch = 1, uart address 3 = line control register
   mov byte[_uart0_dlab_0], 3      ; baud = 38400
@@ -261,6 +262,7 @@ uart_init:
   mov byte[_uart0_ier], 0      ; disable all uart interrupts
   mov byte[_uart0_fcr], 0      ; disable fifo
   sysret
+
 uart_send:
   mov al, [_uart0_lsr]      ; read line status register
   test al, 20h          ; isolate transmitter empty
@@ -268,6 +270,7 @@ uart_send:
   mov al, ah
   mov [_uart0_data], al      ; write char to transmitter holding register
   sysret
+
 uart_receive:
   mov al, [_uart0_lsr]      ; read line status register
   test al, 1          ; isolate data ready
@@ -275,6 +278,7 @@ uart_receive:
   mov al, [_uart0_data]      ; get character
   mov ah, al
   sysret
+
 uart_receive_e:
   mov al, [_uart0_lsr]      ; read line status register
   test al, 1          ; isolate data ready
