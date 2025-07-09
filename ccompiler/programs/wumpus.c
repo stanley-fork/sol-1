@@ -17,23 +17,23 @@
 #include <ctype.h>
 
 int arrows;
-int debug = 0;	
+int debug = 0;  
 int rand_val = 29;
 int rand_inc=1;
 
-#define YOU	    0
-#define WUMPUS	1
-#define PIT1	2
-#define PIT2	3
-#define BATS1	4
-#define BATS2	5
-#define LOCS	6
+#define YOU      0
+#define WUMPUS  1
+#define PIT1  2
+#define PIT2  3
+#define BATS1  4
+#define BATS2  5
+#define LOCS  6
 
 int loc[LOCS];
 
-#define NOT	     0
-#define WIN	     1
-#define LOSE	2
+#define NOT       0
+#define WIN       1
+#define LOSE  2
 
 int finished;
 
@@ -84,43 +84,29 @@ int getlet(char* prompt) {
 
 void print_instructions() {
 
-  print("WELCOME TO 'HUNT THE WUMPUS'\n");
-  print("THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM\n");
-  print("HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n"); 
-  print("LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n");
-  print("\n");
+  print("\n\n");
+  print("WELCOME TO HUNT THE WUMPUS\n");
+  print("THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n"); 
+  print("LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n\n");
   print(" HAZARDS:\n");
-  print(" BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM\n");
-  print(" IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n");
-  print(" SUPER BATS     : TWO OTHER ROOMS HAVE SUPER BATS. IF YOU\n");
-  print(" GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER\n");
-  print(" ROOM AT RANDOM. (WHICH MAY BE TROUBLESOME)\n\n");
-  print(" WUMPUS:\n");
-  print(" THE WUMPUS IS NOT BOTHERED BY HAZARDS (HE HAS SUCKER\n");
-  print(" FEET AND IS TOO BIG FOR A BAT TO LIFT).  USUALLY\n");
-  print(" HE IS ASLEEP.  TWO THINGS WAKE HIM UP: YOU SHOOTING AN\n");
-  print(" ARROW OR YOU ENTERING HIS ROOM.\n");
-  print(" IF THE WUMPUS WAKES HE MOVES (P=.75) ONE ROOM\n");
-  print(" OR STAYS STILL (P=.25).  AFTER THAT, IF HE IS WHERE YOU\n");
-  print(" ARE, HE EATS YOU UP AND YOU LOSE!\n");
-  print("\n");
-  print(" YOU:\n");
-  print(" EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW\n");
-  print(" MOVING:  YOU CAN MOVE ONE ROOM (THRU ONE TUNNEL)\n");
-  print(" ARROWS:  YOU HAVE 5 ARROWS.  YOU LOSE WHEN YOU RUN OUT\n");
-  print(" EACH ARROW CAN GO FROM 1 TO 5 ROOMS. YOU AIM BY TELLING\n");
-  print("   THE COMPUTER THE ROOM#S YOU WANT THE ARROW TO GO TO.\n");
-  print("   IF THE ARROW CAN'T GO THAT WAY (IF NO TUNNEL) IT MOVES\n");
-  print("   AT RANDOM TO THE NEXT ROOM.\n");
-  print("     IF THE ARROW HITS THE WUMPUS, YOU WIN.\n");
-  print("     IF THE ARROW HITS YOU, YOU LOSE.\n");
-  print(" WARNINGS:\n");
-  print(" WHEN YOU ARE ONE ROOM AWAY FROM A WUMPUS OR HAZARD,\n");
-  print(" THE COMPUTER SAYS:\n");
-  print(" WUMPUS:  'I SMELL A WUMPUS'\n");
-  print(" BAT   :  'BATS NEARBY'\n");
-  print(" PIT   :  'I FEEL A DRAFT'\n");
-  print("\n");
+  print(" BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM. IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n");
+  print(" SUPER BATS: TWO OTHER ROOMS HAVE SUPER BATS. IF YOU GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER\n");
+  print("   ROOM AT RANDOM. (WHICH MAY BE TROUBLESOME)\n\n");
+  print(" WUMPUS: THE WUMPUS IS NOT BOTHERED BY HAZARDS (HE HAS SUCKER FEET AND IS TOO BIG FOR A BAT TO LIFT).  USUALLY\n");
+  print("   HE IS ASLEEP.  TWO THINGS WAKE HIM UP: YOU SHOOTING AN ARROW OR YOU ENTERING HIS ROOM.\n");
+  print("   IF THE WUMPUS WAKES HE MOVES (P=.75) ONE ROOM OR STAYS STILL (P=.25).  AFTER THAT, IF HE IS WHERE YOU\n");
+  print("   ARE, HE EATS YOU UP AND YOU LOSE!\n\n");
+  print(" YOU: EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW\n");
+  print(" MOVING: YOU CAN MOVE ONE ROOM (THRU ONE TUNNEL)\n");
+  print(" ARROWS: YOU HAVE 5 ARROWS. YOU LOSE WHEN YOU RUN OUT\n");
+  print("   EACH ARROW CAN GO FROM 1 TO 5 ROOMS. YOU AIM BY TELLING THE COMPUTER THE ROOM#S YOU WANT THE ARROW TO GO TO.\n");
+  print("   IF THE ARROW CANT GO THAT WAY (IF NO TUNNEL) IT MOVES AT RANDOM TO THE NEXT ROOM.\n");
+  print("   IF THE ARROW HITS THE WUMPUS, YOU WIN.\n");
+  print("   IF THE ARROW HITS YOU, YOU LOSE.\n");
+  print(" WARNINGS: WHEN YOU ARE ONE ROOM AWAY FROM A WUMPUS OR HAZARD, THE COMPUTER SAYS:\n");
+  print("   WUMPUS: I SMELL A WUMPUS\n");
+  print("   BAT: BATS NEARBY\n");
+  print("   PIT: I FEEL A DRAFT\n\n");
 }
 
 void show_room() {
@@ -129,14 +115,14 @@ void show_room() {
 
     for (k = 0; k < 3; k++) {
 
-	   room = cave[loc[YOU]][k];
+     room = cave[loc[YOU]][k];
 
-	   if (room == loc[WUMPUS]) {
-	       print("I SMELL A WUMPUS!\n");
-	   } else if (room == loc[PIT1] || room == loc[PIT2]) {
-	       print("I FEEL A DRAFT\n");
-	   } else if (room == loc[BATS1] || room == loc[BATS2]) {
-	       print("BATS NEARBY!\n");
+     if (room == loc[WUMPUS]) {
+         print("I SMELL A WUMPUS!\n");
+     } else if (room == loc[PIT1] || room == loc[PIT2]) {
+         print("I FEEL A DRAFT\n");
+     } else if (room == loc[BATS1] || room == loc[BATS2]) {
+         print("BATS NEARBY!\n");
        }
     }
 
@@ -178,64 +164,64 @@ void move_wumpus() {
 
 void shoot() {
 
-    int path[5];
-    int scratchloc = -1;
-  int len, k;
+ int path[5];
+ int scratchloc = -1;
+ int len, k;
 
-    finished = NOT;
+ finished = NOT;
 
-    len = -1;
-    while (len < 1 || len > 5) {
-        len = getnum("\nNUMBER OF ROOMS (1-5): ");
-    }
+ len = -1;
+ while (len < 1 || len > 5) {
+     len = getnum("\nNUMBER OF ROOMS (1-5): ");
+ }
 
-    k = 0;
-    while (k < len) {
-        path[k] = getnum("ROOM #") - 1;
+ k = 0;
+ while (k < len) {
+     path[k] = getnum("ROOM #") - 1;
 
-        if ((k>1) && (path[k] == path[k - 2])) {
-            print("ARROWS AREN'T THAT CROOKED - TRY ANOTHER ROOM\n");
-            continue; 
-       } 
+     if ((k>1) && (path[k] == path[k - 2])) {
+         print("ARROWS ARENT THAT CROOKED - TRY ANOTHER ROOM\n");
+         continue; 
+    } 
 
-       k++;
-    }
- 
-    scratchloc = loc[YOU];
+    k++;
+ }
 
-    for (k = 0; k < len; k++) {
+ scratchloc = loc[YOU];
 
-        if ((cave[scratchloc][0] == path[k]) ||
-            (cave[scratchloc][1] == path[k]) ||
-            (cave[scratchloc][2] == path[k])) {
+ for (k = 0; k < len; k++) {
 
-            scratchloc = path[k];
-        } else {
-            scratchloc = cave[scratchloc][rand2()%3];
-        }
+   if ((cave[scratchloc][0] == path[k]) ||
+       (cave[scratchloc][1] == path[k]) ||
+       (cave[scratchloc][2] == path[k])) {
 
-        if (scratchloc == loc[WUMPUS]) {
+         scratchloc = path[k];
+     } else {
+         scratchloc = cave[scratchloc][rand2()%3];
+     }
 
-            print("AHA! YOU GOT THE WUMPUS!\n");
-            finished = WIN;
+     if (scratchloc == loc[WUMPUS]) {
 
-        } else if (scratchloc == loc[YOU]) {
+         print("AHA! YOU GOT THE WUMPUS!\n");
+         finished = WIN;
 
-            print("OUCH! ARROW GOT YOU!\n");
-            finished = LOSE;
-        }
+     } else if (scratchloc == loc[YOU]) {
 
-        if (finished != NOT) {
-            return;
-        }
-    }
+         print("OUCH! ARROW GOT YOU!\n");
+         finished = LOSE;
+     }
 
-	print("MISSED\n");
+     if (finished != NOT) {
+         return;
+     }
+   }
 
-	move_wumpus();
+print("MISSED\n");
 
-	if (--arrows <= 0) {
-	    finished = LOSE;
+move_wumpus();
+
+if (--arrows <= 0) {
+    finished = LOSE;
     }
 }
 
@@ -273,13 +259,13 @@ void move() {
     }
 
     if (scratchloc == loc[WUMPUS]) {
-	   print("... OOPS! BUMPED A WUMPUS!\n");
-	   move_wumpus();
+     print("... OOPS! BUMPED A WUMPUS!\n");
+     move_wumpus();
     } 
 
     if (scratchloc == loc[PIT1] || scratchloc == loc[PIT2]) {
-	   print("YYYYIIIIEEEE . . . FELL IN PIT\n");
-	   finished = LOSE;
+     print("YYYYIIIIEEEE . . . FELL IN PIT\n");
+     finished = LOSE;
     }
 }
 
@@ -313,7 +299,9 @@ void game_play() {
 
     arrows = 5;
 
-    print("HUNT THE WUMPUS\n");
+    print("*********************\n");
+    print("** HUNT THE WUMPUS **\n");
+    print("*********************\n");
 
     if (debug) {
         print("Wumpus is at "); print_unsigned(loc[WUMPUS]+1);
@@ -325,7 +313,6 @@ void game_play() {
 
     finished = NOT;
     while (finished == NOT) {
-
         show_room();
         if (move_or_shoot()) {
             shoot();
@@ -335,7 +322,7 @@ void game_play() {
     }
 
     if (finished == WIN) {
-        print("HEE HEE HEE - THE WUMPUS'LL GET YOU NEXT TIME!!\n");
+        print("HEE HEE HEE - THE WUMPUS WILL GET YOU NEXT TIME!!\n");
     }
 
     if (finished == LOSE) {
@@ -359,7 +346,7 @@ int main() {
     c = getlet("INSTRUCTIONS (Y-N): ");
 
     if (c == 'Y') {
-	   print_instructions();
+     print_instructions();
     }
 
     do { 

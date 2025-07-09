@@ -3027,7 +3027,7 @@ kernel_reset_vector:
   mov al, 2
   syscall sys_io                ; enable uart in interrupt mode
 
-  mov d, s_kernel_started
+  mov d, s_kernel_welcome
   call _puts
 
   mov d, s_fdc_config
@@ -3117,8 +3117,12 @@ s_ls_total:
 
 s_int_en:
   .db "irqs enabled\n", 0
-s_kernel_started:
-  .db "kernel started(version 1.0)\n", 0
+s_kernel_welcome:
+  .db "************************************************\n"
+  .db "*** Welcome to Solarium OS - Kernel ver. 1.0 ***\n"
+  .db "***                                          ***\n"
+  .db "*** type help for more information           ***\n"
+  .db "************************************************\n"
 s_prompt_init:
   .db "starting init\n", 0
 s_priviledge:
@@ -3166,7 +3170,7 @@ s_week:
 
 s_fdc_irq: .db "\nIRQ0 Executed.\n", 0
 s_fdc_config:
-  .db "\nselecting diskette drive 0, side 0, single density, head loaded\n", 0
+  .db "selecting diskette drive 0, side 0, single density, head loaded\n", 0
 
 proc_state_table:   
   .fill 16 * 20, 0  ; for 15 processes max

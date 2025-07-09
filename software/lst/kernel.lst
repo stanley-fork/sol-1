@@ -353,9 +353,9 @@
 0353   005B 77            inc a
 0354   005C 99            mov bl, ah
 0355   005D FD 3D B0 FF   mov [_7seg_display], bl
-0356   0061 AF 96 30      cmp a, fifo + _fifo_size     ; check if pointer reached the end of the fifo
+0356   0061 AF 6D 31      cmp a, fifo + _fifo_size     ; check if pointer reached the end of the fifo
 0357   0064 C7 6A 00      jne int_7_continue
-0358   0067 10 96 20      mov a, fifo  
+0358   0067 10 6D 21      mov a, fifo  
 0359   006A             int_7_continue:  
 0360   006A 42 35 19      mov [fifo_in], a            ; update fifo pointer
 0361   006D EE            popf
@@ -500,7 +500,7 @@
 0489   0122 07 9D 02      call fdc_format_mem_128
 0490   0125 07 92 02      call fdc_wait_not_busy
 0491   0128 FD 3D C9 FF   mov [_fdc_track], bl
-0492   012C FD 4D 96 32   mov si, transient_area
+0492   012C FD 4D 6D 33   mov si, transient_area
 0493   0130 F2 C8 FF FA   mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
 0494   0134 07 73 03      call fdc_wait_64us
 0495   0137             fdc_format_drq_128:
@@ -522,7 +522,7 @@
 0511   014C 07 08 03      call fdc_format_mem_512
 0512   014F 07 92 02      call fdc_wait_not_busy
 0513   0152 FD 3D C9 FF   mov [_fdc_track], bl
-0514   0156 FD 4D 96 32   mov si, transient_area
+0514   0156 FD 4D 6D 33   mov si, transient_area
 0515   015A F2 C8 FF FA   mov byte [_fdc_stat_cmd], %11111010 ; write track command: {1111, 0: enable spin-up seq, 1: settling delay, 1: no write precompensation, 0}
 0516   015E 07 73 03      call fdc_wait_64us
 0517   0161             fdc_format_drq_512:
@@ -543,7 +543,7 @@
 0532   0178 07 9D 02      call fdc_format_mem_128
 0533   017B 07 92 02      call fdc_wait_not_busy
 0534   017E FD 3D C9 FF   mov [_fdc_track], bl
-0535   0182 FD 4D 96 32   mov si, transient_area
+0535   0182 FD 4D 6D 33   mov si, transient_area
 0536   0186 F2 C8 FF FA   mov byte [_fdc_stat_cmd], %11111010 ; write track command
 0537   018A 07 73 03      call fdc_wait_64us
 0538   018D             fdc_formatdisk_drq_128:
@@ -573,7 +573,7 @@
 0562   01BA 07 08 03      call fdc_format_mem_512
 0563   01BD 07 92 02      call fdc_wait_not_busy
 0564   01C0 FD 3D C9 FF   mov [_fdc_track], bl
-0565   01C4 FD 4D 96 32   mov si, transient_area
+0565   01C4 FD 4D 6D 33   mov si, transient_area
 0566   01C8 F2 C8 FF F2   mov byte [_fdc_stat_cmd], %11110010 ; write track command
 0567   01CC 07 73 03      call fdc_wait_64us
 0568   01CF             fdc_formatdisk_drq_512:
@@ -602,7 +602,7 @@
 0591   01FA             syscall_fdc_read_track:
 0592   01FA 07 92 02      call fdc_wait_not_busy
 0593   01FD E3            push di
-0594   01FE FD 4F 96 32   mov di, transient_area
+0594   01FE FD 4F 6D 33   mov di, transient_area
 0595   0202 F2 C8 FF E8   mov byte [_fdc_stat_cmd], %11101000
 0596   0206 07 73 03      call fdc_wait_64us
 0597   0209             fdc_read_track_l0: ; for each byte, we need to wait for drq to be high
@@ -619,9 +619,9 @@
 0608   021D             ;because for every write, if it also reads, then that clears drq, so we need to wait for next drq.
 0609   021D             fdc_read_track_end:
 0610   021D 50            mov a, di
-0611   021E 5F 96 32      sub a, transient_area
+0611   021E 5F 6D 33      sub a, transient_area
 0612   0221 F0            pop di
-0613   0222 FD 4D 96 32   mov si, transient_area
+0613   0222 FD 4D 6D 33   mov si, transient_area
 0614   0226 39            mov c, a  ; copy track over to user space
 0615   0227 03            store
 0616   0228 06            sysret
@@ -637,7 +637,7 @@
 0626   0232 FD 3D C9 FF   mov [_fdc_track], bl
 0627   0236 F2 C8 FF 88   mov byte [_fdc_stat_cmd], %10001000
 0628   023A 07 73 03      call fdc_wait_64us
-0629   023D FD 4F 96 32   mov di, transient_area
+0629   023D FD 4F 6D 33   mov di, transient_area
 0630   0241             fdc_read_sect_l0: ; for each byte, we need to wait for drq to be high
 0631   0241 1D C8 FF      mov al, [_fdc_stat_cmd]      ; read lost data flag 10+3+5+8+5+8
 0632   0244 93 01         test al, $01                ; check drq bit
@@ -649,9 +649,9 @@
 0638   0252 0A 41 02      jmp fdc_read_sect_l0
 0639   0255             fdc_read_sect_end:
 0640   0255 50            mov a, di
-0641   0256 5F 96 32      sub a, transient_area
+0641   0256 5F 6D 33      sub a, transient_area
 0642   0259 F0            pop di
-0643   025A FD 4D 96 32   mov si, transient_area
+0643   025A FD 4D 6D 33   mov si, transient_area
 0644   025E 39            mov c, a  ; copy sector over to user space
 0645   025F 03            store
 0646   0260 06            sysret
@@ -665,9 +665,9 @@
 0654   0264 FD 3D CA FF   mov [_fdc_sector], bl
 0655   0268 30            mov bl, bh
 0656   0269 FD 3D C9 FF   mov [_fdc_track], bl
-0657   026D FD 4F 96 32   mov di, transient_area    ; si = data source, di = destination 
+0657   026D FD 4F 6D 33   mov di, transient_area    ; si = data source, di = destination 
 0658   0271 04            load                    ; transfer data to kernel space!
-0659   0272 FD 4D 96 32   mov si, transient_area
+0659   0272 FD 4D 6D 33   mov si, transient_area
 0660   0276 F2 C8 FF AA   mov byte [_fdc_stat_cmd], %10101010            ; 101, 0:single sector, 1: disable spinup, 0: no delay, 1: no precomp, 0: normal data mark
 0661   027A 07 73 03      call fdc_wait_64us
 0662   027D             fdc_write_sect_l0: ; for each byte, we need to wait for drq to be high
@@ -694,7 +694,7 @@
 0683   029D             ; track number in bl
 0684   029D             fdc_format_mem_128:
 0685   029D 3B 01 00      mov d, 1
-0686   02A0 FD 4F 96 32   mov di, transient_area
+0686   02A0 FD 4F 6D 33   mov di, transient_area
 0687   02A4             ; 40 * FF
 0688   02A4 38 28 00      mov c, 40
 0689   02A7 19 FF         mov al, $ff
@@ -787,7 +787,7 @@
 0776   0308             ; track number in bl
 0777   0308             fdc_format_mem_512:
 0778   0308 3B 01 00      mov d, 1
-0779   030B FD 4F 96 32   mov di, transient_area
+0779   030B FD 4F 6D 33   mov di, transient_area
 0780   030F             ; 40 * FF
 0781   030F 38 28 00      mov c, 40
 0782   0312 19 FF         mov al, $ff
@@ -943,14 +943,14 @@
 0932   03AF 26 00 00      mov b, 0
 0933   03B2 38 00 00      mov c, 0
 0934   03B5 22 01         mov ah, $01                 ; 1 sector
-0935   03B7 3B 96 32      mov d, transient_area
+0935   03B7 3B 6D 33      mov d, transient_area
 0936   03BA 07 D5 06      call ide_read_sect          ; read sector
 0937   03BD E5            pop b
 0938   03BE FD 44 FE 01   mov [d + 510], b            ; update LBA address
 0939   03C2 26 00 00      mov b, 0
 0940   03C5 38 00 00      mov c, 0
 0941   03C8 22 01         mov ah, $01                 ; 1 sector
-0942   03CA 3B 96 32      mov d, transient_area
+0942   03CA 3B 6D 33      mov d, transient_area
 0943   03CD 07 FB 06      call ide_write_sect         ; write sector
 0944   03D0 06            sysret
 0945   03D1             
@@ -1017,13 +1017,13 @@
 1006   041D             syscall_list_procs:
 1007   041D 3B 67 19      mov d, s_ps_header
 1008   0420 07 FF 13      call _puts
-1009   0423 3B 07 1C      mov d, proc_availab_table + 1
+1009   0423 3B DE 1C      mov d, proc_availab_table + 1
 1010   0426 38 01 00      mov c, 1
 1011   0429             list_procs_l0:  
 1012   0429 BD 01         cmp byte[d], 1
 1013   042B C7 4F 04      jne list_procs_next
 1014   042E 2D            mov b, d
-1015   042F 61 06 1C      sub b, proc_availab_table
+1015   042F 61 DD 1C      sub b, proc_availab_table
 1016   0432 FD 9F 05      shl b, 5
 1017   0435 DA            push d
 1018   0436 D8            push b
@@ -1034,7 +1034,7 @@
 1023   0440 07 D3 12      call _putchar
 1024   0443 E5            pop b
 1025   0444 74            mov d, b
-1026   0445 58 16 1C      add d, proc_names
+1026   0445 58 ED 1C      add d, proc_names
 1027   0448 07 FF 13      call _puts
 1028   044B 07 AC 13      call printnl
 1029   044E E7            pop d
@@ -1054,7 +1054,7 @@
 1043   0458             trap_privilege:
 1044   0458 0A D9 03      jmp syscall_reboot
 1045   045B DA            push d
-1046   045C 3B B6 19      mov d, s_priviledge
+1046   045C 3B 8E 1A      mov d, s_priviledge
 1047   045F 07 FF 13      call _puts
 1048   0462 E7            pop d
 1049   0463 06            sysret
@@ -1099,10 +1099,10 @@
 1088   04A2 07 AC 13      call printnl
 1089   04A5 07 7D 14      call scan_u16x
 1090   04A8 4D            mov si, a               ; data source from user space
-1091   04A9 FD 4F 96 30   mov di, scrap_sector    ; destination in kernel space
+1091   04A9 FD 4F 6D 31   mov di, scrap_sector    ; destination in kernel space
 1092   04AD 38 00 02      mov c, 512
 1093   04B0 04            load                    ; transfer data to kernel space!
-1094   04B1 3B 96 30      mov d, scrap_sector     ; dump pointer in d
+1094   04B1 3B 6D 31      mov d, scrap_sector     ; dump pointer in d
 1095   04B4 38 00 00      mov c, 0
 1096   04B7             dump_loop:
 1097   04B7 84            mov al, cl
@@ -1151,7 +1151,7 @@
 1140   0508             print_base:
 1141   0508 07 AC 13      call printnl
 1142   050B 2D            mov b, d
-1143   050C 61 96 30      sub b, scrap_sector      ; remove this later and fix address bases which display incorrectly
+1143   050C 61 6D 31      sub b, scrap_sector      ; remove this later and fix address bases which display incorrectly
 1144   050F 07 5B 14      call print_u16x          ; display row
 1145   0512 10 00 3A      mov a, $3a00
 1146   0515 05 03         syscall sys_io
@@ -1191,7 +1191,7 @@
 1161   0575 D7            push a
 1162   0576 DA            push d
 1163   0577 E1            pushf
-1164   0578 3B CD 19      mov d, s_divzero
+1164   0578 3B A5 1A      mov d, s_divzero
 1165   057B 07 FF 13      call _puts
 1166   057E EE            popf
 1167   057F E7            pop d
@@ -1255,7 +1255,7 @@
 1225   05C0 1A            mov al, ah
 1226   05C1 22 00         mov ah, 0
 1227   05C3 FD 9D 02      shl a, 2          
-1228   05C6 3B 57 1A      mov d, s_week
+1228   05C6 3B 2F 1B      mov d, s_week
 1229   05C9 59            add d, a
 1230   05CA 07 FF 13      call _puts
 1231   05CD 10 00 20      mov a, $2000
@@ -1275,7 +1275,7 @@
 1245   05E3 1A            mov al, ah
 1246   05E4 22 00         mov ah, 0
 1247   05E6 FD 9D 02      shl a, 2          
-1248   05E9 3B 23 1A      mov d, s_months
+1248   05E9 3B FB 1A      mov d, s_months
 1249   05EC 59            add d, a
 1250   05ED 07 FF 13      call _puts
 1251   05F0 10 00 20      mov a, $2000
@@ -1307,43 +1307,43 @@
 1277   0629 07 AC 13      call printnl
 1278   062C 06            sysret
 1279   062D             set_date:
-1280   062D 3B E8 19      mov d, s_set_year
+1280   062D 3B C0 1A      mov d, s_set_year
 1281   0630 07 FF 13      call _puts
 1282   0633 07 EA 14      call scan_u8x          ; read integer into a
 1283   0636 FD 9D 08      shl a, 8               ; only al used, move to ah
 1284   0639 19 0D         mov al, 0dh            ; set rtc year
 1285   063B 05 01         syscall sys_rtc        ; set rtc
-1286   063D 3B EF 19      mov d, s_set_month
+1286   063D 3B C7 1A      mov d, s_set_month
 1287   0640 07 FF 13      call _puts
 1288   0643 07 EA 14      call scan_u8x          ; read integer into a
 1289   0646 FD 9D 08      shl a, 8               ; only al used, move to ah
 1290   0649 19 0C         mov al, 0ch            ; set rtc month
 1291   064B 05 01         syscall sys_rtc        ; set rtc
-1292   064D 3B F7 19      mov d, s_set_day
+1292   064D 3B CF 1A      mov d, s_set_day
 1293   0650 07 FF 13      call _puts
 1294   0653 07 EA 14      call scan_u8x          ; read integer into a
 1295   0656 FD 9D 08      shl a, 8               ; only al used, move to ah
 1296   0659 19 0B         mov al, 0bh            ; set rtc month
 1297   065B 05 01         syscall sys_rtc        ; set rtc
-1298   065D 3B FD 19      mov d, s_set_week
+1298   065D 3B D5 1A      mov d, s_set_week
 1299   0660 07 FF 13      call _puts
 1300   0663 07 EA 14      call scan_u8x          ; read integer into a
 1301   0666 FD 9D 08      shl a, 8               ; only al used, move to ah
 1302   0669 19 0A         mov al, 0ah            ; set rtc month
 1303   066B 05 01         syscall sys_rtc        ; set rtc
-1304   066D 3B 07 1A      mov d, s_set_hours
+1304   066D 3B DF 1A      mov d, s_set_hours
 1305   0670 07 FF 13      call _puts
 1306   0673 07 EA 14      call scan_u8x          ; read integer into a
 1307   0676 FD 9D 08      shl a, 8               ; only al used, move to ah
 1308   0679 19 09         mov al, 09h            ; set rtc month
 1309   067B 05 01         syscall sys_rtc        ; set rtc
-1310   067D 3B 0F 1A      mov d, s_set_minutes
+1310   067D 3B E7 1A      mov d, s_set_minutes
 1311   0680 07 FF 13      call _puts
 1312   0683 07 EA 14      call scan_u8x          ; read integer into a
 1313   0686 FD 9D 08      shl a, 8               ; only al used, move to ah
 1314   0689 19 08         mov al, 08h            ; set rtc month
 1315   068B 05 01         syscall sys_rtc        ; set rtc
-1316   068D 3B 19 1A      mov d, s_set_seconds
+1316   068D 3B F1 1A      mov d, s_set_seconds
 1317   0690 07 FF 13      call _puts
 1318   0693 07 EA 14      call scan_u8x          ; read integer into a
 1319   0696 FD 9D 08      shl a, 8               ; only al used, move to ah
@@ -1542,9 +1542,9 @@
 1512   07AB C6 A4 07      je syscall_io_getch_l0
 1513   07AE 3C            mov d, a
 1514   07AF 77            inc a
-1515   07B0 AF 96 30      cmp a, fifo + _fifo_size      ; check if pointer reached the end of the fifo
+1515   07B0 AF 6D 31      cmp a, fifo + _fifo_size      ; check if pointer reached the end of the fifo
 1516   07B3 C7 B9 07      jne syscall_io_getch_cont
-1517   07B6 10 96 20      mov a, fifo  
+1517   07B6 10 6D 21      mov a, fifo  
 1518   07B9             syscall_io_getch_cont:  
 1519   07B9 42 37 19      mov [fifo_out], a             ; update fifo pointer
 1520   07BC 1E            mov al, [d]                   ; get char
@@ -1659,7 +1659,7 @@
 1622   084A             fs_chmod:
 1623   084A DD            push bl
 1624   084B FD 4E         mov si, d
-1625   084D FD 4F 96 1E   mov di, user_data
+1625   084D FD 4F 6D 1F   mov di, user_data
 1626   0851 38 80 00      mov c, 128
 1627   0854 04            load                        ; load filename from user-space
 1628   0855 14 39 19      mov a, [current_dir_id]
@@ -1667,13 +1667,13 @@
 1630   0859 27            mov b, a
 1631   085A 38 00 00      mov c, 0                    ; upper lba = 0
 1632   085D 22 01         mov ah, $01                  ; 1 sector
-1633   085F 3B 96 32      mov d, transient_area
+1633   085F 3B 6D 33      mov d, transient_area
 1634   0862 07 D5 06      call ide_read_sect          ; read directory
 1635   0865 FD 10         cla
 1636   0867 42 31 19      mov [index], a              ; reset file counter
 1637   086A             fs_chmod_l1:
 1638   086A FD 4E         mov si, d
-1639   086C FD 4F 96 1E   mov di, user_data
+1639   086C FD 4F 6D 1F   mov di, user_data
 1640   0870 07 42 12      call _strcmp
 1641   0873 C6 8A 08      je fs_chmod_found_entry
 1642   0876 58 20 00      add d, 32
@@ -1692,7 +1692,7 @@
 1655   0892 8C            or al, bl                   ; set new permissions
 1656   0893 3F 18 00      mov [d + 24], al            ; write new permissions
 1657   0896 38 00 00      mov c, 0
-1658   0899 3B 96 32      mov d, transient_area
+1658   0899 3B 6D 33      mov d, transient_area
 1659   089C 22 01         mov ah, $01                 ; disk write 1 sect
 1660   089E FD 27         mov b, g                    ; retrieve lba
 1661   08A0 07 FB 06      call ide_write_sect         ; write sector
@@ -1705,7 +1705,7 @@
 1668   08A4             ; search list for null name entry. add new directory to list
 1669   08A4             fs_mkdir:
 1670   08A4 FD 4E         mov si, d
-1671   08A6 FD 4F 96 1E   mov di, user_data
+1671   08A6 FD 4F 6D 1F   mov di, user_data
 1672   08AA 38 00 02      mov c, 512
 1673   08AD 04            load                        ; load data from user-space
 1674   08AE 26 22 00      mov b, fst_lba_start + 2    ; start at 2 because lba  0 is root (this would also cause issues                 
@@ -1713,7 +1713,7 @@
 1676   08B1 38 00 00      mov c, 0                    ; upper lba = 0
 1677   08B4             fs_mkdir_l1:  
 1678   08B4 22 01         mov ah, $01                  ; 1 sector
-1679   08B6 3B 96 32      mov d, transient_area
+1679   08B6 3B 6D 33      mov d, transient_area
 1680   08B9 07 D5 06      call ide_read_sect          ; read sector
 1681   08BC BD 00         cmp byte[d], 0              ; check for null
 1682   08BE C6 C7 08      je fs_mkdir_found_null
@@ -1723,18 +1723,18 @@
 1686   08C7             ;create header file by grabbing dir name from parameter
 1687   08C7 D8            push b                      ; save new directory's lba
 1688   08C8 38 40 00      mov c, 64
-1689   08CB FD 4D 96 1E   mov si, user_data
-1690   08CF FD 4F 96 32   mov di, transient_area
+1689   08CB FD 4D 6D 1F   mov si, user_data
+1690   08CF FD 4F 6D 33   mov di, transient_area
 1691   08D3 FD F5         rep movsb                   ; copy dirname from user_data to transient_area
 1692   08D5 14 39 19      mov a, [current_dir_id]
-1693   08D8 42 D6 32      mov [transient_area + 64], a    ; store parent directory lba
+1693   08D8 42 AD 33      mov [transient_area + 64], a    ; store parent directory lba
 1694   08DB 19 00         mov al, 0
-1695   08DD FD 4F 96 34   mov di, transient_area + 512
+1695   08DD FD 4F 6D 35   mov di, transient_area + 512
 1696   08E1 38 00 02      mov c, 512
 1697   08E4 FD F7         rep stosb                       ; clean buffer
 1698   08E6 38 00 00      mov c, 0                        ; reset lba(c) to 0
 1699   08E9             ; write directory entry sectors
-1700   08E9 3B 96 32      mov d, transient_area
+1700   08E9 3B 6D 33      mov d, transient_area
 1701   08EC 22 02         mov ah, $02                     ; disk write, 2 sectors
 1702   08EE 07 FB 06      call ide_write_sect             ; write sector
 1703   08F1             ; now we need to add the new directory to the list, inside the current directory
@@ -1743,7 +1743,7 @@
 1706   08F7 27            mov b, a                        ; metadata sector
 1707   08F8 38 00 00      mov c, 0
 1708   08FB FD 79         mov g, b                        ; save lba
-1709   08FD 3B 96 32      mov d, transient_area
+1709   08FD 3B 6D 33      mov d, transient_area
 1710   0900 22 01         mov ah, $01                  ; 1 sector
 1711   0902 07 D5 06      call ide_read_sect              ; read metadata sector
 1712   0905             fs_mkdir_l2:
@@ -1752,7 +1752,7 @@
 1715   090A 58 20 00      add d, fst_entry_size
 1716   090D 0A 05 09      jmp fs_mkdir_l2                ; we look for a null entry here but dont check for limits. care needed when adding too many files to a directory
 1717   0910             fs_mkdir_found_null2:
-1718   0910 FD 4D 96 1E   mov si, user_data
+1718   0910 FD 4D 6D 1F   mov si, user_data
 1719   0914 FD 50         mov di, d
 1720   0916 07 57 12      call _strcpy                    ; copy directory name
 1721   0919 58 18 00      add d, 24                       ; goto attributes
@@ -1781,7 +1781,7 @@
 1744   093B             ; write sector into disk for new directory entry
 1745   093B FD 27         mov b, g
 1746   093D 38 00 00      mov c, 0
-1747   0940 3B 96 32      mov d, transient_area
+1747   0940 3B 6D 33      mov d, transient_area
 1748   0943 22 01         mov ah, $01                     ; disk write, 1 sector
 1749   0945 07 FB 06      call ide_write_sect             ; write sector
 1750   0948             
@@ -1800,7 +1800,7 @@
 1763   094D 27            mov b, a                      ; metadata sector
 1764   094E 38 00 00      mov c, 0
 1765   0951 FD 79         mov g, b                      ; save lba
-1766   0953 3B 96 32      mov d, transient_area
+1766   0953 3B 6D 33      mov d, transient_area
 1767   0956 22 01         mov ah, $01                  ; 1 sector
 1768   0958 07 D5 06      call ide_read_sect            ; read metadata sector
 1769   095B             fs_mkdir_l3:
@@ -1837,7 +1837,7 @@
 1800   0992             ; write sector into disk for new directory entry
 1801   0992 FD 27         mov b, g
 1802   0994 38 00 00      mov c, 0
-1803   0997 3B 96 32      mov d, transient_area
+1803   0997 3B 6D 33      mov d, transient_area
 1804   099A 22 01         mov ah, $01                   ; disk write, 1 sector
 1805   099C 07 FB 06      call ide_write_sect           ; write sector
 1806   099F             ;;;;;;;;;;;;;
@@ -1849,7 +1849,7 @@
 1812   09A4 27            mov b, a                      ; metadata sector
 1813   09A5 38 00 00      mov c, 0
 1814   09A8 FD 79         mov g, b                      ; save lba
-1815   09AA 3B 96 32      mov d, transient_area
+1815   09AA 3B 6D 33      mov d, transient_area
 1816   09AD 22 01         mov ah, $01                  ; 1 sector
 1817   09AF 07 D5 06      call ide_read_sect            ; read metadata sector
 1818   09B2             fs_mkdir_l4:
@@ -1886,7 +1886,7 @@
 1849   09E7             ; write sector into disk for new directory entry
 1850   09E7 FD 27         mov b, g
 1851   09E9 38 00 00      mov c, 0
-1852   09EC 3B 96 32      mov d, transient_area
+1852   09EC 3B 6D 33      mov d, transient_area
 1853   09EF 22 01         mov ah, $01                   ; disk write, 1 sector
 1854   09F1 07 FB 06      call ide_write_sect           ; write sector
 1855   09F4             fs_mkdir_end:
@@ -1912,12 +1912,12 @@
 1875   09F5             ;------------------------------------------------------------------------------------------------------;
 1876   09F5             ; sample path: /usr/bin
 1877   09F5             fs_dir_id_to_path:
-1878   09F5 3B 16 1E      mov d, filename
+1878   09F5 3B ED 1E      mov d, filename
 1879   09F8 19 00         mov al, 0
 1880   09FA 3E            mov [d], al                     ; initialize path string 
 1881   09FB 14 39 19      mov a, [current_dir_id]
 1882   09FE 07 0B 0A      call fs_dir_id_to_path_e0
-1883   0A01 3B 16 1E      mov d, filename
+1883   0A01 3B ED 1E      mov d, filename
 1884   0A04 07 EB 11      call _strrev
 1885   0A07 07 FF 13      call _puts
 1886   0A0A 06            sysret
@@ -1948,7 +1948,7 @@
 1911   0A2D 27            mov b, a
 1912   0A2E 38 00 00      mov c, 0                      ; upper lba = 0
 1913   0A31 22 01         mov ah, $01                  ; 1 sector
-1914   0A33 3B 96 30      mov d, transient_area - 512
+1914   0A33 3B 6D 31      mov d, transient_area - 512
 1915   0A36 07 D5 06      call ide_read_sect            ; read directory
 1916   0A39 07 EB 11      call _strrev                  ; reverse dir name before copying
 1917   0A3C FD 4E         mov si, d
@@ -1971,7 +1971,7 @@
 1934   0A49 27            mov b, a
 1935   0A4A 38 00 00      mov c, 0                      ; upper lba = 0
 1936   0A4D 22 01         mov ah, $01                  ; 1 sector
-1937   0A4F 3B 96 30      mov d, transient_area - 512
+1937   0A4F 3B 6D 31      mov d, transient_area - 512
 1938   0A52 07 D5 06      call ide_read_sect            ; read directory
 1939   0A55 16 40 00      mov a, [d + 64]               ; copy parent id value to a
 1940   0A58 E7            pop d
@@ -1990,13 +1990,13 @@
 1953   0A5B             ;------------------------------------------------------------------------------------------------------;
 1954   0A5B             fs_path_to_dir_id_user:
 1955   0A5B FD 4E         mov si, d
-1956   0A5D FD 4F 96 1E   mov di, user_data
+1956   0A5D FD 4F 6D 1F   mov di, user_data
 1957   0A61 38 00 02      mov c, 512
 1958   0A64 04            load
 1959   0A65 07 69 0A      call get_dirid_from_path
 1960   0A68 06            sysret
 1961   0A69             get_dirid_from_path:
-1962   0A69 26 96 1E      mov b, user_data
+1962   0A69 26 6D 1F      mov b, user_data
 1963   0A6C FD 42 24 18   mov [prog], b                  ; token pointer set to path string
 1964   0A70 07 85 16      call get_token
 1965   0A73 31 27 18      mov bl, [tok]
@@ -2014,19 +2014,19 @@
 1977   0A8F C7 E0 0A      jne get_dirid_from_path_end   ; check if there are tokens after '/'. i.e. is this a 'cd /' command?
 1978   0A92             
 1979   0A92 FD 4D 28 18   mov si, tokstr
-1980   0A96 FD 4F 16 1E   mov di, filename
+1980   0A96 FD 4F ED 1E   mov di, filename
 1981   0A9A 07 57 12      call _strcpy        
 1982   0A9D 77            inc a                         ; metadata sector
 1983   0A9E 27            mov b, a
 1984   0A9F 38 00 00      mov c, 0                      ; upper lba = 0
 1985   0AA2 22 01         mov ah, $01                  ; 1 sector
-1986   0AA4 3B 96 32      mov d, transient_area
+1986   0AA4 3B 6D 33      mov d, transient_area
 1987   0AA7 07 D5 06      call ide_read_sect            ; read directory
 1988   0AAA FD 10         cla
 1989   0AAC 42 31 19      mov [index], a
 1990   0AAF             get_dirid_from_path_l1:
 1991   0AAF FD 4E         mov si, d
-1992   0AB1 FD 4F 16 1E   mov di, filename
+1992   0AB1 FD 4F ED 1E   mov di, filename
 1993   0AB5 07 42 12      call _strcmp
 1994   0AB8 C6 CE 0A      je get_dirid_from_path_name_equal  
 1995   0ABB 58 20 00      add d, 32
@@ -2061,13 +2061,13 @@
 2024   0AE5             ;------------------------------------------------------------------------------------------------------;
 2025   0AE5             fs_filepath_exists_user:
 2026   0AE5 FD 4E         mov si, d
-2027   0AE7 FD 4F 96 1E   mov di, user_data
+2027   0AE7 FD 4F 6D 1F   mov di, user_data
 2028   0AEB 38 00 02      mov c, 512
 2029   0AEE 04            load
 2030   0AEF 07 F3 0A      call file_exists_by_path
 2031   0AF2 06            sysret
 2032   0AF3             file_exists_by_path:
-2033   0AF3 26 96 1E      mov b, user_data
+2033   0AF3 26 6D 1F      mov b, user_data
 2034   0AF6 FD 42 24 18   mov [prog], b                   ; token pointer set to path string
 2035   0AFA 07 85 16      call get_token
 2036   0AFD 31 27 18      mov bl, [tok]
@@ -2084,19 +2084,19 @@
 2047   0B17 C1 00         cmp bl, toktyp_identifier
 2048   0B19 C7 71 0B      jne file_exists_by_path_end     ; check if there are tokens after '/'
 2049   0B1C FD 4D 28 18   mov si, tokstr
-2050   0B20 FD 4F 16 1E   mov di, filename
+2050   0B20 FD 4F ED 1E   mov di, filename
 2051   0B24 07 57 12      call _strcpy        
 2052   0B27 77            inc a                           ; metadata sector
 2053   0B28 27            mov b, a
 2054   0B29 38 00 00      mov c, 0                        ; upper lba = 0
 2055   0B2C 22 01         mov ah, $01                  ; 1 sector
-2056   0B2E 3B 96 32      mov d, transient_area
+2056   0B2E 3B 6D 33      mov d, transient_area
 2057   0B31 07 D5 06      call ide_read_sect              ; read directory
 2058   0B34 FD 10         cla
 2059   0B36 42 31 19      mov [index], a
 2060   0B39             file_exists_by_path_l1:
 2061   0B39 FD 4E         mov si, d
-2062   0B3B FD 4F 16 1E   mov di, filename
+2062   0B3B FD 4F ED 1E   mov di, filename
 2063   0B3F 07 42 12      call _strcmp
 2064   0B42 C6 58 0B      je   file_exists_by_path_name_equal
 2065   0B45 58 20 00      add d, 32
@@ -2134,17 +2134,17 @@
 2097   0B75             fs_load_from_path_user:
 2098   0B75 E3            push di
 2099   0B76 FD 4E         mov si, d
-2100   0B78 FD 4F 96 1E   mov di, user_data
+2100   0B78 FD 4F 6D 1F   mov di, user_data
 2101   0B7C 38 00 02      mov c, 512
 2102   0B7F 04            load
 2103   0B80 07 8D 0B      call loadfile_from_path
 2104   0B83 F0            pop di
-2105   0B84 FD 4D 96 32   mov si, transient_area
+2105   0B84 FD 4D 6D 33   mov si, transient_area
 2106   0B88 38 00 3E      mov c, 512 * (fs_sectors_per_file-1)
 2107   0B8B 03            store
 2108   0B8C 06            sysret
 2109   0B8D             loadfile_from_path:
-2110   0B8D 26 96 1E      mov b, user_data
+2110   0B8D 26 6D 1F      mov b, user_data
 2111   0B90 FD 42 24 18   mov [prog], b                 ; token pointer set to path string
 2112   0B94 07 85 16      call get_token
 2113   0B97 31 27 18      mov bl, [tok]
@@ -2161,19 +2161,19 @@
 2124   0BB1 C1 00         cmp bl, toktyp_identifier
 2125   0BB3 C7 18 0C      jne loadfile_from_path_end    ; check if there are tokens after '/'. i.e. is this a 'cd /' command?
 2126   0BB6 FD 4D 28 18   mov si, tokstr
-2127   0BBA FD 4F 16 1E   mov di, filename
+2127   0BBA FD 4F ED 1E   mov di, filename
 2128   0BBE 07 57 12      call _strcpy        
 2129   0BC1 77            inc a                         ; metadata sector
 2130   0BC2 27            mov b, a
 2131   0BC3 38 00 00      mov c, 0                      ; upper lba = 0
 2132   0BC6 22 01         mov ah, $01                  ; 1 sector
-2133   0BC8 3B 96 32      mov d, transient_area
+2133   0BC8 3B 6D 33      mov d, transient_area
 2134   0BCB 07 D5 06      call ide_read_sect            ; read directory
 2135   0BCE FD 10         cla
 2136   0BD0 42 31 19      mov [index], a
 2137   0BD3             loadfile_from_path_l1:
 2138   0BD3 FD 4E         mov si, d
-2139   0BD5 FD 4F 16 1E   mov di, filename
+2139   0BD5 FD 4F ED 1E   mov di, filename
 2140   0BD9 07 42 12      call _strcmp
 2141   0BDC C6 F2 0B      je loadfile_from_path_name_equal  
 2142   0BDF 58 20 00      add d, 32
@@ -2191,7 +2191,7 @@
 2154   0BFD             ; entry is a file
 2155   0BFD 2B 19 00      mov b, [d + 25]               ; get lba
 2156   0C00 FD 77         inc b                         ; add 1 to b because the lba for data comes after the header sector
-2157   0C02 3B 96 32      mov d, transient_area
+2157   0C02 3B 6D 33      mov d, transient_area
 2158   0C05 38 00 00      mov c, 0
 2159   0C08 22 1F         mov ah, fs_sectors_per_file-1 ; number of sectors
 2160   0C0A 07 D5 06      call ide_read_sect            ; read sector
@@ -2229,7 +2229,7 @@
 2192   0C24 FD 77         inc b                        ; metadata sector
 2193   0C26 38 00 00      mov c, 0                     ; upper lba = 0
 2194   0C29 22 01         mov ah, $01                  ; 1 sector
-2195   0C2B 3B 96 32      mov d, transient_area
+2195   0C2B 3B 6D 33      mov d, transient_area
 2196   0C2E 07 D5 06      call ide_read_sect           ; read directory
 2197   0C31 FD 10         cla
 2198   0C33 42 31 19      mov [index], a               ; reset entry index
@@ -2284,7 +2284,7 @@
 2247   0CA6 1F 1E 00      mov al, [d + 30]             ; month
 2248   0CA9 FD 9E 02      shl al, 2
 2249   0CAC DA            push d
-2250   0CAD 3B 23 1A      mov d, s_months
+2250   0CAD 3B FB 1A      mov d, s_months
 2251   0CB0 22 00         mov ah, 0
 2252   0CB2 59            add d, a
 2253   0CB3 07 FF 13      call _puts
@@ -2324,7 +2324,7 @@
 2287   0CF8 38 00 00      mov c, 0                ; upper lba = 0
 2288   0CFB             fs_find_empty_block_l1:  
 2289   0CFB 22 01         mov ah, $01                  ; 1 sector
-2290   0CFD 3B 96 30      mov d, transient_area - 512
+2290   0CFD 3B 6D 31      mov d, transient_area - 512
 2291   0D00 07 D5 06      call ide_read_sect      ; read sector
 2292   0D03 BD 00         cmp byte [d], 0
 2293   0D05 C6 0E 0D      je fs_find_empty_block_found_null
@@ -2339,7 +2339,7 @@
 2302   0D0F             ; search for first null block
 2303   0D0F             fs_mktxt:
 2304   0D0F FD 4E       	mov si, d
-2305   0D11 FD 4F 96 1E 	mov di, user_data
+2305   0D11 FD 4F 6D 1F 	mov di, user_data
 2306   0D15 38 00 01    	mov c, 256
 2307   0D18 04          	load					; load data from user-space
 2308   0D19             	
@@ -2347,7 +2347,7 @@
 2310   0D1C 38 00 00    	mov c, 0						; reset lba to 0
 2311   0D1F             fs_mktxt_l1:	
 2312   0D1F 10 02 01    	mov a, $0102			; disk read
-2313   0D22 3B 96 32    	mov d, transient_area
+2313   0D22 3B 6D 33    	mov d, transient_area
 2314   0D25 05 02       	syscall sys_ide ; read sector
 2315   0D27 1E          	mov al, [d]
 2316   0D28 B9 00       	cmp al, 0			; check for null
@@ -2359,15 +2359,15 @@
 2322   0D34             ;create header file by grabbing file name from parameter	
 2323   0D34 3B 55 19    	mov d, s_dataentry
 2324   0D37 07 FF 13    	call _puts
-2325   0D3A 3B 96 34    	mov d, transient_area + 512			; pointer to file contents
+2325   0D3A 3B 6D 35    	mov d, transient_area + 512			; pointer to file contents
 2326   0D3D 07 65 13    	call _gettxt
 2327   0D40 07 32 12    	call _strlen						; get length of file
 2328   0D43 D9          	push c							; save length
 2329   0D44 19 01       	mov al, 1
-2330   0D46 3D 96 32    	mov [transient_area], al					; mark sectors as used (not null)
+2330   0D46 3D 6D 33    	mov [transient_area], al					; mark sectors as used (not null)
 2331   0D49 10 00 00    	mov a, 0
 2332   0D4C 42 31 19    	mov [index], a
-2333   0D4F 3B 96 32    	mov d, transient_area
+2333   0D4F 3B 6D 33    	mov d, transient_area
 2334   0D52 13          	mov a, d
 2335   0D53 42 33 19    	mov [buffer_addr], a
 2336   0D56             fs_mktxt_l2:
@@ -2392,7 +2392,7 @@
 2355   0D7E 27          	mov b, a					; metadata sector
 2356   0D7F 38 00 00    	mov c, 0
 2357   0D82 FD 79       	mov g, b					; save lba
-2358   0D84 3B 96 32    	mov d, transient_area
+2358   0D84 3B 6D 33    	mov d, transient_area
 2359   0D87 10 02 01    	mov a, $0102			; disk read
 2360   0D8A 05 02       	syscall sys_ide		; read metadata sector
 2361   0D8C             fs_mktxt_add_to_dir_l2:
@@ -2402,7 +2402,7 @@
 2365   0D92 58 20 00    	add d, fst_entry_size
 2366   0D95 0A 8C 0D    	jmp fs_mktxt_add_to_dir_l2					; we look for a null entry here but dont check for limits. care needed when adding too many files to a directory
 2367   0D98             fs_mktxt_add_to_dir_null:
-2368   0D98 FD 4D 96 1E 	mov si, user_data
+2368   0D98 FD 4D 6D 1F 	mov si, user_data
 2369   0D9C FD 50       	mov di, d
 2370   0D9E 07 57 12    	call _strcpy			; copy file name
 2371   0DA1 58 18 00    	add d, 24			; skip name
@@ -2437,7 +2437,7 @@
 2400   0DC9             ; write sector into disk for new directory entry
 2401   0DC9 FD 27       	mov b, g
 2402   0DCB 38 00 00    	mov c, 0
-2403   0DCE 3B 96 32    	mov d, transient_area
+2403   0DCE 3B 6D 33    	mov d, transient_area
 2404   0DD1 10 03 01    	mov a, $0103			; disk write, 1 sector
 2405   0DD4 05 02       	syscall sys_ide		; write sector
 2406   0DD6 07 AC 13    	call printnl
@@ -2453,14 +2453,14 @@
 2416   0DDA 19 00         mov al, 0
 2417   0DDC 3D 29 19      mov [sys_echo_on], al ; disable echo
 2418   0DDF FD 4E         mov si, d
-2419   0DE1 FD 4F 96 1E   mov di, user_data
+2419   0DE1 FD 4F 6D 1F   mov di, user_data
 2420   0DE5 38 00 02      mov c, 512
 2421   0DE8 04            load                          ; load data from user-space
 2422   0DE9 26 A0 00      mov b, fs_lba_start           ; files start when directories end
 2423   0DEC 38 00 00      mov c, 0                      ; upper lba = 0
 2424   0DEF             fs_mkbin_l1:  
 2425   0DEF 22 01         mov ah, $01                  ; 1 sector
-2426   0DF1 3B 96 32      mov d, transient_area
+2426   0DF1 3B 6D 33      mov d, transient_area
 2427   0DF4 07 D5 06      call ide_read_sect            ; read sector
 2428   0DF7 BD 00         cmp byte[d], 0                ; check for null
 2429   0DF9 C6 02 0E      je fs_mkbin_found_null
@@ -2469,14 +2469,14 @@
 2432   0E02             fs_mkbin_found_null:
 2433   0E02 D8            push b                        ; save lba
 2434   0E03             ;create header file by grabbing file name from parameter
-2435   0E03 FD 4F 96 34   mov di, transient_area + 512  ; pointer to file contents
+2435   0E03 FD 4F 6D 35   mov di, transient_area + 512  ; pointer to file contents
 2436   0E07 07 7D 11      call _load_hex                ; load binary hex
 2437   0E0A D9            push c                        ; save size (nbr of bytes)
 2438   0E0B 19 01         mov al, 1
-2439   0E0D 3D 96 32      mov [transient_area], al      ; mark sectors as used (not null)
+2439   0E0D 3D 6D 33      mov [transient_area], al      ; mark sectors as used (not null)
 2440   0E10 FD 10         cla
 2441   0E12 42 31 19      mov [index], a
-2442   0E15 3B 96 32      mov d, transient_area
+2442   0E15 3B 6D 33      mov d, transient_area
 2443   0E18 13            mov a, d
 2444   0E19 42 33 19      mov [buffer_addr], a
 2445   0E1C             fs_mkbin_l2:
@@ -2501,7 +2501,7 @@
 2464   0E44 27            mov b, a                      ; metadata sector
 2465   0E45 38 00 00      mov c, 0
 2466   0E48 FD 79         mov g, b                      ; save lba
-2467   0E4A 3B 96 32      mov d, transient_area
+2467   0E4A 3B 6D 33      mov d, transient_area
 2468   0E4D 22 01         mov ah, $01                  ; 1 sector
 2469   0E4F 07 D5 06      call ide_read_sect            ; read metadata sector
 2470   0E52             fs_mkbin_add_to_dir_l2:
@@ -2510,7 +2510,7 @@
 2473   0E57 58 20 00      add d, fst_entry_size
 2474   0E5A 0A 52 0E      jmp fs_mkbin_add_to_dir_l2   ; we look for a null entry here but dont check for limits. care needed when adding too many files to a directory
 2475   0E5D             fs_mkbin_add_to_dir_null:
-2476   0E5D FD 4D 96 1E   mov si, user_data
+2476   0E5D FD 4D 6D 1F   mov si, user_data
 2477   0E61 FD 50         mov di, d
 2478   0E63 07 57 12      call _strcpy                  ; copy file name
 2479   0E66 58 18 00      add d, 24                     ; skip name
@@ -2541,7 +2541,7 @@
 2504   0E8E             ; write sector into disk for new directory entry
 2505   0E8E FD 27         mov b, g
 2506   0E90 38 00 00      mov c, 0
-2507   0E93 3B 96 32      mov d, transient_area
+2507   0E93 3B 6D 33      mov d, transient_area
 2508   0E96 22 01         mov ah, $01                   ; disk write, 1 sector
 2509   0E98 07 FB 06      call ide_write_sect           ; write sector
 2510   0E9B 19 01         mov al, 1
@@ -2552,12 +2552,12 @@
 2515   0EA1             ; pwd - print working directory
 2516   0EA1             ;------------------------------------------------------------------------------------------------------;    
 2517   0EA1             fs_pwd:
-2518   0EA1 3B 16 1E      mov d, filename
+2518   0EA1 3B ED 1E      mov d, filename
 2519   0EA4 19 00         mov al, 0
 2520   0EA6 3E            mov [d], al                   ; initialize path string 
 2521   0EA7 14 39 19      mov a, [current_dir_id]
 2522   0EAA 07 0B 0A      call fs_dir_id_to_path_e0
-2523   0EAD 3B 16 1E      mov d, filename
+2523   0EAD 3B ED 1E      mov d, filename
 2524   0EB0 07 EB 11      call _strrev
 2525   0EB3 07 FF 13      call _puts
 2526   0EB6 07 AC 13      call printnl
@@ -2579,20 +2579,20 @@
 2542   0EBE             fs_cat:
 2543   0EBE DA            push d                              ; save userspace file data destination
 2544   0EBF FD 4E         mov si, d
-2545   0EC1 FD 4F 96 1E   mov di, user_data
+2545   0EC1 FD 4F 6D 1F   mov di, user_data
 2546   0EC5 38 00 02      mov c, 512
 2547   0EC8 04            load                                ; copy filename from user-space
 2548   0EC9 29 39 19      mov b, [current_dir_id]
 2549   0ECC FD 77         inc b                               ; metadata sector
 2550   0ECE 38 00 00      mov c, 0                            ; upper lba = 0
 2551   0ED1 22 01         mov ah, $01                  ; 1 sector
-2552   0ED3 3B 96 30      mov d, transient_area-512
+2552   0ED3 3B 6D 31      mov d, transient_area-512
 2553   0ED6 07 D5 06      call ide_read_sect                  ; read directory
 2554   0ED9 FD 10         cla
 2555   0EDB 42 31 19      mov [index], a                      ; reset file counter
 2556   0EDE             fs_cat_l1:
 2557   0EDE FD 4E         mov si, d
-2558   0EE0 FD 4F 96 1E   mov di, user_data
+2558   0EE0 FD 4F 6D 1F   mov di, user_data
 2559   0EE4 07 42 12      call _strcmp
 2560   0EE7 C6 FD 0E      je fs_cat_found_entry
 2561   0EEA 58 20 00      add d, 32
@@ -2606,12 +2606,12 @@
 2569   0EFD 58 19 00      add d, 25                           ; get to dirid of file in disk
 2570   0F00 2A            mov b, [d]                          ; get lba
 2571   0F01 FD 77         inc b                               ; add 1 to b because the lba for data comes after the header sector 
-2572   0F03 3B 96 32      mov d, transient_area  
+2572   0F03 3B 6D 33      mov d, transient_area  
 2573   0F06 38 00 00      mov c, 0
 2574   0F09 22 1F         mov ah, fs_sectors_per_file-1       ; nbr sectors
 2575   0F0B 07 D5 06      call ide_read_sect                  ; read sectors
 2576   0F0E F0            pop di                              ; write userspace file data destination to di
-2577   0F0F FD 4D 96 32   mov si, transient_area              ; data origin
+2577   0F0F FD 4D 6D 33   mov si, transient_area              ; data origin
 2578   0F13 38 00 3E      mov c, 512*(fs_sectors_per_file-1)
 2579   0F16 03            store
 2580   0F17 06            sysret
@@ -2636,7 +2636,7 @@
 2599   0F22 27            mov b, a
 2600   0F23 38 00 00      mov c, 0                      ; upper lba = 0
 2601   0F26 22 01         mov ah, $01          ;
-2602   0F28 3B 96 32      mov d, transient_area
+2602   0F28 3B 6D 33      mov d, transient_area
 2603   0F2B 07 D5 06      call ide_read_sect            ; read directory
 2604   0F2E FD 10         cla
 2605   0F30 42 31 19      mov [index], a                ; reset file counter
@@ -2660,11 +2660,11 @@
 2623   0F56 FD 77         inc b                         ; metadata sector
 2624   0F58 38 00 00      mov c, 0                      ; upper lba = 0
 2625   0F5B 22 01         mov ah, $01          ; 
-2626   0F5D 3B 96 32      mov d, transient_area
+2626   0F5D 3B 6D 33      mov d, transient_area
 2627   0F60 07 FB 06      call ide_write_sect           ; write sector and erase file's entry in the current dir
 2628   0F63             
 2629   0F63 FD 27         mov b, g
-2630   0F65 3B 96 32      mov d, transient_area  
+2630   0F65 3B 6D 33      mov d, transient_area  
 2631   0F68 FD 10         cla
 2632   0F6A 3E            mov [d], al                   ; make directory's name header null for re-use
 2633   0F6B 38 00 00      mov c, 0
@@ -2682,7 +2682,7 @@
 2645   0F76             ; deletes file entry in the directory's file list 
 2646   0F76             fs_rm:
 2647   0F76 FD 4E         mov si, d
-2648   0F78 FD 4F 96 1E   mov di, user_data
+2648   0F78 FD 4F 6D 1F   mov di, user_data
 2649   0F7C 38 00 02      mov c, 512
 2650   0F7F 04            load                          ; load data from user-space
 2651   0F80 14 39 19      mov a, [current_dir_id]
@@ -2690,13 +2690,13 @@
 2653   0F84 27            mov b, a
 2654   0F85 38 00 00      mov c, 0                      ; upper lba = 0
 2655   0F88 22 01         mov ah, $01                  ; 1 sector
-2656   0F8A 3B 96 32      mov d, transient_area
+2656   0F8A 3B 6D 33      mov d, transient_area
 2657   0F8D 07 D5 06      call ide_read_sect            ; read directory
 2658   0F90 10 00 00      mov a, 0
 2659   0F93 42 31 19      mov [index], a                ; reset file counter
 2660   0F96             fs_rm_l1:
 2661   0F96 FD 4E         mov si, d
-2662   0F98 FD 4F 96 1E   mov di, user_data
+2662   0F98 FD 4F 6D 1F   mov di, user_data
 2663   0F9C 07 42 12      call _strcmp
 2664   0F9F C6 B5 0F      je fs_rm_found_entry
 2665   0FA2 58 20 00      add d, 32
@@ -2716,9 +2716,9 @@
 2679   0FC1 27            mov b, a
 2680   0FC2 38 00 00      mov c, 0                      ; upper lba = 0
 2681   0FC5 22 01         mov ah, $01                   ; disk write
-2682   0FC7 3B 96 32      mov d, transient_area
+2682   0FC7 3B 6D 33      mov d, transient_area
 2683   0FCA 07 FB 06      call ide_write_sect           ; write sector and erase file's entry in the current dir
-2684   0FCD 3B 96 32      mov d, transient_area  
+2684   0FCD 3B 6D 33      mov d, transient_area  
 2685   0FD0 19 00         mov al, 0
 2686   0FD2 3E            mov [d], al                   ; make file's data header null for re-use
 2687   0FD3 38 00 00      mov c, 0
@@ -2733,7 +2733,7 @@
 2696   0FDE             ;------------------------------------------------------------------------------------------------------;
 2697   0FDE             fs_mv:
 2698   0FDE FD 4E         mov si, d
-2699   0FE0 FD 4F 96 1E   mov di, user_data
+2699   0FE0 FD 4F 6D 1F   mov di, user_data
 2700   0FE4 38 00 02      mov c, 512
 2701   0FE7 04            load                          ; load data from user-space
 2702   0FE8 14 39 19      mov a, [current_dir_id]
@@ -2741,13 +2741,13 @@
 2704   0FEC 27            mov b, a  
 2705   0FED 38 00 00      mov c, 0                      ; upper lba = 0
 2706   0FF0 22 01         mov ah, $01                  ; 1 sector
-2707   0FF2 3B 96 32      mov d, transient_area
+2707   0FF2 3B 6D 33      mov d, transient_area
 2708   0FF5 07 D5 06      call ide_read_sect            ; read directory
 2709   0FF8 FD 10         cla
 2710   0FFA 42 31 19      mov [index], a                ; reset file counter
 2711   0FFD             fs_mv_l1:
 2712   0FFD FD 4E         mov si, d
-2713   0FFF FD 4F 96 1E   mov di, user_data
+2713   0FFF FD 4F 6D 1F   mov di, user_data
 2714   1003 07 42 12      call _strcmp
 2715   1006 C6 1C 10      je fs_mv_found_entry
 2716   1009 58 20 00      add d, 32
@@ -2759,21 +2759,21 @@
 2722   1019 0A FD 0F      jmp fs_mv_l1
 2723   101C             fs_mv_found_entry:  
 2724   101C DA            push d
-2725   101D FD 4D 16 1F   mov si, user_data + 128       ; (0...127) = original filename , (128...255) = new name
+2725   101D FD 4D ED 1F   mov si, user_data + 128       ; (0...127) = original filename , (128...255) = new name
 2726   1021 FD 50         mov di, d
 2727   1023 07 57 12      call _strcpy  
 2728   1026 38 00 00      mov c, 0
-2729   1029 3B 96 32      mov d, transient_area
+2729   1029 3B 6D 33      mov d, transient_area
 2730   102C 22 01         mov ah, $01                   ; disk write 1 sect
 2731   102E 07 FB 06      call ide_write_sect           ; write sector
 2732   1031 E7            pop d
 2733   1032             ;; need to check whether its a dir or a file here ;;;
 2734   1032 2B 19 00      mov b, [d + 25]               ; get the dirid of the directory so we can locate its own entry in the list
 2735   1035 22 01         mov ah, $01
-2736   1037 3B 96 32      mov d, transient_area
+2736   1037 3B 6D 33      mov d, transient_area
 2737   103A 38 00 00      mov c, 0
 2738   103D 07 D5 06      call ide_read_sect            ; read directory entry
-2739   1040 FD 4D 16 1F   mov si, user_data + 128
+2739   1040 FD 4D ED 1F   mov si, user_data + 128
 2740   1044 FD 50         mov di, d
 2741   1046 07 57 12      call _strcpy                  ; change directory's name
 2742   1049 22 01         mov ah, $01
@@ -2786,7 +2786,7 @@
 2749   104F             ; process index in a
 2750   104F             ;----------------------------------------------------------------------------------------------------;
 2751   104F             find_free_proc:
-2752   104F FD 4D 07 1C   mov si, proc_availab_table + 1      ; skip process 0 (kernel)
+2752   104F FD 4D DE 1C   mov si, proc_availab_table + 1      ; skip process 0 (kernel)
 2753   1053             find_free_proc_l0:
 2754   1053 F6            lodsb                               ; get process state
 2755   1054 B9 00         cmp al, 0
@@ -2794,7 +2794,7 @@
 2757   1059 0A 53 10      jmp find_free_proc_l0               ; else, goto next
 2758   105C             find_free_proc_free:
 2759   105C 4E            mov a, si
-2760   105D 5F 07 1C      sub a, 1 + proc_availab_table       ; get process index
+2760   105D 5F DE 1C      sub a, 1 + proc_availab_table       ; get process index
 2761   1060 09            ret
 2762   1061               
 2763   1061             
@@ -2825,7 +2825,7 @@
 2788   107A 1D 30 19      mov al, [active_proc_index]
 2789   107D 22 00         mov ah, 0  
 2790   107F FD 9D 05      shl a, 5                             ; x32
-2791   1082 53 16 1C      add a, proc_names
+2791   1082 53 ED 1C      add a, proc_names
 2792   1085 3C            mov d, a
 2793   1086 19 00         mov al, 0
 2794   1088 3E            mov [d], al                           ; nullify process name
@@ -2834,7 +2834,7 @@
 2797   108C 22 00         mov ah, 0  
 2798   108E 3C            mov d, a
 2799   108F 19 00         mov al, 0
-2800   1091 3F 06 1C      mov [d + proc_availab_table], al    ; make process empty again
+2800   1091 3F DD 1C      mov [d + proc_availab_table], al    ; make process empty again
 2801   1094               
 2802   1094 1D 2F 19      mov al, [nbr_active_procs]          ; decrease nbr of active processes
 2803   1097 80            dec al
@@ -2932,12 +2932,12 @@
 2895   1104 51 14 00      add sp, 20
 2896   1107               
 2897   1107 FD 4E         mov si, d                          ; copy the file path
-2898   1109 FD 4F 96 1E   mov di, user_data
+2898   1109 FD 4F 6D 1F   mov di, user_data
 2899   110D 38 00 02      mov c, 512
 2900   1110 04            load
 2901   1111 11            mov a, b
 2902   1112 4D            mov si, a                          ; copy the arguments
-2903   1113 FD 4F 96 30   mov di, scrap_sector
+2903   1113 FD 4F 6D 31   mov di, scrap_sector
 2904   1117 38 00 02      mov c, 512
 2905   111A 04            load
 2906   111B 07 8D 0B      call loadfile_from_path            ; load the process file from disk by path (path is in user_data)
@@ -2947,12 +2947,12 @@
 2910   1121 01            setptb 
 2911   1122 07 61 10      call proc_memory_map               ; map process memory pages
 2912   1125             ; copy arguments into process's memory
-2913   1125 FD 4D 96 30   mov si, scrap_sector
+2913   1125 FD 4D 6D 31   mov si, scrap_sector
 2914   1129 FD 4F 00 00   mov di, 0
 2915   112D 38 00 02      mov c, 512
 2916   1130 03            store
 2917   1131             ; now copy process binary data into process's memory
-2918   1131 FD 4D 96 32   mov si, transient_area
+2918   1131 FD 4D 6D 33   mov si, transient_area
 2919   1135 FD 4F 00 04   mov di, text_org                   ; code origin address for all user processes
 2920   1139 38 00 40      mov c, fs_file_size                ; size of memory space to copy, which is equal to the max file size in disk (for now)
 2921   113C 03            store                              ; copy process data
@@ -2960,15 +2960,15 @@
 2923   113D 07 4F 10      call find_free_proc                ; index in a
 2924   1140 3D 30 19      mov [active_proc_index], al        ; set new active process
 2925   1143 FD 9D 05      shl a, 5                           ; x32
-2926   1146 53 16 1C      add a, proc_names
+2926   1146 53 ED 1C      add a, proc_names
 2927   1149 4F            mov di, a
-2928   114A FD 4D 96 1E   mov si, user_data                  ; copy and store process filename
+2928   114A FD 4D 6D 1F   mov si, user_data                  ; copy and store process filename
 2929   114E 07 57 12      call _strcpy
 2930   1151               
 2931   1151 07 4F 10      call find_free_proc                ; index in a
 2932   1154 3C            mov d, a
 2933   1155 19 01         mov al, 1
-2934   1157 3F 06 1C      mov [d + proc_availab_table], al   ; make process busy
+2934   1157 3F DD 1C      mov [d + proc_availab_table], al   ; make process busy
 2935   115A               
 2936   115A 1D 2F 19      mov al, [nbr_active_procs]         ; increase nbr of active processes
 2937   115D 7A            inc al
@@ -2980,14 +2980,14 @@
 2943   116C 06            sysret
 2944   116D             
 2945   116D             proc_table_convert:
-2946   116D C6 1A         .dw proc_state_table + 0
-2947   116F DA 1A         .dw proc_state_table + 20
-2948   1171 EE 1A         .dw proc_state_table + 40
-2949   1173 02 1B         .dw proc_state_table + 60
-2950   1175 16 1B         .dw proc_state_table + 80
-2951   1177 2A 1B         .dw proc_state_table + 100
-2952   1179 3E 1B         .dw proc_state_table + 120
-2953   117B 52 1B         .dw proc_state_table + 140
+2946   116D 9D 1B         .dw proc_state_table + 0
+2947   116F B1 1B         .dw proc_state_table + 20
+2948   1171 C5 1B         .dw proc_state_table + 40
+2949   1173 D9 1B         .dw proc_state_table + 60
+2950   1175 ED 1B         .dw proc_state_table + 80
+2951   1177 01 1C         .dw proc_state_table + 100
+2952   1179 15 1C         .dw proc_state_table + 120
+2953   117B 29 1C         .dw proc_state_table + 140
 2954   117D               
 2955   117D             ;----------------------------------------------------------------------------------------------;
 2956   117D             ; get hex file
@@ -3056,7 +3056,7 @@
 3019   11B4 0D            stostat
 3020   11B5               
 3021   11B5             ; reset fifo pointers
-3022   11B5 10 96 20      mov a, fifo
+3022   11B5 10 6D 21      mov a, fifo
 3023   11B8 3B 35 19      mov d, fifo_in
 3024   11BB 43            mov [d], a
 3025   11BC 3B 37 19      mov d, fifo_out
@@ -3064,10 +3064,10 @@
 3027   11C0 19 02         mov al, 2
 3028   11C2 05 03         syscall sys_io                ; enable uart in interrupt mode
 3029   11C4             
-3030   11C4 3B 8A 19      mov d, s_kernel_started
+3030   11C4 3B 8A 19      mov d, s_kernel_welcome
 3031   11C7 07 FF 13      call _puts
 3032   11CA             
-3033   11CA 3B 84 1A      mov d, s_fdc_config
+3033   11CA 3B 5C 1B      mov d, s_fdc_config
 3034   11CD 07 FF 13      call _puts
 3035   11D0 F2 C0 FF 0D   mov byte [_fdc_config], %00001101  ; %00001001 : turn led on / head load, disable double density, select side 0, select drive 0, do not select drive 1
 3036   11D4 F2 C8 FF 0B   mov byte [_fdc_stat_cmd], %00001011     ; leave this restore command in order to clear BUSY flag
@@ -3076,7 +3076,7 @@
 3039   11DC 19 10         mov al, 16
 3040   11DE 05 04         syscall sys_filesystem        ; set root dirid
 3041   11E0             
-3042   11E0 3B A7 19      mov d, s_prompt_init
+3042   11E0 3B 7F 1A      mov d, s_prompt_init
 3043   11E3 07 FF 13      call _puts
 3044   11E6 3B 3B 19      mov d, s_init_path
 3045   11E9 05 05         syscall sys_create_proc       ; launch init as a new process
@@ -4488,9 +4488,9 @@
 3086   1933 00 00         .dw 0
 3087   1935             
 3088   1935             fifo_in:
-3089   1935 96 20         .dw fifo
+3089   1935 6D 21         .dw fifo
 3090   1937             fifo_out:
-3091   1937 96 20         .dw fifo
+3091   1937 6D 21         .dw fifo
 3092   1939             
 3093   1939             ; file system variables
 3094   1939             current_dir_id:
@@ -4532,1642 +4532,1699 @@
 3119   1980 20 65 6E 61 
 3119   1984 62 6C 65 64 
 3119   1988 0A 00 
-3120   198A             s_kernel_started:
-3121   198A 6B 65 72 6E   .db "kernel started(version 1.0)\n", 0
-3121   198E 65 6C 20 73 
-3121   1992 74 61 72 74 
-3121   1996 65 64 28 76 
-3121   199A 65 72 73 69 
-3121   199E 6F 6E 20 31 
-3121   19A2 2E 30 29 0A 
-3121   19A6 00 
-3122   19A7             s_prompt_init:
-3123   19A7 73 74 61 72   .db "starting init\n", 0
-3123   19AB 74 69 6E 67 
-3123   19AF 20 69 6E 69 
-3123   19B3 74 0A 00 
-3124   19B6             s_priviledge:
-3125   19B6 0A 65 78 63   .db "\nexception: privilege\n", 0
-3125   19BA 65 70 74 69 
-3125   19BE 6F 6E 3A 20 
-3125   19C2 70 72 69 76 
-3125   19C6 69 6C 65 67 
-3125   19CA 65 0A 00 
-3126   19CD             s_divzero:
-3127   19CD 0A 65 78 63   .db "\nexception: zero division\n", 0
-3127   19D1 65 70 74 69 
-3127   19D5 6F 6E 3A 20 
-3127   19D9 7A 65 72 6F 
-3127   19DD 20 64 69 76 
-3127   19E1 69 73 69 6F 
-3127   19E5 6E 0A 00 
-3128   19E8             
-3129   19E8             s_set_year:
-3130   19E8 79 65 61 72   .db "year: ", 0
-3130   19EC 3A 20 00 
-3131   19EF             s_set_month:
-3132   19EF 6D 6F 6E 74   .db "month: ", 0
-3132   19F3 68 3A 20 00 
-3133   19F7             s_set_day:
-3134   19F7 64 61 79 3A   .db "day: ", 0
-3134   19FB 20 00 
-3135   19FD             s_set_week:
-3136   19FD 77 65 65 6B   .db "weekday: ", 0
-3136   1A01 64 61 79 3A 
-3136   1A05 20 00 
-3137   1A07             s_set_hours:
-3138   1A07 68 6F 75 72   .db "hours: ", 0
-3138   1A0B 73 3A 20 00 
-3139   1A0F             s_set_minutes:
-3140   1A0F 6D 69 6E 75   .db "minutes: ", 0
-3140   1A13 74 65 73 3A 
-3140   1A17 20 00 
-3141   1A19             s_set_seconds:
-3142   1A19 73 65 63 6F   .db "seconds: ", 0
-3142   1A1D 6E 64 73 3A 
-3142   1A21 20 00 
-3143   1A23             s_months:      
-3144   1A23 20 20 20 00   .db "   ", 0
-3145   1A27 6A 61 6E 00   .db "jan", 0
-3146   1A2B 66 65 62 00   .db "feb", 0
-3147   1A2F 6D 61 72 00   .db "mar", 0
-3148   1A33 61 70 72 00   .db "apr", 0
-3149   1A37 6D 61 79 00   .db "may", 0
-3150   1A3B 6A 75 6E 00   .db "jun", 0
-3151   1A3F 6A 75 6C 00   .db "jul", 0
-3152   1A43 61 75 67 00   .db "aug", 0
-3153   1A47 73 65 70 00   .db "sep", 0
-3154   1A4B 6F 63 74 00   .db "oct", 0
-3155   1A4F 6E 6F 76 00   .db "nov", 0
-3156   1A53 64 65 63 00   .db "dec", 0
-3157   1A57             
-3158   1A57             s_week:        
-3159   1A57 73 75 6E 00   .db "sun", 0 
-3160   1A5B 6D 6F 6E 00   .db "mon", 0 
-3161   1A5F 74 75 65 00   .db "tue", 0 
-3162   1A63 77 65 64 00   .db "wed", 0 
-3163   1A67 74 68 75 00   .db "thu", 0 
-3164   1A6B 66 72 69 00   .db "fri", 0 
-3165   1A6F 73 61 74 00   .db "sat", 0
-3166   1A73             
-3167   1A73 0A 49 52 51 s_fdc_irq: .db "\nIRQ0 Executed.\n", 0
-3167   1A77 30 20 45 78 
-3167   1A7B 65 63 75 74 
-3167   1A7F 65 64 2E 0A 
-3167   1A83 00 
-3168   1A84             s_fdc_config:
-3169   1A84 0A 73 65 6C   .db "\nselecting diskette drive 0, side 0, single density, head loaded\n", 0
-3169   1A88 65 63 74 69 
-3169   1A8C 6E 67 20 64 
-3169   1A90 69 73 6B 65 
-3169   1A94 74 74 65 20 
-3169   1A98 64 72 69 76 
-3169   1A9C 65 20 30 2C 
-3169   1AA0 20 73 69 64 
-3169   1AA4 65 20 30 2C 
-3169   1AA8 20 73 69 6E 
-3169   1AAC 67 6C 65 20 
-3169   1AB0 64 65 6E 73 
-3169   1AB4 69 74 79 2C 
-3169   1AB8 20 68 65 61 
-3169   1ABC 64 20 6C 6F 
-3169   1AC0 61 64 65 64 
-3169   1AC4 0A 00 
-3170   1AC6             
-3171   1AC6             proc_state_table:   
-3172   1AC6 00 00 00 00   .fill 16 * 20, 0  ; for 15 processes max
-3172   1ACA 00 00 00 00 
-3172   1ACE 00 00 00 00 
-3172   1AD2 00 00 00 00 
-3172   1AD6 00 00 00 00 
-3172   1ADA 00 00 00 00 
-3172   1ADE 00 00 00 00 
-3172   1AE2 00 00 00 00 
-3172   1AE6 00 00 00 00 
-3172   1AEA 00 00 00 00 
-3172   1AEE 00 00 00 00 
-3172   1AF2 00 00 00 00 
-3172   1AF6 00 00 00 00 
-3172   1AFA 00 00 00 00 
-3172   1AFE 00 00 00 00 
-3172   1B02 00 00 00 00 
-3172   1B06 00 00 00 00 
-3172   1B0A 00 00 00 00 
-3172   1B0E 00 00 00 00 
-3172   1B12 00 00 00 00 
-3172   1B16 00 00 00 00 
-3172   1B1A 00 00 00 00 
-3172   1B1E 00 00 00 00 
-3172   1B22 00 00 00 00 
-3172   1B26 00 00 00 00 
-3172   1B2A 00 00 00 00 
-3172   1B2E 00 00 00 00 
-3172   1B32 00 00 00 00 
-3172   1B36 00 00 00 00 
-3172   1B3A 00 00 00 00 
-3172   1B3E 00 00 00 00 
-3172   1B42 00 00 00 00 
-3172   1B46 00 00 00 00 
-3172   1B4A 00 00 00 00 
-3172   1B4E 00 00 00 00 
-3172   1B52 00 00 00 00 
-3172   1B56 00 00 00 00 
-3172   1B5A 00 00 00 00 
-3172   1B5E 00 00 00 00 
-3172   1B62 00 00 00 00 
-3172   1B66 00 00 00 00 
-3172   1B6A 00 00 00 00 
-3172   1B6E 00 00 00 00 
-3172   1B72 00 00 00 00 
-3172   1B76 00 00 00 00 
-3172   1B7A 00 00 00 00 
-3172   1B7E 00 00 00 00 
-3172   1B82 00 00 00 00 
-3172   1B86 00 00 00 00 
-3172   1B8A 00 00 00 00 
-3172   1B8E 00 00 00 00 
-3172   1B92 00 00 00 00 
-3172   1B96 00 00 00 00 
-3172   1B9A 00 00 00 00 
-3172   1B9E 00 00 00 00 
-3172   1BA2 00 00 00 00 
-3172   1BA6 00 00 00 00 
-3172   1BAA 00 00 00 00 
-3172   1BAE 00 00 00 00 
-3172   1BB2 00 00 00 00 
-3172   1BB6 00 00 00 00 
-3172   1BBA 00 00 00 00 
-3172   1BBE 00 00 00 00 
-3172   1BC2 00 00 00 00 
-3172   1BC6 00 00 00 00 
-3172   1BCA 00 00 00 00 
-3172   1BCE 00 00 00 00 
-3172   1BD2 00 00 00 00 
-3172   1BD6 00 00 00 00 
-3172   1BDA 00 00 00 00 
-3172   1BDE 00 00 00 00 
-3172   1BE2 00 00 00 00 
-3172   1BE6 00 00 00 00 
-3172   1BEA 00 00 00 00 
-3172   1BEE 00 00 00 00 
-3172   1BF2 00 00 00 00 
-3172   1BF6 00 00 00 00 
-3172   1BFA 00 00 00 00 
-3172   1BFE 00 00 00 00 
-3172   1C02 00 00 00 00 
-3173   1C06             proc_availab_table: 
-3174   1C06 00 00 00 00   .fill 16, 0       ; space for 15 processes. 0 = process empty, 1 = process taken
-3174   1C0A 00 00 00 00 
-3174   1C0E 00 00 00 00 
-3174   1C12 00 00 00 00 
-3175   1C16             proc_names:
-3176   1C16 00 00 00 00   .fill 16 * 32, 0  ; process names
-3176   1C1A 00 00 00 00 
-3176   1C1E 00 00 00 00 
-3176   1C22 00 00 00 00 
-3176   1C26 00 00 00 00 
-3176   1C2A 00 00 00 00 
-3176   1C2E 00 00 00 00 
-3176   1C32 00 00 00 00 
-3176   1C36 00 00 00 00 
-3176   1C3A 00 00 00 00 
-3176   1C3E 00 00 00 00 
-3176   1C42 00 00 00 00 
-3176   1C46 00 00 00 00 
-3176   1C4A 00 00 00 00 
-3176   1C4E 00 00 00 00 
-3176   1C52 00 00 00 00 
-3176   1C56 00 00 00 00 
-3176   1C5A 00 00 00 00 
-3176   1C5E 00 00 00 00 
-3176   1C62 00 00 00 00 
-3176   1C66 00 00 00 00 
-3176   1C6A 00 00 00 00 
-3176   1C6E 00 00 00 00 
-3176   1C72 00 00 00 00 
-3176   1C76 00 00 00 00 
-3176   1C7A 00 00 00 00 
-3176   1C7E 00 00 00 00 
-3176   1C82 00 00 00 00 
-3176   1C86 00 00 00 00 
-3176   1C8A 00 00 00 00 
-3176   1C8E 00 00 00 00 
-3176   1C92 00 00 00 00 
-3176   1C96 00 00 00 00 
-3176   1C9A 00 00 00 00 
-3176   1C9E 00 00 00 00 
-3176   1CA2 00 00 00 00 
-3176   1CA6 00 00 00 00 
-3176   1CAA 00 00 00 00 
-3176   1CAE 00 00 00 00 
-3176   1CB2 00 00 00 00 
-3176   1CB6 00 00 00 00 
-3176   1CBA 00 00 00 00 
-3176   1CBE 00 00 00 00 
-3176   1CC2 00 00 00 00 
-3176   1CC6 00 00 00 00 
-3176   1CCA 00 00 00 00 
-3176   1CCE 00 00 00 00 
-3176   1CD2 00 00 00 00 
-3176   1CD6 00 00 00 00 
-3176   1CDA 00 00 00 00 
-3176   1CDE 00 00 00 00 
-3176   1CE2 00 00 00 00 
-3176   1CE6 00 00 00 00 
-3176   1CEA 00 00 00 00 
-3176   1CEE 00 00 00 00 
-3176   1CF2 00 00 00 00 
-3176   1CF6 00 00 00 00 
-3176   1CFA 00 00 00 00 
-3176   1CFE 00 00 00 00 
-3176   1D02 00 00 00 00 
-3176   1D06 00 00 00 00 
-3176   1D0A 00 00 00 00 
-3176   1D0E 00 00 00 00 
-3176   1D12 00 00 00 00 
-3176   1D16 00 00 00 00 
-3176   1D1A 00 00 00 00 
-3176   1D1E 00 00 00 00 
-3176   1D22 00 00 00 00 
-3176   1D26 00 00 00 00 
-3176   1D2A 00 00 00 00 
-3176   1D2E 00 00 00 00 
-3176   1D32 00 00 00 00 
-3176   1D36 00 00 00 00 
-3176   1D3A 00 00 00 00 
-3176   1D3E 00 00 00 00 
-3176   1D42 00 00 00 00 
-3176   1D46 00 00 00 00 
-3176   1D4A 00 00 00 00 
-3176   1D4E 00 00 00 00 
-3176   1D52 00 00 00 00 
-3176   1D56 00 00 00 00 
-3176   1D5A 00 00 00 00 
-3176   1D5E 00 00 00 00 
-3176   1D62 00 00 00 00 
-3176   1D66 00 00 00 00 
-3176   1D6A 00 00 00 00 
-3176   1D6E 00 00 00 00 
-3176   1D72 00 00 00 00 
-3176   1D76 00 00 00 00 
-3176   1D7A 00 00 00 00 
-3176   1D7E 00 00 00 00 
-3176   1D82 00 00 00 00 
-3176   1D86 00 00 00 00 
-3176   1D8A 00 00 00 00 
-3176   1D8E 00 00 00 00 
-3176   1D92 00 00 00 00 
-3176   1D96 00 00 00 00 
-3176   1D9A 00 00 00 00 
-3176   1D9E 00 00 00 00 
-3176   1DA2 00 00 00 00 
-3176   1DA6 00 00 00 00 
-3176   1DAA 00 00 00 00 
-3176   1DAE 00 00 00 00 
-3176   1DB2 00 00 00 00 
-3176   1DB6 00 00 00 00 
-3176   1DBA 00 00 00 00 
-3176   1DBE 00 00 00 00 
-3176   1DC2 00 00 00 00 
-3176   1DC6 00 00 00 00 
-3176   1DCA 00 00 00 00 
-3176   1DCE 00 00 00 00 
-3176   1DD2 00 00 00 00 
-3176   1DD6 00 00 00 00 
-3176   1DDA 00 00 00 00 
-3176   1DDE 00 00 00 00 
-3176   1DE2 00 00 00 00 
-3176   1DE6 00 00 00 00 
-3176   1DEA 00 00 00 00 
-3176   1DEE 00 00 00 00 
-3176   1DF2 00 00 00 00 
-3176   1DF6 00 00 00 00 
-3176   1DFA 00 00 00 00 
-3176   1DFE 00 00 00 00 
-3176   1E02 00 00 00 00 
-3176   1E06 00 00 00 00 
-3176   1E0A 00 00 00 00 
-3176   1E0E 00 00 00 00 
-3176   1E12 00 00 00 00 
-3177   1E16             filename:
-3178   1E16 00 00 00 00   .fill 128, 0      ; holds a path for file search
-3178   1E1A 00 00 00 00 
-3178   1E1E 00 00 00 00 
-3178   1E22 00 00 00 00 
-3178   1E26 00 00 00 00 
-3178   1E2A 00 00 00 00 
-3178   1E2E 00 00 00 00 
-3178   1E32 00 00 00 00 
-3178   1E36 00 00 00 00 
-3178   1E3A 00 00 00 00 
-3178   1E3E 00 00 00 00 
-3178   1E42 00 00 00 00 
-3178   1E46 00 00 00 00 
-3178   1E4A 00 00 00 00 
-3178   1E4E 00 00 00 00 
-3178   1E52 00 00 00 00 
-3178   1E56 00 00 00 00 
-3178   1E5A 00 00 00 00 
-3178   1E5E 00 00 00 00 
-3178   1E62 00 00 00 00 
-3178   1E66 00 00 00 00 
-3178   1E6A 00 00 00 00 
-3178   1E6E 00 00 00 00 
-3178   1E72 00 00 00 00 
-3178   1E76 00 00 00 00 
-3178   1E7A 00 00 00 00 
-3178   1E7E 00 00 00 00 
-3178   1E82 00 00 00 00 
-3178   1E86 00 00 00 00 
-3178   1E8A 00 00 00 00 
-3178   1E8E 00 00 00 00 
-3178   1E92 00 00 00 00 
-3179   1E96             user_data:
-3180   1E96 00 00 00 00   .fill 512, 0      ;  user space data
-3180   1E9A 00 00 00 00 
-3180   1E9E 00 00 00 00 
-3180   1EA2 00 00 00 00 
-3180   1EA6 00 00 00 00 
-3180   1EAA 00 00 00 00 
-3180   1EAE 00 00 00 00 
-3180   1EB2 00 00 00 00 
-3180   1EB6 00 00 00 00 
-3180   1EBA 00 00 00 00 
-3180   1EBE 00 00 00 00 
-3180   1EC2 00 00 00 00 
-3180   1EC6 00 00 00 00 
-3180   1ECA 00 00 00 00 
-3180   1ECE 00 00 00 00 
-3180   1ED2 00 00 00 00 
-3180   1ED6 00 00 00 00 
-3180   1EDA 00 00 00 00 
-3180   1EDE 00 00 00 00 
-3180   1EE2 00 00 00 00 
-3180   1EE6 00 00 00 00 
-3180   1EEA 00 00 00 00 
-3180   1EEE 00 00 00 00 
-3180   1EF2 00 00 00 00 
-3180   1EF6 00 00 00 00 
-3180   1EFA 00 00 00 00 
-3180   1EFE 00 00 00 00 
-3180   1F02 00 00 00 00 
-3180   1F06 00 00 00 00 
-3180   1F0A 00 00 00 00 
-3180   1F0E 00 00 00 00 
-3180   1F12 00 00 00 00 
-3180   1F16 00 00 00 00 
-3180   1F1A 00 00 00 00 
-3180   1F1E 00 00 00 00 
-3180   1F22 00 00 00 00 
-3180   1F26 00 00 00 00 
-3180   1F2A 00 00 00 00 
-3180   1F2E 00 00 00 00 
-3180   1F32 00 00 00 00 
-3180   1F36 00 00 00 00 
-3180   1F3A 00 00 00 00 
-3180   1F3E 00 00 00 00 
-3180   1F42 00 00 00 00 
-3180   1F46 00 00 00 00 
-3180   1F4A 00 00 00 00 
-3180   1F4E 00 00 00 00 
-3180   1F52 00 00 00 00 
-3180   1F56 00 00 00 00 
-3180   1F5A 00 00 00 00 
-3180   1F5E 00 00 00 00 
-3180   1F62 00 00 00 00 
-3180   1F66 00 00 00 00 
-3180   1F6A 00 00 00 00 
-3180   1F6E 00 00 00 00 
-3180   1F72 00 00 00 00 
-3180   1F76 00 00 00 00 
-3180   1F7A 00 00 00 00 
-3180   1F7E 00 00 00 00 
-3180   1F82 00 00 00 00 
-3180   1F86 00 00 00 00 
-3180   1F8A 00 00 00 00 
-3180   1F8E 00 00 00 00 
-3180   1F92 00 00 00 00 
-3180   1F96 00 00 00 00 
-3180   1F9A 00 00 00 00 
-3180   1F9E 00 00 00 00 
-3180   1FA2 00 00 00 00 
-3180   1FA6 00 00 00 00 
-3180   1FAA 00 00 00 00 
-3180   1FAE 00 00 00 00 
-3180   1FB2 00 00 00 00 
-3180   1FB6 00 00 00 00 
-3180   1FBA 00 00 00 00 
-3180   1FBE 00 00 00 00 
-3180   1FC2 00 00 00 00 
-3180   1FC6 00 00 00 00 
-3180   1FCA 00 00 00 00 
-3180   1FCE 00 00 00 00 
-3180   1FD2 00 00 00 00 
-3180   1FD6 00 00 00 00 
-3180   1FDA 00 00 00 00 
-3180   1FDE 00 00 00 00 
-3180   1FE2 00 00 00 00 
-3180   1FE6 00 00 00 00 
-3180   1FEA 00 00 00 00 
-3180   1FEE 00 00 00 00 
-3180   1FF2 00 00 00 00 
-3180   1FF6 00 00 00 00 
-3180   1FFA 00 00 00 00 
-3180   1FFE 00 00 00 00 
-3180   2002 00 00 00 00 
-3180   2006 00 00 00 00 
-3180   200A 00 00 00 00 
-3180   200E 00 00 00 00 
-3180   2012 00 00 00 00 
-3180   2016 00 00 00 00 
-3180   201A 00 00 00 00 
-3180   201E 00 00 00 00 
-3180   2022 00 00 00 00 
-3180   2026 00 00 00 00 
-3180   202A 00 00 00 00 
-3180   202E 00 00 00 00 
-3180   2032 00 00 00 00 
-3180   2036 00 00 00 00 
-3180   203A 00 00 00 00 
-3180   203E 00 00 00 00 
-3180   2042 00 00 00 00 
-3180   2046 00 00 00 00 
-3180   204A 00 00 00 00 
-3180   204E 00 00 00 00 
-3180   2052 00 00 00 00 
-3180   2056 00 00 00 00 
-3180   205A 00 00 00 00 
-3180   205E 00 00 00 00 
-3180   2062 00 00 00 00 
-3180   2066 00 00 00 00 
-3180   206A 00 00 00 00 
-3180   206E 00 00 00 00 
-3180   2072 00 00 00 00 
-3180   2076 00 00 00 00 
-3180   207A 00 00 00 00 
-3180   207E 00 00 00 00 
-3180   2082 00 00 00 00 
-3180   2086 00 00 00 00 
-3180   208A 00 00 00 00 
-3180   208E 00 00 00 00 
-3180   2092 00 00 00 00 
-3181   2096             fifo:
-3182   2096 FF FF FF FF   .fill _fifo_size
-3182   209A FF FF FF FF 
-3182   209E FF FF FF FF 
-3182   20A2 FF FF FF FF 
-3182   20A6 FF FF FF FF 
-3182   20AA FF FF FF FF 
-3182   20AE FF FF FF FF 
-3182   20B2 FF FF FF FF 
-3182   20B6 FF FF FF FF 
-3182   20BA FF FF FF FF 
-3182   20BE FF FF FF FF 
-3182   20C2 FF FF FF FF 
-3182   20C6 FF FF FF FF 
-3182   20CA FF FF FF FF 
-3182   20CE FF FF FF FF 
-3182   20D2 FF FF FF FF 
-3182   20D6 FF FF FF FF 
-3182   20DA FF FF FF FF 
-3182   20DE FF FF FF FF 
-3182   20E2 FF FF FF FF 
-3182   20E6 FF FF FF FF 
-3182   20EA FF FF FF FF 
-3182   20EE FF FF FF FF 
-3182   20F2 FF FF FF FF 
-3182   20F6 FF FF FF FF 
-3182   20FA FF FF FF FF 
-3182   20FE FF FF FF FF 
-3182   2102 FF FF FF FF 
-3182   2106 FF FF FF FF 
-3182   210A FF FF FF FF 
-3182   210E FF FF FF FF 
-3182   2112 FF FF FF FF 
-3182   2116 FF FF FF FF 
-3182   211A FF FF FF FF 
-3182   211E FF FF FF FF 
-3182   2122 FF FF FF FF 
-3182   2126 FF FF FF FF 
-3182   212A FF FF FF FF 
-3182   212E FF FF FF FF 
-3182   2132 FF FF FF FF 
-3182   2136 FF FF FF FF 
-3182   213A FF FF FF FF 
-3182   213E FF FF FF FF 
-3182   2142 FF FF FF FF 
-3182   2146 FF FF FF FF 
-3182   214A FF FF FF FF 
-3182   214E FF FF FF FF 
-3182   2152 FF FF FF FF 
-3182   2156 FF FF FF FF 
-3182   215A FF FF FF FF 
-3182   215E FF FF FF FF 
-3182   2162 FF FF FF FF 
-3182   2166 FF FF FF FF 
-3182   216A FF FF FF FF 
-3182   216E FF FF FF FF 
-3182   2172 FF FF FF FF 
-3182   2176 FF FF FF FF 
-3182   217A FF FF FF FF 
-3182   217E FF FF FF FF 
-3182   2182 FF FF FF FF 
-3182   2186 FF FF FF FF 
-3182   218A FF FF FF FF 
-3182   218E FF FF FF FF 
-3182   2192 FF FF FF FF 
-3182   2196 FF FF FF FF 
-3182   219A FF FF FF FF 
-3182   219E FF FF FF FF 
-3182   21A2 FF FF FF FF 
-3182   21A6 FF FF FF FF 
-3182   21AA FF FF FF FF 
-3182   21AE FF FF FF FF 
-3182   21B2 FF FF FF FF 
-3182   21B6 FF FF FF FF 
-3182   21BA FF FF FF FF 
-3182   21BE FF FF FF FF 
-3182   21C2 FF FF FF FF 
-3182   21C6 FF FF FF FF 
-3182   21CA FF FF FF FF 
-3182   21CE FF FF FF FF 
-3182   21D2 FF FF FF FF 
-3182   21D6 FF FF FF FF 
-3182   21DA FF FF FF FF 
-3182   21DE FF FF FF FF 
-3182   21E2 FF FF FF FF 
-3182   21E6 FF FF FF FF 
-3182   21EA FF FF FF FF 
-3182   21EE FF FF FF FF 
-3182   21F2 FF FF FF FF 
-3182   21F6 FF FF FF FF 
-3182   21FA FF FF FF FF 
-3182   21FE FF FF FF FF 
-3182   2202 FF FF FF FF 
-3182   2206 FF FF FF FF 
-3182   220A FF FF FF FF 
-3182   220E FF FF FF FF 
-3182   2212 FF FF FF FF 
-3182   2216 FF FF FF FF 
-3182   221A FF FF FF FF 
-3182   221E FF FF FF FF 
-3182   2222 FF FF FF FF 
-3182   2226 FF FF FF FF 
-3182   222A FF FF FF FF 
-3182   222E FF FF FF FF 
-3182   2232 FF FF FF FF 
-3182   2236 FF FF FF FF 
-3182   223A FF FF FF FF 
-3182   223E FF FF FF FF 
-3182   2242 FF FF FF FF 
-3182   2246 FF FF FF FF 
-3182   224A FF FF FF FF 
-3182   224E FF FF FF FF 
-3182   2252 FF FF FF FF 
-3182   2256 FF FF FF FF 
-3182   225A FF FF FF FF 
-3182   225E FF FF FF FF 
-3182   2262 FF FF FF FF 
-3182   2266 FF FF FF FF 
-3182   226A FF FF FF FF 
-3182   226E FF FF FF FF 
-3182   2272 FF FF FF FF 
-3182   2276 FF FF FF FF 
-3182   227A FF FF FF FF 
-3182   227E FF FF FF FF 
-3182   2282 FF FF FF FF 
-3182   2286 FF FF FF FF 
-3182   228A FF FF FF FF 
-3182   228E FF FF FF FF 
-3182   2292 FF FF FF FF 
-3182   2296 FF FF FF FF 
-3182   229A FF FF FF FF 
-3182   229E FF FF FF FF 
-3182   22A2 FF FF FF FF 
-3182   22A6 FF FF FF FF 
-3182   22AA FF FF FF FF 
-3182   22AE FF FF FF FF 
-3182   22B2 FF FF FF FF 
-3182   22B6 FF FF FF FF 
-3182   22BA FF FF FF FF 
-3182   22BE FF FF FF FF 
-3182   22C2 FF FF FF FF 
-3182   22C6 FF FF FF FF 
-3182   22CA FF FF FF FF 
-3182   22CE FF FF FF FF 
-3182   22D2 FF FF FF FF 
-3182   22D6 FF FF FF FF 
-3182   22DA FF FF FF FF 
-3182   22DE FF FF FF FF 
-3182   22E2 FF FF FF FF 
-3182   22E6 FF FF FF FF 
-3182   22EA FF FF FF FF 
-3182   22EE FF FF FF FF 
-3182   22F2 FF FF FF FF 
-3182   22F6 FF FF FF FF 
-3182   22FA FF FF FF FF 
-3182   22FE FF FF FF FF 
-3182   2302 FF FF FF FF 
-3182   2306 FF FF FF FF 
-3182   230A FF FF FF FF 
-3182   230E FF FF FF FF 
-3182   2312 FF FF FF FF 
-3182   2316 FF FF FF FF 
-3182   231A FF FF FF FF 
-3182   231E FF FF FF FF 
-3182   2322 FF FF FF FF 
-3182   2326 FF FF FF FF 
-3182   232A FF FF FF FF 
-3182   232E FF FF FF FF 
-3182   2332 FF FF FF FF 
-3182   2336 FF FF FF FF 
-3182   233A FF FF FF FF 
-3182   233E FF FF FF FF 
-3182   2342 FF FF FF FF 
-3182   2346 FF FF FF FF 
-3182   234A FF FF FF FF 
-3182   234E FF FF FF FF 
-3182   2352 FF FF FF FF 
-3182   2356 FF FF FF FF 
-3182   235A FF FF FF FF 
-3182   235E FF FF FF FF 
-3182   2362 FF FF FF FF 
-3182   2366 FF FF FF FF 
-3182   236A FF FF FF FF 
-3182   236E FF FF FF FF 
-3182   2372 FF FF FF FF 
-3182   2376 FF FF FF FF 
-3182   237A FF FF FF FF 
-3182   237E FF FF FF FF 
-3182   2382 FF FF FF FF 
-3182   2386 FF FF FF FF 
-3182   238A FF FF FF FF 
-3182   238E FF FF FF FF 
-3182   2392 FF FF FF FF 
-3182   2396 FF FF FF FF 
-3182   239A FF FF FF FF 
-3182   239E FF FF FF FF 
-3182   23A2 FF FF FF FF 
-3182   23A6 FF FF FF FF 
-3182   23AA FF FF FF FF 
-3182   23AE FF FF FF FF 
-3182   23B2 FF FF FF FF 
-3182   23B6 FF FF FF FF 
-3182   23BA FF FF FF FF 
-3182   23BE FF FF FF FF 
-3182   23C2 FF FF FF FF 
-3182   23C6 FF FF FF FF 
-3182   23CA FF FF FF FF 
-3182   23CE FF FF FF FF 
-3182   23D2 FF FF FF FF 
-3182   23D6 FF FF FF FF 
-3182   23DA FF FF FF FF 
-3182   23DE FF FF FF FF 
-3182   23E2 FF FF FF FF 
-3182   23E6 FF FF FF FF 
-3182   23EA FF FF FF FF 
-3182   23EE FF FF FF FF 
-3182   23F2 FF FF FF FF 
-3182   23F6 FF FF FF FF 
-3182   23FA FF FF FF FF 
-3182   23FE FF FF FF FF 
-3182   2402 FF FF FF FF 
-3182   2406 FF FF FF FF 
-3182   240A FF FF FF FF 
-3182   240E FF FF FF FF 
-3182   2412 FF FF FF FF 
-3182   2416 FF FF FF FF 
-3182   241A FF FF FF FF 
-3182   241E FF FF FF FF 
-3182   2422 FF FF FF FF 
-3182   2426 FF FF FF FF 
-3182   242A FF FF FF FF 
-3182   242E FF FF FF FF 
-3182   2432 FF FF FF FF 
-3182   2436 FF FF FF FF 
-3182   243A FF FF FF FF 
-3182   243E FF FF FF FF 
-3182   2442 FF FF FF FF 
-3182   2446 FF FF FF FF 
-3182   244A FF FF FF FF 
-3182   244E FF FF FF FF 
-3182   2452 FF FF FF FF 
-3182   2456 FF FF FF FF 
-3182   245A FF FF FF FF 
-3182   245E FF FF FF FF 
-3182   2462 FF FF FF FF 
-3182   2466 FF FF FF FF 
-3182   246A FF FF FF FF 
-3182   246E FF FF FF FF 
-3182   2472 FF FF FF FF 
-3182   2476 FF FF FF FF 
-3182   247A FF FF FF FF 
-3182   247E FF FF FF FF 
-3182   2482 FF FF FF FF 
-3182   2486 FF FF FF FF 
-3182   248A FF FF FF FF 
-3182   248E FF FF FF FF 
-3182   2492 FF FF FF FF 
-3182   2496 FF FF FF FF 
-3182   249A FF FF FF FF 
-3182   249E FF FF FF FF 
-3182   24A2 FF FF FF FF 
-3182   24A6 FF FF FF FF 
-3182   24AA FF FF FF FF 
-3182   24AE FF FF FF FF 
-3182   24B2 FF FF FF FF 
-3182   24B6 FF FF FF FF 
-3182   24BA FF FF FF FF 
-3182   24BE FF FF FF FF 
-3182   24C2 FF FF FF FF 
-3182   24C6 FF FF FF FF 
-3182   24CA FF FF FF FF 
-3182   24CE FF FF FF FF 
-3182   24D2 FF FF FF FF 
-3182   24D6 FF FF FF FF 
-3182   24DA FF FF FF FF 
-3182   24DE FF FF FF FF 
-3182   24E2 FF FF FF FF 
-3182   24E6 FF FF FF FF 
-3182   24EA FF FF FF FF 
-3182   24EE FF FF FF FF 
-3182   24F2 FF FF FF FF 
-3182   24F6 FF FF FF FF 
-3182   24FA FF FF FF FF 
-3182   24FE FF FF FF FF 
-3182   2502 FF FF FF FF 
-3182   2506 FF FF FF FF 
-3182   250A FF FF FF FF 
-3182   250E FF FF FF FF 
-3182   2512 FF FF FF FF 
-3182   2516 FF FF FF FF 
-3182   251A FF FF FF FF 
-3182   251E FF FF FF FF 
-3182   2522 FF FF FF FF 
-3182   2526 FF FF FF FF 
-3182   252A FF FF FF FF 
-3182   252E FF FF FF FF 
-3182   2532 FF FF FF FF 
-3182   2536 FF FF FF FF 
-3182   253A FF FF FF FF 
-3182   253E FF FF FF FF 
-3182   2542 FF FF FF FF 
-3182   2546 FF FF FF FF 
-3182   254A FF FF FF FF 
-3182   254E FF FF FF FF 
-3182   2552 FF FF FF FF 
-3182   2556 FF FF FF FF 
-3182   255A FF FF FF FF 
-3182   255E FF FF FF FF 
-3182   2562 FF FF FF FF 
-3182   2566 FF FF FF FF 
-3182   256A FF FF FF FF 
-3182   256E FF FF FF FF 
-3182   2572 FF FF FF FF 
-3182   2576 FF FF FF FF 
-3182   257A FF FF FF FF 
-3182   257E FF FF FF FF 
-3182   2582 FF FF FF FF 
-3182   2586 FF FF FF FF 
-3182   258A FF FF FF FF 
-3182   258E FF FF FF FF 
-3182   2592 FF FF FF FF 
-3182   2596 FF FF FF FF 
-3182   259A FF FF FF FF 
-3182   259E FF FF FF FF 
-3182   25A2 FF FF FF FF 
-3182   25A6 FF FF FF FF 
-3182   25AA FF FF FF FF 
-3182   25AE FF FF FF FF 
-3182   25B2 FF FF FF FF 
-3182   25B6 FF FF FF FF 
-3182   25BA FF FF FF FF 
-3182   25BE FF FF FF FF 
-3182   25C2 FF FF FF FF 
-3182   25C6 FF FF FF FF 
-3182   25CA FF FF FF FF 
-3182   25CE FF FF FF FF 
-3182   25D2 FF FF FF FF 
-3182   25D6 FF FF FF FF 
-3182   25DA FF FF FF FF 
-3182   25DE FF FF FF FF 
-3182   25E2 FF FF FF FF 
-3182   25E6 FF FF FF FF 
-3182   25EA FF FF FF FF 
-3182   25EE FF FF FF FF 
-3182   25F2 FF FF FF FF 
-3182   25F6 FF FF FF FF 
-3182   25FA FF FF FF FF 
-3182   25FE FF FF FF FF 
-3182   2602 FF FF FF FF 
-3182   2606 FF FF FF FF 
-3182   260A FF FF FF FF 
-3182   260E FF FF FF FF 
-3182   2612 FF FF FF FF 
-3182   2616 FF FF FF FF 
-3182   261A FF FF FF FF 
-3182   261E FF FF FF FF 
-3182   2622 FF FF FF FF 
-3182   2626 FF FF FF FF 
-3182   262A FF FF FF FF 
-3182   262E FF FF FF FF 
-3182   2632 FF FF FF FF 
-3182   2636 FF FF FF FF 
-3182   263A FF FF FF FF 
-3182   263E FF FF FF FF 
-3182   2642 FF FF FF FF 
-3182   2646 FF FF FF FF 
-3182   264A FF FF FF FF 
-3182   264E FF FF FF FF 
-3182   2652 FF FF FF FF 
-3182   2656 FF FF FF FF 
-3182   265A FF FF FF FF 
-3182   265E FF FF FF FF 
-3182   2662 FF FF FF FF 
-3182   2666 FF FF FF FF 
-3182   266A FF FF FF FF 
-3182   266E FF FF FF FF 
-3182   2672 FF FF FF FF 
-3182   2676 FF FF FF FF 
-3182   267A FF FF FF FF 
-3182   267E FF FF FF FF 
-3182   2682 FF FF FF FF 
-3182   2686 FF FF FF FF 
-3182   268A FF FF FF FF 
-3182   268E FF FF FF FF 
-3182   2692 FF FF FF FF 
-3182   2696 FF FF FF FF 
-3182   269A FF FF FF FF 
-3182   269E FF FF FF FF 
-3182   26A2 FF FF FF FF 
-3182   26A6 FF FF FF FF 
-3182   26AA FF FF FF FF 
-3182   26AE FF FF FF FF 
-3182   26B2 FF FF FF FF 
-3182   26B6 FF FF FF FF 
-3182   26BA FF FF FF FF 
-3182   26BE FF FF FF FF 
-3182   26C2 FF FF FF FF 
-3182   26C6 FF FF FF FF 
-3182   26CA FF FF FF FF 
-3182   26CE FF FF FF FF 
-3182   26D2 FF FF FF FF 
-3182   26D6 FF FF FF FF 
-3182   26DA FF FF FF FF 
-3182   26DE FF FF FF FF 
-3182   26E2 FF FF FF FF 
-3182   26E6 FF FF FF FF 
-3182   26EA FF FF FF FF 
-3182   26EE FF FF FF FF 
-3182   26F2 FF FF FF FF 
-3182   26F6 FF FF FF FF 
-3182   26FA FF FF FF FF 
-3182   26FE FF FF FF FF 
-3182   2702 FF FF FF FF 
-3182   2706 FF FF FF FF 
-3182   270A FF FF FF FF 
-3182   270E FF FF FF FF 
-3182   2712 FF FF FF FF 
-3182   2716 FF FF FF FF 
-3182   271A FF FF FF FF 
-3182   271E FF FF FF FF 
-3182   2722 FF FF FF FF 
-3182   2726 FF FF FF FF 
-3182   272A FF FF FF FF 
-3182   272E FF FF FF FF 
-3182   2732 FF FF FF FF 
-3182   2736 FF FF FF FF 
-3182   273A FF FF FF FF 
-3182   273E FF FF FF FF 
-3182   2742 FF FF FF FF 
-3182   2746 FF FF FF FF 
-3182   274A FF FF FF FF 
-3182   274E FF FF FF FF 
-3182   2752 FF FF FF FF 
-3182   2756 FF FF FF FF 
-3182   275A FF FF FF FF 
-3182   275E FF FF FF FF 
-3182   2762 FF FF FF FF 
-3182   2766 FF FF FF FF 
-3182   276A FF FF FF FF 
-3182   276E FF FF FF FF 
-3182   2772 FF FF FF FF 
-3182   2776 FF FF FF FF 
-3182   277A FF FF FF FF 
-3182   277E FF FF FF FF 
-3182   2782 FF FF FF FF 
-3182   2786 FF FF FF FF 
-3182   278A FF FF FF FF 
-3182   278E FF FF FF FF 
-3182   2792 FF FF FF FF 
-3182   2796 FF FF FF FF 
-3182   279A FF FF FF FF 
-3182   279E FF FF FF FF 
-3182   27A2 FF FF FF FF 
-3182   27A6 FF FF FF FF 
-3182   27AA FF FF FF FF 
-3182   27AE FF FF FF FF 
-3182   27B2 FF FF FF FF 
-3182   27B6 FF FF FF FF 
-3182   27BA FF FF FF FF 
-3182   27BE FF FF FF FF 
-3182   27C2 FF FF FF FF 
-3182   27C6 FF FF FF FF 
-3182   27CA FF FF FF FF 
-3182   27CE FF FF FF FF 
-3182   27D2 FF FF FF FF 
-3182   27D6 FF FF FF FF 
-3182   27DA FF FF FF FF 
-3182   27DE FF FF FF FF 
-3182   27E2 FF FF FF FF 
-3182   27E6 FF FF FF FF 
-3182   27EA FF FF FF FF 
-3182   27EE FF FF FF FF 
-3182   27F2 FF FF FF FF 
-3182   27F6 FF FF FF FF 
-3182   27FA FF FF FF FF 
-3182   27FE FF FF FF FF 
-3182   2802 FF FF FF FF 
-3182   2806 FF FF FF FF 
-3182   280A FF FF FF FF 
-3182   280E FF FF FF FF 
-3182   2812 FF FF FF FF 
-3182   2816 FF FF FF FF 
-3182   281A FF FF FF FF 
-3182   281E FF FF FF FF 
-3182   2822 FF FF FF FF 
-3182   2826 FF FF FF FF 
-3182   282A FF FF FF FF 
-3182   282E FF FF FF FF 
-3182   2832 FF FF FF FF 
-3182   2836 FF FF FF FF 
-3182   283A FF FF FF FF 
-3182   283E FF FF FF FF 
-3182   2842 FF FF FF FF 
-3182   2846 FF FF FF FF 
-3182   284A FF FF FF FF 
-3182   284E FF FF FF FF 
-3182   2852 FF FF FF FF 
-3182   2856 FF FF FF FF 
-3182   285A FF FF FF FF 
-3182   285E FF FF FF FF 
-3182   2862 FF FF FF FF 
-3182   2866 FF FF FF FF 
-3182   286A FF FF FF FF 
-3182   286E FF FF FF FF 
-3182   2872 FF FF FF FF 
-3182   2876 FF FF FF FF 
-3182   287A FF FF FF FF 
-3182   287E FF FF FF FF 
-3182   2882 FF FF FF FF 
-3182   2886 FF FF FF FF 
-3182   288A FF FF FF FF 
-3182   288E FF FF FF FF 
-3182   2892 FF FF FF FF 
-3182   2896 FF FF FF FF 
-3182   289A FF FF FF FF 
-3182   289E FF FF FF FF 
-3182   28A2 FF FF FF FF 
-3182   28A6 FF FF FF FF 
-3182   28AA FF FF FF FF 
-3182   28AE FF FF FF FF 
-3182   28B2 FF FF FF FF 
-3182   28B6 FF FF FF FF 
-3182   28BA FF FF FF FF 
-3182   28BE FF FF FF FF 
-3182   28C2 FF FF FF FF 
-3182   28C6 FF FF FF FF 
-3182   28CA FF FF FF FF 
-3182   28CE FF FF FF FF 
-3182   28D2 FF FF FF FF 
-3182   28D6 FF FF FF FF 
-3182   28DA FF FF FF FF 
-3182   28DE FF FF FF FF 
-3182   28E2 FF FF FF FF 
-3182   28E6 FF FF FF FF 
-3182   28EA FF FF FF FF 
-3182   28EE FF FF FF FF 
-3182   28F2 FF FF FF FF 
-3182   28F6 FF FF FF FF 
-3182   28FA FF FF FF FF 
-3182   28FE FF FF FF FF 
-3182   2902 FF FF FF FF 
-3182   2906 FF FF FF FF 
-3182   290A FF FF FF FF 
-3182   290E FF FF FF FF 
-3182   2912 FF FF FF FF 
-3182   2916 FF FF FF FF 
-3182   291A FF FF FF FF 
-3182   291E FF FF FF FF 
-3182   2922 FF FF FF FF 
-3182   2926 FF FF FF FF 
-3182   292A FF FF FF FF 
-3182   292E FF FF FF FF 
-3182   2932 FF FF FF FF 
-3182   2936 FF FF FF FF 
-3182   293A FF FF FF FF 
-3182   293E FF FF FF FF 
-3182   2942 FF FF FF FF 
-3182   2946 FF FF FF FF 
-3182   294A FF FF FF FF 
-3182   294E FF FF FF FF 
-3182   2952 FF FF FF FF 
-3182   2956 FF FF FF FF 
-3182   295A FF FF FF FF 
-3182   295E FF FF FF FF 
-3182   2962 FF FF FF FF 
-3182   2966 FF FF FF FF 
-3182   296A FF FF FF FF 
-3182   296E FF FF FF FF 
-3182   2972 FF FF FF FF 
-3182   2976 FF FF FF FF 
-3182   297A FF FF FF FF 
-3182   297E FF FF FF FF 
-3182   2982 FF FF FF FF 
-3182   2986 FF FF FF FF 
-3182   298A FF FF FF FF 
-3182   298E FF FF FF FF 
-3182   2992 FF FF FF FF 
-3182   2996 FF FF FF FF 
-3182   299A FF FF FF FF 
-3182   299E FF FF FF FF 
-3182   29A2 FF FF FF FF 
-3182   29A6 FF FF FF FF 
-3182   29AA FF FF FF FF 
-3182   29AE FF FF FF FF 
-3182   29B2 FF FF FF FF 
-3182   29B6 FF FF FF FF 
-3182   29BA FF FF FF FF 
-3182   29BE FF FF FF FF 
-3182   29C2 FF FF FF FF 
-3182   29C6 FF FF FF FF 
-3182   29CA FF FF FF FF 
-3182   29CE FF FF FF FF 
-3182   29D2 FF FF FF FF 
-3182   29D6 FF FF FF FF 
-3182   29DA FF FF FF FF 
-3182   29DE FF FF FF FF 
-3182   29E2 FF FF FF FF 
-3182   29E6 FF FF FF FF 
-3182   29EA FF FF FF FF 
-3182   29EE FF FF FF FF 
-3182   29F2 FF FF FF FF 
-3182   29F6 FF FF FF FF 
-3182   29FA FF FF FF FF 
-3182   29FE FF FF FF FF 
-3182   2A02 FF FF FF FF 
-3182   2A06 FF FF FF FF 
-3182   2A0A FF FF FF FF 
-3182   2A0E FF FF FF FF 
-3182   2A12 FF FF FF FF 
-3182   2A16 FF FF FF FF 
-3182   2A1A FF FF FF FF 
-3182   2A1E FF FF FF FF 
-3182   2A22 FF FF FF FF 
-3182   2A26 FF FF FF FF 
-3182   2A2A FF FF FF FF 
-3182   2A2E FF FF FF FF 
-3182   2A32 FF FF FF FF 
-3182   2A36 FF FF FF FF 
-3182   2A3A FF FF FF FF 
-3182   2A3E FF FF FF FF 
-3182   2A42 FF FF FF FF 
-3182   2A46 FF FF FF FF 
-3182   2A4A FF FF FF FF 
-3182   2A4E FF FF FF FF 
-3182   2A52 FF FF FF FF 
-3182   2A56 FF FF FF FF 
-3182   2A5A FF FF FF FF 
-3182   2A5E FF FF FF FF 
-3182   2A62 FF FF FF FF 
-3182   2A66 FF FF FF FF 
-3182   2A6A FF FF FF FF 
-3182   2A6E FF FF FF FF 
-3182   2A72 FF FF FF FF 
-3182   2A76 FF FF FF FF 
-3182   2A7A FF FF FF FF 
-3182   2A7E FF FF FF FF 
-3182   2A82 FF FF FF FF 
-3182   2A86 FF FF FF FF 
-3182   2A8A FF FF FF FF 
-3182   2A8E FF FF FF FF 
-3182   2A92 FF FF FF FF 
-3182   2A96 FF FF FF FF 
-3182   2A9A FF FF FF FF 
-3182   2A9E FF FF FF FF 
-3182   2AA2 FF FF FF FF 
-3182   2AA6 FF FF FF FF 
-3182   2AAA FF FF FF FF 
-3182   2AAE FF FF FF FF 
-3182   2AB2 FF FF FF FF 
-3182   2AB6 FF FF FF FF 
-3182   2ABA FF FF FF FF 
-3182   2ABE FF FF FF FF 
-3182   2AC2 FF FF FF FF 
-3182   2AC6 FF FF FF FF 
-3182   2ACA FF FF FF FF 
-3182   2ACE FF FF FF FF 
-3182   2AD2 FF FF FF FF 
-3182   2AD6 FF FF FF FF 
-3182   2ADA FF FF FF FF 
-3182   2ADE FF FF FF FF 
-3182   2AE2 FF FF FF FF 
-3182   2AE6 FF FF FF FF 
-3182   2AEA FF FF FF FF 
-3182   2AEE FF FF FF FF 
-3182   2AF2 FF FF FF FF 
-3182   2AF6 FF FF FF FF 
-3182   2AFA FF FF FF FF 
-3182   2AFE FF FF FF FF 
-3182   2B02 FF FF FF FF 
-3182   2B06 FF FF FF FF 
-3182   2B0A FF FF FF FF 
-3182   2B0E FF FF FF FF 
-3182   2B12 FF FF FF FF 
-3182   2B16 FF FF FF FF 
-3182   2B1A FF FF FF FF 
-3182   2B1E FF FF FF FF 
-3182   2B22 FF FF FF FF 
-3182   2B26 FF FF FF FF 
-3182   2B2A FF FF FF FF 
-3182   2B2E FF FF FF FF 
-3182   2B32 FF FF FF FF 
-3182   2B36 FF FF FF FF 
-3182   2B3A FF FF FF FF 
-3182   2B3E FF FF FF FF 
-3182   2B42 FF FF FF FF 
-3182   2B46 FF FF FF FF 
-3182   2B4A FF FF FF FF 
-3182   2B4E FF FF FF FF 
-3182   2B52 FF FF FF FF 
-3182   2B56 FF FF FF FF 
-3182   2B5A FF FF FF FF 
-3182   2B5E FF FF FF FF 
-3182   2B62 FF FF FF FF 
-3182   2B66 FF FF FF FF 
-3182   2B6A FF FF FF FF 
-3182   2B6E FF FF FF FF 
-3182   2B72 FF FF FF FF 
-3182   2B76 FF FF FF FF 
-3182   2B7A FF FF FF FF 
-3182   2B7E FF FF FF FF 
-3182   2B82 FF FF FF FF 
-3182   2B86 FF FF FF FF 
-3182   2B8A FF FF FF FF 
-3182   2B8E FF FF FF FF 
-3182   2B92 FF FF FF FF 
-3182   2B96 FF FF FF FF 
-3182   2B9A FF FF FF FF 
-3182   2B9E FF FF FF FF 
-3182   2BA2 FF FF FF FF 
-3182   2BA6 FF FF FF FF 
-3182   2BAA FF FF FF FF 
-3182   2BAE FF FF FF FF 
-3182   2BB2 FF FF FF FF 
-3182   2BB6 FF FF FF FF 
-3182   2BBA FF FF FF FF 
-3182   2BBE FF FF FF FF 
-3182   2BC2 FF FF FF FF 
-3182   2BC6 FF FF FF FF 
-3182   2BCA FF FF FF FF 
-3182   2BCE FF FF FF FF 
-3182   2BD2 FF FF FF FF 
-3182   2BD6 FF FF FF FF 
-3182   2BDA FF FF FF FF 
-3182   2BDE FF FF FF FF 
-3182   2BE2 FF FF FF FF 
-3182   2BE6 FF FF FF FF 
-3182   2BEA FF FF FF FF 
-3182   2BEE FF FF FF FF 
-3182   2BF2 FF FF FF FF 
-3182   2BF6 FF FF FF FF 
-3182   2BFA FF FF FF FF 
-3182   2BFE FF FF FF FF 
-3182   2C02 FF FF FF FF 
-3182   2C06 FF FF FF FF 
-3182   2C0A FF FF FF FF 
-3182   2C0E FF FF FF FF 
-3182   2C12 FF FF FF FF 
-3182   2C16 FF FF FF FF 
-3182   2C1A FF FF FF FF 
-3182   2C1E FF FF FF FF 
-3182   2C22 FF FF FF FF 
-3182   2C26 FF FF FF FF 
-3182   2C2A FF FF FF FF 
-3182   2C2E FF FF FF FF 
-3182   2C32 FF FF FF FF 
-3182   2C36 FF FF FF FF 
-3182   2C3A FF FF FF FF 
-3182   2C3E FF FF FF FF 
-3182   2C42 FF FF FF FF 
-3182   2C46 FF FF FF FF 
-3182   2C4A FF FF FF FF 
-3182   2C4E FF FF FF FF 
-3182   2C52 FF FF FF FF 
-3182   2C56 FF FF FF FF 
-3182   2C5A FF FF FF FF 
-3182   2C5E FF FF FF FF 
-3182   2C62 FF FF FF FF 
-3182   2C66 FF FF FF FF 
-3182   2C6A FF FF FF FF 
-3182   2C6E FF FF FF FF 
-3182   2C72 FF FF FF FF 
-3182   2C76 FF FF FF FF 
-3182   2C7A FF FF FF FF 
-3182   2C7E FF FF FF FF 
-3182   2C82 FF FF FF FF 
-3182   2C86 FF FF FF FF 
-3182   2C8A FF FF FF FF 
-3182   2C8E FF FF FF FF 
-3182   2C92 FF FF FF FF 
-3182   2C96 FF FF FF FF 
-3182   2C9A FF FF FF FF 
-3182   2C9E FF FF FF FF 
-3182   2CA2 FF FF FF FF 
-3182   2CA6 FF FF FF FF 
-3182   2CAA FF FF FF FF 
-3182   2CAE FF FF FF FF 
-3182   2CB2 FF FF FF FF 
-3182   2CB6 FF FF FF FF 
-3182   2CBA FF FF FF FF 
-3182   2CBE FF FF FF FF 
-3182   2CC2 FF FF FF FF 
-3182   2CC6 FF FF FF FF 
-3182   2CCA FF FF FF FF 
-3182   2CCE FF FF FF FF 
-3182   2CD2 FF FF FF FF 
-3182   2CD6 FF FF FF FF 
-3182   2CDA FF FF FF FF 
-3182   2CDE FF FF FF FF 
-3182   2CE2 FF FF FF FF 
-3182   2CE6 FF FF FF FF 
-3182   2CEA FF FF FF FF 
-3182   2CEE FF FF FF FF 
-3182   2CF2 FF FF FF FF 
-3182   2CF6 FF FF FF FF 
-3182   2CFA FF FF FF FF 
-3182   2CFE FF FF FF FF 
-3182   2D02 FF FF FF FF 
-3182   2D06 FF FF FF FF 
-3182   2D0A FF FF FF FF 
-3182   2D0E FF FF FF FF 
-3182   2D12 FF FF FF FF 
-3182   2D16 FF FF FF FF 
-3182   2D1A FF FF FF FF 
-3182   2D1E FF FF FF FF 
-3182   2D22 FF FF FF FF 
-3182   2D26 FF FF FF FF 
-3182   2D2A FF FF FF FF 
-3182   2D2E FF FF FF FF 
-3182   2D32 FF FF FF FF 
-3182   2D36 FF FF FF FF 
-3182   2D3A FF FF FF FF 
-3182   2D3E FF FF FF FF 
-3182   2D42 FF FF FF FF 
-3182   2D46 FF FF FF FF 
-3182   2D4A FF FF FF FF 
-3182   2D4E FF FF FF FF 
-3182   2D52 FF FF FF FF 
-3182   2D56 FF FF FF FF 
-3182   2D5A FF FF FF FF 
-3182   2D5E FF FF FF FF 
-3182   2D62 FF FF FF FF 
-3182   2D66 FF FF FF FF 
-3182   2D6A FF FF FF FF 
-3182   2D6E FF FF FF FF 
-3182   2D72 FF FF FF FF 
-3182   2D76 FF FF FF FF 
-3182   2D7A FF FF FF FF 
-3182   2D7E FF FF FF FF 
-3182   2D82 FF FF FF FF 
-3182   2D86 FF FF FF FF 
-3182   2D8A FF FF FF FF 
-3182   2D8E FF FF FF FF 
-3182   2D92 FF FF FF FF 
-3182   2D96 FF FF FF FF 
-3182   2D9A FF FF FF FF 
-3182   2D9E FF FF FF FF 
-3182   2DA2 FF FF FF FF 
-3182   2DA6 FF FF FF FF 
-3182   2DAA FF FF FF FF 
-3182   2DAE FF FF FF FF 
-3182   2DB2 FF FF FF FF 
-3182   2DB6 FF FF FF FF 
-3182   2DBA FF FF FF FF 
-3182   2DBE FF FF FF FF 
-3182   2DC2 FF FF FF FF 
-3182   2DC6 FF FF FF FF 
-3182   2DCA FF FF FF FF 
-3182   2DCE FF FF FF FF 
-3182   2DD2 FF FF FF FF 
-3182   2DD6 FF FF FF FF 
-3182   2DDA FF FF FF FF 
-3182   2DDE FF FF FF FF 
-3182   2DE2 FF FF FF FF 
-3182   2DE6 FF FF FF FF 
-3182   2DEA FF FF FF FF 
-3182   2DEE FF FF FF FF 
-3182   2DF2 FF FF FF FF 
-3182   2DF6 FF FF FF FF 
-3182   2DFA FF FF FF FF 
-3182   2DFE FF FF FF FF 
-3182   2E02 FF FF FF FF 
-3182   2E06 FF FF FF FF 
-3182   2E0A FF FF FF FF 
-3182   2E0E FF FF FF FF 
-3182   2E12 FF FF FF FF 
-3182   2E16 FF FF FF FF 
-3182   2E1A FF FF FF FF 
-3182   2E1E FF FF FF FF 
-3182   2E22 FF FF FF FF 
-3182   2E26 FF FF FF FF 
-3182   2E2A FF FF FF FF 
-3182   2E2E FF FF FF FF 
-3182   2E32 FF FF FF FF 
-3182   2E36 FF FF FF FF 
-3182   2E3A FF FF FF FF 
-3182   2E3E FF FF FF FF 
-3182   2E42 FF FF FF FF 
-3182   2E46 FF FF FF FF 
-3182   2E4A FF FF FF FF 
-3182   2E4E FF FF FF FF 
-3182   2E52 FF FF FF FF 
-3182   2E56 FF FF FF FF 
-3182   2E5A FF FF FF FF 
-3182   2E5E FF FF FF FF 
-3182   2E62 FF FF FF FF 
-3182   2E66 FF FF FF FF 
-3182   2E6A FF FF FF FF 
-3182   2E6E FF FF FF FF 
-3182   2E72 FF FF FF FF 
-3182   2E76 FF FF FF FF 
-3182   2E7A FF FF FF FF 
-3182   2E7E FF FF FF FF 
-3182   2E82 FF FF FF FF 
-3182   2E86 FF FF FF FF 
-3182   2E8A FF FF FF FF 
-3182   2E8E FF FF FF FF 
-3182   2E92 FF FF FF FF 
-3182   2E96 FF FF FF FF 
-3182   2E9A FF FF FF FF 
-3182   2E9E FF FF FF FF 
-3182   2EA2 FF FF FF FF 
-3182   2EA6 FF FF FF FF 
-3182   2EAA FF FF FF FF 
-3182   2EAE FF FF FF FF 
-3182   2EB2 FF FF FF FF 
-3182   2EB6 FF FF FF FF 
-3182   2EBA FF FF FF FF 
-3182   2EBE FF FF FF FF 
-3182   2EC2 FF FF FF FF 
-3182   2EC6 FF FF FF FF 
-3182   2ECA FF FF FF FF 
-3182   2ECE FF FF FF FF 
-3182   2ED2 FF FF FF FF 
-3182   2ED6 FF FF FF FF 
-3182   2EDA FF FF FF FF 
-3182   2EDE FF FF FF FF 
-3182   2EE2 FF FF FF FF 
-3182   2EE6 FF FF FF FF 
-3182   2EEA FF FF FF FF 
-3182   2EEE FF FF FF FF 
-3182   2EF2 FF FF FF FF 
-3182   2EF6 FF FF FF FF 
-3182   2EFA FF FF FF FF 
-3182   2EFE FF FF FF FF 
-3182   2F02 FF FF FF FF 
-3182   2F06 FF FF FF FF 
-3182   2F0A FF FF FF FF 
-3182   2F0E FF FF FF FF 
-3182   2F12 FF FF FF FF 
-3182   2F16 FF FF FF FF 
-3182   2F1A FF FF FF FF 
-3182   2F1E FF FF FF FF 
-3182   2F22 FF FF FF FF 
-3182   2F26 FF FF FF FF 
-3182   2F2A FF FF FF FF 
-3182   2F2E FF FF FF FF 
-3182   2F32 FF FF FF FF 
-3182   2F36 FF FF FF FF 
-3182   2F3A FF FF FF FF 
-3182   2F3E FF FF FF FF 
-3182   2F42 FF FF FF FF 
-3182   2F46 FF FF FF FF 
-3182   2F4A FF FF FF FF 
-3182   2F4E FF FF FF FF 
-3182   2F52 FF FF FF FF 
-3182   2F56 FF FF FF FF 
-3182   2F5A FF FF FF FF 
-3182   2F5E FF FF FF FF 
-3182   2F62 FF FF FF FF 
-3182   2F66 FF FF FF FF 
-3182   2F6A FF FF FF FF 
-3182   2F6E FF FF FF FF 
-3182   2F72 FF FF FF FF 
-3182   2F76 FF FF FF FF 
-3182   2F7A FF FF FF FF 
-3182   2F7E FF FF FF FF 
-3182   2F82 FF FF FF FF 
-3182   2F86 FF FF FF FF 
-3182   2F8A FF FF FF FF 
-3182   2F8E FF FF FF FF 
-3182   2F92 FF FF FF FF 
-3182   2F96 FF FF FF FF 
-3182   2F9A FF FF FF FF 
-3182   2F9E FF FF FF FF 
-3182   2FA2 FF FF FF FF 
-3182   2FA6 FF FF FF FF 
-3182   2FAA FF FF FF FF 
-3182   2FAE FF FF FF FF 
-3182   2FB2 FF FF FF FF 
-3182   2FB6 FF FF FF FF 
-3182   2FBA FF FF FF FF 
-3182   2FBE FF FF FF FF 
-3182   2FC2 FF FF FF FF 
-3182   2FC6 FF FF FF FF 
-3182   2FCA FF FF FF FF 
-3182   2FCE FF FF FF FF 
-3182   2FD2 FF FF FF FF 
-3182   2FD6 FF FF FF FF 
-3182   2FDA FF FF FF FF 
-3182   2FDE FF FF FF FF 
-3182   2FE2 FF FF FF FF 
-3182   2FE6 FF FF FF FF 
-3182   2FEA FF FF FF FF 
-3182   2FEE FF FF FF FF 
-3182   2FF2 FF FF FF FF 
-3182   2FF6 FF FF FF FF 
-3182   2FFA FF FF FF FF 
-3182   2FFE FF FF FF FF 
-3182   3002 FF FF FF FF 
-3182   3006 FF FF FF FF 
-3182   300A FF FF FF FF 
-3182   300E FF FF FF FF 
-3182   3012 FF FF FF FF 
-3182   3016 FF FF FF FF 
-3182   301A FF FF FF FF 
-3182   301E FF FF FF FF 
-3182   3022 FF FF FF FF 
-3182   3026 FF FF FF FF 
-3182   302A FF FF FF FF 
-3182   302E FF FF FF FF 
-3182   3032 FF FF FF FF 
-3182   3036 FF FF FF FF 
-3182   303A FF FF FF FF 
-3182   303E FF FF FF FF 
-3182   3042 FF FF FF FF 
-3182   3046 FF FF FF FF 
-3182   304A FF FF FF FF 
-3182   304E FF FF FF FF 
-3182   3052 FF FF FF FF 
-3182   3056 FF FF FF FF 
-3182   305A FF FF FF FF 
-3182   305E FF FF FF FF 
-3182   3062 FF FF FF FF 
-3182   3066 FF FF FF FF 
-3182   306A FF FF FF FF 
-3182   306E FF FF FF FF 
-3182   3072 FF FF FF FF 
-3182   3076 FF FF FF FF 
-3182   307A FF FF FF FF 
-3182   307E FF FF FF FF 
-3182   3082 FF FF FF FF 
-3182   3086 FF FF FF FF 
-3182   308A FF FF FF FF 
-3182   308E FF FF FF FF 
-3182   3092 FF FF FF FF 
-3183   3096             
-3184   3096             scrap_sector:
-3185   3096 FF FF FF FF   .fill 512         ; scrap sector
-3185   309A FF FF FF FF 
-3185   309E FF FF FF FF 
-3185   30A2 FF FF FF FF 
-3185   30A6 FF FF FF FF 
-3185   30AA FF FF FF FF 
-3185   30AE FF FF FF FF 
-3185   30B2 FF FF FF FF 
-3185   30B6 FF FF FF FF 
-3185   30BA FF FF FF FF 
-3185   30BE FF FF FF FF 
-3185   30C2 FF FF FF FF 
-3185   30C6 FF FF FF FF 
-3185   30CA FF FF FF FF 
-3185   30CE FF FF FF FF 
-3185   30D2 FF FF FF FF 
-3185   30D6 FF FF FF FF 
-3185   30DA FF FF FF FF 
-3185   30DE FF FF FF FF 
-3185   30E2 FF FF FF FF 
-3185   30E6 FF FF FF FF 
-3185   30EA FF FF FF FF 
-3185   30EE FF FF FF FF 
-3185   30F2 FF FF FF FF 
-3185   30F6 FF FF FF FF 
-3185   30FA FF FF FF FF 
-3185   30FE FF FF FF FF 
-3185   3102 FF FF FF FF 
-3185   3106 FF FF FF FF 
-3185   310A FF FF FF FF 
-3185   310E FF FF FF FF 
-3185   3112 FF FF FF FF 
-3185   3116 FF FF FF FF 
-3185   311A FF FF FF FF 
-3185   311E FF FF FF FF 
-3185   3122 FF FF FF FF 
-3185   3126 FF FF FF FF 
-3185   312A FF FF FF FF 
-3185   312E FF FF FF FF 
-3185   3132 FF FF FF FF 
-3185   3136 FF FF FF FF 
-3185   313A FF FF FF FF 
-3185   313E FF FF FF FF 
-3185   3142 FF FF FF FF 
-3185   3146 FF FF FF FF 
-3185   314A FF FF FF FF 
-3185   314E FF FF FF FF 
-3185   3152 FF FF FF FF 
-3185   3156 FF FF FF FF 
-3185   315A FF FF FF FF 
-3185   315E FF FF FF FF 
-3185   3162 FF FF FF FF 
-3185   3166 FF FF FF FF 
-3185   316A FF FF FF FF 
-3185   316E FF FF FF FF 
-3185   3172 FF FF FF FF 
-3185   3176 FF FF FF FF 
-3185   317A FF FF FF FF 
-3185   317E FF FF FF FF 
-3185   3182 FF FF FF FF 
-3185   3186 FF FF FF FF 
-3185   318A FF FF FF FF 
-3185   318E FF FF FF FF 
-3185   3192 FF FF FF FF 
-3185   3196 FF FF FF FF 
-3185   319A FF FF FF FF 
-3185   319E FF FF FF FF 
-3185   31A2 FF FF FF FF 
-3185   31A6 FF FF FF FF 
-3185   31AA FF FF FF FF 
-3185   31AE FF FF FF FF 
-3185   31B2 FF FF FF FF 
-3185   31B6 FF FF FF FF 
-3185   31BA FF FF FF FF 
-3185   31BE FF FF FF FF 
-3185   31C2 FF FF FF FF 
-3185   31C6 FF FF FF FF 
-3185   31CA FF FF FF FF 
-3185   31CE FF FF FF FF 
-3185   31D2 FF FF FF FF 
-3185   31D6 FF FF FF FF 
-3185   31DA FF FF FF FF 
-3185   31DE FF FF FF FF 
-3185   31E2 FF FF FF FF 
-3185   31E6 FF FF FF FF 
-3185   31EA FF FF FF FF 
-3185   31EE FF FF FF FF 
-3185   31F2 FF FF FF FF 
-3185   31F6 FF FF FF FF 
-3185   31FA FF FF FF FF 
-3185   31FE FF FF FF FF 
-3185   3202 FF FF FF FF 
-3185   3206 FF FF FF FF 
-3185   320A FF FF FF FF 
-3185   320E FF FF FF FF 
-3185   3212 FF FF FF FF 
-3185   3216 FF FF FF FF 
-3185   321A FF FF FF FF 
-3185   321E FF FF FF FF 
-3185   3222 FF FF FF FF 
-3185   3226 FF FF FF FF 
-3185   322A FF FF FF FF 
-3185   322E FF FF FF FF 
-3185   3232 FF FF FF FF 
-3185   3236 FF FF FF FF 
-3185   323A FF FF FF FF 
-3185   323E FF FF FF FF 
-3185   3242 FF FF FF FF 
-3185   3246 FF FF FF FF 
-3185   324A FF FF FF FF 
-3185   324E FF FF FF FF 
-3185   3252 FF FF FF FF 
-3185   3256 FF FF FF FF 
-3185   325A FF FF FF FF 
-3185   325E FF FF FF FF 
-3185   3262 FF FF FF FF 
-3185   3266 FF FF FF FF 
-3185   326A FF FF FF FF 
-3185   326E FF FF FF FF 
-3185   3272 FF FF FF FF 
-3185   3276 FF FF FF FF 
-3185   327A FF FF FF FF 
-3185   327E FF FF FF FF 
-3185   3282 FF FF FF FF 
-3185   3286 FF FF FF FF 
-3185   328A FF FF FF FF 
-3185   328E FF FF FF FF 
-3185   3292 FF FF FF FF 
-3186   3296             transient_area:
-3187   3296 00            .db 0             ; beginning of the transient memory area. used for disk reads and other purposes    
-3188   3297             
-3189   3297             .end
+3120   198A             s_kernel_welcome:
+3121   198A 2A 2A 2A 2A   .db "************************************************\n"
+3121   198E 2A 2A 2A 2A 
+3121   1992 2A 2A 2A 2A 
+3121   1996 2A 2A 2A 2A 
+3121   199A 2A 2A 2A 2A 
+3121   199E 2A 2A 2A 2A 
+3121   19A2 2A 2A 2A 2A 
+3121   19A6 2A 2A 2A 2A 
+3121   19AA 2A 2A 2A 2A 
+3121   19AE 2A 2A 2A 2A 
+3121   19B2 2A 2A 2A 2A 
+3121   19B6 2A 2A 2A 2A 
+3121   19BA 0A 
+3122   19BB 2A 2A 2A 20   .db "*** Welcome to Solarium OS - Kernel ver. 1.0 ***\n"
+3122   19BF 57 65 6C 63 
+3122   19C3 6F 6D 65 20 
+3122   19C7 74 6F 20 53 
+3122   19CB 6F 6C 61 72 
+3122   19CF 69 75 6D 20 
+3122   19D3 4F 53 20 2D 
+3122   19D7 20 4B 65 72 
+3122   19DB 6E 65 6C 20 
+3122   19DF 76 65 72 2E 
+3122   19E3 20 31 2E 30 
+3122   19E7 20 2A 2A 2A 
+3122   19EB 0A 
+3123   19EC 2A 2A 2A 20   .db "***                                          ***\n"
+3123   19F0 20 20 20 20 
+3123   19F4 20 20 20 20 
+3123   19F8 20 20 20 20 
+3123   19FC 20 20 20 20 
+3123   1A00 20 20 20 20 
+3123   1A04 20 20 20 20 
+3123   1A08 20 20 20 20 
+3123   1A0C 20 20 20 20 
+3123   1A10 20 20 20 20 
+3123   1A14 20 20 20 20 
+3123   1A18 20 2A 2A 2A 
+3123   1A1C 0A 
+3124   1A1D 2A 2A 2A 20   .db "*** type help for more information           ***\n"
+3124   1A21 74 79 70 65 
+3124   1A25 20 68 65 6C 
+3124   1A29 70 20 66 6F 
+3124   1A2D 72 20 6D 6F 
+3124   1A31 72 65 20 69 
+3124   1A35 6E 66 6F 72 
+3124   1A39 6D 61 74 69 
+3124   1A3D 6F 6E 20 20 
+3124   1A41 20 20 20 20 
+3124   1A45 20 20 20 20 
+3124   1A49 20 2A 2A 2A 
+3124   1A4D 0A 
+3125   1A4E 2A 2A 2A 2A   .db "************************************************\n"
+3125   1A52 2A 2A 2A 2A 
+3125   1A56 2A 2A 2A 2A 
+3125   1A5A 2A 2A 2A 2A 
+3125   1A5E 2A 2A 2A 2A 
+3125   1A62 2A 2A 2A 2A 
+3125   1A66 2A 2A 2A 2A 
+3125   1A6A 2A 2A 2A 2A 
+3125   1A6E 2A 2A 2A 2A 
+3125   1A72 2A 2A 2A 2A 
+3125   1A76 2A 2A 2A 2A 
+3125   1A7A 2A 2A 2A 2A 
+3125   1A7E 0A 
+3126   1A7F             s_prompt_init:
+3127   1A7F 73 74 61 72   .db "starting init\n", 0
+3127   1A83 74 69 6E 67 
+3127   1A87 20 69 6E 69 
+3127   1A8B 74 0A 00 
+3128   1A8E             s_priviledge:
+3129   1A8E 0A 65 78 63   .db "\nexception: privilege\n", 0
+3129   1A92 65 70 74 69 
+3129   1A96 6F 6E 3A 20 
+3129   1A9A 70 72 69 76 
+3129   1A9E 69 6C 65 67 
+3129   1AA2 65 0A 00 
+3130   1AA5             s_divzero:
+3131   1AA5 0A 65 78 63   .db "\nexception: zero division\n", 0
+3131   1AA9 65 70 74 69 
+3131   1AAD 6F 6E 3A 20 
+3131   1AB1 7A 65 72 6F 
+3131   1AB5 20 64 69 76 
+3131   1AB9 69 73 69 6F 
+3131   1ABD 6E 0A 00 
+3132   1AC0             
+3133   1AC0             s_set_year:
+3134   1AC0 79 65 61 72   .db "year: ", 0
+3134   1AC4 3A 20 00 
+3135   1AC7             s_set_month:
+3136   1AC7 6D 6F 6E 74   .db "month: ", 0
+3136   1ACB 68 3A 20 00 
+3137   1ACF             s_set_day:
+3138   1ACF 64 61 79 3A   .db "day: ", 0
+3138   1AD3 20 00 
+3139   1AD5             s_set_week:
+3140   1AD5 77 65 65 6B   .db "weekday: ", 0
+3140   1AD9 64 61 79 3A 
+3140   1ADD 20 00 
+3141   1ADF             s_set_hours:
+3142   1ADF 68 6F 75 72   .db "hours: ", 0
+3142   1AE3 73 3A 20 00 
+3143   1AE7             s_set_minutes:
+3144   1AE7 6D 69 6E 75   .db "minutes: ", 0
+3144   1AEB 74 65 73 3A 
+3144   1AEF 20 00 
+3145   1AF1             s_set_seconds:
+3146   1AF1 73 65 63 6F   .db "seconds: ", 0
+3146   1AF5 6E 64 73 3A 
+3146   1AF9 20 00 
+3147   1AFB             s_months:      
+3148   1AFB 20 20 20 00   .db "   ", 0
+3149   1AFF 6A 61 6E 00   .db "jan", 0
+3150   1B03 66 65 62 00   .db "feb", 0
+3151   1B07 6D 61 72 00   .db "mar", 0
+3152   1B0B 61 70 72 00   .db "apr", 0
+3153   1B0F 6D 61 79 00   .db "may", 0
+3154   1B13 6A 75 6E 00   .db "jun", 0
+3155   1B17 6A 75 6C 00   .db "jul", 0
+3156   1B1B 61 75 67 00   .db "aug", 0
+3157   1B1F 73 65 70 00   .db "sep", 0
+3158   1B23 6F 63 74 00   .db "oct", 0
+3159   1B27 6E 6F 76 00   .db "nov", 0
+3160   1B2B 64 65 63 00   .db "dec", 0
+3161   1B2F             
+3162   1B2F             s_week:        
+3163   1B2F 73 75 6E 00   .db "sun", 0 
+3164   1B33 6D 6F 6E 00   .db "mon", 0 
+3165   1B37 74 75 65 00   .db "tue", 0 
+3166   1B3B 77 65 64 00   .db "wed", 0 
+3167   1B3F 74 68 75 00   .db "thu", 0 
+3168   1B43 66 72 69 00   .db "fri", 0 
+3169   1B47 73 61 74 00   .db "sat", 0
+3170   1B4B             
+3171   1B4B 0A 49 52 51 s_fdc_irq: .db "\nIRQ0 Executed.\n", 0
+3171   1B4F 30 20 45 78 
+3171   1B53 65 63 75 74 
+3171   1B57 65 64 2E 0A 
+3171   1B5B 00 
+3172   1B5C             s_fdc_config:
+3173   1B5C 73 65 6C 65   .db "selecting diskette drive 0, side 0, single density, head loaded\n", 0
+3173   1B60 63 74 69 6E 
+3173   1B64 67 20 64 69 
+3173   1B68 73 6B 65 74 
+3173   1B6C 74 65 20 64 
+3173   1B70 72 69 76 65 
+3173   1B74 20 30 2C 20 
+3173   1B78 73 69 64 65 
+3173   1B7C 20 30 2C 20 
+3173   1B80 73 69 6E 67 
+3173   1B84 6C 65 20 64 
+3173   1B88 65 6E 73 69 
+3173   1B8C 74 79 2C 20 
+3173   1B90 68 65 61 64 
+3173   1B94 20 6C 6F 61 
+3173   1B98 64 65 64 0A 
+3173   1B9C 00 
+3174   1B9D             
+3175   1B9D             proc_state_table:   
+3176   1B9D 00 00 00 00   .fill 16 * 20, 0  ; for 15 processes max
+3176   1BA1 00 00 00 00 
+3176   1BA5 00 00 00 00 
+3176   1BA9 00 00 00 00 
+3176   1BAD 00 00 00 00 
+3176   1BB1 00 00 00 00 
+3176   1BB5 00 00 00 00 
+3176   1BB9 00 00 00 00 
+3176   1BBD 00 00 00 00 
+3176   1BC1 00 00 00 00 
+3176   1BC5 00 00 00 00 
+3176   1BC9 00 00 00 00 
+3176   1BCD 00 00 00 00 
+3176   1BD1 00 00 00 00 
+3176   1BD5 00 00 00 00 
+3176   1BD9 00 00 00 00 
+3176   1BDD 00 00 00 00 
+3176   1BE1 00 00 00 00 
+3176   1BE5 00 00 00 00 
+3176   1BE9 00 00 00 00 
+3176   1BED 00 00 00 00 
+3176   1BF1 00 00 00 00 
+3176   1BF5 00 00 00 00 
+3176   1BF9 00 00 00 00 
+3176   1BFD 00 00 00 00 
+3176   1C01 00 00 00 00 
+3176   1C05 00 00 00 00 
+3176   1C09 00 00 00 00 
+3176   1C0D 00 00 00 00 
+3176   1C11 00 00 00 00 
+3176   1C15 00 00 00 00 
+3176   1C19 00 00 00 00 
+3176   1C1D 00 00 00 00 
+3176   1C21 00 00 00 00 
+3176   1C25 00 00 00 00 
+3176   1C29 00 00 00 00 
+3176   1C2D 00 00 00 00 
+3176   1C31 00 00 00 00 
+3176   1C35 00 00 00 00 
+3176   1C39 00 00 00 00 
+3176   1C3D 00 00 00 00 
+3176   1C41 00 00 00 00 
+3176   1C45 00 00 00 00 
+3176   1C49 00 00 00 00 
+3176   1C4D 00 00 00 00 
+3176   1C51 00 00 00 00 
+3176   1C55 00 00 00 00 
+3176   1C59 00 00 00 00 
+3176   1C5D 00 00 00 00 
+3176   1C61 00 00 00 00 
+3176   1C65 00 00 00 00 
+3176   1C69 00 00 00 00 
+3176   1C6D 00 00 00 00 
+3176   1C71 00 00 00 00 
+3176   1C75 00 00 00 00 
+3176   1C79 00 00 00 00 
+3176   1C7D 00 00 00 00 
+3176   1C81 00 00 00 00 
+3176   1C85 00 00 00 00 
+3176   1C89 00 00 00 00 
+3176   1C8D 00 00 00 00 
+3176   1C91 00 00 00 00 
+3176   1C95 00 00 00 00 
+3176   1C99 00 00 00 00 
+3176   1C9D 00 00 00 00 
+3176   1CA1 00 00 00 00 
+3176   1CA5 00 00 00 00 
+3176   1CA9 00 00 00 00 
+3176   1CAD 00 00 00 00 
+3176   1CB1 00 00 00 00 
+3176   1CB5 00 00 00 00 
+3176   1CB9 00 00 00 00 
+3176   1CBD 00 00 00 00 
+3176   1CC1 00 00 00 00 
+3176   1CC5 00 00 00 00 
+3176   1CC9 00 00 00 00 
+3176   1CCD 00 00 00 00 
+3176   1CD1 00 00 00 00 
+3176   1CD5 00 00 00 00 
+3176   1CD9 00 00 00 00 
+3177   1CDD             proc_availab_table: 
+3178   1CDD 00 00 00 00   .fill 16, 0       ; space for 15 processes. 0 = process empty, 1 = process taken
+3178   1CE1 00 00 00 00 
+3178   1CE5 00 00 00 00 
+3178   1CE9 00 00 00 00 
+3179   1CED             proc_names:
+3180   1CED 00 00 00 00   .fill 16 * 32, 0  ; process names
+3180   1CF1 00 00 00 00 
+3180   1CF5 00 00 00 00 
+3180   1CF9 00 00 00 00 
+3180   1CFD 00 00 00 00 
+3180   1D01 00 00 00 00 
+3180   1D05 00 00 00 00 
+3180   1D09 00 00 00 00 
+3180   1D0D 00 00 00 00 
+3180   1D11 00 00 00 00 
+3180   1D15 00 00 00 00 
+3180   1D19 00 00 00 00 
+3180   1D1D 00 00 00 00 
+3180   1D21 00 00 00 00 
+3180   1D25 00 00 00 00 
+3180   1D29 00 00 00 00 
+3180   1D2D 00 00 00 00 
+3180   1D31 00 00 00 00 
+3180   1D35 00 00 00 00 
+3180   1D39 00 00 00 00 
+3180   1D3D 00 00 00 00 
+3180   1D41 00 00 00 00 
+3180   1D45 00 00 00 00 
+3180   1D49 00 00 00 00 
+3180   1D4D 00 00 00 00 
+3180   1D51 00 00 00 00 
+3180   1D55 00 00 00 00 
+3180   1D59 00 00 00 00 
+3180   1D5D 00 00 00 00 
+3180   1D61 00 00 00 00 
+3180   1D65 00 00 00 00 
+3180   1D69 00 00 00 00 
+3180   1D6D 00 00 00 00 
+3180   1D71 00 00 00 00 
+3180   1D75 00 00 00 00 
+3180   1D79 00 00 00 00 
+3180   1D7D 00 00 00 00 
+3180   1D81 00 00 00 00 
+3180   1D85 00 00 00 00 
+3180   1D89 00 00 00 00 
+3180   1D8D 00 00 00 00 
+3180   1D91 00 00 00 00 
+3180   1D95 00 00 00 00 
+3180   1D99 00 00 00 00 
+3180   1D9D 00 00 00 00 
+3180   1DA1 00 00 00 00 
+3180   1DA5 00 00 00 00 
+3180   1DA9 00 00 00 00 
+3180   1DAD 00 00 00 00 
+3180   1DB1 00 00 00 00 
+3180   1DB5 00 00 00 00 
+3180   1DB9 00 00 00 00 
+3180   1DBD 00 00 00 00 
+3180   1DC1 00 00 00 00 
+3180   1DC5 00 00 00 00 
+3180   1DC9 00 00 00 00 
+3180   1DCD 00 00 00 00 
+3180   1DD1 00 00 00 00 
+3180   1DD5 00 00 00 00 
+3180   1DD9 00 00 00 00 
+3180   1DDD 00 00 00 00 
+3180   1DE1 00 00 00 00 
+3180   1DE5 00 00 00 00 
+3180   1DE9 00 00 00 00 
+3180   1DED 00 00 00 00 
+3180   1DF1 00 00 00 00 
+3180   1DF5 00 00 00 00 
+3180   1DF9 00 00 00 00 
+3180   1DFD 00 00 00 00 
+3180   1E01 00 00 00 00 
+3180   1E05 00 00 00 00 
+3180   1E09 00 00 00 00 
+3180   1E0D 00 00 00 00 
+3180   1E11 00 00 00 00 
+3180   1E15 00 00 00 00 
+3180   1E19 00 00 00 00 
+3180   1E1D 00 00 00 00 
+3180   1E21 00 00 00 00 
+3180   1E25 00 00 00 00 
+3180   1E29 00 00 00 00 
+3180   1E2D 00 00 00 00 
+3180   1E31 00 00 00 00 
+3180   1E35 00 00 00 00 
+3180   1E39 00 00 00 00 
+3180   1E3D 00 00 00 00 
+3180   1E41 00 00 00 00 
+3180   1E45 00 00 00 00 
+3180   1E49 00 00 00 00 
+3180   1E4D 00 00 00 00 
+3180   1E51 00 00 00 00 
+3180   1E55 00 00 00 00 
+3180   1E59 00 00 00 00 
+3180   1E5D 00 00 00 00 
+3180   1E61 00 00 00 00 
+3180   1E65 00 00 00 00 
+3180   1E69 00 00 00 00 
+3180   1E6D 00 00 00 00 
+3180   1E71 00 00 00 00 
+3180   1E75 00 00 00 00 
+3180   1E79 00 00 00 00 
+3180   1E7D 00 00 00 00 
+3180   1E81 00 00 00 00 
+3180   1E85 00 00 00 00 
+3180   1E89 00 00 00 00 
+3180   1E8D 00 00 00 00 
+3180   1E91 00 00 00 00 
+3180   1E95 00 00 00 00 
+3180   1E99 00 00 00 00 
+3180   1E9D 00 00 00 00 
+3180   1EA1 00 00 00 00 
+3180   1EA5 00 00 00 00 
+3180   1EA9 00 00 00 00 
+3180   1EAD 00 00 00 00 
+3180   1EB1 00 00 00 00 
+3180   1EB5 00 00 00 00 
+3180   1EB9 00 00 00 00 
+3180   1EBD 00 00 00 00 
+3180   1EC1 00 00 00 00 
+3180   1EC5 00 00 00 00 
+3180   1EC9 00 00 00 00 
+3180   1ECD 00 00 00 00 
+3180   1ED1 00 00 00 00 
+3180   1ED5 00 00 00 00 
+3180   1ED9 00 00 00 00 
+3180   1EDD 00 00 00 00 
+3180   1EE1 00 00 00 00 
+3180   1EE5 00 00 00 00 
+3180   1EE9 00 00 00 00 
+3181   1EED             filename:
+3182   1EED 00 00 00 00   .fill 128, 0      ; holds a path for file search
+3182   1EF1 00 00 00 00 
+3182   1EF5 00 00 00 00 
+3182   1EF9 00 00 00 00 
+3182   1EFD 00 00 00 00 
+3182   1F01 00 00 00 00 
+3182   1F05 00 00 00 00 
+3182   1F09 00 00 00 00 
+3182   1F0D 00 00 00 00 
+3182   1F11 00 00 00 00 
+3182   1F15 00 00 00 00 
+3182   1F19 00 00 00 00 
+3182   1F1D 00 00 00 00 
+3182   1F21 00 00 00 00 
+3182   1F25 00 00 00 00 
+3182   1F29 00 00 00 00 
+3182   1F2D 00 00 00 00 
+3182   1F31 00 00 00 00 
+3182   1F35 00 00 00 00 
+3182   1F39 00 00 00 00 
+3182   1F3D 00 00 00 00 
+3182   1F41 00 00 00 00 
+3182   1F45 00 00 00 00 
+3182   1F49 00 00 00 00 
+3182   1F4D 00 00 00 00 
+3182   1F51 00 00 00 00 
+3182   1F55 00 00 00 00 
+3182   1F59 00 00 00 00 
+3182   1F5D 00 00 00 00 
+3182   1F61 00 00 00 00 
+3182   1F65 00 00 00 00 
+3182   1F69 00 00 00 00 
+3183   1F6D             user_data:
+3184   1F6D 00 00 00 00   .fill 512, 0      ;  user space data
+3184   1F71 00 00 00 00 
+3184   1F75 00 00 00 00 
+3184   1F79 00 00 00 00 
+3184   1F7D 00 00 00 00 
+3184   1F81 00 00 00 00 
+3184   1F85 00 00 00 00 
+3184   1F89 00 00 00 00 
+3184   1F8D 00 00 00 00 
+3184   1F91 00 00 00 00 
+3184   1F95 00 00 00 00 
+3184   1F99 00 00 00 00 
+3184   1F9D 00 00 00 00 
+3184   1FA1 00 00 00 00 
+3184   1FA5 00 00 00 00 
+3184   1FA9 00 00 00 00 
+3184   1FAD 00 00 00 00 
+3184   1FB1 00 00 00 00 
+3184   1FB5 00 00 00 00 
+3184   1FB9 00 00 00 00 
+3184   1FBD 00 00 00 00 
+3184   1FC1 00 00 00 00 
+3184   1FC5 00 00 00 00 
+3184   1FC9 00 00 00 00 
+3184   1FCD 00 00 00 00 
+3184   1FD1 00 00 00 00 
+3184   1FD5 00 00 00 00 
+3184   1FD9 00 00 00 00 
+3184   1FDD 00 00 00 00 
+3184   1FE1 00 00 00 00 
+3184   1FE5 00 00 00 00 
+3184   1FE9 00 00 00 00 
+3184   1FED 00 00 00 00 
+3184   1FF1 00 00 00 00 
+3184   1FF5 00 00 00 00 
+3184   1FF9 00 00 00 00 
+3184   1FFD 00 00 00 00 
+3184   2001 00 00 00 00 
+3184   2005 00 00 00 00 
+3184   2009 00 00 00 00 
+3184   200D 00 00 00 00 
+3184   2011 00 00 00 00 
+3184   2015 00 00 00 00 
+3184   2019 00 00 00 00 
+3184   201D 00 00 00 00 
+3184   2021 00 00 00 00 
+3184   2025 00 00 00 00 
+3184   2029 00 00 00 00 
+3184   202D 00 00 00 00 
+3184   2031 00 00 00 00 
+3184   2035 00 00 00 00 
+3184   2039 00 00 00 00 
+3184   203D 00 00 00 00 
+3184   2041 00 00 00 00 
+3184   2045 00 00 00 00 
+3184   2049 00 00 00 00 
+3184   204D 00 00 00 00 
+3184   2051 00 00 00 00 
+3184   2055 00 00 00 00 
+3184   2059 00 00 00 00 
+3184   205D 00 00 00 00 
+3184   2061 00 00 00 00 
+3184   2065 00 00 00 00 
+3184   2069 00 00 00 00 
+3184   206D 00 00 00 00 
+3184   2071 00 00 00 00 
+3184   2075 00 00 00 00 
+3184   2079 00 00 00 00 
+3184   207D 00 00 00 00 
+3184   2081 00 00 00 00 
+3184   2085 00 00 00 00 
+3184   2089 00 00 00 00 
+3184   208D 00 00 00 00 
+3184   2091 00 00 00 00 
+3184   2095 00 00 00 00 
+3184   2099 00 00 00 00 
+3184   209D 00 00 00 00 
+3184   20A1 00 00 00 00 
+3184   20A5 00 00 00 00 
+3184   20A9 00 00 00 00 
+3184   20AD 00 00 00 00 
+3184   20B1 00 00 00 00 
+3184   20B5 00 00 00 00 
+3184   20B9 00 00 00 00 
+3184   20BD 00 00 00 00 
+3184   20C1 00 00 00 00 
+3184   20C5 00 00 00 00 
+3184   20C9 00 00 00 00 
+3184   20CD 00 00 00 00 
+3184   20D1 00 00 00 00 
+3184   20D5 00 00 00 00 
+3184   20D9 00 00 00 00 
+3184   20DD 00 00 00 00 
+3184   20E1 00 00 00 00 
+3184   20E5 00 00 00 00 
+3184   20E9 00 00 00 00 
+3184   20ED 00 00 00 00 
+3184   20F1 00 00 00 00 
+3184   20F5 00 00 00 00 
+3184   20F9 00 00 00 00 
+3184   20FD 00 00 00 00 
+3184   2101 00 00 00 00 
+3184   2105 00 00 00 00 
+3184   2109 00 00 00 00 
+3184   210D 00 00 00 00 
+3184   2111 00 00 00 00 
+3184   2115 00 00 00 00 
+3184   2119 00 00 00 00 
+3184   211D 00 00 00 00 
+3184   2121 00 00 00 00 
+3184   2125 00 00 00 00 
+3184   2129 00 00 00 00 
+3184   212D 00 00 00 00 
+3184   2131 00 00 00 00 
+3184   2135 00 00 00 00 
+3184   2139 00 00 00 00 
+3184   213D 00 00 00 00 
+3184   2141 00 00 00 00 
+3184   2145 00 00 00 00 
+3184   2149 00 00 00 00 
+3184   214D 00 00 00 00 
+3184   2151 00 00 00 00 
+3184   2155 00 00 00 00 
+3184   2159 00 00 00 00 
+3184   215D 00 00 00 00 
+3184   2161 00 00 00 00 
+3184   2165 00 00 00 00 
+3184   2169 00 00 00 00 
+3185   216D             fifo:
+3186   216D FF FF FF FF   .fill _fifo_size
+3186   2171 FF FF FF FF 
+3186   2175 FF FF FF FF 
+3186   2179 FF FF FF FF 
+3186   217D FF FF FF FF 
+3186   2181 FF FF FF FF 
+3186   2185 FF FF FF FF 
+3186   2189 FF FF FF FF 
+3186   218D FF FF FF FF 
+3186   2191 FF FF FF FF 
+3186   2195 FF FF FF FF 
+3186   2199 FF FF FF FF 
+3186   219D FF FF FF FF 
+3186   21A1 FF FF FF FF 
+3186   21A5 FF FF FF FF 
+3186   21A9 FF FF FF FF 
+3186   21AD FF FF FF FF 
+3186   21B1 FF FF FF FF 
+3186   21B5 FF FF FF FF 
+3186   21B9 FF FF FF FF 
+3186   21BD FF FF FF FF 
+3186   21C1 FF FF FF FF 
+3186   21C5 FF FF FF FF 
+3186   21C9 FF FF FF FF 
+3186   21CD FF FF FF FF 
+3186   21D1 FF FF FF FF 
+3186   21D5 FF FF FF FF 
+3186   21D9 FF FF FF FF 
+3186   21DD FF FF FF FF 
+3186   21E1 FF FF FF FF 
+3186   21E5 FF FF FF FF 
+3186   21E9 FF FF FF FF 
+3186   21ED FF FF FF FF 
+3186   21F1 FF FF FF FF 
+3186   21F5 FF FF FF FF 
+3186   21F9 FF FF FF FF 
+3186   21FD FF FF FF FF 
+3186   2201 FF FF FF FF 
+3186   2205 FF FF FF FF 
+3186   2209 FF FF FF FF 
+3186   220D FF FF FF FF 
+3186   2211 FF FF FF FF 
+3186   2215 FF FF FF FF 
+3186   2219 FF FF FF FF 
+3186   221D FF FF FF FF 
+3186   2221 FF FF FF FF 
+3186   2225 FF FF FF FF 
+3186   2229 FF FF FF FF 
+3186   222D FF FF FF FF 
+3186   2231 FF FF FF FF 
+3186   2235 FF FF FF FF 
+3186   2239 FF FF FF FF 
+3186   223D FF FF FF FF 
+3186   2241 FF FF FF FF 
+3186   2245 FF FF FF FF 
+3186   2249 FF FF FF FF 
+3186   224D FF FF FF FF 
+3186   2251 FF FF FF FF 
+3186   2255 FF FF FF FF 
+3186   2259 FF FF FF FF 
+3186   225D FF FF FF FF 
+3186   2261 FF FF FF FF 
+3186   2265 FF FF FF FF 
+3186   2269 FF FF FF FF 
+3186   226D FF FF FF FF 
+3186   2271 FF FF FF FF 
+3186   2275 FF FF FF FF 
+3186   2279 FF FF FF FF 
+3186   227D FF FF FF FF 
+3186   2281 FF FF FF FF 
+3186   2285 FF FF FF FF 
+3186   2289 FF FF FF FF 
+3186   228D FF FF FF FF 
+3186   2291 FF FF FF FF 
+3186   2295 FF FF FF FF 
+3186   2299 FF FF FF FF 
+3186   229D FF FF FF FF 
+3186   22A1 FF FF FF FF 
+3186   22A5 FF FF FF FF 
+3186   22A9 FF FF FF FF 
+3186   22AD FF FF FF FF 
+3186   22B1 FF FF FF FF 
+3186   22B5 FF FF FF FF 
+3186   22B9 FF FF FF FF 
+3186   22BD FF FF FF FF 
+3186   22C1 FF FF FF FF 
+3186   22C5 FF FF FF FF 
+3186   22C9 FF FF FF FF 
+3186   22CD FF FF FF FF 
+3186   22D1 FF FF FF FF 
+3186   22D5 FF FF FF FF 
+3186   22D9 FF FF FF FF 
+3186   22DD FF FF FF FF 
+3186   22E1 FF FF FF FF 
+3186   22E5 FF FF FF FF 
+3186   22E9 FF FF FF FF 
+3186   22ED FF FF FF FF 
+3186   22F1 FF FF FF FF 
+3186   22F5 FF FF FF FF 
+3186   22F9 FF FF FF FF 
+3186   22FD FF FF FF FF 
+3186   2301 FF FF FF FF 
+3186   2305 FF FF FF FF 
+3186   2309 FF FF FF FF 
+3186   230D FF FF FF FF 
+3186   2311 FF FF FF FF 
+3186   2315 FF FF FF FF 
+3186   2319 FF FF FF FF 
+3186   231D FF FF FF FF 
+3186   2321 FF FF FF FF 
+3186   2325 FF FF FF FF 
+3186   2329 FF FF FF FF 
+3186   232D FF FF FF FF 
+3186   2331 FF FF FF FF 
+3186   2335 FF FF FF FF 
+3186   2339 FF FF FF FF 
+3186   233D FF FF FF FF 
+3186   2341 FF FF FF FF 
+3186   2345 FF FF FF FF 
+3186   2349 FF FF FF FF 
+3186   234D FF FF FF FF 
+3186   2351 FF FF FF FF 
+3186   2355 FF FF FF FF 
+3186   2359 FF FF FF FF 
+3186   235D FF FF FF FF 
+3186   2361 FF FF FF FF 
+3186   2365 FF FF FF FF 
+3186   2369 FF FF FF FF 
+3186   236D FF FF FF FF 
+3186   2371 FF FF FF FF 
+3186   2375 FF FF FF FF 
+3186   2379 FF FF FF FF 
+3186   237D FF FF FF FF 
+3186   2381 FF FF FF FF 
+3186   2385 FF FF FF FF 
+3186   2389 FF FF FF FF 
+3186   238D FF FF FF FF 
+3186   2391 FF FF FF FF 
+3186   2395 FF FF FF FF 
+3186   2399 FF FF FF FF 
+3186   239D FF FF FF FF 
+3186   23A1 FF FF FF FF 
+3186   23A5 FF FF FF FF 
+3186   23A9 FF FF FF FF 
+3186   23AD FF FF FF FF 
+3186   23B1 FF FF FF FF 
+3186   23B5 FF FF FF FF 
+3186   23B9 FF FF FF FF 
+3186   23BD FF FF FF FF 
+3186   23C1 FF FF FF FF 
+3186   23C5 FF FF FF FF 
+3186   23C9 FF FF FF FF 
+3186   23CD FF FF FF FF 
+3186   23D1 FF FF FF FF 
+3186   23D5 FF FF FF FF 
+3186   23D9 FF FF FF FF 
+3186   23DD FF FF FF FF 
+3186   23E1 FF FF FF FF 
+3186   23E5 FF FF FF FF 
+3186   23E9 FF FF FF FF 
+3186   23ED FF FF FF FF 
+3186   23F1 FF FF FF FF 
+3186   23F5 FF FF FF FF 
+3186   23F9 FF FF FF FF 
+3186   23FD FF FF FF FF 
+3186   2401 FF FF FF FF 
+3186   2405 FF FF FF FF 
+3186   2409 FF FF FF FF 
+3186   240D FF FF FF FF 
+3186   2411 FF FF FF FF 
+3186   2415 FF FF FF FF 
+3186   2419 FF FF FF FF 
+3186   241D FF FF FF FF 
+3186   2421 FF FF FF FF 
+3186   2425 FF FF FF FF 
+3186   2429 FF FF FF FF 
+3186   242D FF FF FF FF 
+3186   2431 FF FF FF FF 
+3186   2435 FF FF FF FF 
+3186   2439 FF FF FF FF 
+3186   243D FF FF FF FF 
+3186   2441 FF FF FF FF 
+3186   2445 FF FF FF FF 
+3186   2449 FF FF FF FF 
+3186   244D FF FF FF FF 
+3186   2451 FF FF FF FF 
+3186   2455 FF FF FF FF 
+3186   2459 FF FF FF FF 
+3186   245D FF FF FF FF 
+3186   2461 FF FF FF FF 
+3186   2465 FF FF FF FF 
+3186   2469 FF FF FF FF 
+3186   246D FF FF FF FF 
+3186   2471 FF FF FF FF 
+3186   2475 FF FF FF FF 
+3186   2479 FF FF FF FF 
+3186   247D FF FF FF FF 
+3186   2481 FF FF FF FF 
+3186   2485 FF FF FF FF 
+3186   2489 FF FF FF FF 
+3186   248D FF FF FF FF 
+3186   2491 FF FF FF FF 
+3186   2495 FF FF FF FF 
+3186   2499 FF FF FF FF 
+3186   249D FF FF FF FF 
+3186   24A1 FF FF FF FF 
+3186   24A5 FF FF FF FF 
+3186   24A9 FF FF FF FF 
+3186   24AD FF FF FF FF 
+3186   24B1 FF FF FF FF 
+3186   24B5 FF FF FF FF 
+3186   24B9 FF FF FF FF 
+3186   24BD FF FF FF FF 
+3186   24C1 FF FF FF FF 
+3186   24C5 FF FF FF FF 
+3186   24C9 FF FF FF FF 
+3186   24CD FF FF FF FF 
+3186   24D1 FF FF FF FF 
+3186   24D5 FF FF FF FF 
+3186   24D9 FF FF FF FF 
+3186   24DD FF FF FF FF 
+3186   24E1 FF FF FF FF 
+3186   24E5 FF FF FF FF 
+3186   24E9 FF FF FF FF 
+3186   24ED FF FF FF FF 
+3186   24F1 FF FF FF FF 
+3186   24F5 FF FF FF FF 
+3186   24F9 FF FF FF FF 
+3186   24FD FF FF FF FF 
+3186   2501 FF FF FF FF 
+3186   2505 FF FF FF FF 
+3186   2509 FF FF FF FF 
+3186   250D FF FF FF FF 
+3186   2511 FF FF FF FF 
+3186   2515 FF FF FF FF 
+3186   2519 FF FF FF FF 
+3186   251D FF FF FF FF 
+3186   2521 FF FF FF FF 
+3186   2525 FF FF FF FF 
+3186   2529 FF FF FF FF 
+3186   252D FF FF FF FF 
+3186   2531 FF FF FF FF 
+3186   2535 FF FF FF FF 
+3186   2539 FF FF FF FF 
+3186   253D FF FF FF FF 
+3186   2541 FF FF FF FF 
+3186   2545 FF FF FF FF 
+3186   2549 FF FF FF FF 
+3186   254D FF FF FF FF 
+3186   2551 FF FF FF FF 
+3186   2555 FF FF FF FF 
+3186   2559 FF FF FF FF 
+3186   255D FF FF FF FF 
+3186   2561 FF FF FF FF 
+3186   2565 FF FF FF FF 
+3186   2569 FF FF FF FF 
+3186   256D FF FF FF FF 
+3186   2571 FF FF FF FF 
+3186   2575 FF FF FF FF 
+3186   2579 FF FF FF FF 
+3186   257D FF FF FF FF 
+3186   2581 FF FF FF FF 
+3186   2585 FF FF FF FF 
+3186   2589 FF FF FF FF 
+3186   258D FF FF FF FF 
+3186   2591 FF FF FF FF 
+3186   2595 FF FF FF FF 
+3186   2599 FF FF FF FF 
+3186   259D FF FF FF FF 
+3186   25A1 FF FF FF FF 
+3186   25A5 FF FF FF FF 
+3186   25A9 FF FF FF FF 
+3186   25AD FF FF FF FF 
+3186   25B1 FF FF FF FF 
+3186   25B5 FF FF FF FF 
+3186   25B9 FF FF FF FF 
+3186   25BD FF FF FF FF 
+3186   25C1 FF FF FF FF 
+3186   25C5 FF FF FF FF 
+3186   25C9 FF FF FF FF 
+3186   25CD FF FF FF FF 
+3186   25D1 FF FF FF FF 
+3186   25D5 FF FF FF FF 
+3186   25D9 FF FF FF FF 
+3186   25DD FF FF FF FF 
+3186   25E1 FF FF FF FF 
+3186   25E5 FF FF FF FF 
+3186   25E9 FF FF FF FF 
+3186   25ED FF FF FF FF 
+3186   25F1 FF FF FF FF 
+3186   25F5 FF FF FF FF 
+3186   25F9 FF FF FF FF 
+3186   25FD FF FF FF FF 
+3186   2601 FF FF FF FF 
+3186   2605 FF FF FF FF 
+3186   2609 FF FF FF FF 
+3186   260D FF FF FF FF 
+3186   2611 FF FF FF FF 
+3186   2615 FF FF FF FF 
+3186   2619 FF FF FF FF 
+3186   261D FF FF FF FF 
+3186   2621 FF FF FF FF 
+3186   2625 FF FF FF FF 
+3186   2629 FF FF FF FF 
+3186   262D FF FF FF FF 
+3186   2631 FF FF FF FF 
+3186   2635 FF FF FF FF 
+3186   2639 FF FF FF FF 
+3186   263D FF FF FF FF 
+3186   2641 FF FF FF FF 
+3186   2645 FF FF FF FF 
+3186   2649 FF FF FF FF 
+3186   264D FF FF FF FF 
+3186   2651 FF FF FF FF 
+3186   2655 FF FF FF FF 
+3186   2659 FF FF FF FF 
+3186   265D FF FF FF FF 
+3186   2661 FF FF FF FF 
+3186   2665 FF FF FF FF 
+3186   2669 FF FF FF FF 
+3186   266D FF FF FF FF 
+3186   2671 FF FF FF FF 
+3186   2675 FF FF FF FF 
+3186   2679 FF FF FF FF 
+3186   267D FF FF FF FF 
+3186   2681 FF FF FF FF 
+3186   2685 FF FF FF FF 
+3186   2689 FF FF FF FF 
+3186   268D FF FF FF FF 
+3186   2691 FF FF FF FF 
+3186   2695 FF FF FF FF 
+3186   2699 FF FF FF FF 
+3186   269D FF FF FF FF 
+3186   26A1 FF FF FF FF 
+3186   26A5 FF FF FF FF 
+3186   26A9 FF FF FF FF 
+3186   26AD FF FF FF FF 
+3186   26B1 FF FF FF FF 
+3186   26B5 FF FF FF FF 
+3186   26B9 FF FF FF FF 
+3186   26BD FF FF FF FF 
+3186   26C1 FF FF FF FF 
+3186   26C5 FF FF FF FF 
+3186   26C9 FF FF FF FF 
+3186   26CD FF FF FF FF 
+3186   26D1 FF FF FF FF 
+3186   26D5 FF FF FF FF 
+3186   26D9 FF FF FF FF 
+3186   26DD FF FF FF FF 
+3186   26E1 FF FF FF FF 
+3186   26E5 FF FF FF FF 
+3186   26E9 FF FF FF FF 
+3186   26ED FF FF FF FF 
+3186   26F1 FF FF FF FF 
+3186   26F5 FF FF FF FF 
+3186   26F9 FF FF FF FF 
+3186   26FD FF FF FF FF 
+3186   2701 FF FF FF FF 
+3186   2705 FF FF FF FF 
+3186   2709 FF FF FF FF 
+3186   270D FF FF FF FF 
+3186   2711 FF FF FF FF 
+3186   2715 FF FF FF FF 
+3186   2719 FF FF FF FF 
+3186   271D FF FF FF FF 
+3186   2721 FF FF FF FF 
+3186   2725 FF FF FF FF 
+3186   2729 FF FF FF FF 
+3186   272D FF FF FF FF 
+3186   2731 FF FF FF FF 
+3186   2735 FF FF FF FF 
+3186   2739 FF FF FF FF 
+3186   273D FF FF FF FF 
+3186   2741 FF FF FF FF 
+3186   2745 FF FF FF FF 
+3186   2749 FF FF FF FF 
+3186   274D FF FF FF FF 
+3186   2751 FF FF FF FF 
+3186   2755 FF FF FF FF 
+3186   2759 FF FF FF FF 
+3186   275D FF FF FF FF 
+3186   2761 FF FF FF FF 
+3186   2765 FF FF FF FF 
+3186   2769 FF FF FF FF 
+3186   276D FF FF FF FF 
+3186   2771 FF FF FF FF 
+3186   2775 FF FF FF FF 
+3186   2779 FF FF FF FF 
+3186   277D FF FF FF FF 
+3186   2781 FF FF FF FF 
+3186   2785 FF FF FF FF 
+3186   2789 FF FF FF FF 
+3186   278D FF FF FF FF 
+3186   2791 FF FF FF FF 
+3186   2795 FF FF FF FF 
+3186   2799 FF FF FF FF 
+3186   279D FF FF FF FF 
+3186   27A1 FF FF FF FF 
+3186   27A5 FF FF FF FF 
+3186   27A9 FF FF FF FF 
+3186   27AD FF FF FF FF 
+3186   27B1 FF FF FF FF 
+3186   27B5 FF FF FF FF 
+3186   27B9 FF FF FF FF 
+3186   27BD FF FF FF FF 
+3186   27C1 FF FF FF FF 
+3186   27C5 FF FF FF FF 
+3186   27C9 FF FF FF FF 
+3186   27CD FF FF FF FF 
+3186   27D1 FF FF FF FF 
+3186   27D5 FF FF FF FF 
+3186   27D9 FF FF FF FF 
+3186   27DD FF FF FF FF 
+3186   27E1 FF FF FF FF 
+3186   27E5 FF FF FF FF 
+3186   27E9 FF FF FF FF 
+3186   27ED FF FF FF FF 
+3186   27F1 FF FF FF FF 
+3186   27F5 FF FF FF FF 
+3186   27F9 FF FF FF FF 
+3186   27FD FF FF FF FF 
+3186   2801 FF FF FF FF 
+3186   2805 FF FF FF FF 
+3186   2809 FF FF FF FF 
+3186   280D FF FF FF FF 
+3186   2811 FF FF FF FF 
+3186   2815 FF FF FF FF 
+3186   2819 FF FF FF FF 
+3186   281D FF FF FF FF 
+3186   2821 FF FF FF FF 
+3186   2825 FF FF FF FF 
+3186   2829 FF FF FF FF 
+3186   282D FF FF FF FF 
+3186   2831 FF FF FF FF 
+3186   2835 FF FF FF FF 
+3186   2839 FF FF FF FF 
+3186   283D FF FF FF FF 
+3186   2841 FF FF FF FF 
+3186   2845 FF FF FF FF 
+3186   2849 FF FF FF FF 
+3186   284D FF FF FF FF 
+3186   2851 FF FF FF FF 
+3186   2855 FF FF FF FF 
+3186   2859 FF FF FF FF 
+3186   285D FF FF FF FF 
+3186   2861 FF FF FF FF 
+3186   2865 FF FF FF FF 
+3186   2869 FF FF FF FF 
+3186   286D FF FF FF FF 
+3186   2871 FF FF FF FF 
+3186   2875 FF FF FF FF 
+3186   2879 FF FF FF FF 
+3186   287D FF FF FF FF 
+3186   2881 FF FF FF FF 
+3186   2885 FF FF FF FF 
+3186   2889 FF FF FF FF 
+3186   288D FF FF FF FF 
+3186   2891 FF FF FF FF 
+3186   2895 FF FF FF FF 
+3186   2899 FF FF FF FF 
+3186   289D FF FF FF FF 
+3186   28A1 FF FF FF FF 
+3186   28A5 FF FF FF FF 
+3186   28A9 FF FF FF FF 
+3186   28AD FF FF FF FF 
+3186   28B1 FF FF FF FF 
+3186   28B5 FF FF FF FF 
+3186   28B9 FF FF FF FF 
+3186   28BD FF FF FF FF 
+3186   28C1 FF FF FF FF 
+3186   28C5 FF FF FF FF 
+3186   28C9 FF FF FF FF 
+3186   28CD FF FF FF FF 
+3186   28D1 FF FF FF FF 
+3186   28D5 FF FF FF FF 
+3186   28D9 FF FF FF FF 
+3186   28DD FF FF FF FF 
+3186   28E1 FF FF FF FF 
+3186   28E5 FF FF FF FF 
+3186   28E9 FF FF FF FF 
+3186   28ED FF FF FF FF 
+3186   28F1 FF FF FF FF 
+3186   28F5 FF FF FF FF 
+3186   28F9 FF FF FF FF 
+3186   28FD FF FF FF FF 
+3186   2901 FF FF FF FF 
+3186   2905 FF FF FF FF 
+3186   2909 FF FF FF FF 
+3186   290D FF FF FF FF 
+3186   2911 FF FF FF FF 
+3186   2915 FF FF FF FF 
+3186   2919 FF FF FF FF 
+3186   291D FF FF FF FF 
+3186   2921 FF FF FF FF 
+3186   2925 FF FF FF FF 
+3186   2929 FF FF FF FF 
+3186   292D FF FF FF FF 
+3186   2931 FF FF FF FF 
+3186   2935 FF FF FF FF 
+3186   2939 FF FF FF FF 
+3186   293D FF FF FF FF 
+3186   2941 FF FF FF FF 
+3186   2945 FF FF FF FF 
+3186   2949 FF FF FF FF 
+3186   294D FF FF FF FF 
+3186   2951 FF FF FF FF 
+3186   2955 FF FF FF FF 
+3186   2959 FF FF FF FF 
+3186   295D FF FF FF FF 
+3186   2961 FF FF FF FF 
+3186   2965 FF FF FF FF 
+3186   2969 FF FF FF FF 
+3186   296D FF FF FF FF 
+3186   2971 FF FF FF FF 
+3186   2975 FF FF FF FF 
+3186   2979 FF FF FF FF 
+3186   297D FF FF FF FF 
+3186   2981 FF FF FF FF 
+3186   2985 FF FF FF FF 
+3186   2989 FF FF FF FF 
+3186   298D FF FF FF FF 
+3186   2991 FF FF FF FF 
+3186   2995 FF FF FF FF 
+3186   2999 FF FF FF FF 
+3186   299D FF FF FF FF 
+3186   29A1 FF FF FF FF 
+3186   29A5 FF FF FF FF 
+3186   29A9 FF FF FF FF 
+3186   29AD FF FF FF FF 
+3186   29B1 FF FF FF FF 
+3186   29B5 FF FF FF FF 
+3186   29B9 FF FF FF FF 
+3186   29BD FF FF FF FF 
+3186   29C1 FF FF FF FF 
+3186   29C5 FF FF FF FF 
+3186   29C9 FF FF FF FF 
+3186   29CD FF FF FF FF 
+3186   29D1 FF FF FF FF 
+3186   29D5 FF FF FF FF 
+3186   29D9 FF FF FF FF 
+3186   29DD FF FF FF FF 
+3186   29E1 FF FF FF FF 
+3186   29E5 FF FF FF FF 
+3186   29E9 FF FF FF FF 
+3186   29ED FF FF FF FF 
+3186   29F1 FF FF FF FF 
+3186   29F5 FF FF FF FF 
+3186   29F9 FF FF FF FF 
+3186   29FD FF FF FF FF 
+3186   2A01 FF FF FF FF 
+3186   2A05 FF FF FF FF 
+3186   2A09 FF FF FF FF 
+3186   2A0D FF FF FF FF 
+3186   2A11 FF FF FF FF 
+3186   2A15 FF FF FF FF 
+3186   2A19 FF FF FF FF 
+3186   2A1D FF FF FF FF 
+3186   2A21 FF FF FF FF 
+3186   2A25 FF FF FF FF 
+3186   2A29 FF FF FF FF 
+3186   2A2D FF FF FF FF 
+3186   2A31 FF FF FF FF 
+3186   2A35 FF FF FF FF 
+3186   2A39 FF FF FF FF 
+3186   2A3D FF FF FF FF 
+3186   2A41 FF FF FF FF 
+3186   2A45 FF FF FF FF 
+3186   2A49 FF FF FF FF 
+3186   2A4D FF FF FF FF 
+3186   2A51 FF FF FF FF 
+3186   2A55 FF FF FF FF 
+3186   2A59 FF FF FF FF 
+3186   2A5D FF FF FF FF 
+3186   2A61 FF FF FF FF 
+3186   2A65 FF FF FF FF 
+3186   2A69 FF FF FF FF 
+3186   2A6D FF FF FF FF 
+3186   2A71 FF FF FF FF 
+3186   2A75 FF FF FF FF 
+3186   2A79 FF FF FF FF 
+3186   2A7D FF FF FF FF 
+3186   2A81 FF FF FF FF 
+3186   2A85 FF FF FF FF 
+3186   2A89 FF FF FF FF 
+3186   2A8D FF FF FF FF 
+3186   2A91 FF FF FF FF 
+3186   2A95 FF FF FF FF 
+3186   2A99 FF FF FF FF 
+3186   2A9D FF FF FF FF 
+3186   2AA1 FF FF FF FF 
+3186   2AA5 FF FF FF FF 
+3186   2AA9 FF FF FF FF 
+3186   2AAD FF FF FF FF 
+3186   2AB1 FF FF FF FF 
+3186   2AB5 FF FF FF FF 
+3186   2AB9 FF FF FF FF 
+3186   2ABD FF FF FF FF 
+3186   2AC1 FF FF FF FF 
+3186   2AC5 FF FF FF FF 
+3186   2AC9 FF FF FF FF 
+3186   2ACD FF FF FF FF 
+3186   2AD1 FF FF FF FF 
+3186   2AD5 FF FF FF FF 
+3186   2AD9 FF FF FF FF 
+3186   2ADD FF FF FF FF 
+3186   2AE1 FF FF FF FF 
+3186   2AE5 FF FF FF FF 
+3186   2AE9 FF FF FF FF 
+3186   2AED FF FF FF FF 
+3186   2AF1 FF FF FF FF 
+3186   2AF5 FF FF FF FF 
+3186   2AF9 FF FF FF FF 
+3186   2AFD FF FF FF FF 
+3186   2B01 FF FF FF FF 
+3186   2B05 FF FF FF FF 
+3186   2B09 FF FF FF FF 
+3186   2B0D FF FF FF FF 
+3186   2B11 FF FF FF FF 
+3186   2B15 FF FF FF FF 
+3186   2B19 FF FF FF FF 
+3186   2B1D FF FF FF FF 
+3186   2B21 FF FF FF FF 
+3186   2B25 FF FF FF FF 
+3186   2B29 FF FF FF FF 
+3186   2B2D FF FF FF FF 
+3186   2B31 FF FF FF FF 
+3186   2B35 FF FF FF FF 
+3186   2B39 FF FF FF FF 
+3186   2B3D FF FF FF FF 
+3186   2B41 FF FF FF FF 
+3186   2B45 FF FF FF FF 
+3186   2B49 FF FF FF FF 
+3186   2B4D FF FF FF FF 
+3186   2B51 FF FF FF FF 
+3186   2B55 FF FF FF FF 
+3186   2B59 FF FF FF FF 
+3186   2B5D FF FF FF FF 
+3186   2B61 FF FF FF FF 
+3186   2B65 FF FF FF FF 
+3186   2B69 FF FF FF FF 
+3186   2B6D FF FF FF FF 
+3186   2B71 FF FF FF FF 
+3186   2B75 FF FF FF FF 
+3186   2B79 FF FF FF FF 
+3186   2B7D FF FF FF FF 
+3186   2B81 FF FF FF FF 
+3186   2B85 FF FF FF FF 
+3186   2B89 FF FF FF FF 
+3186   2B8D FF FF FF FF 
+3186   2B91 FF FF FF FF 
+3186   2B95 FF FF FF FF 
+3186   2B99 FF FF FF FF 
+3186   2B9D FF FF FF FF 
+3186   2BA1 FF FF FF FF 
+3186   2BA5 FF FF FF FF 
+3186   2BA9 FF FF FF FF 
+3186   2BAD FF FF FF FF 
+3186   2BB1 FF FF FF FF 
+3186   2BB5 FF FF FF FF 
+3186   2BB9 FF FF FF FF 
+3186   2BBD FF FF FF FF 
+3186   2BC1 FF FF FF FF 
+3186   2BC5 FF FF FF FF 
+3186   2BC9 FF FF FF FF 
+3186   2BCD FF FF FF FF 
+3186   2BD1 FF FF FF FF 
+3186   2BD5 FF FF FF FF 
+3186   2BD9 FF FF FF FF 
+3186   2BDD FF FF FF FF 
+3186   2BE1 FF FF FF FF 
+3186   2BE5 FF FF FF FF 
+3186   2BE9 FF FF FF FF 
+3186   2BED FF FF FF FF 
+3186   2BF1 FF FF FF FF 
+3186   2BF5 FF FF FF FF 
+3186   2BF9 FF FF FF FF 
+3186   2BFD FF FF FF FF 
+3186   2C01 FF FF FF FF 
+3186   2C05 FF FF FF FF 
+3186   2C09 FF FF FF FF 
+3186   2C0D FF FF FF FF 
+3186   2C11 FF FF FF FF 
+3186   2C15 FF FF FF FF 
+3186   2C19 FF FF FF FF 
+3186   2C1D FF FF FF FF 
+3186   2C21 FF FF FF FF 
+3186   2C25 FF FF FF FF 
+3186   2C29 FF FF FF FF 
+3186   2C2D FF FF FF FF 
+3186   2C31 FF FF FF FF 
+3186   2C35 FF FF FF FF 
+3186   2C39 FF FF FF FF 
+3186   2C3D FF FF FF FF 
+3186   2C41 FF FF FF FF 
+3186   2C45 FF FF FF FF 
+3186   2C49 FF FF FF FF 
+3186   2C4D FF FF FF FF 
+3186   2C51 FF FF FF FF 
+3186   2C55 FF FF FF FF 
+3186   2C59 FF FF FF FF 
+3186   2C5D FF FF FF FF 
+3186   2C61 FF FF FF FF 
+3186   2C65 FF FF FF FF 
+3186   2C69 FF FF FF FF 
+3186   2C6D FF FF FF FF 
+3186   2C71 FF FF FF FF 
+3186   2C75 FF FF FF FF 
+3186   2C79 FF FF FF FF 
+3186   2C7D FF FF FF FF 
+3186   2C81 FF FF FF FF 
+3186   2C85 FF FF FF FF 
+3186   2C89 FF FF FF FF 
+3186   2C8D FF FF FF FF 
+3186   2C91 FF FF FF FF 
+3186   2C95 FF FF FF FF 
+3186   2C99 FF FF FF FF 
+3186   2C9D FF FF FF FF 
+3186   2CA1 FF FF FF FF 
+3186   2CA5 FF FF FF FF 
+3186   2CA9 FF FF FF FF 
+3186   2CAD FF FF FF FF 
+3186   2CB1 FF FF FF FF 
+3186   2CB5 FF FF FF FF 
+3186   2CB9 FF FF FF FF 
+3186   2CBD FF FF FF FF 
+3186   2CC1 FF FF FF FF 
+3186   2CC5 FF FF FF FF 
+3186   2CC9 FF FF FF FF 
+3186   2CCD FF FF FF FF 
+3186   2CD1 FF FF FF FF 
+3186   2CD5 FF FF FF FF 
+3186   2CD9 FF FF FF FF 
+3186   2CDD FF FF FF FF 
+3186   2CE1 FF FF FF FF 
+3186   2CE5 FF FF FF FF 
+3186   2CE9 FF FF FF FF 
+3186   2CED FF FF FF FF 
+3186   2CF1 FF FF FF FF 
+3186   2CF5 FF FF FF FF 
+3186   2CF9 FF FF FF FF 
+3186   2CFD FF FF FF FF 
+3186   2D01 FF FF FF FF 
+3186   2D05 FF FF FF FF 
+3186   2D09 FF FF FF FF 
+3186   2D0D FF FF FF FF 
+3186   2D11 FF FF FF FF 
+3186   2D15 FF FF FF FF 
+3186   2D19 FF FF FF FF 
+3186   2D1D FF FF FF FF 
+3186   2D21 FF FF FF FF 
+3186   2D25 FF FF FF FF 
+3186   2D29 FF FF FF FF 
+3186   2D2D FF FF FF FF 
+3186   2D31 FF FF FF FF 
+3186   2D35 FF FF FF FF 
+3186   2D39 FF FF FF FF 
+3186   2D3D FF FF FF FF 
+3186   2D41 FF FF FF FF 
+3186   2D45 FF FF FF FF 
+3186   2D49 FF FF FF FF 
+3186   2D4D FF FF FF FF 
+3186   2D51 FF FF FF FF 
+3186   2D55 FF FF FF FF 
+3186   2D59 FF FF FF FF 
+3186   2D5D FF FF FF FF 
+3186   2D61 FF FF FF FF 
+3186   2D65 FF FF FF FF 
+3186   2D69 FF FF FF FF 
+3186   2D6D FF FF FF FF 
+3186   2D71 FF FF FF FF 
+3186   2D75 FF FF FF FF 
+3186   2D79 FF FF FF FF 
+3186   2D7D FF FF FF FF 
+3186   2D81 FF FF FF FF 
+3186   2D85 FF FF FF FF 
+3186   2D89 FF FF FF FF 
+3186   2D8D FF FF FF FF 
+3186   2D91 FF FF FF FF 
+3186   2D95 FF FF FF FF 
+3186   2D99 FF FF FF FF 
+3186   2D9D FF FF FF FF 
+3186   2DA1 FF FF FF FF 
+3186   2DA5 FF FF FF FF 
+3186   2DA9 FF FF FF FF 
+3186   2DAD FF FF FF FF 
+3186   2DB1 FF FF FF FF 
+3186   2DB5 FF FF FF FF 
+3186   2DB9 FF FF FF FF 
+3186   2DBD FF FF FF FF 
+3186   2DC1 FF FF FF FF 
+3186   2DC5 FF FF FF FF 
+3186   2DC9 FF FF FF FF 
+3186   2DCD FF FF FF FF 
+3186   2DD1 FF FF FF FF 
+3186   2DD5 FF FF FF FF 
+3186   2DD9 FF FF FF FF 
+3186   2DDD FF FF FF FF 
+3186   2DE1 FF FF FF FF 
+3186   2DE5 FF FF FF FF 
+3186   2DE9 FF FF FF FF 
+3186   2DED FF FF FF FF 
+3186   2DF1 FF FF FF FF 
+3186   2DF5 FF FF FF FF 
+3186   2DF9 FF FF FF FF 
+3186   2DFD FF FF FF FF 
+3186   2E01 FF FF FF FF 
+3186   2E05 FF FF FF FF 
+3186   2E09 FF FF FF FF 
+3186   2E0D FF FF FF FF 
+3186   2E11 FF FF FF FF 
+3186   2E15 FF FF FF FF 
+3186   2E19 FF FF FF FF 
+3186   2E1D FF FF FF FF 
+3186   2E21 FF FF FF FF 
+3186   2E25 FF FF FF FF 
+3186   2E29 FF FF FF FF 
+3186   2E2D FF FF FF FF 
+3186   2E31 FF FF FF FF 
+3186   2E35 FF FF FF FF 
+3186   2E39 FF FF FF FF 
+3186   2E3D FF FF FF FF 
+3186   2E41 FF FF FF FF 
+3186   2E45 FF FF FF FF 
+3186   2E49 FF FF FF FF 
+3186   2E4D FF FF FF FF 
+3186   2E51 FF FF FF FF 
+3186   2E55 FF FF FF FF 
+3186   2E59 FF FF FF FF 
+3186   2E5D FF FF FF FF 
+3186   2E61 FF FF FF FF 
+3186   2E65 FF FF FF FF 
+3186   2E69 FF FF FF FF 
+3186   2E6D FF FF FF FF 
+3186   2E71 FF FF FF FF 
+3186   2E75 FF FF FF FF 
+3186   2E79 FF FF FF FF 
+3186   2E7D FF FF FF FF 
+3186   2E81 FF FF FF FF 
+3186   2E85 FF FF FF FF 
+3186   2E89 FF FF FF FF 
+3186   2E8D FF FF FF FF 
+3186   2E91 FF FF FF FF 
+3186   2E95 FF FF FF FF 
+3186   2E99 FF FF FF FF 
+3186   2E9D FF FF FF FF 
+3186   2EA1 FF FF FF FF 
+3186   2EA5 FF FF FF FF 
+3186   2EA9 FF FF FF FF 
+3186   2EAD FF FF FF FF 
+3186   2EB1 FF FF FF FF 
+3186   2EB5 FF FF FF FF 
+3186   2EB9 FF FF FF FF 
+3186   2EBD FF FF FF FF 
+3186   2EC1 FF FF FF FF 
+3186   2EC5 FF FF FF FF 
+3186   2EC9 FF FF FF FF 
+3186   2ECD FF FF FF FF 
+3186   2ED1 FF FF FF FF 
+3186   2ED5 FF FF FF FF 
+3186   2ED9 FF FF FF FF 
+3186   2EDD FF FF FF FF 
+3186   2EE1 FF FF FF FF 
+3186   2EE5 FF FF FF FF 
+3186   2EE9 FF FF FF FF 
+3186   2EED FF FF FF FF 
+3186   2EF1 FF FF FF FF 
+3186   2EF5 FF FF FF FF 
+3186   2EF9 FF FF FF FF 
+3186   2EFD FF FF FF FF 
+3186   2F01 FF FF FF FF 
+3186   2F05 FF FF FF FF 
+3186   2F09 FF FF FF FF 
+3186   2F0D FF FF FF FF 
+3186   2F11 FF FF FF FF 
+3186   2F15 FF FF FF FF 
+3186   2F19 FF FF FF FF 
+3186   2F1D FF FF FF FF 
+3186   2F21 FF FF FF FF 
+3186   2F25 FF FF FF FF 
+3186   2F29 FF FF FF FF 
+3186   2F2D FF FF FF FF 
+3186   2F31 FF FF FF FF 
+3186   2F35 FF FF FF FF 
+3186   2F39 FF FF FF FF 
+3186   2F3D FF FF FF FF 
+3186   2F41 FF FF FF FF 
+3186   2F45 FF FF FF FF 
+3186   2F49 FF FF FF FF 
+3186   2F4D FF FF FF FF 
+3186   2F51 FF FF FF FF 
+3186   2F55 FF FF FF FF 
+3186   2F59 FF FF FF FF 
+3186   2F5D FF FF FF FF 
+3186   2F61 FF FF FF FF 
+3186   2F65 FF FF FF FF 
+3186   2F69 FF FF FF FF 
+3186   2F6D FF FF FF FF 
+3186   2F71 FF FF FF FF 
+3186   2F75 FF FF FF FF 
+3186   2F79 FF FF FF FF 
+3186   2F7D FF FF FF FF 
+3186   2F81 FF FF FF FF 
+3186   2F85 FF FF FF FF 
+3186   2F89 FF FF FF FF 
+3186   2F8D FF FF FF FF 
+3186   2F91 FF FF FF FF 
+3186   2F95 FF FF FF FF 
+3186   2F99 FF FF FF FF 
+3186   2F9D FF FF FF FF 
+3186   2FA1 FF FF FF FF 
+3186   2FA5 FF FF FF FF 
+3186   2FA9 FF FF FF FF 
+3186   2FAD FF FF FF FF 
+3186   2FB1 FF FF FF FF 
+3186   2FB5 FF FF FF FF 
+3186   2FB9 FF FF FF FF 
+3186   2FBD FF FF FF FF 
+3186   2FC1 FF FF FF FF 
+3186   2FC5 FF FF FF FF 
+3186   2FC9 FF FF FF FF 
+3186   2FCD FF FF FF FF 
+3186   2FD1 FF FF FF FF 
+3186   2FD5 FF FF FF FF 
+3186   2FD9 FF FF FF FF 
+3186   2FDD FF FF FF FF 
+3186   2FE1 FF FF FF FF 
+3186   2FE5 FF FF FF FF 
+3186   2FE9 FF FF FF FF 
+3186   2FED FF FF FF FF 
+3186   2FF1 FF FF FF FF 
+3186   2FF5 FF FF FF FF 
+3186   2FF9 FF FF FF FF 
+3186   2FFD FF FF FF FF 
+3186   3001 FF FF FF FF 
+3186   3005 FF FF FF FF 
+3186   3009 FF FF FF FF 
+3186   300D FF FF FF FF 
+3186   3011 FF FF FF FF 
+3186   3015 FF FF FF FF 
+3186   3019 FF FF FF FF 
+3186   301D FF FF FF FF 
+3186   3021 FF FF FF FF 
+3186   3025 FF FF FF FF 
+3186   3029 FF FF FF FF 
+3186   302D FF FF FF FF 
+3186   3031 FF FF FF FF 
+3186   3035 FF FF FF FF 
+3186   3039 FF FF FF FF 
+3186   303D FF FF FF FF 
+3186   3041 FF FF FF FF 
+3186   3045 FF FF FF FF 
+3186   3049 FF FF FF FF 
+3186   304D FF FF FF FF 
+3186   3051 FF FF FF FF 
+3186   3055 FF FF FF FF 
+3186   3059 FF FF FF FF 
+3186   305D FF FF FF FF 
+3186   3061 FF FF FF FF 
+3186   3065 FF FF FF FF 
+3186   3069 FF FF FF FF 
+3186   306D FF FF FF FF 
+3186   3071 FF FF FF FF 
+3186   3075 FF FF FF FF 
+3186   3079 FF FF FF FF 
+3186   307D FF FF FF FF 
+3186   3081 FF FF FF FF 
+3186   3085 FF FF FF FF 
+3186   3089 FF FF FF FF 
+3186   308D FF FF FF FF 
+3186   3091 FF FF FF FF 
+3186   3095 FF FF FF FF 
+3186   3099 FF FF FF FF 
+3186   309D FF FF FF FF 
+3186   30A1 FF FF FF FF 
+3186   30A5 FF FF FF FF 
+3186   30A9 FF FF FF FF 
+3186   30AD FF FF FF FF 
+3186   30B1 FF FF FF FF 
+3186   30B5 FF FF FF FF 
+3186   30B9 FF FF FF FF 
+3186   30BD FF FF FF FF 
+3186   30C1 FF FF FF FF 
+3186   30C5 FF FF FF FF 
+3186   30C9 FF FF FF FF 
+3186   30CD FF FF FF FF 
+3186   30D1 FF FF FF FF 
+3186   30D5 FF FF FF FF 
+3186   30D9 FF FF FF FF 
+3186   30DD FF FF FF FF 
+3186   30E1 FF FF FF FF 
+3186   30E5 FF FF FF FF 
+3186   30E9 FF FF FF FF 
+3186   30ED FF FF FF FF 
+3186   30F1 FF FF FF FF 
+3186   30F5 FF FF FF FF 
+3186   30F9 FF FF FF FF 
+3186   30FD FF FF FF FF 
+3186   3101 FF FF FF FF 
+3186   3105 FF FF FF FF 
+3186   3109 FF FF FF FF 
+3186   310D FF FF FF FF 
+3186   3111 FF FF FF FF 
+3186   3115 FF FF FF FF 
+3186   3119 FF FF FF FF 
+3186   311D FF FF FF FF 
+3186   3121 FF FF FF FF 
+3186   3125 FF FF FF FF 
+3186   3129 FF FF FF FF 
+3186   312D FF FF FF FF 
+3186   3131 FF FF FF FF 
+3186   3135 FF FF FF FF 
+3186   3139 FF FF FF FF 
+3186   313D FF FF FF FF 
+3186   3141 FF FF FF FF 
+3186   3145 FF FF FF FF 
+3186   3149 FF FF FF FF 
+3186   314D FF FF FF FF 
+3186   3151 FF FF FF FF 
+3186   3155 FF FF FF FF 
+3186   3159 FF FF FF FF 
+3186   315D FF FF FF FF 
+3186   3161 FF FF FF FF 
+3186   3165 FF FF FF FF 
+3186   3169 FF FF FF FF 
+3187   316D             
+3188   316D             scrap_sector:
+3189   316D FF FF FF FF   .fill 512         ; scrap sector
+3189   3171 FF FF FF FF 
+3189   3175 FF FF FF FF 
+3189   3179 FF FF FF FF 
+3189   317D FF FF FF FF 
+3189   3181 FF FF FF FF 
+3189   3185 FF FF FF FF 
+3189   3189 FF FF FF FF 
+3189   318D FF FF FF FF 
+3189   3191 FF FF FF FF 
+3189   3195 FF FF FF FF 
+3189   3199 FF FF FF FF 
+3189   319D FF FF FF FF 
+3189   31A1 FF FF FF FF 
+3189   31A5 FF FF FF FF 
+3189   31A9 FF FF FF FF 
+3189   31AD FF FF FF FF 
+3189   31B1 FF FF FF FF 
+3189   31B5 FF FF FF FF 
+3189   31B9 FF FF FF FF 
+3189   31BD FF FF FF FF 
+3189   31C1 FF FF FF FF 
+3189   31C5 FF FF FF FF 
+3189   31C9 FF FF FF FF 
+3189   31CD FF FF FF FF 
+3189   31D1 FF FF FF FF 
+3189   31D5 FF FF FF FF 
+3189   31D9 FF FF FF FF 
+3189   31DD FF FF FF FF 
+3189   31E1 FF FF FF FF 
+3189   31E5 FF FF FF FF 
+3189   31E9 FF FF FF FF 
+3189   31ED FF FF FF FF 
+3189   31F1 FF FF FF FF 
+3189   31F5 FF FF FF FF 
+3189   31F9 FF FF FF FF 
+3189   31FD FF FF FF FF 
+3189   3201 FF FF FF FF 
+3189   3205 FF FF FF FF 
+3189   3209 FF FF FF FF 
+3189   320D FF FF FF FF 
+3189   3211 FF FF FF FF 
+3189   3215 FF FF FF FF 
+3189   3219 FF FF FF FF 
+3189   321D FF FF FF FF 
+3189   3221 FF FF FF FF 
+3189   3225 FF FF FF FF 
+3189   3229 FF FF FF FF 
+3189   322D FF FF FF FF 
+3189   3231 FF FF FF FF 
+3189   3235 FF FF FF FF 
+3189   3239 FF FF FF FF 
+3189   323D FF FF FF FF 
+3189   3241 FF FF FF FF 
+3189   3245 FF FF FF FF 
+3189   3249 FF FF FF FF 
+3189   324D FF FF FF FF 
+3189   3251 FF FF FF FF 
+3189   3255 FF FF FF FF 
+3189   3259 FF FF FF FF 
+3189   325D FF FF FF FF 
+3189   3261 FF FF FF FF 
+3189   3265 FF FF FF FF 
+3189   3269 FF FF FF FF 
+3189   326D FF FF FF FF 
+3189   3271 FF FF FF FF 
+3189   3275 FF FF FF FF 
+3189   3279 FF FF FF FF 
+3189   327D FF FF FF FF 
+3189   3281 FF FF FF FF 
+3189   3285 FF FF FF FF 
+3189   3289 FF FF FF FF 
+3189   328D FF FF FF FF 
+3189   3291 FF FF FF FF 
+3189   3295 FF FF FF FF 
+3189   3299 FF FF FF FF 
+3189   329D FF FF FF FF 
+3189   32A1 FF FF FF FF 
+3189   32A5 FF FF FF FF 
+3189   32A9 FF FF FF FF 
+3189   32AD FF FF FF FF 
+3189   32B1 FF FF FF FF 
+3189   32B5 FF FF FF FF 
+3189   32B9 FF FF FF FF 
+3189   32BD FF FF FF FF 
+3189   32C1 FF FF FF FF 
+3189   32C5 FF FF FF FF 
+3189   32C9 FF FF FF FF 
+3189   32CD FF FF FF FF 
+3189   32D1 FF FF FF FF 
+3189   32D5 FF FF FF FF 
+3189   32D9 FF FF FF FF 
+3189   32DD FF FF FF FF 
+3189   32E1 FF FF FF FF 
+3189   32E5 FF FF FF FF 
+3189   32E9 FF FF FF FF 
+3189   32ED FF FF FF FF 
+3189   32F1 FF FF FF FF 
+3189   32F5 FF FF FF FF 
+3189   32F9 FF FF FF FF 
+3189   32FD FF FF FF FF 
+3189   3301 FF FF FF FF 
+3189   3305 FF FF FF FF 
+3189   3309 FF FF FF FF 
+3189   330D FF FF FF FF 
+3189   3311 FF FF FF FF 
+3189   3315 FF FF FF FF 
+3189   3319 FF FF FF FF 
+3189   331D FF FF FF FF 
+3189   3321 FF FF FF FF 
+3189   3325 FF FF FF FF 
+3189   3329 FF FF FF FF 
+3189   332D FF FF FF FF 
+3189   3331 FF FF FF FF 
+3189   3335 FF FF FF FF 
+3189   3339 FF FF FF FF 
+3189   333D FF FF FF FF 
+3189   3341 FF FF FF FF 
+3189   3345 FF FF FF FF 
+3189   3349 FF FF FF FF 
+3189   334D FF FF FF FF 
+3189   3351 FF FF FF FF 
+3189   3355 FF FF FF FF 
+3189   3359 FF FF FF FF 
+3189   335D FF FF FF FF 
+3189   3361 FF FF FF FF 
+3189   3365 FF FF FF FF 
+3189   3369 FF FF FF FF 
+3190   336D             transient_area:
+3191   336D 00            .db 0             ; beginning of the transient memory area. used for disk reads and other purposes    
+3192   336E             
+3193   336E             .end
 tasm: Number of errors = 0
