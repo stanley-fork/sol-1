@@ -147,6 +147,12 @@ MOV [@],B                       42FD  4    NOP      1
 MOV BYTE[@],@                   F2    4    COMBINE  1
 MOV WORD[@],@                   B8    5    COMBINE  1
 
+; TODO
+; to be burned in : 
+; MOV D,[@]                       C1FD  4    NOP      1
+; to be implemented in sol1.micro:
+; MOV [[D]],al                    FFFD  2    NOP      1
+
 ADD SP,@                        51    3    NOP      1
 SUB SP,@                        52    3    NOP      1
 ADD A,B                         54    1    NOP      1
@@ -490,5 +496,5 @@ MOV CL, BL                      31FD  2    NOP      1
 MOV CL, BH                      32FD  2    NOP      1
 MOV CL, AH                      33FD  2    NOP      1
 
-MOV BL, CL                      
-MOV BL, CH
+MOV BL, CL                      48FD  2    NOP      1
+MOV BL, CH                      B4FD  2    NOP      1

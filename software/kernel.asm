@@ -11,7 +11,7 @@
 ; i/o map
 ; ------------------------------------------------------------------------------------------------------------------;
 ; ff80 - uart 0 (16550)
-; ff90 - uart 1 (16550)
+; ff88 - uart 1 (16550)
 ; ffa0 - rtc    (m48t02)
 ; ffb0 - pio 0  (8255)
 ; ffc0 - fdd    (5.25" floppy drive block)
@@ -38,13 +38,13 @@ _uart0_fcr        .equ $ff82         ; fifo control register
 _uart0_lcr        .equ $ff83         ; line control register
 _uart0_lsr        .equ $ff85         ; line status register
 
-_uart1_data       .equ $ff90         ; data
-_uart1_dlab_0     .equ $ff90         ; divisor latch low byte
-_uart1_dlab_1     .equ $ff91         ; divisor latch high byte
-_uart1_ier        .equ $ff91         ; interrupt enable register
-_uart1_fcr        .equ $ff92         ; fifo control register
-_uart1_lcr        .equ $ff93         ; line control register
-_uart1_lsr        .equ $ff95         ; line status register
+_uart1_data       .equ $ff88         ; data
+_uart1_dlab_0     .equ $ff88         ; divisor latch low byte
+_uart1_dlab_1     .equ $ff89         ; divisor latch high byte
+_uart1_ier        .equ $ff89         ; interrupt enable register
+_uart1_fcr        .equ $ff8A         ; fifo control register
+_uart1_lcr        .equ $ff8B         ; line control register
+_uart1_lsr        .equ $ff8D         ; line status register
 
 _ide_base         .equ $ffd0         ; ide base
 _ide_r0           .equ _ide_base + 0 ; data port
@@ -195,7 +195,7 @@ root_id:            .equ fst_lba_start
 .dw int_3
 .dw int_4
 .dw int_5
-.dw int_6
+.dw int_6_timer
 .dw int_7_uart0
 
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -331,7 +331,7 @@ int_5:
   sysret
 
 ; timer irq
-int_6:  
+int_6_timer:  
   sysret
 
 ; ------------------------------------------------------------------------------------------------------------------;
@@ -341,18 +341,17 @@ int_7_uart0:
   push a
   push d
   pushf
-  mov a, [fifo_in]
-  mov d, a
   mov al, [_uart0_data]       ; get character
   cmp al, $03                 ; ctrl-c
   je ctrlc
   cmp al, $1a                 ; ctrl-z
   je ctrlz
+  ;mov [[d]], al              ; TODO: implement this double indirection instruction
+  mov d, fifo_in
+  mov d, [d]
   mov [d], al                 ; add to fifo
-  mov a, [fifo_in]
+  mov a, d
   inc a
-  mov bl, ah
-  mov [_7seg_display], bl
   cmp a, fifo + _fifo_size     ; check if pointer reached the end of the fifo
   jne int_7_continue
   mov a, fifo  
@@ -366,9 +365,7 @@ ctrlc:
   add sp, 5
   jmp syscall_terminate_proc
 ctrlz:
-  popf
-  pop d
-  pop a
+  add sp, 5
   jmp syscall_pause_proc      ; pause current process and go back to the shell
 
 ; ------------------------------------------------------------------------------------------------------------------;

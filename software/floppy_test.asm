@@ -318,10 +318,8 @@ s2:      .db "\nsector: ", 0
 ss3:     .db "\nvalue: ", 0
 
 fdc_sec_data_128:
-  .db "Hello World my name is Paulo Constantino and this "
-  .db "is a test of the 5.25 inch floppy drive for the Sol-1 Homebrew CPU!"
-  .db "If everything went according to plan then we should have a nicely "
-  .db "formatted track with the information I am writing here.  This is the End."
+  .db "Example data for a write sector instruction. There are 128 bytes "
+  .db "per sector in this format, 40 tracks per disk. Single Density.
 
 ;  .db $ff, $ee, $e0, $55, $66, $33, $42, $aa, $ae, $67, $23, $11, $23, $56, $88, $99,
 ;  .db $1f, $2e, $40, $53, $63, $43, $52, $1a, $a4, $67, $03, $31, $43, $56, $48, $f9,

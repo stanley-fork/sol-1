@@ -11,7 +11,7 @@ const char* password = "";
 uint16_t baud = 38400;  // Change if needed
 
 // Telnet settings
-const int MAX_CLIENTS = 3;
+const int MAX_CLIENTS = 1;
 WiFiServer server(51515);
 WiFiClient serverClients[MAX_CLIENTS];
 
