@@ -42,9 +42,9 @@ _uart1_data       .equ $ff88         ; data
 _uart1_dlab_0     .equ $ff88         ; divisor latch low byte
 _uart1_dlab_1     .equ $ff89         ; divisor latch high byte
 _uart1_ier        .equ $ff89         ; interrupt enable register
-_uart1_fcr        .equ $ff8A         ; fifo control register
-_uart1_lcr        .equ $ff8B         ; line control register
-_uart1_lsr        .equ $ff8D         ; line status register
+_uart1_fcr        .equ $ff8a         ; fifo control register
+_uart1_lcr        .equ $ff8b         ; line control register
+_uart1_lsr        .equ $ff8d         ; line status register
 
 _ide_base         .equ $ffd0         ; ide base
 _ide_r0           .equ _ide_base + 0 ; data port
@@ -194,7 +194,7 @@ root_id:            .equ fst_lba_start
 .dw int_2
 .dw int_3
 .dw int_4
-.dw int_5
+.dw int_5_uart1
 .dw int_6_timer
 .dw int_7_uart0
 
@@ -327,7 +327,30 @@ int_3:
   sysret
 int_4:
   sysret
-int_5:
+
+int_5_uart1:
+  push a
+  push d
+  pushf
+  mov al, [_uart1_data]       ; get character
+  cmp al, $03                 ; ctrl-c
+  je ctrlc
+  cmp al, $1a                 ; ctrl-z
+  je ctrlz
+  ;mov [[d]], al              ; TODO: implement this double indirection instruction
+  mov d, fifo_in
+  mov d, [d]
+  mov [d], al                 ; add to fifo
+  mov a, d
+  inc a
+  cmp a, fifo + _fifo_size     ; check if pointer reached the end of the fifo
+  jne int_5_continue
+  mov a, fifo  
+int_5_continue:  
+  mov [fifo_in], a            ; update fifo pointer
+  popf
+  pop d
+  pop a  
   sysret
 
 ; timer irq
@@ -361,6 +384,8 @@ int_7_continue:
   pop d
   pop a  
   sysret
+
+
 ctrlc:
   add sp, 5
   jmp syscall_terminate_proc
@@ -1469,31 +1494,31 @@ syscall_io:
 ; of the baud generator during a read or write operation. it must be set low (logic 0) to access the receiver
 ; buffer, the transmitter holding register, or the interrupt enable register.
 syscall_io_uart_setup:
-  mov al, [sys_uart0_lcr]
+  mov al, [sys_uart1_lcr]
   or al, $80                ; set dlab access bit
-  mov [_uart0_lcr], al      ; 8 data, 2 stop, no parity by default
-  mov al, [sys_uart0_div0]
-  mov [_uart0_dlab_0], al   ; divisor latch byte 0
-  mov al, [sys_uart0_div1]
-  mov [_uart0_dlab_1], al   ; divisor latch byte 1      
+  mov [_uart1_lcr], al      ; 8 data, 2 stop, no parity by default
+  mov al, [sys_uart1_div0]
+  mov [_uart1_dlab_0], al   ; divisor latch byte 0
+  mov al, [sys_uart1_div1]
+  mov [_uart1_dlab_1], al   ; divisor latch byte 1      
 
-  mov al, [sys_uart0_lcr]
+  mov al, [sys_uart1_lcr]
   and al, $7f               ; clear dlab access bit 
-  mov [_uart0_lcr], al
-  mov al, [sys_uart0_inten]
-  mov [_uart0_ier], al      ; interrupts
-  mov al, [sys_uart0_fifoen]
-  mov [_uart0_fcr], al      ; fifo control
+  mov [_uart1_lcr], al
+  mov al, [sys_uart1_inten]
+  mov [_uart1_ier], al      ; interrupts
+  mov al, [sys_uart1_fifoen]
+  mov [_uart1_fcr], al      ; fifo control
   sysret
 
 ; char in ah
 syscall_io_putchar:
 syscall_io_putchar_l0:
-  mov al, [_uart0_lsr]         ; read line status register
+  mov al, [_uart1_lsr]         ; read line status register
   and al, $20
   jz syscall_io_putchar_l0    
   mov al, ah
-  mov [_uart0_data], al        ; write char to transmitter holding register
+  mov [_uart1_data], al        ; write char to transmitter holding register
   sysret
 
 ; char in ah
@@ -1521,11 +1546,11 @@ syscall_io_getch_cont:
   jne syscall_io_getch_noecho 
 ; here we just echo the char back to the console
 syscall_io_getch_echo_l0:
-  mov al, [_uart0_lsr]         ; read line status register
+  mov al, [_uart1_lsr]         ; read line status register
   and al, $20                 ; isolate transmitter empty
   jz syscall_io_getch_echo_l0
   mov al, ah
-  mov [_uart0_data], al        ; write char to transmitter holding register
+  mov [_uart1_data], al        ; write char to transmitter holding register
 syscall_io_getch_noecho:
   mov al, 1                    ; al = 1 means a char successfully received
   pop d
@@ -3052,15 +3077,15 @@ sys_debug_mode:
   .db 0   ; debug modes: 0=normal mode, 1=debug mode
 sys_echo_on:
   .db 1
-sys_uart0_lcr:
+sys_uart1_lcr:
   .db %00001111 ; 8 data bits, 2 stop bits, enable parity, odd parity
-sys_uart0_inten:
+sys_uart1_inten:
   .db 1
-sys_uart0_fifoen:
+sys_uart1_fifoen:
   .db 0
-sys_uart0_div0:
+sys_uart1_div0:
   .db 3
-sys_uart0_div1:
+sys_uart1_div1:
   .db 0   ; default baud = 38400
 ; baud  divisor
 ; 50    2304

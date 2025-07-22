@@ -1232,8 +1232,7 @@
 0321   0B3C 32 38 20 62 
 0321   0B40 79 74 65 73 
 0321   0B44 20 
-floppy_test.asm line 0322: No terminating quote: ("per sector in this format, 40 tracks per disk. Single Density.)
-0322   0B45 70 65 72 20   .db "per sector in this format, 40 tracks per disk. Single Density.
+0322   0B45 70 65 72 20   .db "per sector in this format, 40 tracks per disk. Single Density."
 0322   0B49 73 65 63 74 
 0322   0B4D 6F 72 20 69 
 0322   0B51 6E 20 74 68 
@@ -1391,4 +1390,4 @@ floppy_test.asm line 0322: No terminating quote: ("per sector in this format, 40
 0366   0D83 00          transient_area: .db 0
 0367   0D84             
 0368   0D84             .end
-tasm: Number of errors = 1
+tasm: Number of errors = 0
