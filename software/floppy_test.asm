@@ -319,7 +319,7 @@ ss3:     .db "\nvalue: ", 0
 
 fdc_sec_data_128:
   .db "Example data for a write sector instruction. There are 128 bytes "
-  .db "per sector in this format, 40 tracks per disk. Single Density.
+  .db "per sector in this format, 40 tracks per disk. Single Density."
 
 ;  .db $ff, $ee, $e0, $55, $66, $33, $42, $aa, $ae, $67, $23, $11, $23, $56, $88, $99,
 ;  .db $1f, $2e, $40, $53, $63, $43, $52, $1a, $a4, $67, $03, $31, $43, $56, $48, $f9,

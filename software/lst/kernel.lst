@@ -11,7 +11,7 @@
 0011   0000             ; i/o map
 0012   0000             ; ------------------------------------------------------------------------------------------------------------------;
 0013   0000             ; ff80 - uart 0 (16550)
-0014   0000             ; ff90 - uart 1 (16550)
+0014   0000             ; ff88 - uart 1 (16550)
 0015   0000             ; ffa0 - rtc    (m48t02)
 0016   0000             ; ffb0 - pio 0  (8255)
 0017   0000             ; ffc0 - fdd    (5.25" floppy drive block)
@@ -38,13 +38,13 @@
 0038   0000             _uart0_lcr        .equ $ff83         ; line control register
 0039   0000             _uart0_lsr        .equ $ff85         ; line status register
 0040   0000             
-0041   0000             _uart1_data       .equ $ff90         ; data
-0042   0000             _uart1_dlab_0     .equ $ff90         ; divisor latch low byte
-0043   0000             _uart1_dlab_1     .equ $ff91         ; divisor latch high byte
-0044   0000             _uart1_ier        .equ $ff91         ; interrupt enable register
-0045   0000             _uart1_fcr        .equ $ff92         ; fifo control register
-0046   0000             _uart1_lcr        .equ $ff93         ; line control register
-0047   0000             _uart1_lsr        .equ $ff95         ; line status register
+0041   0000             _uart1_data       .equ $ff88         ; data
+0042   0000             _uart1_dlab_0     .equ $ff88         ; divisor latch low byte
+0043   0000             _uart1_dlab_1     .equ $ff89         ; divisor latch high byte
+0044   0000             _uart1_ier        .equ $ff89         ; interrupt enable register
+0045   0000             _uart1_fcr        .equ $ff8A         ; fifo control register
+0046   0000             _uart1_lcr        .equ $ff8B         ; line control register
+0047   0000             _uart1_lsr        .equ $ff8D         ; line status register
 0048   0000             
 0049   0000             _ide_base         .equ $ffd0         ; ide base
 0050   0000             _ide_r0           .equ _ide_base + 0 ; data port
