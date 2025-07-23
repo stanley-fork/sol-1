@@ -42,9 +42,9 @@ _uart1_data       .equ $ff88         ; data
 _uart1_dlab_0     .equ $ff88         ; divisor latch low byte
 _uart1_dlab_1     .equ $ff89         ; divisor latch high byte
 _uart1_ier        .equ $ff89         ; interrupt enable register
-_uart1_fcr        .equ $ff8a         ; fifo control register
-_uart1_lcr        .equ $ff8b         ; line control register
-_uart1_lsr        .equ $ff8d         ; line status register
+_uart1_fcr        .equ $ff8A         ; fifo control register
+_uart1_lcr        .equ $ff8B         ; line control register
+_uart1_lsr        .equ $ff8D         ; line status register
 
 _ide_base         .equ $ffd0         ; ide base
 _ide_r0           .equ _ide_base + 0 ; data port
@@ -328,6 +328,9 @@ int_3:
 int_4:
   sysret
 
+; ------------------------------------------------------------------------------------------------------------------;
+; uart1 interrupt
+; ------------------------------------------------------------------------------------------------------------------;
 int_5_uart1:
   push a
   push d
@@ -353,7 +356,9 @@ int_5_continue:
   pop a  
   sysret
 
+; ------------------------------------------------------------------------------------------------------------------;
 ; timer irq
+; ------------------------------------------------------------------------------------------------------------------;
 int_6_timer:  
   sysret
 
@@ -384,8 +389,6 @@ int_7_continue:
   pop d
   pop a  
   sysret
-
-
 ctrlc:
   add sp, 5
   jmp syscall_terminate_proc
@@ -1494,6 +1497,21 @@ syscall_io:
 ; of the baud generator during a read or write operation. it must be set low (logic 0) to access the receiver
 ; buffer, the transmitter holding register, or the interrupt enable register.
 syscall_io_uart_setup:
+  mov al, [sys_uart0_lcr]
+  or al, $80                ; set dlab access bit
+  mov [_uart0_lcr], al      ; 8 data, 2 stop, no parity by default
+  mov al, [sys_uart0_div0]
+  mov [_uart0_dlab_0], al   ; divisor latch byte 0
+  mov al, [sys_uart0_div1]
+  mov [_uart0_dlab_1], al   ; divisor latch byte 1      
+  mov al, [sys_uart0_lcr]
+  and al, $7f               ; clear dlab access bit 
+  mov [_uart0_lcr], al
+  mov al, [sys_uart0_inten]
+  mov [_uart0_ier], al      ; interrupts
+  mov al, [sys_uart0_fifoen]
+  mov [_uart0_fcr], al      ; fifo control
+; uart1:
   mov al, [sys_uart1_lcr]
   or al, $80                ; set dlab access bit
   mov [_uart1_lcr], al      ; 8 data, 2 stop, no parity by default
@@ -1501,7 +1519,6 @@ syscall_io_uart_setup:
   mov [_uart1_dlab_0], al   ; divisor latch byte 0
   mov al, [sys_uart1_div1]
   mov [_uart1_dlab_1], al   ; divisor latch byte 1      
-
   mov al, [sys_uart1_lcr]
   and al, $7f               ; clear dlab access bit 
   mov [_uart1_lcr], al
@@ -1514,9 +1531,16 @@ syscall_io_uart_setup:
 ; char in ah
 syscall_io_putchar:
 syscall_io_putchar_l0:
-  mov al, [_uart1_lsr]         ; read line status register
+  mov al, [_uart0_lsr]         ; read line status register
   and al, $20
   jz syscall_io_putchar_l0    
+  mov al, ah
+  mov [_uart0_data], al        ; write char to transmitter holding register
+; write to uart1
+syscall_io_putchar_l1:
+  mov al, [_uart1_lsr]         ; read line status register
+  and al, $20
+  jz syscall_io_putchar_l1
   mov al, ah
   mov [_uart1_data], al        ; write char to transmitter holding register
   sysret
@@ -1546,9 +1570,15 @@ syscall_io_getch_cont:
   jne syscall_io_getch_noecho 
 ; here we just echo the char back to the console
 syscall_io_getch_echo_l0:
-  mov al, [_uart1_lsr]         ; read line status register
+  mov al, [_uart0_lsr]         ; read line status register
   and al, $20                 ; isolate transmitter empty
   jz syscall_io_getch_echo_l0
+  mov al, ah
+  mov [_uart0_data], al        ; write char to transmitter holding register
+syscall_io_getch_echo_l1:
+  mov al, [_uart1_lsr]         ; read line status register
+  and al, $20                 ; isolate transmitter empty
+  jz syscall_io_getch_echo_l1
   mov al, ah
   mov [_uart1_data], al        ; write char to transmitter holding register
 syscall_io_getch_noecho:
@@ -3032,7 +3062,7 @@ kernel_reset_vector:
   mov bp, _stack_begin
   mov sp, _stack_begin
   
-  mov al, %10000001             ; mask out timer interrupt for now - enable uart and fdc irqs 
+  mov al, %10100001             ; mask out timer interrupt for now - enable uarts and fdc irqs 
   stomsk                        
   sti  
 
@@ -3077,15 +3107,15 @@ sys_debug_mode:
   .db 0   ; debug modes: 0=normal mode, 1=debug mode
 sys_echo_on:
   .db 1
-sys_uart1_lcr:
+sys_uart0_lcr:
   .db %00001111 ; 8 data bits, 2 stop bits, enable parity, odd parity
-sys_uart1_inten:
+sys_uart0_inten:
   .db 1
-sys_uart1_fifoen:
+sys_uart0_fifoen:
   .db 0
-sys_uart1_div0:
+sys_uart0_div0:
   .db 3
-sys_uart1_div1:
+sys_uart0_div1:
   .db 0   ; default baud = 38400
 ; baud  divisor
 ; 50    2304
@@ -3096,6 +3126,16 @@ sys_uart1_div1:
 ; 9600    12
 ; 19200    6
 ; 38400    3
+sys_uart1_lcr:
+  .db %00001111 ; 8 data bits, 2 stop bits, enable parity, odd parity
+sys_uart1_inten:
+  .db 1
+sys_uart1_fifoen:
+  .db 0
+sys_uart1_div0:
+  .db 3
+sys_uart1_div1:
+  .db 0   ; default baud = 38400
 
 nbr_active_procs:
   .db 0
@@ -3142,7 +3182,6 @@ s_int_en:
 s_kernel_welcome:
   .db "************************************************\n"
   .db "*** Welcome to Solarium OS - Kernel ver. 1.0 ***\n"
-  .db "***                                          ***\n"
   .db "*** type help for more information           ***\n"
   .db "************************************************\n"
 s_prompt_init:
