@@ -1,4 +1,5 @@
 ; --- FILENAME: programs/sha256.c
+; --- DATE:     24-07-2025 at 19:24:29
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -529,14 +530,6 @@ _switch5_default:
   add sp, 2
 ; --- END FUNCTION CALL
 _switch5_exit:
-; format_p++; 
-  lea d, [bp + -3] ; $format_p
-  mov b, [d]
-  mov c, 0
-  inc b
-  lea d, [bp + -3] ; $format_p
-  mov [d], b
-  dec b
   jmp _if4_exit
 _if4_else:
 ; putchar(*format_p); 
@@ -552,6 +545,8 @@ _if4_else:
   call putchar
   add sp, 1
 ; --- END FUNCTION CALL
+_if4_exit:
+_if3_exit:
 ; format_p++; 
   lea d, [bp + -3] ; $format_p
   mov b, [d]
@@ -560,8 +555,6 @@ _if4_else:
   lea d, [bp + -3] ; $format_p
   mov [d], b
   dec b
-_if4_exit:
-_if3_exit:
 _for2_update:
   jmp _for2_cond
 _for2_exit:
@@ -593,6 +586,7 @@ _if9_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   slt ; <
   pop g
@@ -639,6 +633,7 @@ _if10_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -672,6 +667,7 @@ _while11_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgt
   pop g
@@ -714,6 +710,7 @@ _while11_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS
@@ -839,6 +836,7 @@ _if19_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   seq ; ==
   pop g
@@ -871,6 +869,7 @@ _while20_cond:
   mov a, b
   mov g, c
   mov32 cb, $00000000
+  mov c, 0
   cmp32 ga, cb
   sgu
   pop g
@@ -913,6 +912,7 @@ _while20_block:
   pop g
   pop a
 ; --- END FACTORS
+  mov g, 0
   add32 cb, ga
   pop a
 ; --- END TERMS

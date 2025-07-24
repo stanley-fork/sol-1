@@ -1249,8 +1249,7 @@ datetime_serv_tbl:
 syscall_datetime:
   jmp [datetime_serv_tbl + al]      
 print_date:
-  mov a, $0d00           ; print carriage return char
-  mov al, 3
+  mov a, $0d03           ; print carriage return char
   syscall sys_rtc        ; get week
   mov al, ah
   mov ah, 0
@@ -1643,32 +1642,14 @@ file_system_jmptbl:
   .dw fs_load_from_path_user    ; 20  
   .dw fs_filepath_exists_user   ; 21
 
-s_syscall_fs_dbg0: .db "\n> syscall_file_system called: ", 0
 syscall_file_system:
-  push bl
-  mov bl, [sys_debug_mode]
-  ; debug block
-  cmp bl, 0
-  pop bl
-  je syscall_filesystem_jmp
-  push d
-  push bl
-  mov d, s_syscall_fs_dbg0
-  call _puts
-  mov bl, al
-  call print_u8x
-  call printnl
-  pop bl
-  pop d
-syscall_filesystem_jmp:
   jmp [file_system_jmptbl + al]
 
 fs_mkfs:  
   sysret  
   
 fs_cd_root:
-  mov a, root_id
-  mov [current_dir_id], a      ; set current directory lba to root
+  mov word [current_dir_id], root_id      ; set current directory lba to root
   sysret  
 
 ; filename in d (userspace data)
@@ -1679,9 +1660,8 @@ fs_chmod:
   mov di, user_data
   mov c, 128
   load                        ; load filename from user-space
-  mov a, [current_dir_id]
-  inc a                       ; metadata sector
-  mov b, a
+  mov b, [current_dir_id]
+  inc b                       ; metadata sector
   mov c, 0                    ; upper lba = 0
   mov ah, $01                  ; 1 sector
   mov d, transient_area
@@ -1755,9 +1735,8 @@ fs_mkdir_found_null:
   mov ah, $02                     ; disk write, 2 sectors
   call ide_write_sect             ; write sector
 ; now we need to add the new directory to the list, inside the current directory
-  mov a, [current_dir_id]
-  add a, 1
-  mov b, a                        ; metadata sector
+  mov b, [current_dir_id]
+  inc b                           ; metadata sector
   mov c, 0
   mov g, b                        ; save lba
   mov d, transient_area
@@ -1811,10 +1790,9 @@ fs_mkdir_found_null2:
 ; the new directory can reference its parent and itself.
 ; we need to add both '..' and '.'
 ; this first section is for '..' and on the section below we do the same for '.'
-  pop a                         ; retrieve the new directory's lba  
-  push a                        ; and save again
-  add a, 1
-  mov b, a                      ; metadata sector
+  pop b                         ; retrieve the new directory's lba  
+  push b                        ; and save again
+  inc b
   mov c, 0
   mov g, b                      ; save lba
   mov d, transient_area
@@ -1860,10 +1838,9 @@ fs_mkdir_found_null3:
 ;;;;;;;;;;;;;
 ; like we did above for '..', we need to now add the '.' directory to the list.
 ;------------------------------------------------------------------------------------------------------;
-  pop a                         ; retrieve the new directory's lba  
-  push a
-  add a, 1
-  mov b, a                      ; metadata sector
+  pop b                         ; retrieve the new directory's lba  
+  push b
+  inc b                         ; metadata sector
   mov c, 0
   mov g, b                      ; save lba
   mov d, transient_area
@@ -2115,7 +2092,7 @@ file_exists_by_path_l1:
   mov si, d
   mov di, filename
   call _strcmp
-  je   file_exists_by_path_name_equal
+  je file_exists_by_path_name_equal
   add d, 32
   mov a, [index]
   inc a
@@ -2241,7 +2218,6 @@ fs_cd:
 ; ls
 ; dirid in b
 ;------------------------------------------------------------------------------------------------------;
-ls_count:       .dw 0
 fs_ls:
   inc b                        ; metadata sector
   mov c, 0                     ; upper lba = 0
@@ -2511,9 +2487,8 @@ fs_mkbin_l2:
   jmp fs_mkbin_l2
 ; now we add the file to the current directory!
 fs_mkbin_add_to_dir:  
-  mov a, [current_dir_id]
-  inc a
-  mov b, a                      ; metadata sector
+  mov b, [current_dir_id]
+  inc b        ; metadata sector
   mov c, 0
   mov g, b                      ; save lba
   mov d, transient_area
@@ -2700,9 +2675,8 @@ fs_rm:
   mov di, user_data
   mov c, 512
   load                          ; load data from user-space
-  mov a, [current_dir_id]
-  inc a                         ; metadata sector
-  mov b, a
+  mov b, [current_dir_id]
+  inc b                         ; metadata sector
   mov c, 0                      ; upper lba = 0
   mov ah, $01                  ; 1 sector
   mov d, transient_area
@@ -2726,9 +2700,8 @@ fs_rm_found_entry:
   mov g, b                      ; save lba
   mov al, 0
   mov [d], al                   ; make file entry null
-  mov a, [current_dir_id]
-  inc a                         ; metadata sector
-  mov b, a
+  mov b, [current_dir_id]
+  inc b                         ; metadata sector
   mov c, 0                      ; upper lba = 0
   mov ah, $01                   ; disk write
   mov d, transient_area
@@ -2751,9 +2724,8 @@ fs_mv:
   mov di, user_data
   mov c, 512
   load                          ; load data from user-space
-  mov a, [current_dir_id]
-  inc a                         ; metadata sector
-  mov b, a  
+  mov b, [current_dir_id]
+  inc b                         ; metadata sector
   mov c, 0                      ; upper lba = 0
   mov ah, $01                  ; 1 sector
   mov d, transient_area
@@ -3176,6 +3148,8 @@ s_ps_header:
   .db "pid command\n", 0
 s_ls_total:
   .db "total: ", 0
+ls_count:
+  .dw 0
 
 s_int_en:
   .db "irqs enabled\n", 0

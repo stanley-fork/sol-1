@@ -8,12 +8,8 @@ char *nl = "\n\r";
 void main(void){
   coef = 1;
 
-  print("Enter the number of rows: ");
-  asm{
-    call scan_u16d
-    meta mov d, rows
-    mov [d], a
-  }
+  printf("Enter the number of rows: ");
+  scanf("%d", &rows);
 
   for (i = 0; i < rows; i=i+1) {
     for (space = 1; space <= rows - i; space=space+1) print("\n");
@@ -23,8 +19,8 @@ void main(void){
         coef = 1;
        else
         coef = coef * (i - j + 1) / j;
-      printu(coef);
-      print(" ");
+      printf("%u", coef);
+      printf(" ");
     }
 
    }
