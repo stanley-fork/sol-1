@@ -1,5 +1,5 @@
 0001   0000             ; --- FILENAME: programs/wumpus.c
-0002   0000             ; --- DATE:     23-07-2025 at 16:32:59
+0002   0000             ; --- DATE:     24-07-2025 at 06:39:33
 0003   0000             .include "lib/asm/kernel.exp"
 0001+  0000             fdc_al_restore   .EQU  $0000
 0002+  0000             fdc_al_step      .EQU  $0001
@@ -17,7 +17,7 @@
 0014+  0000             fdc_al_force_int .EQU  $000d
 0015+  0000             fdc_al_status0   .EQU  $000e
 0016+  0000             fdc_al_status1   .EQU  $000f
-0017+  0000             noname._7seg_display .EQU  $ffb0
+0017+  0000             noname._til311_display .EQU  $ffb0
 0018+  0000             noname._fdc_config .EQU  $ffc0
 0019+  0000             noname._fdc_status_0 .EQU  $ffc1
 0020+  0000             noname._fdc_stat_cmd .EQU  $ffc8

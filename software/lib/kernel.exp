@@ -14,7 +14,7 @@ fdc_al_write_sect .EQU  $000c
 fdc_al_force_int .EQU  $000d
 fdc_al_status0   .EQU  $000e
 fdc_al_status1   .EQU  $000f
-noname._7seg_display .EQU  $ffb0
+noname._til311_display .EQU  $ffb0
 noname._fdc_config .EQU  $ffc0
 noname._fdc_status_0 .EQU  $ffc1
 noname._fdc_stat_cmd .EQU  $ffc8

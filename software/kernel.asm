@@ -56,7 +56,7 @@ _ide_r5           .equ _ide_base + 5 ; sector address lba 2 [16:23]
 _ide_r6           .equ _ide_base + 6 ; sector address lba 3 [24:27 (lsb)]
 _ide_r7           .equ _ide_base + 7 ; read: status, write: command       
 
-_7seg_display     .equ $ffb0         ; bios post code hex display (2 digits) (connected to pio a)
+_til311_display   .equ $ffb0         ; bios post code hex display (2 digits) (connected to pio a)
 _bios_post_ctrl   .equ $ffb3         ; bios post display control register, 80h = as output
 _pio_a            .equ $ffb0    
 _pio_b            .equ $ffb1
@@ -289,7 +289,7 @@ fdc_al_status1      .equ 15
 .export sys_system
 .export sys_fdc
 
-.export _7seg_display
+.export _til311_display
 
 .export _fdc_config        
 .export _fdc_status_0      
@@ -351,6 +351,8 @@ int_5_uart1:
   mov a, fifo  
 int_5_continue:  
   mov [fifo_in], a            ; update fifo pointer
+  mov al, ah
+  mov [_til311_display], al
   popf
   pop d
   pop a  
@@ -385,10 +387,13 @@ int_7_uart0:
   mov a, fifo  
 int_7_continue:  
   mov [fifo_in], a            ; update fifo pointer
+  mov al, ah
+  mov [_til311_display], al
   popf
   pop d
   pop a  
   sysret
+
 ctrlc:
   add sp, 5
   jmp syscall_terminate_proc
@@ -1565,9 +1570,6 @@ syscall_io_getch_cont:
   mov [fifo_out], a             ; update fifo pointer
   mov al, [d]                   ; get char
   mov ah, al
-  mov al, [sys_echo_on]
-  cmp al, 1
-  jne syscall_io_getch_noecho 
 ; here we just echo the char back to the console
 syscall_io_getch_echo_l0:
   mov al, [_uart0_lsr]         ; read line status register
@@ -2457,8 +2459,6 @@ fs_mktxt_add_to_dir_null:
 	syscall sys_ide		; write sector
 	call printnl
 	sysret
-
-
 
 ;------------------------------------------------------------------------------------------------------;
 ; create new binary file
