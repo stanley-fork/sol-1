@@ -318,6 +318,8 @@ fdc_al_status1      .equ 15
 ; ------------------------------------------------------------------------------------------------------------------;
 ; 5.25" floppy drive controller irq
 int_0_fdc:
+  mov d, s_fdc_irq
+  call _puts
   sysret
 int_1:
   sysret
@@ -404,28 +406,169 @@ ctrlz:
 ; ------------------------------------------------------------------------------------------------------------------;
 ; ext2 file system
 ; ------------------------------------------------------------------------------------------------------------------;
+; ------------------------------------------------------------------------------------------------------------------;
+; DISK LAYOUT:
+; Metadata               | Size (bytes)    | Blocks (2048 bytes)              |  Comment
+; ---------------------- | --------------- | -------------------------------- | ----------------------------------
+; Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |
+; Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |
+; Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |
+; Block Bitmap           | 16,384 bytes    | 8 blocks                         | 16384*2048 = 33554432 blocks.  33554432*8 = 256MB of disk space
+; Inode Bitmap           | 2,048 bytes     | 1 block                          | 2048*8=16384. total of 16384 bits, meaning 16384 inodes, which is a standard default of 1 inode per 16KB of disk space
+; Inode Table            | 2,097,152 bytes | 1024 blocks                      | 128bytes per inode entry. 2097152 / 128 = 16384 inodes
+; 
+; first 512 bytes: bootloader from 0 to 445, MBR partition table from 446 to 511 (64 bytes)
+; up to 4 partitions, each 16 bytes long
+; MBR:
+; Byte | Description
+; -----|----------------------------
+; 0    | Boot flag (0x80 active, 0x00 inactive)
+; 1-3  | Start CHS (head, sector, cylinder)
+; 4    | Partition type (filesystem ID)
+;   0x83 = Linux native (ext2/3/4)
+;   0x07 = NTFS/exFAT
+;   0x0B = FAT32 CHS
+;   0x0C = FAT32 LBA
+;   0x05 = Extended partition
+; 5-7  | End CHS
+; 8-11 | Start LBA (little endian)
+; 12-15| Size in sectors (little endian)
+; 
+; 
+; SUPERBLOCK:
+; | Field                 | Description                              | Typical Size (bytes) | Notes                           |
+; | --------------------- | ---------------------------------------- | -------------------- | ------------------------------- |
+; | `s_inodes_count`      | Total number of inodes in the filesystem | 4                    | 32-bit unsigned int             |
+; | `s_blocks_count`      | Total number of data blocks              | 4                    | 32-bit unsigned int             |
+; | `s_free_inodes_count` | Number of free inodes                    | 4                    | 32-bit unsigned int             |
+; | `s_free_blocks_count` | Number of free blocks                    | 4                    | 32-bit unsigned int             |
+; | `s_first_data_block`  | Block number of the first data block     | 4                    | 32-bit unsigned int             |
+; | `s_log_block_size`    | Block size = 1024 << `s_log_block_size`  | 4                    | 32-bit unsigned int             |
+; | `s_inode_size`        | Size of each inode (in bytes)            | 2                    | 16-bit unsigned int             |
+; | `s_magic`             | Filesystem signature (`0xEF53`)          | 2                    | 16-bit unsigned int             |
+; | `s_mtime`             | Last mount time                          | 4                    | 32-bit unsigned int (Unix time) |
+; | `s_wtime`             | Last write time                          | 4                    | 32-bit unsigned int (Unix time) |
+; | `s_uuid`              | Unique ID of the filesystem              | 16                   | 128-bit UUID                    |
+; | `s_volume_name`       | Label of the filesystem                  | 16                   | Usually ASCII, padded           |
+; | `s_feature_flags`     | Compatibility flags                      | 4                    | 32-bit unsigned int             |
+; 
+; 
+; inode for root dir is #2, #0 and #1 not used
+; block size: 2048
+
+; inode-table format:
+; entry size: 128 bytes per entry (default)
+; | Field         | Size (bytes) | Description                                                                                  |
+; | ------------- | ------------ | -------------------------------------------------------------------------------------------- |
+; | `mode`        | 2            | File type and permissions                                                                    |
+; | `uid`         | 2            | Owner user ID                                                                                |
+; | `size`        | 4            | Size of the file in bytes                                                                    |
+; | `atime`       | 4            | Last access time (timestamp)                                                                 |
+; | `ctime`       | 4            | Creation time (timestamp)                                                                    |
+; | `mtime`       | 4            | Last modification time (timestamp)                                                           |
+; | `dtime`       | 4            | Deletion time (timestamp)                                                                    |
+; | `gid`         | 2            | Group ID                                                                                     |
+; | `links_count` | 2            | Number of hard links                                                                         |
+; | `blocks`      | 4            | Number of 512-byte blocks allocated                                                          |
+; | `flags`       | 4            | File flags                                                                                   |
+; | `block`       | 15 x 4 = 60  | Pointers to data blocks (12 direct, 1 single indirect, 1 double indirect, 1 triple indirect) |
+; | padding       | 32 bytes
+; ------------------------------------------------------------------------------------------------------------------;
+; ext2 file system
+; ------------------------------------------------------------------------------------------------------------------;
+; up to 4 partitions, each 16 bytes long
+; MBR:
+; Byte | Description
+; -----|----------------------------
+; 0    | Boot flag (0x80 active, 0x00 inactive)
+; 1-3  | Start CHS (head, sector, cylinder)
+; 4    | Partition type (filesystem ID)
+;   0x83 = Linux native (ext2/3/4)
+;   0x07 = NTFS/exFAT
+;   0x0B = FAT32 CHS
+;   0x0C = FAT32 LBA
+;   0x05 = Extended partition
+; 5-7  | End CHS
+; 8-11 | Start LBA (little endian)
+; 12-15| Size in sectors (little endian)
 sys_mkfs:
 ; master boot record
-  mov byte[_mbr], $80
-  mov word[_mbr + 1], $0000
-  mov byte[_mbr + 3], $00
-  mov byte[_mbr + 4], $83  ; ext2
-  mov word[_mbr + 5], $0000   ;end CHS
-  mov byte[_mbr + 7], $00    
-  mov word[_mbr + 8], 1       ; start LBA of kernel
-  mov word[_mbr + 10], $0000
-  mov word[_mbr + 12], $0000       ; size = 65536 sectors = 32MB
-  mov word[_mbr + 13], $0001
-
-; superblock
-  mov word[_superblock], 2048
-  mov word[_superblock + 2], $0000
-  mov word[_superblock + 4], $2800
-  mov word[_superblock + 6], $0000
-
+; partition 0
+  mov byte[transient_area + 446 + 0 +  0], $80      ; boot flag, 0x80 = active
+  mov word[transient_area + 446 + 0 +  1], $0000    ; start of CHS
+  mov byte[transient_area + 446 + 0 +  3], $00      ; start of CHS
+  mov byte[transient_area + 446 + 0 +  4], $83      ; artition type, 0x83 = linux/ext2
+  mov word[transient_area + 446 + 0 +  5], $0000    ; end of CHS
+  mov byte[transient_area + 446 + 0 +  7], $00      ; end of CHS
+  mov word[transient_area + 446 + 0 +  8], $0001    ; start LBA of file system, at sector 1
+  mov word[transient_area + 446 + 0 + 10], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + 446 + 0 + 12], $0000    ; size of file system in sectors/lba, 256MB
+  mov word[transient_area + 446 + 0 + 14], $0008    ; 256MB = 524288 sectors
+; partition 1
+  mov byte[transient_area + 446 + 16 +  0], $00      ; boot flag, 0x00 = inactive
+  mov word[transient_area + 446 + 16 +  1], $0000    ; start of CHS
+  mov byte[transient_area + 446 + 16 +  3], $00      ; start of CHS
+  mov byte[transient_area + 446 + 16 +  4], $83      ; artition type, 0x83 = linux/ext2
+  mov word[transient_area + 446 + 16 +  5], $0000    ; end of CHS
+  mov byte[transient_area + 446 + 16 +  7], $00      ; end of CHS
+  mov word[transient_area + 446 + 16 +  8], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + 446 + 16 + 10], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + 446 + 16 + 12], $0000    ; size of file system in sectors/lba, 256MB
+  mov word[transient_area + 446 + 16 + 14], $0000    ; 256MB = 524288 sectors
+; partition 2
+  mov byte[transient_area + 446 + 32 +  0], $00      ; boot flag, 0x00 = inactive
+  mov word[transient_area + 446 + 32 +  1], $0000    ; start of CHS
+  mov byte[transient_area + 446 + 32 +  3], $00      ; start of CHS
+  mov byte[transient_area + 446 + 32 +  4], $83      ; artition type, 0x83 = linux/ext2
+  mov word[transient_area + 446 + 32 +  5], $0000    ; end of CHS
+  mov byte[transient_area + 446 + 32 +  7], $00      ; end of CHS
+  mov word[transient_area + 446 + 32 +  8], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + 446 + 32 + 10], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + 446 + 32 + 12], $0000    ; size of file system in sectors/lba, 256MB
+  mov word[transient_area + 446 + 32 + 14], $0000    ; 256MB = 524288 sectors
+; partition 3
+  mov byte[transient_area + 446 + 48 +  0], $00      ; boot flag, 0x00 = inactive
+  mov word[transient_area + 446 + 48 +  1], $0000    ; start of CHS
+  mov byte[transient_area + 446 + 48 +  3], $00      ; start of CHS
+  mov byte[transient_area + 446 + 48 +  4], $83      ; artition type, 0x83 = linux/ext2
+  mov word[transient_area + 446 + 48 +  5], $0000    ; end of CHS
+  mov byte[transient_area + 446 + 48 +  7], $00      ; end of CHS
+  mov word[transient_area + 446 + 48 +  8], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + 446 + 48 + 10], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + 446 + 48 + 12], $0000    ; size of file system in sectors/lba, 256MB
+  mov word[transient_area + 446 + 48 + 14], $0000    ; 256MB = 524288 sectors
 ; --- MBR signature ---
   mov word [510], $AA55          ; Must be present for BIOS to boot
 
+; Metadata               | Size (bytes)    | Blocks (2048 bytes)              |  Comment
+; ---------------------- | --------------- | -------------------------------- | ----------------------------------
+; Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |
+; Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |
+; Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |
+; Block Bitmap           | 16,384 bytes    | 8 blocks                         | 16384*2048 = 33554432 blocks.  33554432*8 = 256MB of disk space
+; Inode Bitmap           | 2,048 bytes     | 1 block                          | 2048*8=16384. total of 16384 bits, meaning 16384 inodes, which is a standard default of 1 inode per 16KB of disk space
+; Inode Table            | 2,097,152 bytes | 1024 blocks                      | 128bytes per inode entry. 2097152 / 128 = 16384 inodes
+; SUPERBLOCK:
+; | Field                 | Description                              | Typical Size (bytes) | Notes                           |
+; | --------------------- | ---------------------------------------- | -------------------- | ------------------------------- |
+; | `s_inodes_count`      | Total number of inodes in the filesystem | 4                    | 32-bit unsigned int             |
+; | `s_blocks_count`      | Total number of data blocks              | 4                    | 32-bit unsigned int             |
+; | `s_free_inodes_count` | Number of free inodes                    | 4                    | 32-bit unsigned int             |
+; | `s_free_blocks_count` | Number of free blocks                    | 4                    | 32-bit unsigned int             |
+; | `s_first_data_block`  | Block number of the first data block     | 4                    | 32-bit unsigned int             |
+; | `s_log_block_size`    | Block size = 1024 << `s_log_block_size`  | 4                    | 32-bit unsigned int             |
+; | `s_inode_size`        | Size of each inode (in bytes)            | 2                    | 16-bit unsigned int             |
+; | `s_magic`             | Filesystem signature (`0xEF53`)          | 2                    | 16-bit unsigned int             |
+; | `s_mtime`             | Last mount time                          | 4                    | 32-bit unsigned int (Unix time) |
+; | `s_wtime`             | Last write time                          | 4                    | 32-bit unsigned int (Unix time) |
+; | `s_uuid`              | Unique ID of the filesystem              | 16                   | 128-bit UUID                    |
+; | `s_volume_name`       | Label of the filesystem                  | 16                   | Usually ASCII, padded           |
+; | `s_feature_flags`     | Compatibility flags                      | 4                    | 32-bit unsigned int             |
+; superblock
+  mov word[transient_area + 512 + 0], 2048
+  mov word[transient_area + 512 + 2], $0000
+  mov word[transient_area + 512 + 4], $2800
+  mov word[transient_area + 512 + 6], $0000
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; floppy drive syscalls
@@ -1249,7 +1392,8 @@ datetime_serv_tbl:
 syscall_datetime:
   jmp [datetime_serv_tbl + al]      
 print_date:
-  mov a, $0d03           ; print carriage return char
+  mov a, $0d00           ; print carriage return char
+  mov al, 3
   syscall sys_rtc        ; get week
   mov al, ah
   mov ah, 0
@@ -1619,7 +1763,7 @@ syscall_io_getch_noecho:
 ;
 ; first directory on disk is the root directory '/'
 file_system_jmptbl:
-  .dw fs_mkfs                   ; 0
+  .dw 0                         ; 0
   .dw 0                         ; 1
   .dw fs_mkdir                  ; 2
   .dw fs_cd                     ; 3
@@ -1642,14 +1786,29 @@ file_system_jmptbl:
   .dw fs_load_from_path_user    ; 20  
   .dw fs_filepath_exists_user   ; 21
 
+s_syscall_fs_dbg0: .db "\n> syscall_file_system called: ", 0
 syscall_file_system:
+  push bl
+  mov bl, [sys_debug_mode]
+  ; debug block
+  cmp bl, 0
+  pop bl
+  je syscall_filesystem_jmp
+  push d
+  push bl
+  mov d, s_syscall_fs_dbg0
+  call _puts
+  mov bl, al
+  call print_u8x
+  call printnl
+  pop bl
+  pop d
+syscall_filesystem_jmp:
   jmp [file_system_jmptbl + al]
-
-fs_mkfs:  
-  sysret  
   
 fs_cd_root:
-  mov word [current_dir_id], root_id      ; set current directory lba to root
+  mov a, root_id
+  mov [current_dir_id], a      ; set current directory lba to root
   sysret  
 
 ; filename in d (userspace data)
@@ -1660,8 +1819,9 @@ fs_chmod:
   mov di, user_data
   mov c, 128
   load                        ; load filename from user-space
-  mov b, [current_dir_id]
-  inc b                       ; metadata sector
+  mov a, [current_dir_id]
+  inc a                       ; metadata sector
+  mov b, a
   mov c, 0                    ; upper lba = 0
   mov ah, $01                  ; 1 sector
   mov d, transient_area
@@ -1735,8 +1895,9 @@ fs_mkdir_found_null:
   mov ah, $02                     ; disk write, 2 sectors
   call ide_write_sect             ; write sector
 ; now we need to add the new directory to the list, inside the current directory
-  mov b, [current_dir_id]
-  inc b                           ; metadata sector
+  mov a, [current_dir_id]
+  add a, 1
+  mov b, a                        ; metadata sector
   mov c, 0
   mov g, b                        ; save lba
   mov d, transient_area
@@ -1790,9 +1951,10 @@ fs_mkdir_found_null2:
 ; the new directory can reference its parent and itself.
 ; we need to add both '..' and '.'
 ; this first section is for '..' and on the section below we do the same for '.'
-  pop b                         ; retrieve the new directory's lba  
-  push b                        ; and save again
-  inc b
+  pop a                         ; retrieve the new directory's lba  
+  push a                        ; and save again
+  add a, 1
+  mov b, a                      ; metadata sector
   mov c, 0
   mov g, b                      ; save lba
   mov d, transient_area
@@ -1838,9 +2000,10 @@ fs_mkdir_found_null3:
 ;;;;;;;;;;;;;
 ; like we did above for '..', we need to now add the '.' directory to the list.
 ;------------------------------------------------------------------------------------------------------;
-  pop b                         ; retrieve the new directory's lba  
-  push b
-  inc b                         ; metadata sector
+  pop a                         ; retrieve the new directory's lba  
+  push a
+  add a, 1
+  mov b, a                      ; metadata sector
   mov c, 0
   mov g, b                      ; save lba
   mov d, transient_area
@@ -2092,7 +2255,7 @@ file_exists_by_path_l1:
   mov si, d
   mov di, filename
   call _strcmp
-  je file_exists_by_path_name_equal
+  je   file_exists_by_path_name_equal
   add d, 32
   mov a, [index]
   inc a
@@ -2218,6 +2381,7 @@ fs_cd:
 ; ls
 ; dirid in b
 ;------------------------------------------------------------------------------------------------------;
+ls_count:       .dw 0
 fs_ls:
   inc b                        ; metadata sector
   mov c, 0                     ; upper lba = 0
@@ -2487,8 +2651,9 @@ fs_mkbin_l2:
   jmp fs_mkbin_l2
 ; now we add the file to the current directory!
 fs_mkbin_add_to_dir:  
-  mov b, [current_dir_id]
-  inc b        ; metadata sector
+  mov a, [current_dir_id]
+  inc a
+  mov b, a                      ; metadata sector
   mov c, 0
   mov g, b                      ; save lba
   mov d, transient_area
@@ -2675,8 +2840,9 @@ fs_rm:
   mov di, user_data
   mov c, 512
   load                          ; load data from user-space
-  mov b, [current_dir_id]
-  inc b                         ; metadata sector
+  mov a, [current_dir_id]
+  inc a                         ; metadata sector
+  mov b, a
   mov c, 0                      ; upper lba = 0
   mov ah, $01                  ; 1 sector
   mov d, transient_area
@@ -2700,8 +2866,9 @@ fs_rm_found_entry:
   mov g, b                      ; save lba
   mov al, 0
   mov [d], al                   ; make file entry null
-  mov b, [current_dir_id]
-  inc b                         ; metadata sector
+  mov a, [current_dir_id]
+  inc a                         ; metadata sector
+  mov b, a
   mov c, 0                      ; upper lba = 0
   mov ah, $01                   ; disk write
   mov d, transient_area
@@ -2724,8 +2891,9 @@ fs_mv:
   mov di, user_data
   mov c, 512
   load                          ; load data from user-space
-  mov b, [current_dir_id]
-  inc b                         ; metadata sector
+  mov a, [current_dir_id]
+  inc a                         ; metadata sector
+  mov b, a  
   mov c, 0                      ; upper lba = 0
   mov ah, $01                  ; 1 sector
   mov d, transient_area
@@ -3148,8 +3316,6 @@ s_ps_header:
   .db "pid command\n", 0
 s_ls_total:
   .db "total: ", 0
-ls_count:
-  .dw 0
 
 s_int_en:
   .db "irqs enabled\n", 0
