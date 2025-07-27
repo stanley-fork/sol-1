@@ -79,7 +79,7 @@ _stack_begin      .equ $f7ff         ; beginning of stack
 _fifo_size        .equ 4096
 
 _mbr              .equ 446
-_superblock       .equ 512
+_superblock       .equ 1024
 
 text_org          .equ $400          ; code origin address for all user processes
 
@@ -545,7 +545,7 @@ sys_mkfs:
 ; Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |
 ; Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |
 ; Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |
-; Block Bitmap           | 16,384 bytes    | 8 blocks                         | 16384*2048 = 33554432 blocks.  33554432*8 = 256MB of disk space
+; Block Bitmap           | 16,384 bytes    | 8 blocks                         | 16384*8 = 131072bits .  131072*2048 = 256MB of disk space
 ; Inode Bitmap           | 2,048 bytes     | 1 block                          | 2048*8=16384. total of 16384 bits, meaning 16384 inodes, which is a standard default of 1 inode per 16KB of disk space
 ; Inode Table            | 2,097,152 bytes | 1024 blocks                      | 128bytes per inode entry. 2097152 / 128 = 16384 inodes
 ; SUPERBLOCK:
@@ -565,10 +565,42 @@ sys_mkfs:
 ; | `s_volume_name`       | Label of the filesystem                  | 16                   | Usually ASCII, padded           |
 ; | `s_feature_flags`     | Compatibility flags                      | 4                    | 32-bit unsigned int             |
 ; superblock
-  mov word[transient_area + 512 + 0], 2048
-  mov word[transient_area + 512 + 2], $0000
-  mov word[transient_area + 512 + 4], $2800
-  mov word[transient_area + 512 + 6], $0000
+  mov word[_superblock +  0], $4000  ;
+  mov word[_superblock +  2], $0000  ; s_inodes_count = 16384
+  mov word[_superblock +  4], $0000  ;
+  mov word[_superblock +  6], $0002  ; s_blocks_count = 131072 blocks = $20000
+  mov word[_superblock +  8], $0000  ;
+  mov word[_superblock + 10], $0002  ; s_free_inodes_count = 131072 blocks = $20000
+  mov word[_superblock + 12], $0000  ;
+  mov word[_superblock + 14], $0002  ; s_free_blocks_count = 131072 blocks = $20000
+  mov word[_superblock + 16], $0000  ;
+  mov word[_superblock + 18], $0000  ; s_first_data_block = 0 (because superblock is contained within first 2048 byte block)
+  mov word[_superblock + 20], $0001  ;
+  mov word[_superblock + 22], $0000  ; s_log_block_size = 1 (1024 << 1 == 2048)
+  mov word[_superblock + 24], $0080  ; s_inode_size = 128
+  mov word[_superblock + 26], $EF53  ; s_magic = ef53
+  mov word[_superblock + 28], $0000  ; s_mtime
+  mov word[_superblock + 30], $0000  ; s_wtime
+  mov word[_superblock + 32], $0000  ; s_uuid
+  mov word[_superblock + 34], $0000  ; s_uuid
+  mov word[_superblock + 36], $0000  ; s_uuid
+  mov word[_superblock + 38], $0000  ; s_uuid
+  mov word[_superblock + 40], $0000  ; s_uuid
+  mov word[_superblock + 42], $0000  ; s_uuid
+  mov word[_superblock + 44], $0000  ; s_uuid
+  mov word[_superblock + 46], $0000  ; s_uuid
+  mov word[_superblock + 48], $0000  ; s_volume_name
+  mov word[_superblock + 50], $0000  ; s_volume_name
+  mov word[_superblock + 52], $0000  ; s_volume_name
+  mov word[_superblock + 54], $0000  ; s_volume_name
+  mov word[_superblock + 56], $0000  ; s_volume_name
+  mov word[_superblock + 58], $0000  ; s_volume_name
+  mov word[_superblock + 60], $0000  ; s_volume_name
+  mov word[_superblock + 62], $0000  ; s_volume_name
+  mov word[_superblock + 62], $0000  ;
+  mov word[_superblock + 62], $0000  ; s_feature_flags
+
+
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; floppy drive syscalls

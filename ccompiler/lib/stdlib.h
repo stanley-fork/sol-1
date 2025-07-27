@@ -46,7 +46,7 @@ int atoi(char *str) {
 
 /* Return a random integer between 0 and RAND_MAX inclusive.  */
 int rand(){
-  int  sec;
+  int sec;
   asm{
       mov al, 0
       syscall sys_rtc					; get seconds

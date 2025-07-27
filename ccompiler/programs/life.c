@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WIDTH  40
 #define HEIGHT 30
@@ -33,6 +34,15 @@ char currState[HEIGHT][WIDTH] = {
 int main(void){
 	int i, j;
   int n;
+	char *p = 0;
+
+	for(i = 0; i < HEIGHT; i++){
+		for(j = 0; j < WIDTH; j++){
+			if(*p % 2 == 0) currState[i][j] = '@';
+			else currState[i][j] = ' ';
+			p++;		
+		}
+	}
 
 	for(i = 0; i < HEIGHT; i++){
 		for(j = 0; j < WIDTH; j++){

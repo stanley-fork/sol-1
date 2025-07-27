@@ -329,13 +329,6 @@ void game_play() {
         print("HA HA HA - YOU LOSE!\n");
     }
 
-    int c;
-    c = getlet("NEW GAME (Y-N): ");
-
-    if (c == 'N') {
-        exit(1);
-    }
-  
 }
 
 

@@ -1,5 +1,5 @@
 0001   0000             ; --- FILENAME: programs/wumpus.c
-0002   0000             ; --- DATE:     24-07-2025 at 06:39:33
+0002   0000             ; --- DATE:     26-07-2025 at 17:28:21
 0003   0000             .include "lib/asm/kernel.exp"
 0001+  0000             fdc_al_restore   .EQU  $0000
 0002+  0000             fdc_al_step      .EQU  $0001
@@ -54,7 +54,7 @@
 0014   040B FA FF FF      lea d, [bp + -1] ; $c
 0015   040E DA            push d
 0016   040F             ; --- START FUNCTION CALL
-0017   040F 26 E6 17      mov b, _s0 ; "INSTRUCTIONS (Y-N): "
+0017   040F 26 9A 17      mov b, _s0 ; "INSTRUCTIONS (Y-N): "
 0018   0412 FD AB         swp b
 0019   0414 D8            push b
 0020   0415 07 93 04      call getlet
@@ -95,7 +95,7 @@
 0054   0443             ; } while (getlet("NEW GAME (Y-N): ") != 'N'); 
 0055   0443             _do2_cond:
 0056   0443             ; --- START FUNCTION CALL
-0057   0443 26 FB 17      mov b, _s1 ; "NEW GAME (Y-N): "
+0057   0443 26 AF 17      mov b, _s1 ; "NEW GAME (Y-N): "
 0058   0446 FD AB         swp b
 0059   0448 D8            push b
 0060   0449 07 93 04      call getlet
@@ -130,14 +130,14 @@
 0087   0474 38 00 00      mov c, 0
 0088   0477 FD AB         swp b
 0089   0479 D8            push b
-0090   047A 07 79 14      call print
+0090   047A 07 38 14      call print
 0091   047D 51 02 00      add sp, 2
 0092   0480             ; --- END FUNCTION CALL
 0093   0480             ; n = scann(); 
 0094   0480 FA FF FF      lea d, [bp + -1] ; $n
 0095   0483 DA            push d
 0096   0484             ; --- START FUNCTION CALL
-0097   0484 07 38 16      call scann
+0097   0484 07 F7 15      call scann
 0098   0487 E7            pop d
 0099   0488 FD 43         mov [d], b
 0100   048A             ; return n; 
@@ -166,7 +166,7 @@
 0122   04AA 38 00 00      mov c, 0
 0123   04AD FD AB         swp b
 0124   04AF D8            push b
-0125   04B0 07 79 14      call print
+0125   04B0 07 38 14      call print
 0126   04B3 51 02 00      add sp, 2
 0127   04B6             ; --- END FUNCTION CALL
 0128   04B6             ; while (c == '\n') { 
@@ -191,7 +191,7 @@
 0146   04D1 FA 00 00      lea d, [bp + 0] ; $c
 0147   04D4 DA            push d
 0148   04D5             ; --- START FUNCTION CALL
-0149   04D5 07 92 14      call getchar
+0149   04D5 07 51 14      call getchar
 0150   04D8 E7            pop d
 0151   04D9 FD 3E         mov [d], bl
 0152   04DB 0A B6 04      jmp _while3_cond
@@ -203,7 +203,7 @@
 0158   04E2 A7 00         mov bh, 0
 0159   04E4 38 00 00      mov c, 0
 0160   04E7 DD            push bl
-0161   04E8 07 AC 14      call toupper
+0161   04E8 07 6B 14      call toupper
 0162   04EB 51 01 00      add sp, 1
 0163   04EE             ; --- END FUNCTION CALL
 0164   04EE F9            leave
@@ -213,186 +213,186 @@
 0168   04F0 F8 00 00      enter 0 ; (push bp; mov bp, sp)
 0169   04F3             ; print("\n\n"); 
 0170   04F3             ; --- START FUNCTION CALL
-0171   04F3 26 0C 18      mov b, _s2 ; "\n\n"
+0171   04F3 26 C0 17      mov b, _s2 ; "\n\n"
 0172   04F6 FD AB         swp b
 0173   04F8 D8            push b
-0174   04F9 07 79 14      call print
+0174   04F9 07 38 14      call print
 0175   04FC 51 02 00      add sp, 2
 0176   04FF             ; --- END FUNCTION CALL
 0177   04FF             ; print("WELCOME TO HUNT THE WUMPUS\n"); 
 0178   04FF             ; --- START FUNCTION CALL
-0179   04FF 26 0F 18      mov b, _s3 ; "WELCOME TO HUNT THE WUMPUS\n"
+0179   04FF 26 C3 17      mov b, _s3 ; "WELCOME TO HUNT THE WUMPUS\n"
 0180   0502 FD AB         swp b
 0181   0504 D8            push b
-0182   0505 07 79 14      call print
+0182   0505 07 38 14      call print
 0183   0508 51 02 00      add sp, 2
 0184   050B             ; --- END FUNCTION CALL
 0185   050B             ; print("THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n");  
 0186   050B             ; --- START FUNCTION CALL
-0187   050B 26 2B 18      mov b, _s4 ; "THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n"
+0187   050B 26 DF 17      mov b, _s4 ; "THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n"
 0188   050E FD AB         swp b
 0189   0510 D8            push b
-0190   0511 07 79 14      call print
+0190   0511 07 38 14      call print
 0191   0514 51 02 00      add sp, 2
 0192   0517             ; --- END FUNCTION CALL
 0193   0517             ; print("LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n\n"); 
 0194   0517             ; --- START FUNCTION CALL
-0195   0517 26 84 18      mov b, _s5 ; "LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n\n"
+0195   0517 26 38 18      mov b, _s5 ; "LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n\n"
 0196   051A FD AB         swp b
 0197   051C D8            push b
-0198   051D 07 79 14      call print
+0198   051D 07 38 14      call print
 0199   0520 51 02 00      add sp, 2
 0200   0523             ; --- END FUNCTION CALL
 0201   0523             ; print(" HAZARDS:\n"); 
 0202   0523             ; --- START FUNCTION CALL
-0203   0523 26 B4 18      mov b, _s6 ; " HAZARDS:\n"
+0203   0523 26 68 18      mov b, _s6 ; " HAZARDS:\n"
 0204   0526 FD AB         swp b
 0205   0528 D8            push b
-0206   0529 07 79 14      call print
+0206   0529 07 38 14      call print
 0207   052C 51 02 00      add sp, 2
 0208   052F             ; --- END FUNCTION CALL
 0209   052F             ; print(" BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM. IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n"); 
 0210   052F             ; --- START FUNCTION CALL
-0211   052F 26 BF 18      mov b, _s7 ; " BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM. IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n"
+0211   052F 26 73 18      mov b, _s7 ; " BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM. IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n"
 0212   0532 FD AB         swp b
 0213   0534 D8            push b
-0214   0535 07 79 14      call print
+0214   0535 07 38 14      call print
 0215   0538 51 02 00      add sp, 2
 0216   053B             ; --- END FUNCTION CALL
 0217   053B             ; print(" SUPER BATS: TWO OTHER ROOMS HAVE SUPER BATS. IF YOU GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER\n"); 
 0218   053B             ; --- START FUNCTION CALL
-0219   053B 26 2B 19      mov b, _s8 ; " SUPER BATS: TWO OTHER ROOMS HAVE SUPER BATS. IF YOU GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER\n"
+0219   053B 26 DF 18      mov b, _s8 ; " SUPER BATS: TWO OTHER ROOMS HAVE SUPER BATS. IF YOU GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER\n"
 0220   053E FD AB         swp b
 0221   0540 D8            push b
-0222   0541 07 79 14      call print
+0222   0541 07 38 14      call print
 0223   0544 51 02 00      add sp, 2
 0224   0547             ; --- END FUNCTION CALL
 0225   0547             ; print("   ROOM AT RANDOM. (WHICH MAY BE TROUBLESOME)\n\n"); 
 0226   0547             ; --- START FUNCTION CALL
-0227   0547 26 97 19      mov b, _s9 ; "   ROOM AT RANDOM. (WHICH MAY BE TROUBLESOME)\n\n"
+0227   0547 26 4B 19      mov b, _s9 ; "   ROOM AT RANDOM. (WHICH MAY BE TROUBLESOME)\n\n"
 0228   054A FD AB         swp b
 0229   054C D8            push b
-0230   054D 07 79 14      call print
+0230   054D 07 38 14      call print
 0231   0550 51 02 00      add sp, 2
 0232   0553             ; --- END FUNCTION CALL
 0233   0553             ; print(" WUMPUS: THE WUMPUS IS NOT BOTHERED BY HAZARDS (HE HAS SUCKER FEET AND IS TOO BIG FOR A BAT TO LIFT).  USUALLY\n"); 
 0234   0553             ; --- START FUNCTION CALL
-0235   0553 26 C7 19      mov b, _s10 ; " WUMPUS: THE WUMPUS IS NOT BOTHERED BY HAZARDS (HE HAS SUCKER FEET AND IS TOO BIG FOR A BAT TO LIFT).  USUALLY\n"
+0235   0553 26 7B 19      mov b, _s10 ; " WUMPUS: THE WUMPUS IS NOT BOTHERED BY HAZARDS (HE HAS SUCKER FEET AND IS TOO BIG FOR A BAT TO LIFT).  USUALLY\n"
 0236   0556 FD AB         swp b
 0237   0558 D8            push b
-0238   0559 07 79 14      call print
+0238   0559 07 38 14      call print
 0239   055C 51 02 00      add sp, 2
 0240   055F             ; --- END FUNCTION CALL
 0241   055F             ; print("   HE IS ASLEEP.  TWO THINGS WAKE HIM UP: YOU SHOOTING AN ARROW OR YOU ENTERING HIS ROOM.\n"); 
 0242   055F             ; --- START FUNCTION CALL
-0243   055F 26 37 1A      mov b, _s11 ; "   HE IS ASLEEP.  TWO THINGS WAKE HIM UP: YOU SHOOTING AN ARROW OR YOU ENTERING HIS ROOM.\n"
+0243   055F 26 EB 19      mov b, _s11 ; "   HE IS ASLEEP.  TWO THINGS WAKE HIM UP: YOU SHOOTING AN ARROW OR YOU ENTERING HIS ROOM.\n"
 0244   0562 FD AB         swp b
 0245   0564 D8            push b
-0246   0565 07 79 14      call print
+0246   0565 07 38 14      call print
 0247   0568 51 02 00      add sp, 2
 0248   056B             ; --- END FUNCTION CALL
 0249   056B             ; print("   IF THE WUMPUS WAKES HE MOVES (P=.75) ONE ROOM OR STAYS STILL (P=.25).  AFTER THAT, IF HE IS WHERE YOU\n"); 
 0250   056B             ; --- START FUNCTION CALL
-0251   056B 26 92 1A      mov b, _s12 ; "   IF THE WUMPUS WAKES HE MOVES (P=.75) ONE ROOM OR STAYS STILL (P=.25).  AFTER THAT, IF HE IS WHERE YOU\n"
+0251   056B 26 46 1A      mov b, _s12 ; "   IF THE WUMPUS WAKES HE MOVES (P=.75) ONE ROOM OR STAYS STILL (P=.25).  AFTER THAT, IF HE IS WHERE YOU\n"
 0252   056E FD AB         swp b
 0253   0570 D8            push b
-0254   0571 07 79 14      call print
+0254   0571 07 38 14      call print
 0255   0574 51 02 00      add sp, 2
 0256   0577             ; --- END FUNCTION CALL
 0257   0577             ; print("   ARE, HE EATS YOU UP AND YOU LOSE!\n\n"); 
 0258   0577             ; --- START FUNCTION CALL
-0259   0577 26 FC 1A      mov b, _s13 ; "   ARE, HE EATS YOU UP AND YOU LOSE!\n\n"
+0259   0577 26 B0 1A      mov b, _s13 ; "   ARE, HE EATS YOU UP AND YOU LOSE!\n\n"
 0260   057A FD AB         swp b
 0261   057C D8            push b
-0262   057D 07 79 14      call print
+0262   057D 07 38 14      call print
 0263   0580 51 02 00      add sp, 2
 0264   0583             ; --- END FUNCTION CALL
 0265   0583             ; print(" YOU: EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW\n"); 
 0266   0583             ; --- START FUNCTION CALL
-0267   0583 26 23 1B      mov b, _s14 ; " YOU: EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW\n"
+0267   0583 26 D7 1A      mov b, _s14 ; " YOU: EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW\n"
 0268   0586 FD AB         swp b
 0269   0588 D8            push b
-0270   0589 07 79 14      call print
+0270   0589 07 38 14      call print
 0271   058C 51 02 00      add sp, 2
 0272   058F             ; --- END FUNCTION CALL
 0273   058F             ; print(" MOVING: YOU CAN MOVE ONE ROOM (THRU ONE TUNNEL)\n"); 
 0274   058F             ; --- START FUNCTION CALL
-0275   058F 26 5A 1B      mov b, _s15 ; " MOVING: YOU CAN MOVE ONE ROOM (THRU ONE TUNNEL)\n"
+0275   058F 26 0E 1B      mov b, _s15 ; " MOVING: YOU CAN MOVE ONE ROOM (THRU ONE TUNNEL)\n"
 0276   0592 FD AB         swp b
 0277   0594 D8            push b
-0278   0595 07 79 14      call print
+0278   0595 07 38 14      call print
 0279   0598 51 02 00      add sp, 2
 0280   059B             ; --- END FUNCTION CALL
 0281   059B             ; print(" ARROWS: YOU HAVE 5 ARROWS. YOU LOSE WHEN YOU RUN OUT\n"); 
 0282   059B             ; --- START FUNCTION CALL
-0283   059B 26 8C 1B      mov b, _s16 ; " ARROWS: YOU HAVE 5 ARROWS. YOU LOSE WHEN YOU RUN OUT\n"
+0283   059B 26 40 1B      mov b, _s16 ; " ARROWS: YOU HAVE 5 ARROWS. YOU LOSE WHEN YOU RUN OUT\n"
 0284   059E FD AB         swp b
 0285   05A0 D8            push b
-0286   05A1 07 79 14      call print
+0286   05A1 07 38 14      call print
 0287   05A4 51 02 00      add sp, 2
 0288   05A7             ; --- END FUNCTION CALL
 0289   05A7             ; print("   EACH ARROW CAN GO FROM 1 TO 5 ROOMS. YOU AIM BY TELLING THE COMPUTER THE ROOM#S YOU WANT THE ARROW TO GO TO.\n"); 
 0290   05A7             ; --- START FUNCTION CALL
-0291   05A7 26 C3 1B      mov b, _s17 ; "   EACH ARROW CAN GO FROM 1 TO 5 ROOMS. YOU AIM BY TELLING THE COMPUTER THE ROOM#S YOU WANT THE ARROW TO GO TO.\n"
+0291   05A7 26 77 1B      mov b, _s17 ; "   EACH ARROW CAN GO FROM 1 TO 5 ROOMS. YOU AIM BY TELLING THE COMPUTER THE ROOM#S YOU WANT THE ARROW TO GO TO.\n"
 0292   05AA FD AB         swp b
 0293   05AC D8            push b
-0294   05AD 07 79 14      call print
+0294   05AD 07 38 14      call print
 0295   05B0 51 02 00      add sp, 2
 0296   05B3             ; --- END FUNCTION CALL
 0297   05B3             ; print("   IF THE ARROW CANT GO THAT WAY (IF NO TUNNEL) IT MOVES AT RANDOM TO THE NEXT ROOM.\n"); 
 0298   05B3             ; --- START FUNCTION CALL
-0299   05B3 26 34 1C      mov b, _s18 ; "   IF THE ARROW CANT GO THAT WAY (IF NO TUNNEL) IT MOVES AT RANDOM TO THE NEXT ROOM.\n"
+0299   05B3 26 E8 1B      mov b, _s18 ; "   IF THE ARROW CANT GO THAT WAY (IF NO TUNNEL) IT MOVES AT RANDOM TO THE NEXT ROOM.\n"
 0300   05B6 FD AB         swp b
 0301   05B8 D8            push b
-0302   05B9 07 79 14      call print
+0302   05B9 07 38 14      call print
 0303   05BC 51 02 00      add sp, 2
 0304   05BF             ; --- END FUNCTION CALL
 0305   05BF             ; print("   IF THE ARROW HITS THE WUMPUS, YOU WIN.\n"); 
 0306   05BF             ; --- START FUNCTION CALL
-0307   05BF 26 8A 1C      mov b, _s19 ; "   IF THE ARROW HITS THE WUMPUS, YOU WIN.\n"
+0307   05BF 26 3E 1C      mov b, _s19 ; "   IF THE ARROW HITS THE WUMPUS, YOU WIN.\n"
 0308   05C2 FD AB         swp b
 0309   05C4 D8            push b
-0310   05C5 07 79 14      call print
+0310   05C5 07 38 14      call print
 0311   05C8 51 02 00      add sp, 2
 0312   05CB             ; --- END FUNCTION CALL
 0313   05CB             ; print("   IF THE ARROW HITS YOU, YOU LOSE.\n"); 
 0314   05CB             ; --- START FUNCTION CALL
-0315   05CB 26 B5 1C      mov b, _s20 ; "   IF THE ARROW HITS YOU, YOU LOSE.\n"
+0315   05CB 26 69 1C      mov b, _s20 ; "   IF THE ARROW HITS YOU, YOU LOSE.\n"
 0316   05CE FD AB         swp b
 0317   05D0 D8            push b
-0318   05D1 07 79 14      call print
+0318   05D1 07 38 14      call print
 0319   05D4 51 02 00      add sp, 2
 0320   05D7             ; --- END FUNCTION CALL
 0321   05D7             ; print(" WARNINGS: WHEN YOU ARE ONE ROOM AWAY FROM A WUMPUS OR HAZARD, THE COMPUTER SAYS:\n"); 
 0322   05D7             ; --- START FUNCTION CALL
-0323   05D7 26 DA 1C      mov b, _s21 ; " WARNINGS: WHEN YOU ARE ONE ROOM AWAY FROM A WUMPUS OR HAZARD, THE COMPUTER SAYS:\n"
+0323   05D7 26 8E 1C      mov b, _s21 ; " WARNINGS: WHEN YOU ARE ONE ROOM AWAY FROM A WUMPUS OR HAZARD, THE COMPUTER SAYS:\n"
 0324   05DA FD AB         swp b
 0325   05DC D8            push b
-0326   05DD 07 79 14      call print
+0326   05DD 07 38 14      call print
 0327   05E0 51 02 00      add sp, 2
 0328   05E3             ; --- END FUNCTION CALL
 0329   05E3             ; print("   WUMPUS: I SMELL A WUMPUS\n"); 
 0330   05E3             ; --- START FUNCTION CALL
-0331   05E3 26 2D 1D      mov b, _s22 ; "   WUMPUS: I SMELL A WUMPUS\n"
+0331   05E3 26 E1 1C      mov b, _s22 ; "   WUMPUS: I SMELL A WUMPUS\n"
 0332   05E6 FD AB         swp b
 0333   05E8 D8            push b
-0334   05E9 07 79 14      call print
+0334   05E9 07 38 14      call print
 0335   05EC 51 02 00      add sp, 2
 0336   05EF             ; --- END FUNCTION CALL
 0337   05EF             ; print("   BAT: BATS NEARBY\n"); 
 0338   05EF             ; --- START FUNCTION CALL
-0339   05EF 26 4A 1D      mov b, _s23 ; "   BAT: BATS NEARBY\n"
+0339   05EF 26 FE 1C      mov b, _s23 ; "   BAT: BATS NEARBY\n"
 0340   05F2 FD AB         swp b
 0341   05F4 D8            push b
-0342   05F5 07 79 14      call print
+0342   05F5 07 38 14      call print
 0343   05F8 51 02 00      add sp, 2
 0344   05FB             ; --- END FUNCTION CALL
 0345   05FB             ; print("   PIT: I FEEL A DRAFT\n\n"); 
 0346   05FB             ; --- START FUNCTION CALL
-0347   05FB 26 5F 1D      mov b, _s24 ; "   PIT: I FEEL A DRAFT\n\n"
+0347   05FB 26 13 1D      mov b, _s24 ; "   PIT: I FEEL A DRAFT\n\n"
 0348   05FE FD AB         swp b
 0349   0600 D8            push b
-0350   0601 07 79 14      call print
+0350   0601 07 38 14      call print
 0351   0604 51 02 00      add sp, 2
 0352   0607             ; --- END FUNCTION CALL
 0353   0607 F9            leave
@@ -405,10 +405,10 @@
 0360   060F 52 02 00      sub sp, 2
 0361   0612             ; print("\n"); 
 0362   0612             ; --- START FUNCTION CALL
-0363   0612 26 78 1D      mov b, _s25 ; "\n"
+0363   0612 26 2C 1D      mov b, _s25 ; "\n"
 0364   0615 FD AB         swp b
 0365   0617 D8            push b
-0366   0618 07 79 14      call print
+0366   0618 07 38 14      call print
 0367   061B 51 02 00      add sp, 2
 0368   061E             ; --- END FUNCTION CALL
 0369   061E             ; for (k = 0; k < 3; k++) { 
@@ -438,10 +438,10 @@
 0391   0644             ; room = cave[loc[      0   ]][k]; 
 0392   0644 FA FF FF      lea d, [bp + -1] ; $room
 0393   0647 DA            push d
-0394   0648 3B 6A 17      mov d, _cave_data ; $cave
+0394   0648 3B 1E 17      mov d, _cave_data ; $cave
 0395   064B D7            push a
 0396   064C DA            push d
-0397   064D 3B 5C 17      mov d, _loc_data ; $loc
+0397   064D 3B 10 17      mov d, _loc_data ; $loc
 0398   0650 D7            push a
 0399   0651 DA            push d
 0400   0652 FD 2E 00 00   mov32 cb, $00000000
@@ -472,7 +472,7 @@
 0424   0683             ; --- START RELATIONAL
 0425   0683 D7            push a
 0426   0684 11            mov a, b
-0427   0685 3B 5C 17      mov d, _loc_data ; $loc
+0427   0685 3B 10 17      mov d, _loc_data ; $loc
 0428   0688 D7            push a
 0429   0689 DA            push d
 0430   068A FD 2E 01 00   mov32 cb, $00000001
@@ -491,10 +491,10 @@
 0442   06A4             _if5_TRUE:
 0443   06A4             ; print("I SMELL A WUMPUS!\n"); 
 0444   06A4             ; --- START FUNCTION CALL
-0445   06A4 26 7A 1D      mov b, _s26 ; "I SMELL A WUMPUS!\n"
+0445   06A4 26 2E 1D      mov b, _s26 ; "I SMELL A WUMPUS!\n"
 0446   06A7 FD AB         swp b
 0447   06A9 D8            push b
-0448   06AA 07 79 14      call print
+0448   06AA 07 38 14      call print
 0449   06AD 51 02 00      add sp, 2
 0450   06B0             ; --- END FUNCTION CALL
 0451   06B0 0A 6F 07      jmp _if5_exit
@@ -507,7 +507,7 @@
 0458   06BA             ; --- START RELATIONAL
 0459   06BA D7            push a
 0460   06BB 11            mov a, b
-0461   06BC 3B 5C 17      mov d, _loc_data ; $loc
+0461   06BC 3B 10 17      mov d, _loc_data ; $loc
 0462   06BF D7            push a
 0463   06C0 DA            push d
 0464   06C1 FD 2E 02 00   mov32 cb, $00000002
@@ -530,7 +530,7 @@
 0480   06DE             ; --- START RELATIONAL
 0481   06DE D7            push a
 0482   06DF 11            mov a, b
-0483   06E0 3B 5C 17      mov d, _loc_data ; $loc
+0483   06E0 3B 10 17      mov d, _loc_data ; $loc
 0484   06E3 D7            push a
 0485   06E4 DA            push d
 0486   06E5 FD 2E 03 00   mov32 cb, $00000003
@@ -552,10 +552,10 @@
 0501   0702             _if6_TRUE:
 0502   0702             ; print("I FEEL A DRAFT\n"); 
 0503   0702             ; --- START FUNCTION CALL
-0504   0702 26 8D 1D      mov b, _s27 ; "I FEEL A DRAFT\n"
+0504   0702 26 41 1D      mov b, _s27 ; "I FEEL A DRAFT\n"
 0505   0705 FD AB         swp b
 0506   0707 D8            push b
-0507   0708 07 79 14      call print
+0507   0708 07 38 14      call print
 0508   070B 51 02 00      add sp, 2
 0509   070E             ; --- END FUNCTION CALL
 0510   070E 0A 6F 07      jmp _if6_exit
@@ -568,7 +568,7 @@
 0517   0718             ; --- START RELATIONAL
 0518   0718 D7            push a
 0519   0719 11            mov a, b
-0520   071A 3B 5C 17      mov d, _loc_data ; $loc
+0520   071A 3B 10 17      mov d, _loc_data ; $loc
 0521   071D D7            push a
 0522   071E DA            push d
 0523   071F FD 2E 04 00   mov32 cb, $00000004
@@ -591,7 +591,7 @@
 0539   073C             ; --- START RELATIONAL
 0540   073C D7            push a
 0541   073D 11            mov a, b
-0542   073E 3B 5C 17      mov d, _loc_data ; $loc
+0542   073E 3B 10 17      mov d, _loc_data ; $loc
 0543   0741 D7            push a
 0544   0742 DA            push d
 0545   0743 FD 2E 05 00   mov32 cb, $00000005
@@ -613,10 +613,10 @@
 0560   0760             _if7_TRUE:
 0561   0760             ; print("BATS NEARBY!\n"); 
 0562   0760             ; --- START FUNCTION CALL
-0563   0760 26 9D 1D      mov b, _s28 ; "BATS NEARBY!\n"
+0563   0760 26 51 1D      mov b, _s28 ; "BATS NEARBY!\n"
 0564   0763 FD AB         swp b
 0565   0765 D8            push b
-0566   0766 07 79 14      call print
+0566   0766 07 38 14      call print
 0567   0769 51 02 00      add sp, 2
 0568   076C             ; --- END FUNCTION CALL
 0569   076C 0A 6F 07      jmp _if7_exit
@@ -636,15 +636,15 @@
 0583   0782             _for4_exit:
 0584   0782             ; print("YOU ARE IN ROOM "); print_unsigned(loc[      0   ]+1); print("\n"); 
 0585   0782             ; --- START FUNCTION CALL
-0586   0782 26 AB 1D      mov b, _s29 ; "YOU ARE IN ROOM "
+0586   0782 26 5F 1D      mov b, _s29 ; "YOU ARE IN ROOM "
 0587   0785 FD AB         swp b
 0588   0787 D8            push b
-0589   0788 07 79 14      call print
+0589   0788 07 38 14      call print
 0590   078B 51 02 00      add sp, 2
 0591   078E             ; --- END FUNCTION CALL
 0592   078E             ; print_unsigned(loc[      0   ]+1); print("\n"); 
 0593   078E             ; --- START FUNCTION CALL
-0594   078E 3B 5C 17      mov d, _loc_data ; $loc
+0594   078E 3B 10 17      mov d, _loc_data ; $loc
 0595   0791 D7            push a
 0596   0792 DA            push d
 0597   0793 FD 2E 00 00   mov32 cb, $00000000
@@ -664,31 +664,31 @@
 0609   07AD             ; --- END TERMS
 0610   07AD FD AB         swp b
 0611   07AF D8            push b
-0612   07B0 07 12 15      call print_unsigned
+0612   07B0 07 D1 14      call print_unsigned
 0613   07B3 51 02 00      add sp, 2
 0614   07B6             ; --- END FUNCTION CALL
 0615   07B6             ; print("\n"); 
 0616   07B6             ; --- START FUNCTION CALL
-0617   07B6 26 78 1D      mov b, _s25 ; "\n"
+0617   07B6 26 2C 1D      mov b, _s25 ; "\n"
 0618   07B9 FD AB         swp b
 0619   07BB D8            push b
-0620   07BC 07 79 14      call print
+0620   07BC 07 38 14      call print
 0621   07BF 51 02 00      add sp, 2
 0622   07C2             ; --- END FUNCTION CALL
 0623   07C2             ; print("TUNNELS LEAD TO ");  
 0624   07C2             ; --- START FUNCTION CALL
-0625   07C2 26 BC 1D      mov b, _s30 ; "TUNNELS LEAD TO "
+0625   07C2 26 70 1D      mov b, _s30 ; "TUNNELS LEAD TO "
 0626   07C5 FD AB         swp b
 0627   07C7 D8            push b
-0628   07C8 07 79 14      call print
+0628   07C8 07 38 14      call print
 0629   07CB 51 02 00      add sp, 2
 0630   07CE             ; --- END FUNCTION CALL
 0631   07CE             ; print_unsigned(cave[loc[      0   ]][0]+1); print(", "); 
 0632   07CE             ; --- START FUNCTION CALL
-0633   07CE 3B 6A 17      mov d, _cave_data ; $cave
+0633   07CE 3B 1E 17      mov d, _cave_data ; $cave
 0634   07D1 D7            push a
 0635   07D2 DA            push d
-0636   07D3 3B 5C 17      mov d, _loc_data ; $loc
+0636   07D3 3B 10 17      mov d, _loc_data ; $loc
 0637   07D6 D7            push a
 0638   07D7 DA            push d
 0639   07D8 FD 2E 00 00   mov32 cb, $00000000
@@ -718,23 +718,23 @@
 0660   0808             ; --- END TERMS
 0661   0808 FD AB         swp b
 0662   080A D8            push b
-0663   080B 07 12 15      call print_unsigned
+0663   080B 07 D1 14      call print_unsigned
 0664   080E 51 02 00      add sp, 2
 0665   0811             ; --- END FUNCTION CALL
 0666   0811             ; print(", "); 
 0667   0811             ; --- START FUNCTION CALL
-0668   0811 26 CD 1D      mov b, _s31 ; ", "
+0668   0811 26 81 1D      mov b, _s31 ; ", "
 0669   0814 FD AB         swp b
 0670   0816 D8            push b
-0671   0817 07 79 14      call print
+0671   0817 07 38 14      call print
 0672   081A 51 02 00      add sp, 2
 0673   081D             ; --- END FUNCTION CALL
 0674   081D             ; print_unsigned(cave[loc[      0   ]][1]+1); print(", "); 
 0675   081D             ; --- START FUNCTION CALL
-0676   081D 3B 6A 17      mov d, _cave_data ; $cave
+0676   081D 3B 1E 17      mov d, _cave_data ; $cave
 0677   0820 D7            push a
 0678   0821 DA            push d
-0679   0822 3B 5C 17      mov d, _loc_data ; $loc
+0679   0822 3B 10 17      mov d, _loc_data ; $loc
 0680   0825 D7            push a
 0681   0826 DA            push d
 0682   0827 FD 2E 00 00   mov32 cb, $00000000
@@ -764,23 +764,23 @@
 0703   0857             ; --- END TERMS
 0704   0857 FD AB         swp b
 0705   0859 D8            push b
-0706   085A 07 12 15      call print_unsigned
+0706   085A 07 D1 14      call print_unsigned
 0707   085D 51 02 00      add sp, 2
 0708   0860             ; --- END FUNCTION CALL
 0709   0860             ; print(", "); 
 0710   0860             ; --- START FUNCTION CALL
-0711   0860 26 CD 1D      mov b, _s31 ; ", "
+0711   0860 26 81 1D      mov b, _s31 ; ", "
 0712   0863 FD AB         swp b
 0713   0865 D8            push b
-0714   0866 07 79 14      call print
+0714   0866 07 38 14      call print
 0715   0869 51 02 00      add sp, 2
 0716   086C             ; --- END FUNCTION CALL
 0717   086C             ; print_unsigned(cave[loc[      0   ]][2]+1); 
 0718   086C             ; --- START FUNCTION CALL
-0719   086C 3B 6A 17      mov d, _cave_data ; $cave
+0719   086C 3B 1E 17      mov d, _cave_data ; $cave
 0720   086F D7            push a
 0721   0870 DA            push d
-0722   0871 3B 5C 17      mov d, _loc_data ; $loc
+0722   0871 3B 10 17      mov d, _loc_data ; $loc
 0723   0874 D7            push a
 0724   0875 DA            push d
 0725   0876 FD 2E 00 00   mov32 cb, $00000000
@@ -810,15 +810,15 @@
 0746   08A6             ; --- END TERMS
 0747   08A6 FD AB         swp b
 0748   08A8 D8            push b
-0749   08A9 07 12 15      call print_unsigned
+0749   08A9 07 D1 14      call print_unsigned
 0750   08AC 51 02 00      add sp, 2
 0751   08AF             ; --- END FUNCTION CALL
 0752   08AF             ; print("\n\n"); 
 0753   08AF             ; --- START FUNCTION CALL
-0754   08AF 26 0C 18      mov b, _s2 ; "\n\n"
+0754   08AF 26 C0 17      mov b, _s2 ; "\n\n"
 0755   08B2 FD AB         swp b
 0756   08B4 D8            push b
-0757   08B5 07 79 14      call print
+0757   08B5 07 38 14      call print
 0758   08B8 51 02 00      add sp, 2
 0759   08BB             ; --- END FUNCTION CALL
 0760   08BB F9            leave
@@ -875,7 +875,7 @@
 0808   0901 FA FF FF      lea d, [bp + -1] ; $c
 0809   0904 DA            push d
 0810   0905             ; --- START FUNCTION CALL
-0811   0905 26 D0 1D      mov b, _s32 ; "SHOOT OR MOVE (S-M): "
+0811   0905 26 84 1D      mov b, _s32 ; "SHOOT OR MOVE (S-M): "
 0812   0908 FD AB         swp b
 0813   090A D8            push b
 0814   090B 07 93 04      call getlet
@@ -957,7 +957,7 @@
 0885   097F C6 CB 09      je _if12_exit
 0886   0982             _if12_TRUE:
 0887   0982             ; loc[  1      ] = cave[loc[  1      ]][k]; 
-0888   0982 3B 5C 17      mov d, _loc_data ; $loc
+0888   0982 3B 10 17      mov d, _loc_data ; $loc
 0889   0985 D7            push a
 0890   0986 DA            push d
 0891   0987 FD 2E 01 00   mov32 cb, $00000001
@@ -966,10 +966,10 @@
 0893   098E FD 13 02 00   mma 2 ; mov a, 2; mul a, b; add d, b
 0894   0992 E4            pop a
 0895   0993 DA            push d
-0896   0994 3B 6A 17      mov d, _cave_data ; $cave
+0896   0994 3B 1E 17      mov d, _cave_data ; $cave
 0897   0997 D7            push a
 0898   0998 DA            push d
-0899   0999 3B 5C 17      mov d, _loc_data ; $loc
+0899   0999 3B 10 17      mov d, _loc_data ; $loc
 0900   099C D7            push a
 0901   099D DA            push d
 0902   099E FD 2E 01 00   mov32 cb, $00000001
@@ -996,7 +996,7 @@
 0922   09CB             _if12_exit:
 0923   09CB             ; if (loc[  1      ] == loc[      0   ]) { 
 0924   09CB             _if13_cond:
-0925   09CB 3B 5C 17      mov d, _loc_data ; $loc
+0925   09CB 3B 10 17      mov d, _loc_data ; $loc
 0926   09CE D7            push a
 0927   09CF DA            push d
 0928   09D0 FD 2E 01 00   mov32 cb, $00000001
@@ -1009,7 +1009,7 @@
 0934   09E0             ; --- START RELATIONAL
 0935   09E0 D7            push a
 0936   09E1 11            mov a, b
-0937   09E2 3B 5C 17      mov d, _loc_data ; $loc
+0937   09E2 3B 10 17      mov d, _loc_data ; $loc
 0938   09E5 D7            push a
 0939   09E6 DA            push d
 0940   09E7 FD 2E 00 00   mov32 cb, $00000000
@@ -1028,14 +1028,14 @@
 0952   0A01             _if13_TRUE:
 0953   0A01             ; print("TSK TSK TSK - WUMPUS GOT YOU!\n"); 
 0954   0A01             ; --- START FUNCTION CALL
-0955   0A01 26 E6 1D      mov b, _s33 ; "TSK TSK TSK - WUMPUS GOT YOU!\n"
+0955   0A01 26 9A 1D      mov b, _s33 ; "TSK TSK TSK - WUMPUS GOT YOU!\n"
 0956   0A04 FD AB         swp b
 0957   0A06 D8            push b
-0958   0A07 07 79 14      call print
+0958   0A07 07 38 14      call print
 0959   0A0A 51 02 00      add sp, 2
 0960   0A0D             ; --- END FUNCTION CALL
 0961   0A0D             ; finished =   2    ; 
-0962   0A0D 3B 68 17      mov d, _finished ; $finished
+0962   0A0D 3B 1C 17      mov d, _finished ; $finished
 0963   0A10 DA            push d
 0964   0A11 FD 2E 02 00   mov32 cb, $00000002
 0964   0A15 00 00 
@@ -1064,7 +1064,7 @@
 0986   0A35 52 02 00      sub sp, 2
 0987   0A38 52 02 00      sub sp, 2
 0988   0A3B             ; finished =        0   ; 
-0989   0A3B 3B 68 17      mov d, _finished ; $finished
+0989   0A3B 3B 1C 17      mov d, _finished ; $finished
 0990   0A3E DA            push d
 0991   0A3F FD 2E 00 00   mov32 cb, $00000000
 0991   0A43 00 00 
@@ -1116,7 +1116,7 @@
 1034   0A86 FA F3 FF      lea d, [bp + -13] ; $len
 1035   0A89 DA            push d
 1036   0A8A             ; --- START FUNCTION CALL
-1037   0A8A 26 05 1E      mov b, _s34 ; "\nNUMBER OF ROOMS (1-5): "
+1037   0A8A 26 B9 1D      mov b, _s34 ; "\nNUMBER OF ROOMS (1-5): "
 1038   0A8D FD AB         swp b
 1039   0A8F D8            push b
 1040   0A90 07 6A 04      call getnum
@@ -1163,7 +1163,7 @@
 1080   0AD4 E4            pop a
 1081   0AD5 DA            push d
 1082   0AD6             ; --- START FUNCTION CALL
-1083   0AD6 26 1E 1E      mov b, _s35 ; "ROOM #"
+1083   0AD6 26 D2 1D      mov b, _s35 ; "ROOM #"
 1084   0AD9 FD AB         swp b
 1085   0ADB D8            push b
 1086   0ADC 07 6A 04      call getnum
@@ -1243,10 +1243,10 @@
 1157   0B4B             _if16_TRUE:
 1158   0B4B             ; print("ARROWS ARENT THAT CROOKED - TRY ANOTHER ROOM\n"); 
 1159   0B4B             ; --- START FUNCTION CALL
-1160   0B4B 26 25 1E      mov b, _s36 ; "ARROWS ARENT THAT CROOKED - TRY ANOTHER ROOM\n"
+1160   0B4B 26 D9 1D      mov b, _s36 ; "ARROWS ARENT THAT CROOKED - TRY ANOTHER ROOM\n"
 1161   0B4E FD AB         swp b
 1162   0B50 D8            push b
-1163   0B51 07 79 14      call print
+1163   0B51 07 38 14      call print
 1164   0B54 51 02 00      add sp, 2
 1165   0B57             ; --- END FUNCTION CALL
 1166   0B57             ; continue;  
@@ -1267,7 +1267,7 @@
 1181   0B70             ; scratchloc = loc[      0   ]; 
 1182   0B70 FA F5 FF      lea d, [bp + -11] ; $scratchloc
 1183   0B73 DA            push d
-1184   0B74 3B 5C 17      mov d, _loc_data ; $loc
+1184   0B74 3B 10 17      mov d, _loc_data ; $loc
 1185   0B77 D7            push a
 1186   0B78 DA            push d
 1187   0B79 FD 2E 00 00   mov32 cb, $00000000
@@ -1306,7 +1306,7 @@
 1218   0BB3             _for17_block:
 1219   0BB3             ; if ((cave[scratchloc][0] == path[k]) || 
 1220   0BB3             _if18_cond:
-1221   0BB3 3B 6A 17      mov d, _cave_data ; $cave
+1221   0BB3 3B 1E 17      mov d, _cave_data ; $cave
 1222   0BB6 D7            push a
 1223   0BB7 DA            push d
 1224   0BB8 FA F5 FF      lea d, [bp + -11] ; $scratchloc
@@ -1343,7 +1343,7 @@
 1254   0BF1             ; --- START LOGICAL OR
 1255   0BF1 D7            push a
 1256   0BF2 11            mov a, b
-1257   0BF3 3B 6A 17      mov d, _cave_data ; $cave
+1257   0BF3 3B 1E 17      mov d, _cave_data ; $cave
 1258   0BF6 D7            push a
 1259   0BF7 DA            push d
 1260   0BF8 FA F5 FF      lea d, [bp + -11] ; $scratchloc
@@ -1379,7 +1379,7 @@
 1289   0C31             ; --- END RELATIONAL
 1290   0C31 FD A8         sor a, b ; ||
 1291   0C33 11            mov a, b
-1292   0C34 3B 6A 17      mov d, _cave_data ; $cave
+1292   0C34 3B 1E 17      mov d, _cave_data ; $cave
 1293   0C37 D7            push a
 1294   0C38 DA            push d
 1295   0C39 FA F5 FF      lea d, [bp + -11] ; $scratchloc
@@ -1440,7 +1440,7 @@
 1349   0C9B             ; scratchloc = cave[scratchloc][rand2()%3]; 
 1350   0C9B FA F5 FF      lea d, [bp + -11] ; $scratchloc
 1351   0C9E DA            push d
-1352   0C9F 3B 6A 17      mov d, _cave_data ; $cave
+1352   0C9F 3B 1E 17      mov d, _cave_data ; $cave
 1353   0CA2 D7            push a
 1354   0CA3 DA            push d
 1355   0CA4 FA F5 FF      lea d, [bp + -11] ; $scratchloc
@@ -1483,7 +1483,7 @@
 1391   0CE0             ; --- START RELATIONAL
 1392   0CE0 D7            push a
 1393   0CE1 11            mov a, b
-1394   0CE2 3B 5C 17      mov d, _loc_data ; $loc
+1394   0CE2 3B 10 17      mov d, _loc_data ; $loc
 1395   0CE5 D7            push a
 1396   0CE6 DA            push d
 1397   0CE7 FD 2E 01 00   mov32 cb, $00000001
@@ -1502,14 +1502,14 @@
 1409   0D01             _if23_TRUE:
 1410   0D01             ; print("AHA! YOU GOT THE WUMPUS!\n"); 
 1411   0D01             ; --- START FUNCTION CALL
-1412   0D01 26 53 1E      mov b, _s37 ; "AHA! YOU GOT THE WUMPUS!\n"
+1412   0D01 26 07 1E      mov b, _s37 ; "AHA! YOU GOT THE WUMPUS!\n"
 1413   0D04 FD AB         swp b
 1414   0D06 D8            push b
-1415   0D07 07 79 14      call print
+1415   0D07 07 38 14      call print
 1416   0D0A 51 02 00      add sp, 2
 1417   0D0D             ; --- END FUNCTION CALL
 1418   0D0D             ; finished =        1   ; 
-1419   0D0D 3B 68 17      mov d, _finished ; $finished
+1419   0D0D 3B 1C 17      mov d, _finished ; $finished
 1420   0D10 DA            push d
 1421   0D11 FD 2E 01 00   mov32 cb, $00000001
 1421   0D15 00 00 
@@ -1525,7 +1525,7 @@
 1431   0D24             ; --- START RELATIONAL
 1432   0D24 D7            push a
 1433   0D25 11            mov a, b
-1434   0D26 3B 5C 17      mov d, _loc_data ; $loc
+1434   0D26 3B 10 17      mov d, _loc_data ; $loc
 1435   0D29 D7            push a
 1436   0D2A DA            push d
 1437   0D2B FD 2E 00 00   mov32 cb, $00000000
@@ -1544,14 +1544,14 @@
 1449   0D45             _if24_TRUE:
 1450   0D45             ; print("OUCH! ARROW GOT YOU!\n"); 
 1451   0D45             ; --- START FUNCTION CALL
-1452   0D45 26 6D 1E      mov b, _s38 ; "OUCH! ARROW GOT YOU!\n"
+1452   0D45 26 21 1E      mov b, _s38 ; "OUCH! ARROW GOT YOU!\n"
 1453   0D48 FD AB         swp b
 1454   0D4A D8            push b
-1455   0D4B 07 79 14      call print
+1455   0D4B 07 38 14      call print
 1456   0D4E 51 02 00      add sp, 2
 1457   0D51             ; --- END FUNCTION CALL
 1458   0D51             ; finished =   2    ; 
-1459   0D51 3B 68 17      mov d, _finished ; $finished
+1459   0D51 3B 1C 17      mov d, _finished ; $finished
 1460   0D54 DA            push d
 1461   0D55 FD 2E 02 00   mov32 cb, $00000002
 1461   0D59 00 00 
@@ -1562,7 +1562,7 @@
 1466   0D61             _if23_exit:
 1467   0D61             ; if (finished !=        0   ) { 
 1468   0D61             _if25_cond:
-1469   0D61 3B 68 17      mov d, _finished ; $finished
+1469   0D61 3B 1C 17      mov d, _finished ; $finished
 1470   0D64 2A            mov b, [d]
 1471   0D65 38 00 00      mov c, 0
 1472   0D68             ; --- START RELATIONAL
@@ -1595,10 +1595,10 @@
 1498   0D92             _for17_exit:
 1499   0D92             ; print("MISSED\n"); 
 1500   0D92             ; --- START FUNCTION CALL
-1501   0D92 26 83 1E      mov b, _s39 ; "MISSED\n"
+1501   0D92 26 37 1E      mov b, _s39 ; "MISSED\n"
 1502   0D95 FD AB         swp b
 1503   0D97 D8            push b
-1504   0D98 07 79 14      call print
+1504   0D98 07 38 14      call print
 1505   0D9B 51 02 00      add sp, 2
 1506   0D9E             ; --- END FUNCTION CALL
 1507   0D9E             ; move_wumpus(); 
@@ -1606,10 +1606,10 @@
 1509   0D9E 07 41 09      call move_wumpus
 1510   0DA1             ; if (--arrows <= 0) { 
 1511   0DA1             _if26_cond:
-1512   0DA1 3B 54 17      mov d, _arrows ; $arrows
+1512   0DA1 3B 08 17      mov d, _arrows ; $arrows
 1513   0DA4 2A            mov b, [d]
 1514   0DA5 FD 7D         dec b
-1515   0DA7 3B 54 17      mov d, _arrows ; $arrows
+1515   0DA7 3B 08 17      mov d, _arrows ; $arrows
 1516   0DAA FD 43         mov [d], b
 1517   0DAC             ; --- START RELATIONAL
 1518   0DAC D7            push a
@@ -1624,7 +1624,7 @@
 1526   0DBB C6 CE 0D      je _if26_exit
 1527   0DBE             _if26_TRUE:
 1528   0DBE             ; finished =   2    ; 
-1529   0DBE 3B 68 17      mov d, _finished ; $finished
+1529   0DBE 3B 1C 17      mov d, _finished ; $finished
 1530   0DC1 DA            push d
 1531   0DC2 FD 2E 02 00   mov32 cb, $00000002
 1531   0DC6 00 00 
@@ -1667,7 +1667,7 @@
 1566   0DFC FA FF FF      lea d, [bp + -1] ; $scratchloc
 1567   0DFF DA            push d
 1568   0E00             ; --- START FUNCTION CALL
-1569   0E00 26 8B 1E      mov b, _s40 ; "\nWHERE TO: "
+1569   0E00 26 3F 1E      mov b, _s40 ; "\nWHERE TO: "
 1570   0E03 FD AB         swp b
 1571   0E05 D8            push b
 1572   0E06 07 6A 04      call getnum
@@ -1732,10 +1732,10 @@
 1627   0E5E             _if28_exit:
 1628   0E5E             ; if ((cave[loc[      0   ]][0] != scratchloc) & 
 1629   0E5E             _if29_cond:
-1630   0E5E 3B 6A 17      mov d, _cave_data ; $cave
+1630   0E5E 3B 1E 17      mov d, _cave_data ; $cave
 1631   0E61 D7            push a
 1632   0E62 DA            push d
-1633   0E63 3B 5C 17      mov d, _loc_data ; $loc
+1633   0E63 3B 10 17      mov d, _loc_data ; $loc
 1634   0E66 D7            push a
 1635   0E67 DA            push d
 1636   0E68 FD 2E 00 00   mov32 cb, $00000000
@@ -1767,10 +1767,10 @@
 1660   0E9B             ; --- END RELATIONAL
 1661   0E9B D7            push a
 1662   0E9C 11            mov a, b
-1663   0E9D 3B 6A 17      mov d, _cave_data ; $cave
+1663   0E9D 3B 1E 17      mov d, _cave_data ; $cave
 1664   0EA0 D7            push a
 1665   0EA1 DA            push d
-1666   0EA2 3B 5C 17      mov d, _loc_data ; $loc
+1666   0EA2 3B 10 17      mov d, _loc_data ; $loc
 1667   0EA5 D7            push a
 1668   0EA6 DA            push d
 1669   0EA7 FD 2E 00 00   mov32 cb, $00000000
@@ -1802,10 +1802,10 @@
 1693   0EDA             ; --- END RELATIONAL
 1694   0EDA FD 92         and b, a ; &
 1695   0EDC 11            mov a, b
-1696   0EDD 3B 6A 17      mov d, _cave_data ; $cave
+1696   0EDD 3B 1E 17      mov d, _cave_data ; $cave
 1697   0EE0 D7            push a
 1698   0EE1 DA            push d
-1699   0EE2 3B 5C 17      mov d, _loc_data ; $loc
+1699   0EE2 3B 10 17      mov d, _loc_data ; $loc
 1700   0EE5 D7            push a
 1701   0EE6 DA            push d
 1702   0EE7 FD 2E 00 00   mov32 cb, $00000000
@@ -1837,7 +1837,7 @@
 1726   0F1A             ; --- END RELATIONAL
 1727   0F1A FD 92         and b, a ; &
 1728   0F1C 11            mov a, b
-1729   0F1D 3B 5C 17      mov d, _loc_data ; $loc
+1729   0F1D 3B 10 17      mov d, _loc_data ; $loc
 1730   0F20 D7            push a
 1731   0F21 DA            push d
 1732   0F22 FD 2E 00 00   mov32 cb, $00000000
@@ -1864,10 +1864,10 @@
 1752   0F48             _if29_TRUE:
 1753   0F48             ; print("NOT POSSIBLE\n"); 
 1754   0F48             ; --- START FUNCTION CALL
-1755   0F48 26 97 1E      mov b, _s41 ; "NOT POSSIBLE\n"
+1755   0F48 26 4B 1E      mov b, _s41 ; "NOT POSSIBLE\n"
 1756   0F4B FD AB         swp b
 1757   0F4D D8            push b
-1758   0F4E 07 79 14      call print
+1758   0F4E 07 38 14      call print
 1759   0F51 51 02 00      add sp, 2
 1760   0F54             ; --- END FUNCTION CALL
 1761   0F54             ; scratchloc = -1; 
@@ -1884,7 +1884,7 @@
 1771   0F67 0A E3 0D      jmp _while27_cond
 1772   0F6A             _while27_exit:
 1773   0F6A             ; loc[      0   ] = scratchloc; 
-1774   0F6A 3B 5C 17      mov d, _loc_data ; $loc
+1774   0F6A 3B 10 17      mov d, _loc_data ; $loc
 1775   0F6D D7            push a
 1776   0F6E DA            push d
 1777   0F6F FD 2E 00 00   mov32 cb, $00000000
@@ -1906,7 +1906,7 @@
 1792   0F8D             ; --- START RELATIONAL
 1793   0F8D D7            push a
 1794   0F8E 11            mov a, b
-1795   0F8F 3B 5C 17      mov d, _loc_data ; $loc
+1795   0F8F 3B 10 17      mov d, _loc_data ; $loc
 1796   0F92 D7            push a
 1797   0F93 DA            push d
 1798   0F94 FD 2E 04 00   mov32 cb, $00000004
@@ -1929,7 +1929,7 @@
 1814   0FB1             ; --- START RELATIONAL
 1815   0FB1 D7            push a
 1816   0FB2 11            mov a, b
-1817   0FB3 3B 5C 17      mov d, _loc_data ; $loc
+1817   0FB3 3B 10 17      mov d, _loc_data ; $loc
 1818   0FB6 D7            push a
 1819   0FB7 DA            push d
 1820   0FB8 FD 2E 05 00   mov32 cb, $00000005
@@ -1951,16 +1951,16 @@
 1835   0FD5             _while30_block:
 1836   0FD5             ; print("ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!\n"); 
 1837   0FD5             ; --- START FUNCTION CALL
-1838   0FD5 26 A5 1E      mov b, _s42 ; "ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!\n"
+1838   0FD5 26 59 1E      mov b, _s42 ; "ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!\n"
 1839   0FD8 FD AB         swp b
 1840   0FDA D8            push b
-1841   0FDB 07 79 14      call print
+1841   0FDB 07 38 14      call print
 1842   0FDE 51 02 00      add sp, 2
 1843   0FE1             ; --- END FUNCTION CALL
 1844   0FE1             ; scratchloc = loc[      0   ] = rand2()%20; 
 1845   0FE1 FA FF FF      lea d, [bp + -1] ; $scratchloc
 1846   0FE4 DA            push d
-1847   0FE5 3B 5C 17      mov d, _loc_data ; $loc
+1847   0FE5 3B 10 17      mov d, _loc_data ; $loc
 1848   0FE8 D7            push a
 1849   0FE9 DA            push d
 1850   0FEA FD 2E 00 00   mov32 cb, $00000000
@@ -2001,7 +2001,7 @@
 1883   1022             ; --- START RELATIONAL
 1884   1022 D7            push a
 1885   1023 11            mov a, b
-1886   1024 3B 5C 17      mov d, _loc_data ; $loc
+1886   1024 3B 10 17      mov d, _loc_data ; $loc
 1887   1027 D7            push a
 1888   1028 DA            push d
 1889   1029 FD 2E 01 00   mov32 cb, $00000001
@@ -2020,10 +2020,10 @@
 1901   1043             _if33_TRUE:
 1902   1043             ; print("... OOPS! BUMPED A WUMPUS!\n"); 
 1903   1043             ; --- START FUNCTION CALL
-1904   1043 26 D5 1E      mov b, _s43 ; "... OOPS! BUMPED A WUMPUS!\n"
+1904   1043 26 89 1E      mov b, _s43 ; "... OOPS! BUMPED A WUMPUS!\n"
 1905   1046 FD AB         swp b
 1906   1048 D8            push b
-1907   1049 07 79 14      call print
+1907   1049 07 38 14      call print
 1908   104C 51 02 00      add sp, 2
 1909   104F             ; --- END FUNCTION CALL
 1910   104F             ; move_wumpus(); 
@@ -2039,7 +2039,7 @@
 1920   105C             ; --- START RELATIONAL
 1921   105C D7            push a
 1922   105D 11            mov a, b
-1923   105E 3B 5C 17      mov d, _loc_data ; $loc
+1923   105E 3B 10 17      mov d, _loc_data ; $loc
 1924   1061 D7            push a
 1925   1062 DA            push d
 1926   1063 FD 2E 02 00   mov32 cb, $00000002
@@ -2062,7 +2062,7 @@
 1942   1080             ; --- START RELATIONAL
 1943   1080 D7            push a
 1944   1081 11            mov a, b
-1945   1082 3B 5C 17      mov d, _loc_data ; $loc
+1945   1082 3B 10 17      mov d, _loc_data ; $loc
 1946   1085 D7            push a
 1947   1086 DA            push d
 1948   1087 FD 2E 03 00   mov32 cb, $00000003
@@ -2084,14 +2084,14 @@
 1963   10A4             _if34_TRUE:
 1964   10A4             ; print("YYYYIIIIEEEE . . . FELL IN PIT\n"); 
 1965   10A4             ; --- START FUNCTION CALL
-1966   10A4 26 F1 1E      mov b, _s44 ; "YYYYIIIIEEEE . . . FELL IN PIT\n"
+1966   10A4 26 A5 1E      mov b, _s44 ; "YYYYIIIIEEEE . . . FELL IN PIT\n"
 1967   10A7 FD AB         swp b
 1968   10A9 D8            push b
-1969   10AA 07 79 14      call print
+1969   10AA 07 38 14      call print
 1970   10AD 51 02 00      add sp, 2
 1971   10B0             ; --- END FUNCTION CALL
 1972   10B0             ; finished =   2    ; 
-1973   10B0 3B 68 17      mov d, _finished ; $finished
+1973   10B0 3B 1C 17      mov d, _finished ; $finished
 1974   10B3 DA            push d
 1975   10B4 FD 2E 02 00   mov32 cb, $00000002
 1975   10B8 00 00 
@@ -2105,15 +2105,15 @@
 1983   10C2             rand2:
 1984   10C2 F8 00 00      enter 0 ; (push bp; mov bp, sp)
 1985   10C5             ; rand_val=rand_val+rand_inc; 
-1986   10C5 3B 58 17      mov d, _rand_val ; $rand_val
+1986   10C5 3B 0C 17      mov d, _rand_val ; $rand_val
 1987   10C8 DA            push d
-1988   10C9 3B 58 17      mov d, _rand_val ; $rand_val
+1988   10C9 3B 0C 17      mov d, _rand_val ; $rand_val
 1989   10CC 2A            mov b, [d]
 1990   10CD 38 00 00      mov c, 0
 1991   10D0             ; --- START TERMS
 1992   10D0 D7            push a
 1993   10D1 11            mov a, b
-1994   10D2 3B 5A 17      mov d, _rand_inc ; $rand_inc
+1994   10D2 3B 0E 17      mov d, _rand_inc ; $rand_inc
 1995   10D5 2A            mov b, [d]
 1996   10D6 38 00 00      mov c, 0
 1997   10D9 56            add b, a
@@ -2122,16 +2122,16 @@
 2000   10DB E7            pop d
 2001   10DC FD 43         mov [d], b
 2002   10DE             ; rand_inc++; 
-2003   10DE 3B 5A 17      mov d, _rand_inc ; $rand_inc
+2003   10DE 3B 0E 17      mov d, _rand_inc ; $rand_inc
 2004   10E1 2A            mov b, [d]
 2005   10E2 38 00 00      mov c, 0
 2006   10E5 11            mov a, b
 2007   10E6 FD 77         inc b
-2008   10E8 3B 5A 17      mov d, _rand_inc ; $rand_inc
+2008   10E8 3B 0E 17      mov d, _rand_inc ; $rand_inc
 2009   10EB FD 43         mov [d], b
 2010   10ED 27            mov b, a
 2011   10EE             ; return rand_val; 
-2012   10EE 3B 58 17      mov d, _rand_val ; $rand_val
+2012   10EE 3B 0C 17      mov d, _rand_val ; $rand_val
 2013   10F1 2A            mov b, [d]
 2014   10F2 38 00 00      mov c, 0
 2015   10F5 F9            leave
@@ -2169,7 +2169,7 @@
 2045   1126 C6 5E 12      je _for35_exit
 2046   1129             _for35_block:
 2047   1129             ; loc[j] = -1; 
-2048   1129 3B 5C 17      mov d, _loc_data ; $loc
+2048   1129 3B 10 17      mov d, _loc_data ; $loc
 2049   112C D7            push a
 2050   112D DA            push d
 2051   112E FA FF FF      lea d, [bp + -1] ; $j
@@ -2185,7 +2185,7 @@
 2060   1143 FD 43         mov [d], b
 2061   1145             ; while (loc[j] < 0) { 
 2062   1145             _while36_cond:
-2063   1145 3B 5C 17      mov d, _loc_data ; $loc
+2063   1145 3B 10 17      mov d, _loc_data ; $loc
 2064   1148 D7            push a
 2065   1149 DA            push d
 2066   114A FA FF FF      lea d, [bp + -1] ; $j
@@ -2216,7 +2216,7 @@
 2090   1174 E7            pop d
 2091   1175 FD 43         mov [d], b
 2092   1177             ; loc[j] = v % 20; 
-2093   1177 3B 5C 17      mov d, _loc_data ; $loc
+2093   1177 3B 10 17      mov d, _loc_data ; $loc
 2094   117A D7            push a
 2095   117B DA            push d
 2096   117C FA FF FF      lea d, [bp + -1] ; $j
@@ -2283,7 +2283,7 @@
 2154   11DE             _for39_block:
 2155   11DE             ; if (loc[j] == loc[k]) { 
 2156   11DE             _if40_cond:
-2157   11DE 3B 5C 17      mov d, _loc_data ; $loc
+2157   11DE 3B 10 17      mov d, _loc_data ; $loc
 2158   11E1 D7            push a
 2159   11E2 DA            push d
 2160   11E3 FA FF FF      lea d, [bp + -1] ; $j
@@ -2297,7 +2297,7 @@
 2168   11F4             ; --- START RELATIONAL
 2169   11F4 D7            push a
 2170   11F5 11            mov a, b
-2171   11F6 3B 5C 17      mov d, _loc_data ; $loc
+2171   11F6 3B 10 17      mov d, _loc_data ; $loc
 2172   11F9 D7            push a
 2173   11FA DA            push d
 2174   11FB FA FD FF      lea d, [bp + -3] ; $k
@@ -2316,7 +2316,7 @@
 2187   1213 C6 35 12      je _if40_exit
 2188   1216             _if40_TRUE:
 2189   1216             ; loc[j] = -1; 
-2190   1216 3B 5C 17      mov d, _loc_data ; $loc
+2190   1216 3B 10 17      mov d, _loc_data ; $loc
 2191   1219 D7            push a
 2192   121A DA            push d
 2193   121B FA FF FF      lea d, [bp + -1] ; $j
@@ -2362,7 +2362,7 @@
 2232   1260             game_play:
 2233   1260 F8 00 00      enter 0 ; (push bp; mov bp, sp)
 2234   1263             ; arrows = 5; 
-2235   1263 3B 54 17      mov d, _arrows ; $arrows
+2235   1263 3B 08 17      mov d, _arrows ; $arrows
 2236   1266 DA            push d
 2237   1267 FD 2E 05 00   mov32 cb, $00000005
 2237   126B 00 00 
@@ -2370,31 +2370,31 @@
 2239   126E FD 43         mov [d], b
 2240   1270             ; print("*********************\n"); 
 2241   1270             ; --- START FUNCTION CALL
-2242   1270 26 11 1F      mov b, _s45 ; "*********************\n"
+2242   1270 26 C5 1E      mov b, _s45 ; "*********************\n"
 2243   1273 FD AB         swp b
 2244   1275 D8            push b
-2245   1276 07 79 14      call print
+2245   1276 07 38 14      call print
 2246   1279 51 02 00      add sp, 2
 2247   127C             ; --- END FUNCTION CALL
 2248   127C             ; print("** HUNT THE WUMPUS **\n"); 
 2249   127C             ; --- START FUNCTION CALL
-2250   127C 26 28 1F      mov b, _s46 ; "** HUNT THE WUMPUS **\n"
+2250   127C 26 DC 1E      mov b, _s46 ; "** HUNT THE WUMPUS **\n"
 2251   127F FD AB         swp b
 2252   1281 D8            push b
-2253   1282 07 79 14      call print
+2253   1282 07 38 14      call print
 2254   1285 51 02 00      add sp, 2
 2255   1288             ; --- END FUNCTION CALL
 2256   1288             ; print("*********************\n"); 
 2257   1288             ; --- START FUNCTION CALL
-2258   1288 26 11 1F      mov b, _s45 ; "*********************\n"
+2258   1288 26 C5 1E      mov b, _s45 ; "*********************\n"
 2259   128B FD AB         swp b
 2260   128D D8            push b
-2261   128E 07 79 14      call print
+2261   128E 07 38 14      call print
 2262   1291 51 02 00      add sp, 2
 2263   1294             ; --- END FUNCTION CALL
 2264   1294             ; if (debug) { 
 2265   1294             _if41_cond:
-2266   1294 3B 56 17      mov d, _debug ; $debug
+2266   1294 3B 0A 17      mov d, _debug ; $debug
 2267   1297 2A            mov b, [d]
 2268   1298 38 00 00      mov c, 0
 2269   129B C0 00 00      cmp b, 0
@@ -2402,15 +2402,15 @@
 2271   12A1             _if41_TRUE:
 2272   12A1             ; print("Wumpus is at "); print_unsigned(loc[  1      ]+1); 
 2273   12A1             ; --- START FUNCTION CALL
-2274   12A1 26 3F 1F      mov b, _s47 ; "Wumpus is at "
+2274   12A1 26 F3 1E      mov b, _s47 ; "Wumpus is at "
 2275   12A4 FD AB         swp b
 2276   12A6 D8            push b
-2277   12A7 07 79 14      call print
+2277   12A7 07 38 14      call print
 2278   12AA 51 02 00      add sp, 2
 2279   12AD             ; --- END FUNCTION CALL
 2280   12AD             ; print_unsigned(loc[  1      ]+1); 
 2281   12AD             ; --- START FUNCTION CALL
-2282   12AD 3B 5C 17      mov d, _loc_data ; $loc
+2282   12AD 3B 10 17      mov d, _loc_data ; $loc
 2283   12B0 D7            push a
 2284   12B1 DA            push d
 2285   12B2 FD 2E 01 00   mov32 cb, $00000001
@@ -2430,20 +2430,20 @@
 2297   12CC             ; --- END TERMS
 2298   12CC FD AB         swp b
 2299   12CE D8            push b
-2300   12CF 07 12 15      call print_unsigned
+2300   12CF 07 D1 14      call print_unsigned
 2301   12D2 51 02 00      add sp, 2
 2302   12D5             ; --- END FUNCTION CALL
 2303   12D5             ; print(", pits at "); print_unsigned(loc[  2    ]+1); 
 2304   12D5             ; --- START FUNCTION CALL
-2305   12D5 26 4D 1F      mov b, _s48 ; ", pits at "
+2305   12D5 26 01 1F      mov b, _s48 ; ", pits at "
 2306   12D8 FD AB         swp b
 2307   12DA D8            push b
-2308   12DB 07 79 14      call print
+2308   12DB 07 38 14      call print
 2309   12DE 51 02 00      add sp, 2
 2310   12E1             ; --- END FUNCTION CALL
 2311   12E1             ; print_unsigned(loc[  2    ]+1); 
 2312   12E1             ; --- START FUNCTION CALL
-2313   12E1 3B 5C 17      mov d, _loc_data ; $loc
+2313   12E1 3B 10 17      mov d, _loc_data ; $loc
 2314   12E4 D7            push a
 2315   12E5 DA            push d
 2316   12E6 FD 2E 02 00   mov32 cb, $00000002
@@ -2463,20 +2463,20 @@
 2328   1300             ; --- END TERMS
 2329   1300 FD AB         swp b
 2330   1302 D8            push b
-2331   1303 07 12 15      call print_unsigned
+2331   1303 07 D1 14      call print_unsigned
 2332   1306 51 02 00      add sp, 2
 2333   1309             ; --- END FUNCTION CALL
 2334   1309             ; print(" & "); print_unsigned(loc[  3    ]+1); 
 2335   1309             ; --- START FUNCTION CALL
-2336   1309 26 58 1F      mov b, _s49 ; " & "
+2336   1309 26 0C 1F      mov b, _s49 ; " & "
 2337   130C FD AB         swp b
 2338   130E D8            push b
-2339   130F 07 79 14      call print
+2339   130F 07 38 14      call print
 2340   1312 51 02 00      add sp, 2
 2341   1315             ; --- END FUNCTION CALL
 2342   1315             ; print_unsigned(loc[  3    ]+1); 
 2343   1315             ; --- START FUNCTION CALL
-2344   1315 3B 5C 17      mov d, _loc_data ; $loc
+2344   1315 3B 10 17      mov d, _loc_data ; $loc
 2345   1318 D7            push a
 2346   1319 DA            push d
 2347   131A FD 2E 03 00   mov32 cb, $00000003
@@ -2496,20 +2496,20 @@
 2359   1334             ; --- END TERMS
 2360   1334 FD AB         swp b
 2361   1336 D8            push b
-2362   1337 07 12 15      call print_unsigned
+2362   1337 07 D1 14      call print_unsigned
 2363   133A 51 02 00      add sp, 2
 2364   133D             ; --- END FUNCTION CALL
 2365   133D             ; print(", bats at "); print_unsigned(loc[  4     ]+1); 
 2366   133D             ; --- START FUNCTION CALL
-2367   133D 26 5C 1F      mov b, _s50 ; ", bats at "
+2367   133D 26 10 1F      mov b, _s50 ; ", bats at "
 2368   1340 FD AB         swp b
 2369   1342 D8            push b
-2370   1343 07 79 14      call print
+2370   1343 07 38 14      call print
 2371   1346 51 02 00      add sp, 2
 2372   1349             ; --- END FUNCTION CALL
 2373   1349             ; print_unsigned(loc[  4     ]+1); 
 2374   1349             ; --- START FUNCTION CALL
-2375   1349 3B 5C 17      mov d, _loc_data ; $loc
+2375   1349 3B 10 17      mov d, _loc_data ; $loc
 2376   134C D7            push a
 2377   134D DA            push d
 2378   134E FD 2E 04 00   mov32 cb, $00000004
@@ -2529,20 +2529,20 @@
 2390   1368             ; --- END TERMS
 2391   1368 FD AB         swp b
 2392   136A D8            push b
-2393   136B 07 12 15      call print_unsigned
+2393   136B 07 D1 14      call print_unsigned
 2394   136E 51 02 00      add sp, 2
 2395   1371             ; --- END FUNCTION CALL
 2396   1371             ; print(" & "); print_unsigned(loc[  5     ]+1); 
 2397   1371             ; --- START FUNCTION CALL
-2398   1371 26 58 1F      mov b, _s49 ; " & "
+2398   1371 26 0C 1F      mov b, _s49 ; " & "
 2399   1374 FD AB         swp b
 2400   1376 D8            push b
-2401   1377 07 79 14      call print
+2401   1377 07 38 14      call print
 2402   137A 51 02 00      add sp, 2
 2403   137D             ; --- END FUNCTION CALL
 2404   137D             ; print_unsigned(loc[  5     ]+1); 
 2405   137D             ; --- START FUNCTION CALL
-2406   137D 3B 5C 17      mov d, _loc_data ; $loc
+2406   137D 3B 10 17      mov d, _loc_data ; $loc
 2407   1380 D7            push a
 2408   1381 DA            push d
 2409   1382 FD 2E 05 00   mov32 cb, $00000005
@@ -2562,13 +2562,13 @@
 2421   139C             ; --- END TERMS
 2422   139C FD AB         swp b
 2423   139E D8            push b
-2424   139F 07 12 15      call print_unsigned
+2424   139F 07 D1 14      call print_unsigned
 2425   13A2 51 02 00      add sp, 2
 2426   13A5             ; --- END FUNCTION CALL
 2427   13A5 0A A8 13      jmp _if41_exit
 2428   13A8             _if41_exit:
 2429   13A8             ; finished =        0   ; 
-2430   13A8 3B 68 17      mov d, _finished ; $finished
+2430   13A8 3B 1C 17      mov d, _finished ; $finished
 2431   13AB DA            push d
 2432   13AC FD 2E 00 00   mov32 cb, $00000000
 2432   13B0 00 00 
@@ -2576,7 +2576,7 @@
 2434   13B3 FD 43         mov [d], b
 2435   13B5             ; while (finished ==        0   ) { 
 2436   13B5             _while42_cond:
-2437   13B5 3B 68 17      mov d, _finished ; $finished
+2437   13B5 3B 1C 17      mov d, _finished ; $finished
 2438   13B8 2A            mov b, [d]
 2439   13B9 38 00 00      mov c, 0
 2440   13BC             ; --- START RELATIONAL
@@ -2614,7 +2614,7 @@
 2471   13E6             _while42_exit:
 2472   13E6             ; if (finished ==        1   ) { 
 2473   13E6             _if44_cond:
-2474   13E6 3B 68 17      mov d, _finished ; $finished
+2474   13E6 3B 1C 17      mov d, _finished ; $finished
 2475   13E9 2A            mov b, [d]
 2476   13EA 38 00 00      mov c, 0
 2477   13ED             ; --- START RELATIONAL
@@ -2631,17 +2631,17 @@
 2487   13FF             _if44_TRUE:
 2488   13FF             ; print("HEE HEE HEE - THE WUMPUS WILL GET YOU NEXT TIME!!\n"); 
 2489   13FF             ; --- START FUNCTION CALL
-2490   13FF 26 67 1F      mov b, _s51 ; "HEE HEE HEE - THE WUMPUS WILL GET YOU NEXT TIME!!\n"
+2490   13FF 26 1B 1F      mov b, _s51 ; "HEE HEE HEE - THE WUMPUS WILL GET YOU NEXT TIME!!\n"
 2491   1402 FD AB         swp b
 2492   1404 D8            push b
-2493   1405 07 79 14      call print
+2493   1405 07 38 14      call print
 2494   1408 51 02 00      add sp, 2
 2495   140B             ; --- END FUNCTION CALL
 2496   140B 0A 0E 14      jmp _if44_exit
 2497   140E             _if44_exit:
 2498   140E             ; if (finished ==   2    ) { 
 2499   140E             _if45_cond:
-2500   140E 3B 68 17      mov d, _finished ; $finished
+2500   140E 3B 1C 17      mov d, _finished ; $finished
 2501   1411 2A            mov b, [d]
 2502   1412 38 00 00      mov c, 0
 2503   1415             ; --- START RELATIONAL
@@ -2658,1097 +2658,1045 @@
 2513   1427             _if45_TRUE:
 2514   1427             ; print("HA HA HA - YOU LOSE!\n"); 
 2515   1427             ; --- START FUNCTION CALL
-2516   1427 26 9A 1F      mov b, _s52 ; "HA HA HA - YOU LOSE!\n"
+2516   1427 26 4E 1F      mov b, _s52 ; "HA HA HA - YOU LOSE!\n"
 2517   142A FD AB         swp b
 2518   142C D8            push b
-2519   142D 07 79 14      call print
+2519   142D 07 38 14      call print
 2520   1430 51 02 00      add sp, 2
 2521   1433             ; --- END FUNCTION CALL
 2522   1433 0A 36 14      jmp _if45_exit
 2523   1436             _if45_exit:
-2524   1436             ; int c; 
-2525   1436 52 02 00      sub sp, 2
-2526   1439             ; c = getlet("NEW GAME (Y-N): "); 
-2527   1439 FA FF FF      lea d, [bp + -1] ; $c
-2528   143C DA            push d
-2529   143D             ; --- START FUNCTION CALL
-2530   143D 26 FB 17      mov b, _s1 ; "NEW GAME (Y-N): "
-2531   1440 FD AB         swp b
-2532   1442 D8            push b
-2533   1443 07 93 04      call getlet
-2534   1446 51 02 00      add sp, 2
-2535   1449             ; --- END FUNCTION CALL
-2536   1449 E7            pop d
-2537   144A FD 43         mov [d], b
-2538   144C             ; if (c == 'N') { 
-2539   144C             _if46_cond:
-2540   144C FA FF FF      lea d, [bp + -1] ; $c
-2541   144F 2A            mov b, [d]
-2542   1450 38 00 00      mov c, 0
-2543   1453             ; --- START RELATIONAL
-2544   1453 D7            push a
-2545   1454 11            mov a, b
-2546   1455 FD 2E 4E 00   mov32 cb, $0000004e
-2546   1459 00 00 
-2547   145B B0            cmp a, b
-2548   145C FD 71         seq ; ==
-2549   145E E4            pop a
-2550   145F             ; --- END RELATIONAL
-2551   145F C0 00 00      cmp b, 0
-2552   1462 C6 77 14      je _if46_exit
-2553   1465             _if46_TRUE:
-2554   1465             ; exit(1); 
-2555   1465             ; --- START FUNCTION CALL
-2556   1465 FD 2E 01 00   mov32 cb, $00000001
-2556   1469 00 00 
-2557   146B FD AB         swp b
-2558   146D D8            push b
-2559   146E 07 49 17      call exit
-2560   1471 51 02 00      add sp, 2
-2561   1474             ; --- END FUNCTION CALL
-2562   1474 0A 77 14      jmp _if46_exit
-2563   1477             _if46_exit:
-2564   1477 F9            leave
-2565   1478 09            ret
-2566   1479             
-2567   1479             print:
-2568   1479 F8 00 00      enter 0 ; (push bp; mov bp, sp)
-2569   147C             ; --- BEGIN INLINE ASM SEGMENT
-2570   147C FA 05 00      lea d, [bp + 5] ; $s
-2571   147F FD 2A         mov d, [d]
-2572   1481             _puts_L1_print:
-2573   1481 1E            mov al, [d]
-2574   1482 B9 00         cmp al, 0
-2575   1484 C6 90 14      jz _puts_END_print
-2576   1487 23            mov ah, al
-2577   1488 19 00         mov al, 0
-2578   148A 05 03         syscall sys_io
-2579   148C 79            inc d
-2580   148D 0A 81 14      jmp _puts_L1_print
-2581   1490             _puts_END_print:
-2582   1490             ; --- END INLINE ASM SEGMENT
-2583   1490 F9            leave
-2584   1491 09            ret
-2585   1492             
-2586   1492             getchar:
-2587   1492 F8 00 00      enter 0 ; (push bp; mov bp, sp)
-2588   1495             ; char c; 
-2589   1495 52 01 00      sub sp, 1
-2590   1498             ; --- BEGIN INLINE ASM SEGMENT
-2591   1498 19 01         mov al, 1
-2592   149A 05 03         syscall sys_io      ; receive in AH
-2593   149C 1A            mov al, ah
-2594   149D FA 00 00      lea d, [bp + 0] ; $c
-2595   14A0 3E            mov [d], al
-2596   14A1             ; --- END INLINE ASM SEGMENT
-2597   14A1             ; return c; 
-2598   14A1 FA 00 00      lea d, [bp + 0] ; $c
-2599   14A4 32            mov bl, [d]
-2600   14A5 A7 00         mov bh, 0
-2601   14A7 38 00 00      mov c, 0
-2602   14AA F9            leave
-2603   14AB 09            ret
-2604   14AC             
-2605   14AC             toupper:
-2606   14AC F8 00 00      enter 0 ; (push bp; mov bp, sp)
-2607   14AF             ; if (ch >= 'a' && ch <= 'z')  
-2608   14AF             _if47_cond:
-2609   14AF FA 05 00      lea d, [bp + 5] ; $ch
-2610   14B2 32            mov bl, [d]
-2611   14B3 A7 00         mov bh, 0
-2612   14B5 38 00 00      mov c, 0
-2613   14B8             ; --- START RELATIONAL
-2614   14B8 D7            push a
-2615   14B9 11            mov a, b
-2616   14BA FD 2E 61 00   mov32 cb, $00000061
-2616   14BE 00 00 
-2617   14C0 B0            cmp a, b
-2618   14C1 FD 80         sge ; >=
-2619   14C3 E4            pop a
-2620   14C4             ; --- END RELATIONAL
-2621   14C4             ; --- START LOGICAL AND
-2622   14C4 D7            push a
-2623   14C5 11            mov a, b
-2624   14C6 FA 05 00      lea d, [bp + 5] ; $ch
-2625   14C9 32            mov bl, [d]
-2626   14CA A7 00         mov bh, 0
-2627   14CC 38 00 00      mov c, 0
-2628   14CF             ; --- START RELATIONAL
-2629   14CF D7            push a
-2630   14D0 11            mov a, b
-2631   14D1 FD 2E 7A 00   mov32 cb, $0000007a
-2631   14D5 00 00 
-2632   14D7 B0            cmp a, b
-2633   14D8 FD 74         sle ; <= (signed)
-2634   14DA E4            pop a
-2635   14DB             ; --- END RELATIONAL
-2636   14DB FD A7         sand a, b
-2637   14DD E4            pop a
-2638   14DE             ; --- END LOGICAL AND
-2639   14DE C0 00 00      cmp b, 0
-2640   14E1 C6 05 15      je _if47_else
-2641   14E4             _if47_TRUE:
-2642   14E4             ; return ch - 'a' + 'A'; 
-2643   14E4 FA 05 00      lea d, [bp + 5] ; $ch
-2644   14E7 32            mov bl, [d]
-2645   14E8 A7 00         mov bh, 0
-2646   14EA 38 00 00      mov c, 0
-2647   14ED             ; --- START TERMS
-2648   14ED D7            push a
-2649   14EE 11            mov a, b
-2650   14EF FD 2E 61 00   mov32 cb, $00000061
-2650   14F3 00 00 
-2651   14F5 60            sub a, b
-2652   14F6 27            mov b, a
-2653   14F7 11            mov a, b
-2654   14F8 FD 2E 41 00   mov32 cb, $00000041
-2654   14FC 00 00 
-2655   14FE 56            add b, a
-2656   14FF E4            pop a
-2657   1500             ; --- END TERMS
-2658   1500 F9            leave
-2659   1501 09            ret
-2660   1502 0A 10 15      jmp _if47_exit
-2661   1505             _if47_else:
-2662   1505             ; return ch; 
-2663   1505 FA 05 00      lea d, [bp + 5] ; $ch
-2664   1508 32            mov bl, [d]
-2665   1509 A7 00         mov bh, 0
-2666   150B 38 00 00      mov c, 0
-2667   150E F9            leave
-2668   150F 09            ret
-2669   1510             _if47_exit:
-2670   1510 F9            leave
-2671   1511 09            ret
-2672   1512             
-2673   1512             print_unsigned:
-2674   1512 F8 00 00      enter 0 ; (push bp; mov bp, sp)
-2675   1515             ; char digits[5]; 
-2676   1515 52 05 00      sub sp, 5
-2677   1518             ; int i; 
-2678   1518 52 02 00      sub sp, 2
-2679   151B             ; i = 0; 
-2680   151B FA FA FF      lea d, [bp + -6] ; $i
-2681   151E DA            push d
-2682   151F FD 2E 00 00   mov32 cb, $00000000
-2682   1523 00 00 
-2683   1525 E7            pop d
-2684   1526 FD 43         mov [d], b
-2685   1528             ; if(num == 0){ 
-2686   1528             _if48_cond:
-2687   1528 FA 05 00      lea d, [bp + 5] ; $num
-2688   152B 2A            mov b, [d]
-2689   152C 38 00 00      mov c, 0
-2690   152F             ; --- START RELATIONAL
-2691   152F D7            push a
-2692   1530 11            mov a, b
-2693   1531 FD 2E 00 00   mov32 cb, $00000000
-2693   1535 00 00 
-2694   1537 B0            cmp a, b
-2695   1538 FD 71         seq ; ==
-2696   153A E4            pop a
-2697   153B             ; --- END RELATIONAL
-2698   153B C0 00 00      cmp b, 0
-2699   153E C6 53 15      je _if48_exit
-2700   1541             _if48_TRUE:
-2701   1541             ; putchar('0'); 
-2702   1541             ; --- START FUNCTION CALL
-2703   1541 FD 2E 30 00   mov32 cb, $00000030
-2703   1545 00 00 
-2704   1547 DD            push bl
-2705   1548 07 2A 16      call putchar
-2706   154B 51 01 00      add sp, 1
-2707   154E             ; --- END FUNCTION CALL
-2708   154E             ; return; 
-2709   154E F9            leave
-2710   154F 09            ret
-2711   1550 0A 53 15      jmp _if48_exit
-2712   1553             _if48_exit:
-2713   1553             ; while (num > 0) { 
-2714   1553             _while49_cond:
-2715   1553 FA 05 00      lea d, [bp + 5] ; $num
-2716   1556 2A            mov b, [d]
-2717   1557 38 00 00      mov c, 0
-2718   155A             ; --- START RELATIONAL
-2719   155A D7            push a
-2720   155B 11            mov a, b
-2721   155C FD 2E 00 00   mov32 cb, $00000000
-2721   1560 00 00 
-2722   1562 B0            cmp a, b
-2723   1563 FD 81         sgu ; > (unsigned)
-2724   1565 E4            pop a
-2725   1566             ; --- END RELATIONAL
-2726   1566 C0 00 00      cmp b, 0
-2727   1569 C6 E0 15      je _while49_exit
-2728   156C             _while49_block:
-2729   156C             ; digits[i] = '0' + (num % 10); 
-2730   156C FA FC FF      lea d, [bp + -4] ; $digits
-2731   156F D7            push a
-2732   1570 DA            push d
-2733   1571 FA FA FF      lea d, [bp + -6] ; $i
-2734   1574 2A            mov b, [d]
-2735   1575 38 00 00      mov c, 0
-2736   1578 E7            pop d
-2737   1579 5A            add d, b
-2738   157A E4            pop a
-2739   157B DA            push d
-2740   157C FD 2E 30 00   mov32 cb, $00000030
-2740   1580 00 00 
-2741   1582             ; --- START TERMS
-2742   1582 D7            push a
-2743   1583 11            mov a, b
-2744   1584 FA 05 00      lea d, [bp + 5] ; $num
-2745   1587 2A            mov b, [d]
-2746   1588 38 00 00      mov c, 0
-2747   158B             ; --- START FACTORS
-2748   158B D7            push a
-2749   158C FD D8         push g
-2750   158E 11            mov a, b
-2751   158F FD 7A         mov g, c
-2752   1591 FD 2E 0A 00   mov32 cb, $0000000a
-2752   1595 00 00 
-2753   1597 FD D8         push g ; save 'g' as the div instruction uses it
-2754   1599 AE            div a, b ; %, a: quotient, b: remainder
-2755   159A 11            mov a, b
-2756   159B FD F1         pop g
-2757   159D FD 38         mov c, g
-2758   159F 27            mov b, a
-2759   15A0 FD F1         pop g
-2760   15A2 E4            pop a
-2761   15A3             ; --- END FACTORS
-2762   15A3 56            add b, a
-2763   15A4 E4            pop a
-2764   15A5             ; --- END TERMS
-2765   15A5 E7            pop d
-2766   15A6 FD 3E         mov [d], bl
-2767   15A8             ; num = num / 10; 
-2768   15A8 FA 05 00      lea d, [bp + 5] ; $num
-2769   15AB DA            push d
-2770   15AC FA 05 00      lea d, [bp + 5] ; $num
-2771   15AF 2A            mov b, [d]
-2772   15B0 38 00 00      mov c, 0
-2773   15B3             ; --- START FACTORS
-2774   15B3 D7            push a
-2775   15B4 FD D8         push g
-2776   15B6 11            mov a, b
-2777   15B7 FD 7A         mov g, c
-2778   15B9 FD 2E 0A 00   mov32 cb, $0000000a
-2778   15BD 00 00 
-2779   15BF FD D8         push g ; save 'g' as the div instruction uses it
-2780   15C1 AE            div a, b ; /, a: quotient, b: remainder
-2781   15C2 FD F1         pop g
-2782   15C4 FD 38         mov c, g
-2783   15C6 27            mov b, a
-2784   15C7 FD F1         pop g
-2785   15C9 E4            pop a
-2786   15CA             ; --- END FACTORS
-2787   15CA E7            pop d
-2788   15CB FD 43         mov [d], b
-2789   15CD             ; i++; 
+2524   1436 F9            leave
+2525   1437 09            ret
+2526   1438             
+2527   1438             print:
+2528   1438 F8 00 00      enter 0 ; (push bp; mov bp, sp)
+2529   143B             ; --- BEGIN INLINE ASM SEGMENT
+2530   143B FA 05 00      lea d, [bp + 5] ; $s
+2531   143E FD 2A         mov d, [d]
+2532   1440             _puts_L1_print:
+2533   1440 1E            mov al, [d]
+2534   1441 B9 00         cmp al, 0
+2535   1443 C6 4F 14      jz _puts_END_print
+2536   1446 23            mov ah, al
+2537   1447 19 00         mov al, 0
+2538   1449 05 03         syscall sys_io
+2539   144B 79            inc d
+2540   144C 0A 40 14      jmp _puts_L1_print
+2541   144F             _puts_END_print:
+2542   144F             ; --- END INLINE ASM SEGMENT
+2543   144F F9            leave
+2544   1450 09            ret
+2545   1451             
+2546   1451             getchar:
+2547   1451 F8 00 00      enter 0 ; (push bp; mov bp, sp)
+2548   1454             ; char c; 
+2549   1454 52 01 00      sub sp, 1
+2550   1457             ; --- BEGIN INLINE ASM SEGMENT
+2551   1457 19 01         mov al, 1
+2552   1459 05 03         syscall sys_io      ; receive in AH
+2553   145B 1A            mov al, ah
+2554   145C FA 00 00      lea d, [bp + 0] ; $c
+2555   145F 3E            mov [d], al
+2556   1460             ; --- END INLINE ASM SEGMENT
+2557   1460             ; return c; 
+2558   1460 FA 00 00      lea d, [bp + 0] ; $c
+2559   1463 32            mov bl, [d]
+2560   1464 A7 00         mov bh, 0
+2561   1466 38 00 00      mov c, 0
+2562   1469 F9            leave
+2563   146A 09            ret
+2564   146B             
+2565   146B             toupper:
+2566   146B F8 00 00      enter 0 ; (push bp; mov bp, sp)
+2567   146E             ; if (ch >= 'a' && ch <= 'z')  
+2568   146E             _if46_cond:
+2569   146E FA 05 00      lea d, [bp + 5] ; $ch
+2570   1471 32            mov bl, [d]
+2571   1472 A7 00         mov bh, 0
+2572   1474 38 00 00      mov c, 0
+2573   1477             ; --- START RELATIONAL
+2574   1477 D7            push a
+2575   1478 11            mov a, b
+2576   1479 FD 2E 61 00   mov32 cb, $00000061
+2576   147D 00 00 
+2577   147F B0            cmp a, b
+2578   1480 FD 80         sge ; >=
+2579   1482 E4            pop a
+2580   1483             ; --- END RELATIONAL
+2581   1483             ; --- START LOGICAL AND
+2582   1483 D7            push a
+2583   1484 11            mov a, b
+2584   1485 FA 05 00      lea d, [bp + 5] ; $ch
+2585   1488 32            mov bl, [d]
+2586   1489 A7 00         mov bh, 0
+2587   148B 38 00 00      mov c, 0
+2588   148E             ; --- START RELATIONAL
+2589   148E D7            push a
+2590   148F 11            mov a, b
+2591   1490 FD 2E 7A 00   mov32 cb, $0000007a
+2591   1494 00 00 
+2592   1496 B0            cmp a, b
+2593   1497 FD 74         sle ; <= (signed)
+2594   1499 E4            pop a
+2595   149A             ; --- END RELATIONAL
+2596   149A FD A7         sand a, b
+2597   149C E4            pop a
+2598   149D             ; --- END LOGICAL AND
+2599   149D C0 00 00      cmp b, 0
+2600   14A0 C6 C4 14      je _if46_else
+2601   14A3             _if46_TRUE:
+2602   14A3             ; return ch - 'a' + 'A'; 
+2603   14A3 FA 05 00      lea d, [bp + 5] ; $ch
+2604   14A6 32            mov bl, [d]
+2605   14A7 A7 00         mov bh, 0
+2606   14A9 38 00 00      mov c, 0
+2607   14AC             ; --- START TERMS
+2608   14AC D7            push a
+2609   14AD 11            mov a, b
+2610   14AE FD 2E 61 00   mov32 cb, $00000061
+2610   14B2 00 00 
+2611   14B4 60            sub a, b
+2612   14B5 27            mov b, a
+2613   14B6 11            mov a, b
+2614   14B7 FD 2E 41 00   mov32 cb, $00000041
+2614   14BB 00 00 
+2615   14BD 56            add b, a
+2616   14BE E4            pop a
+2617   14BF             ; --- END TERMS
+2618   14BF F9            leave
+2619   14C0 09            ret
+2620   14C1 0A CF 14      jmp _if46_exit
+2621   14C4             _if46_else:
+2622   14C4             ; return ch; 
+2623   14C4 FA 05 00      lea d, [bp + 5] ; $ch
+2624   14C7 32            mov bl, [d]
+2625   14C8 A7 00         mov bh, 0
+2626   14CA 38 00 00      mov c, 0
+2627   14CD F9            leave
+2628   14CE 09            ret
+2629   14CF             _if46_exit:
+2630   14CF F9            leave
+2631   14D0 09            ret
+2632   14D1             
+2633   14D1             print_unsigned:
+2634   14D1 F8 00 00      enter 0 ; (push bp; mov bp, sp)
+2635   14D4             ; char digits[5]; 
+2636   14D4 52 05 00      sub sp, 5
+2637   14D7             ; int i; 
+2638   14D7 52 02 00      sub sp, 2
+2639   14DA             ; i = 0; 
+2640   14DA FA FA FF      lea d, [bp + -6] ; $i
+2641   14DD DA            push d
+2642   14DE FD 2E 00 00   mov32 cb, $00000000
+2642   14E2 00 00 
+2643   14E4 E7            pop d
+2644   14E5 FD 43         mov [d], b
+2645   14E7             ; if(num == 0){ 
+2646   14E7             _if47_cond:
+2647   14E7 FA 05 00      lea d, [bp + 5] ; $num
+2648   14EA 2A            mov b, [d]
+2649   14EB 38 00 00      mov c, 0
+2650   14EE             ; --- START RELATIONAL
+2651   14EE D7            push a
+2652   14EF 11            mov a, b
+2653   14F0 FD 2E 00 00   mov32 cb, $00000000
+2653   14F4 00 00 
+2654   14F6 B0            cmp a, b
+2655   14F7 FD 71         seq ; ==
+2656   14F9 E4            pop a
+2657   14FA             ; --- END RELATIONAL
+2658   14FA C0 00 00      cmp b, 0
+2659   14FD C6 12 15      je _if47_exit
+2660   1500             _if47_TRUE:
+2661   1500             ; putchar('0'); 
+2662   1500             ; --- START FUNCTION CALL
+2663   1500 FD 2E 30 00   mov32 cb, $00000030
+2663   1504 00 00 
+2664   1506 DD            push bl
+2665   1507 07 E9 15      call putchar
+2666   150A 51 01 00      add sp, 1
+2667   150D             ; --- END FUNCTION CALL
+2668   150D             ; return; 
+2669   150D F9            leave
+2670   150E 09            ret
+2671   150F 0A 12 15      jmp _if47_exit
+2672   1512             _if47_exit:
+2673   1512             ; while (num > 0) { 
+2674   1512             _while48_cond:
+2675   1512 FA 05 00      lea d, [bp + 5] ; $num
+2676   1515 2A            mov b, [d]
+2677   1516 38 00 00      mov c, 0
+2678   1519             ; --- START RELATIONAL
+2679   1519 D7            push a
+2680   151A 11            mov a, b
+2681   151B FD 2E 00 00   mov32 cb, $00000000
+2681   151F 00 00 
+2682   1521 B0            cmp a, b
+2683   1522 FD 81         sgu ; > (unsigned)
+2684   1524 E4            pop a
+2685   1525             ; --- END RELATIONAL
+2686   1525 C0 00 00      cmp b, 0
+2687   1528 C6 9F 15      je _while48_exit
+2688   152B             _while48_block:
+2689   152B             ; digits[i] = '0' + (num % 10); 
+2690   152B FA FC FF      lea d, [bp + -4] ; $digits
+2691   152E D7            push a
+2692   152F DA            push d
+2693   1530 FA FA FF      lea d, [bp + -6] ; $i
+2694   1533 2A            mov b, [d]
+2695   1534 38 00 00      mov c, 0
+2696   1537 E7            pop d
+2697   1538 5A            add d, b
+2698   1539 E4            pop a
+2699   153A DA            push d
+2700   153B FD 2E 30 00   mov32 cb, $00000030
+2700   153F 00 00 
+2701   1541             ; --- START TERMS
+2702   1541 D7            push a
+2703   1542 11            mov a, b
+2704   1543 FA 05 00      lea d, [bp + 5] ; $num
+2705   1546 2A            mov b, [d]
+2706   1547 38 00 00      mov c, 0
+2707   154A             ; --- START FACTORS
+2708   154A D7            push a
+2709   154B FD D8         push g
+2710   154D 11            mov a, b
+2711   154E FD 7A         mov g, c
+2712   1550 FD 2E 0A 00   mov32 cb, $0000000a
+2712   1554 00 00 
+2713   1556 FD D8         push g ; save 'g' as the div instruction uses it
+2714   1558 AE            div a, b ; %, a: quotient, b: remainder
+2715   1559 11            mov a, b
+2716   155A FD F1         pop g
+2717   155C FD 38         mov c, g
+2718   155E 27            mov b, a
+2719   155F FD F1         pop g
+2720   1561 E4            pop a
+2721   1562             ; --- END FACTORS
+2722   1562 56            add b, a
+2723   1563 E4            pop a
+2724   1564             ; --- END TERMS
+2725   1564 E7            pop d
+2726   1565 FD 3E         mov [d], bl
+2727   1567             ; num = num / 10; 
+2728   1567 FA 05 00      lea d, [bp + 5] ; $num
+2729   156A DA            push d
+2730   156B FA 05 00      lea d, [bp + 5] ; $num
+2731   156E 2A            mov b, [d]
+2732   156F 38 00 00      mov c, 0
+2733   1572             ; --- START FACTORS
+2734   1572 D7            push a
+2735   1573 FD D8         push g
+2736   1575 11            mov a, b
+2737   1576 FD 7A         mov g, c
+2738   1578 FD 2E 0A 00   mov32 cb, $0000000a
+2738   157C 00 00 
+2739   157E FD D8         push g ; save 'g' as the div instruction uses it
+2740   1580 AE            div a, b ; /, a: quotient, b: remainder
+2741   1581 FD F1         pop g
+2742   1583 FD 38         mov c, g
+2743   1585 27            mov b, a
+2744   1586 FD F1         pop g
+2745   1588 E4            pop a
+2746   1589             ; --- END FACTORS
+2747   1589 E7            pop d
+2748   158A FD 43         mov [d], b
+2749   158C             ; i++; 
+2750   158C FA FA FF      lea d, [bp + -6] ; $i
+2751   158F 2A            mov b, [d]
+2752   1590 38 00 00      mov c, 0
+2753   1593 11            mov a, b
+2754   1594 FD 77         inc b
+2755   1596 FA FA FF      lea d, [bp + -6] ; $i
+2756   1599 FD 43         mov [d], b
+2757   159B 27            mov b, a
+2758   159C 0A 12 15      jmp _while48_cond
+2759   159F             _while48_exit:
+2760   159F             ; while (i > 0) { 
+2761   159F             _while55_cond:
+2762   159F FA FA FF      lea d, [bp + -6] ; $i
+2763   15A2 2A            mov b, [d]
+2764   15A3 38 00 00      mov c, 0
+2765   15A6             ; --- START RELATIONAL
+2766   15A6 D7            push a
+2767   15A7 11            mov a, b
+2768   15A8 FD 2E 00 00   mov32 cb, $00000000
+2768   15AC 00 00 
+2769   15AE B0            cmp a, b
+2770   15AF FD 7F         sgt ; >
+2771   15B1 E4            pop a
+2772   15B2             ; --- END RELATIONAL
+2773   15B2 C0 00 00      cmp b, 0
+2774   15B5 C6 E7 15      je _while55_exit
+2775   15B8             _while55_block:
+2776   15B8             ; i--; 
+2777   15B8 FA FA FF      lea d, [bp + -6] ; $i
+2778   15BB 2A            mov b, [d]
+2779   15BC 38 00 00      mov c, 0
+2780   15BF 11            mov a, b
+2781   15C0 FD 7D         dec b
+2782   15C2 FA FA FF      lea d, [bp + -6] ; $i
+2783   15C5 FD 43         mov [d], b
+2784   15C7 27            mov b, a
+2785   15C8             ; putchar(digits[i]); 
+2786   15C8             ; --- START FUNCTION CALL
+2787   15C8 FA FC FF      lea d, [bp + -4] ; $digits
+2788   15CB D7            push a
+2789   15CC DA            push d
 2790   15CD FA FA FF      lea d, [bp + -6] ; $i
 2791   15D0 2A            mov b, [d]
 2792   15D1 38 00 00      mov c, 0
-2793   15D4 11            mov a, b
-2794   15D5 FD 77         inc b
-2795   15D7 FA FA FF      lea d, [bp + -6] ; $i
-2796   15DA FD 43         mov [d], b
-2797   15DC 27            mov b, a
-2798   15DD 0A 53 15      jmp _while49_cond
-2799   15E0             _while49_exit:
-2800   15E0             ; while (i > 0) { 
-2801   15E0             _while56_cond:
-2802   15E0 FA FA FF      lea d, [bp + -6] ; $i
-2803   15E3 2A            mov b, [d]
-2804   15E4 38 00 00      mov c, 0
-2805   15E7             ; --- START RELATIONAL
-2806   15E7 D7            push a
-2807   15E8 11            mov a, b
-2808   15E9 FD 2E 00 00   mov32 cb, $00000000
-2808   15ED 00 00 
-2809   15EF B0            cmp a, b
-2810   15F0 FD 7F         sgt ; >
-2811   15F2 E4            pop a
-2812   15F3             ; --- END RELATIONAL
-2813   15F3 C0 00 00      cmp b, 0
-2814   15F6 C6 28 16      je _while56_exit
-2815   15F9             _while56_block:
-2816   15F9             ; i--; 
-2817   15F9 FA FA FF      lea d, [bp + -6] ; $i
-2818   15FC 2A            mov b, [d]
-2819   15FD 38 00 00      mov c, 0
-2820   1600 11            mov a, b
-2821   1601 FD 7D         dec b
-2822   1603 FA FA FF      lea d, [bp + -6] ; $i
-2823   1606 FD 43         mov [d], b
-2824   1608 27            mov b, a
-2825   1609             ; putchar(digits[i]); 
-2826   1609             ; --- START FUNCTION CALL
-2827   1609 FA FC FF      lea d, [bp + -4] ; $digits
-2828   160C D7            push a
-2829   160D DA            push d
-2830   160E FA FA FF      lea d, [bp + -6] ; $i
-2831   1611 2A            mov b, [d]
-2832   1612 38 00 00      mov c, 0
-2833   1615 E7            pop d
-2834   1616 5A            add d, b
-2835   1617 E4            pop a
-2836   1618 32            mov bl, [d]
-2837   1619 A7 00         mov bh, 0
-2838   161B 38 00 00      mov c, 0
-2839   161E DD            push bl
-2840   161F 07 2A 16      call putchar
-2841   1622 51 01 00      add sp, 1
-2842   1625             ; --- END FUNCTION CALL
-2843   1625 0A E0 15      jmp _while56_cond
-2844   1628             _while56_exit:
-2845   1628 F9            leave
-2846   1629 09            ret
-2847   162A             
-2848   162A             putchar:
-2849   162A F8 00 00      enter 0 ; (push bp; mov bp, sp)
-2850   162D             ; --- BEGIN INLINE ASM SEGMENT
-2851   162D FA 05 00      lea d, [bp + 5] ; $c
-2852   1630 1E            mov al, [d]
-2853   1631 23            mov ah, al
-2854   1632 19 00         mov al, 0
-2855   1634 05 03         syscall sys_io      ; char in AH
-2856   1636             ; --- END INLINE ASM SEGMENT
-2857   1636 F9            leave
-2858   1637 09            ret
-2859   1638             
-2860   1638             scann:
-2861   1638 F8 00 00      enter 0 ; (push bp; mov bp, sp)
-2862   163B             ; int m; 
-2863   163B 52 02 00      sub sp, 2
-2864   163E             ; --- BEGIN INLINE ASM SEGMENT
-2865   163E F8 08 00      enter 8
-2866   1641 FA F9 FF      lea d, [bp +- 7]
-2867   1644 07 8C 16      call _gets_scann
-2868   1647 07 7C 16      call _strlen_scann      ; get string length in C
-2869   164A 7E            dec c
-2870   164B FD 4E         mov si, d
-2871   164D 12            mov a, c
-2872   164E FD 99         shl a
-2873   1650 3B 29 17      mov d, table_power_scann
-2874   1653 59            add d, a
-2875   1654 38 00 00      mov c, 0
-2876   1657             mul_loop_scann:
-2877   1657 F6            lodsb      ; load ASCII to al
-2878   1658 B9 00         cmp al, 0
-2879   165A C6 6D 16      je mul_exit_scann
-2880   165D 6F 30         sub al, $30    ; make into integer
-2881   165F 22 00         mov ah, 0
-2882   1661 2A            mov b, [d]
-2883   1662 AC            mul a, b      ; result in B since it fits in 16bits
-2884   1663 11            mov a, b
-2885   1664 28            mov b, c
-2886   1665 54            add a, b
-2887   1666 39            mov c, a
-2888   1667 63 02 00      sub d, 2
-2889   166A 0A 57 16      jmp mul_loop_scann
-2890   166D             mul_exit_scann:
-2891   166D 12            mov a, c
-2892   166E F9            leave
-2893   166F FA FF FF      lea d, [bp + -1] ; $m
-2894   1672 43            mov [d], a
-2895   1673             ; --- END INLINE ASM SEGMENT
-2896   1673             ; return m; 
-2897   1673 FA FF FF      lea d, [bp + -1] ; $m
-2898   1676 2A            mov b, [d]
-2899   1677 38 00 00      mov c, 0
-2900   167A F9            leave
-2901   167B 09            ret
-2902   167C             ; --- BEGIN INLINE ASM SEGMENT
-2903   167C             _strlen_scann:
-2904   167C DA            push d
-2905   167D 38 00 00      mov c, 0
-2906   1680             _strlen_L1_scann:
-2907   1680 BD 00         cmp byte [d], 0
-2908   1682 C6 8A 16      je _strlen_ret_scann
-2909   1685 79            inc d
-2910   1686 78            inc c
-2911   1687 0A 80 16      jmp _strlen_L1_scann
-2912   168A             _strlen_ret_scann:
-2913   168A E7            pop d
-2914   168B 09            ret
-2915   168C             _gets_scann:
-2916   168C DA            push d
-2917   168D             _gets_loop_scann:
-2918   168D 19 01         mov al, 1
-2919   168F 05 03         syscall sys_io      ; receive in AH
-2920   1691 B9 00         cmp al, 0        ; check error code (AL)
-2921   1693 C6 8D 16      je _gets_loop_scann      ; if no char received, retry
-2922   1696 76 1B         cmp ah, 27
-2923   1698 C6 B9 16      je _gets_ansi_esc_scann
-2924   169B 76 0A         cmp ah, $0A        ; LF
-2925   169D C6 24 17      je _gets_end_scann
-2926   16A0 76 0D         cmp ah, $0D        ; CR
-2927   16A2 C6 24 17      je _gets_end_scann
-2928   16A5 76 5C         cmp ah, $5C        ; '\\'
-2929   16A7 C6 E5 16      je _gets_escape_scann
-2930   16AA 76 08         cmp ah, $08      ; check for backspace
-2931   16AC C6 B5 16      je _gets_backspace_scann
-2932   16AF 1A            mov al, ah
-2933   16B0 3E            mov [d], al
-2934   16B1 79            inc d
-2935   16B2 0A 8D 16      jmp _gets_loop_scann
-2936   16B5             _gets_backspace_scann:
-2937   16B5 7F            dec d
-2938   16B6 0A 8D 16      jmp _gets_loop_scann
-2939   16B9             _gets_ansi_esc_scann:
-2940   16B9 19 01         mov al, 1
-2941   16BB 05 03         syscall sys_io        ; receive in AH without echo
-2942   16BD B9 00         cmp al, 0          ; check error code (AL)
-2943   16BF C6 B9 16      je _gets_ansi_esc_scann    ; if no char received, retry
-2944   16C2 76 5B         cmp ah, '['
-2945   16C4 C7 8D 16      jne _gets_loop_scann
-2946   16C7             _gets_ansi_esc_2_scann:
-2947   16C7 19 01         mov al, 1
-2948   16C9 05 03         syscall sys_io          ; receive in AH without echo
-2949   16CB B9 00         cmp al, 0            ; check error code (AL)
-2950   16CD C6 C7 16      je _gets_ansi_esc_2_scann  ; if no char received, retry
-2951   16D0 76 44         cmp ah, 'D'
-2952   16D2 C6 DD 16      je _gets_left_arrow_scann
-2953   16D5 76 43         cmp ah, 'C'
-2954   16D7 C6 E1 16      je _gets_right_arrow_scann
-2955   16DA 0A 8D 16      jmp _gets_loop_scann
-2956   16DD             _gets_left_arrow_scann:
-2957   16DD 7F            dec d
-2958   16DE 0A 8D 16      jmp _gets_loop_scann
-2959   16E1             _gets_right_arrow_scann:
-2960   16E1 79            inc d
-2961   16E2 0A 8D 16      jmp _gets_loop_scann
-2962   16E5             _gets_escape_scann:
-2963   16E5 19 01         mov al, 1
-2964   16E7 05 03         syscall sys_io      ; receive in AH
-2965   16E9 B9 00         cmp al, 0        ; check error code (AL)
-2966   16EB C6 E5 16      je _gets_escape_scann      ; if no char received, retry
-2967   16EE 76 6E         cmp ah, 'n'
-2968   16F0 C6 0F 17      je _gets_LF_scann
-2969   16F3 76 72         cmp ah, 'r'
-2970   16F5 C6 16 17      je _gets_CR_scann
-2971   16F8 76 30         cmp ah, '0'
-2972   16FA C6 1D 17      je _gets_NULL_scann
-2973   16FD 76 5C         cmp ah, $5C  
-2974   16FF C6 08 17      je _gets_slash_scann
-2975   1702 1A            mov al, ah        ; if not a known escape, it is just a normal letter
-2976   1703 3E            mov [d], al
-2977   1704 79            inc d
-2978   1705 0A 8D 16      jmp _gets_loop_scann
-2979   1708             _gets_slash_scann:
-2980   1708 19 5C         mov al, $5C
-2981   170A 3E            mov [d], al
-2982   170B 79            inc d
-2983   170C 0A 8D 16      jmp _gets_loop_scann
-2984   170F             _gets_LF_scann:
-2985   170F 19 0A         mov al, $0A
-2986   1711 3E            mov [d], al
-2987   1712 79            inc d
-2988   1713 0A 8D 16      jmp _gets_loop_scann
-2989   1716             _gets_CR_scann:
-2990   1716 19 0D         mov al, $0D
-2991   1718 3E            mov [d], al
-2992   1719 79            inc d
-2993   171A 0A 8D 16      jmp _gets_loop_scann
-2994   171D             _gets_NULL_scann:
-2995   171D 19 00         mov al, $00
-2996   171F 3E            mov [d], al
-2997   1720 79            inc d
-2998   1721 0A 8D 16      jmp _gets_loop_scann
-2999   1724             _gets_end_scann:
-3000   1724 19 00         mov al, 0
-3001   1726 3E            mov [d], al        ; terminate string
-3002   1727 E7            pop d
-3003   1728 09            ret
-3004   1729             table_power_scann:
-3005   1729 01 00       .dw 1              ; 1
-3006   172B 0A 00       .dw $A             ; 10
-3007   172D 64 00       .dw $64            ; 100
-3008   172F E8 03       .dw $3E8           ; 1000
-3009   1731 10 27       .dw $2710          ; 10000
-3010   1733 A0 86 01 00 .dw $86A0, $1      ; 100000
-3011   1737 40 42 0F 00 .dw $4240, $F      ; 1000000
-3012   173B 80 96 98 00 .dw $9680, $98     ; 10000000
-3013   173F 00 E1 F5 05 .dw $E100, $5F5    ; 100000000
-3014   1743 00 CA 9A 3B .dw $CA00, $3B9A   ; 1000000000
-3015   1747             ; --- END INLINE ASM SEGMENT
-3016   1747 F9            leave
-3017   1748 09            ret
-3018   1749             
-3019   1749             exit:
-3020   1749 F8 00 00      enter 0 ; (push bp; mov bp, sp)
-3021   174C             ; --- BEGIN INLINE ASM SEGMENT
-3022   174C FA 05 00      lea d, [bp + 5] ; $status
-3023   174F 2A            mov b, [d] ; return value
-3024   1750 05 0B         syscall sys_terminate_proc
-3025   1752             ; --- END INLINE ASM SEGMENT
-3026   1752 F9            leave
-3027   1753 09            ret
-3028   1754             ; --- END TEXT SEGMENT
-3029   1754             
-3030   1754             ; --- BEGIN DATA SEGMENT
-3031   1754 00 00       _arrows: .fill 2, 0
-3032   1756 00 00       _debug: .dw $0000
-3033   1758 1D 00       _rand_val: .dw $001d
-3034   175A 01 00       _rand_inc: .dw $0001
-3035   175C 00 00 00 00 _loc_data: .fill 12, 0
-3035   1760 00 00 00 00 
-3035   1764 00 00 00 00 
-3036   1768 00 00       _finished: .fill 2, 0
-3037   176A 01 00 04 00 _cave_data: .dw $0001,$0004,$0007,$0000,$0002,$0009,$0001,$0003,$000b,$0002,$0004,$000d,$0000,$0003,$0005,
-3037   176E 07 00 00 00 
-3037   1772 02 00 09 00 
-3037   1776 01 00 03 00 
-3037   177A 0B 00 02 00 
-3037   177E 04 00 0D 00 
-3037   1782 00 00 03 00 
-3037   1786 05 00 
-3038   1788 00 00       .dw 
-3039   178A 00 00       .dw 
-3040   178C 04 00 06 00 .dw $0004,$0006,$000e,$0005,$0007,$0010,$0000,$0006,$0008,$0007,$0009,$0011,$0001,$0008,$000a,$0009,
-3040   1790 0E 00 05 00 
-3040   1794 07 00 10 00 
-3040   1798 00 00 06 00 
-3040   179C 08 00 07 00 
-3040   17A0 09 00 11 00 
-3040   17A4 01 00 08 00 
-3040   17A8 0A 00 09 00 
-3041   17AC 0B 00 12 00 .dw $000b,$0012,$0002,$000a,$000c,$000b,$000d,$0013,$0003,$000c,$000e,$0005,$000d,$000f,$000e,$0010,
-3041   17B0 02 00 0A 00 
-3041   17B4 0C 00 0B 00 
-3041   17B8 0D 00 13 00 
-3041   17BC 03 00 0C 00 
-3041   17C0 0E 00 05 00 
-3041   17C4 0D 00 0F 00 
-3041   17C8 0E 00 10 00 
-3042   17CC 13 00 06 00 .dw $0013,$0006,$000f,$0011,$0008,$0010,$0012,$000a,$0011,$0013,$000c,$000f,$0012,
-3042   17D0 0F 00 11 00 
-3042   17D4 08 00 10 00 
-3042   17D8 12 00 0A 00 
-3042   17DC 11 00 13 00 
-3042   17E0 0C 00 0F 00 
-3042   17E4 12 00 
-3043   17E6 49 4E 53 54 _s0: .db "INSTRUCTIONS (Y-N): ", 0
-3043   17EA 52 55 43 54 
-3043   17EE 49 4F 4E 53 
-3043   17F2 20 28 59 2D 
-3043   17F6 4E 29 3A 20 
-3043   17FA 00 
-3044   17FB 4E 45 57 20 _s1: .db "NEW GAME (Y-N): ", 0
-3044   17FF 47 41 4D 45 
-3044   1803 20 28 59 2D 
-3044   1807 4E 29 3A 20 
-3044   180B 00 
-3045   180C 0A 0A 00    _s2: .db "\n\n", 0
-3046   180F 57 45 4C 43 _s3: .db "WELCOME TO HUNT THE WUMPUS\n", 0
-3046   1813 4F 4D 45 20 
-3046   1817 54 4F 20 48 
-3046   181B 55 4E 54 20 
-3046   181F 54 48 45 20 
-3046   1823 57 55 4D 50 
-3046   1827 55 53 0A 00 
-3047   182B 54 48 45 20 _s4: .db "THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n", 0
-3047   182F 57 55 4D 50 
-3047   1833 55 53 20 4C 
-3047   1837 49 56 45 53 
-3047   183B 20 49 4E 20 
-3047   183F 41 20 43 41 
-3047   1843 56 45 20 4F 
-3047   1847 46 20 32 30 
-3047   184B 20 52 4F 4F 
-3047   184F 4D 53 2E 20 
-3047   1853 45 41 43 48 
-3047   1857 20 52 4F 4F 
-3047   185B 4D 20 48 41 
-3047   185F 53 20 33 20 
-3047   1863 54 55 4E 4E 
-3047   1867 45 4C 53 20 
-3047   186B 4C 45 41 44 
-3047   186F 49 4E 47 20 
-3047   1873 54 4F 20 4F 
-3047   1877 54 48 45 52 
-3047   187B 20 52 4F 4F 
-3047   187F 4D 53 2E 0A 
-3047   1883 00 
-3048   1884 4C 4F 4F 4B _s5: .db "LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n\n", 0
-3048   1888 20 41 54 20 
-3048   188C 41 20 44 4F 
-3048   1890 44 45 43 41 
-3048   1894 48 45 44 52 
-3048   1898 4F 4E 20 54 
-3048   189C 4F 20 53 45 
-3048   18A0 45 20 48 4F 
-3048   18A4 57 20 54 48 
-3048   18A8 49 53 20 57 
-3048   18AC 4F 52 4B 53 
-3048   18B0 2E 0A 0A 00 
-3049   18B4 20 48 41 5A _s6: .db " HAZARDS:\n", 0
-3049   18B8 41 52 44 53 
-3049   18BC 3A 0A 00 
-3050   18BF 20 42 4F 54 _s7: .db " BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM. IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n", 0
-3050   18C3 54 4F 4D 4C 
-3050   18C7 45 53 53 20 
-3050   18CB 50 49 54 53 
-3050   18CF 3A 20 54 57 
-3050   18D3 4F 20 52 4F 
-3050   18D7 4F 4D 53 20 
-3050   18DB 48 41 56 45 
-3050   18DF 20 42 4F 54 
-3050   18E3 54 4F 4D 4C 
-3050   18E7 45 53 53 20 
-3050   18EB 50 49 54 53 
-3050   18EF 20 49 4E 20 
-3050   18F3 54 48 45 4D 
-3050   18F7 2E 20 49 46 
-3050   18FB 20 59 4F 55 
-3050   18FF 20 47 4F 20 
-3050   1903 54 48 45 52 
-3050   1907 45 2C 20 59 
-3050   190B 4F 55 20 46 
-3050   190F 41 4C 4C 20 
-3050   1913 49 4E 54 4F 
-3050   1917 20 54 48 45 
-3050   191B 20 50 49 54 
-3050   191F 20 28 26 20 
-3050   1923 4C 4F 53 45 
-3050   1927 21 29 0A 00 
-3051   192B 20 53 55 50 _s8: .db " SUPER BATS: TWO OTHER ROOMS HAVE SUPER BATS. IF YOU GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER\n", 0
-3051   192F 45 52 20 42 
-3051   1933 41 54 53 3A 
-3051   1937 20 54 57 4F 
-3051   193B 20 4F 54 48 
-3051   193F 45 52 20 52 
-3051   1943 4F 4F 4D 53 
-3051   1947 20 48 41 56 
-3051   194B 45 20 53 55 
-3051   194F 50 45 52 20 
-3051   1953 42 41 54 53 
-3051   1957 2E 20 49 46 
-3051   195B 20 59 4F 55 
-3051   195F 20 47 4F 20 
-3051   1963 54 48 45 52 
-3051   1967 45 2C 20 41 
-3051   196B 20 42 41 54 
-3051   196F 20 47 52 41 
-3051   1973 42 53 20 59 
-3051   1977 4F 55 20 41 
-3051   197B 4E 44 20 54 
-3051   197F 41 4B 45 53 
-3051   1983 20 59 4F 55 
-3051   1987 20 54 4F 20 
-3051   198B 53 4F 4D 45 
-3051   198F 20 4F 54 48 
-3051   1993 45 52 0A 00 
-3052   1997 20 20 20 52 _s9: .db "   ROOM AT RANDOM. (WHICH MAY BE TROUBLESOME)\n\n", 0
-3052   199B 4F 4F 4D 20 
-3052   199F 41 54 20 52 
-3052   19A3 41 4E 44 4F 
-3052   19A7 4D 2E 20 28 
-3052   19AB 57 48 49 43 
-3052   19AF 48 20 4D 41 
-3052   19B3 59 20 42 45 
-3052   19B7 20 54 52 4F 
-3052   19BB 55 42 4C 45 
-3052   19BF 53 4F 4D 45 
-3052   19C3 29 0A 0A 00 
-3053   19C7 20 57 55 4D _s10: .db " WUMPUS: THE WUMPUS IS NOT BOTHERED BY HAZARDS (HE HAS SUCKER FEET AND IS TOO BIG FOR A BAT TO LIFT).  USUALLY\n", 0
-3053   19CB 50 55 53 3A 
-3053   19CF 20 54 48 45 
-3053   19D3 20 57 55 4D 
-3053   19D7 50 55 53 20 
-3053   19DB 49 53 20 4E 
-3053   19DF 4F 54 20 42 
-3053   19E3 4F 54 48 45 
-3053   19E7 52 45 44 20 
-3053   19EB 42 59 20 48 
-3053   19EF 41 5A 41 52 
-3053   19F3 44 53 20 28 
-3053   19F7 48 45 20 48 
-3053   19FB 41 53 20 53 
-3053   19FF 55 43 4B 45 
-3053   1A03 52 20 46 45 
-3053   1A07 45 54 20 41 
-3053   1A0B 4E 44 20 49 
-3053   1A0F 53 20 54 4F 
-3053   1A13 4F 20 42 49 
-3053   1A17 47 20 46 4F 
-3053   1A1B 52 20 41 20 
-3053   1A1F 42 41 54 20 
-3053   1A23 54 4F 20 4C 
-3053   1A27 49 46 54 29 
-3053   1A2B 2E 20 20 55 
-3053   1A2F 53 55 41 4C 
-3053   1A33 4C 59 0A 00 
-3054   1A37 20 20 20 48 _s11: .db "   HE IS ASLEEP.  TWO THINGS WAKE HIM UP: YOU SHOOTING AN ARROW OR YOU ENTERING HIS ROOM.\n", 0
-3054   1A3B 45 20 49 53 
-3054   1A3F 20 41 53 4C 
-3054   1A43 45 45 50 2E 
-3054   1A47 20 20 54 57 
-3054   1A4B 4F 20 54 48 
-3054   1A4F 49 4E 47 53 
-3054   1A53 20 57 41 4B 
-3054   1A57 45 20 48 49 
-3054   1A5B 4D 20 55 50 
-3054   1A5F 3A 20 59 4F 
-3054   1A63 55 20 53 48 
-3054   1A67 4F 4F 54 49 
-3054   1A6B 4E 47 20 41 
-3054   1A6F 4E 20 41 52 
-3054   1A73 52 4F 57 20 
-3054   1A77 4F 52 20 59 
-3054   1A7B 4F 55 20 45 
-3054   1A7F 4E 54 45 52 
-3054   1A83 49 4E 47 20 
-3054   1A87 48 49 53 20 
-3054   1A8B 52 4F 4F 4D 
-3054   1A8F 2E 0A 00 
-3055   1A92 20 20 20 49 _s12: .db "   IF THE WUMPUS WAKES HE MOVES (P=.75) ONE ROOM OR STAYS STILL (P=.25).  AFTER THAT, IF HE IS WHERE YOU\n", 0
-3055   1A96 46 20 54 48 
-3055   1A9A 45 20 57 55 
-3055   1A9E 4D 50 55 53 
-3055   1AA2 20 57 41 4B 
-3055   1AA6 45 53 20 48 
-3055   1AAA 45 20 4D 4F 
-3055   1AAE 56 45 53 20 
-3055   1AB2 28 50 3D 2E 
-3055   1AB6 37 35 29 20 
-3055   1ABA 4F 4E 45 20 
-3055   1ABE 52 4F 4F 4D 
-3055   1AC2 20 4F 52 20 
-3055   1AC6 53 54 41 59 
-3055   1ACA 53 20 53 54 
-3055   1ACE 49 4C 4C 20 
-3055   1AD2 28 50 3D 2E 
-3055   1AD6 32 35 29 2E 
-3055   1ADA 20 20 41 46 
-3055   1ADE 54 45 52 20 
-3055   1AE2 54 48 41 54 
-3055   1AE6 2C 20 49 46 
-3055   1AEA 20 48 45 20 
-3055   1AEE 49 53 20 57 
-3055   1AF2 48 45 52 45 
-3055   1AF6 20 59 4F 55 
-3055   1AFA 0A 00 
-3056   1AFC 20 20 20 41 _s13: .db "   ARE, HE EATS YOU UP AND YOU LOSE!\n\n", 0
-3056   1B00 52 45 2C 20 
-3056   1B04 48 45 20 45 
-3056   1B08 41 54 53 20 
-3056   1B0C 59 4F 55 20 
-3056   1B10 55 50 20 41 
-3056   1B14 4E 44 20 59 
-3056   1B18 4F 55 20 4C 
-3056   1B1C 4F 53 45 21 
-3056   1B20 0A 0A 00 
-3057   1B23 20 59 4F 55 _s14: .db " YOU: EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW\n", 0
-3057   1B27 3A 20 45 41 
-3057   1B2B 43 48 20 54 
-3057   1B2F 55 52 4E 20 
-3057   1B33 59 4F 55 20 
-3057   1B37 4D 41 59 20 
-3057   1B3B 4D 4F 56 45 
-3057   1B3F 20 4F 52 20 
-3057   1B43 53 48 4F 4F 
-3057   1B47 54 20 41 20 
-3057   1B4B 43 52 4F 4F 
-3057   1B4F 4B 45 44 20 
-3057   1B53 41 52 52 4F 
-3057   1B57 57 0A 00 
-3058   1B5A 20 4D 4F 56 _s15: .db " MOVING: YOU CAN MOVE ONE ROOM (THRU ONE TUNNEL)\n", 0
-3058   1B5E 49 4E 47 3A 
-3058   1B62 20 59 4F 55 
-3058   1B66 20 43 41 4E 
-3058   1B6A 20 4D 4F 56 
-3058   1B6E 45 20 4F 4E 
-3058   1B72 45 20 52 4F 
-3058   1B76 4F 4D 20 28 
-3058   1B7A 54 48 52 55 
-3058   1B7E 20 4F 4E 45 
-3058   1B82 20 54 55 4E 
-3058   1B86 4E 45 4C 29 
-3058   1B8A 0A 00 
-3059   1B8C 20 41 52 52 _s16: .db " ARROWS: YOU HAVE 5 ARROWS. YOU LOSE WHEN YOU RUN OUT\n", 0
-3059   1B90 4F 57 53 3A 
-3059   1B94 20 59 4F 55 
-3059   1B98 20 48 41 56 
-3059   1B9C 45 20 35 20 
-3059   1BA0 41 52 52 4F 
-3059   1BA4 57 53 2E 20 
-3059   1BA8 59 4F 55 20 
-3059   1BAC 4C 4F 53 45 
-3059   1BB0 20 57 48 45 
-3059   1BB4 4E 20 59 4F 
-3059   1BB8 55 20 52 55 
-3059   1BBC 4E 20 4F 55 
-3059   1BC0 54 0A 00 
-3060   1BC3 20 20 20 45 _s17: .db "   EACH ARROW CAN GO FROM 1 TO 5 ROOMS. YOU AIM BY TELLING THE COMPUTER THE ROOM#S YOU WANT THE ARROW TO GO TO.\n", 0
-3060   1BC7 41 43 48 20 
-3060   1BCB 41 52 52 4F 
-3060   1BCF 57 20 43 41 
-3060   1BD3 4E 20 47 4F 
-3060   1BD7 20 46 52 4F 
-3060   1BDB 4D 20 31 20 
-3060   1BDF 54 4F 20 35 
-3060   1BE3 20 52 4F 4F 
-3060   1BE7 4D 53 2E 20 
-3060   1BEB 59 4F 55 20 
-3060   1BEF 41 49 4D 20 
-3060   1BF3 42 59 20 54 
-3060   1BF7 45 4C 4C 49 
-3060   1BFB 4E 47 20 54 
-3060   1BFF 48 45 20 43 
-3060   1C03 4F 4D 50 55 
-3060   1C07 54 45 52 20 
-3060   1C0B 54 48 45 20 
-3060   1C0F 52 4F 4F 4D 
-3060   1C13 23 53 20 59 
-3060   1C17 4F 55 20 57 
-3060   1C1B 41 4E 54 20 
-3060   1C1F 54 48 45 20 
-3060   1C23 41 52 52 4F 
-3060   1C27 57 20 54 4F 
-3060   1C2B 20 47 4F 20 
-3060   1C2F 54 4F 2E 0A 
-3060   1C33 00 
-3061   1C34 20 20 20 49 _s18: .db "   IF THE ARROW CANT GO THAT WAY (IF NO TUNNEL) IT MOVES AT RANDOM TO THE NEXT ROOM.\n", 0
-3061   1C38 46 20 54 48 
-3061   1C3C 45 20 41 52 
-3061   1C40 52 4F 57 20 
-3061   1C44 43 41 4E 54 
-3061   1C48 20 47 4F 20 
-3061   1C4C 54 48 41 54 
-3061   1C50 20 57 41 59 
-3061   1C54 20 28 49 46 
-3061   1C58 20 4E 4F 20 
-3061   1C5C 54 55 4E 4E 
-3061   1C60 45 4C 29 20 
-3061   1C64 49 54 20 4D 
-3061   1C68 4F 56 45 53 
-3061   1C6C 20 41 54 20 
-3061   1C70 52 41 4E 44 
-3061   1C74 4F 4D 20 54 
-3061   1C78 4F 20 54 48 
-3061   1C7C 45 20 4E 45 
-3061   1C80 58 54 20 52 
-3061   1C84 4F 4F 4D 2E 
-3061   1C88 0A 00 
-3062   1C8A 20 20 20 49 _s19: .db "   IF THE ARROW HITS THE WUMPUS, YOU WIN.\n", 0
-3062   1C8E 46 20 54 48 
-3062   1C92 45 20 41 52 
-3062   1C96 52 4F 57 20 
-3062   1C9A 48 49 54 53 
-3062   1C9E 20 54 48 45 
-3062   1CA2 20 57 55 4D 
-3062   1CA6 50 55 53 2C 
-3062   1CAA 20 59 4F 55 
-3062   1CAE 20 57 49 4E 
-3062   1CB2 2E 0A 00 
-3063   1CB5 20 20 20 49 _s20: .db "   IF THE ARROW HITS YOU, YOU LOSE.\n", 0
-3063   1CB9 46 20 54 48 
-3063   1CBD 45 20 41 52 
-3063   1CC1 52 4F 57 20 
-3063   1CC5 48 49 54 53 
-3063   1CC9 20 59 4F 55 
-3063   1CCD 2C 20 59 4F 
-3063   1CD1 55 20 4C 4F 
-3063   1CD5 53 45 2E 0A 
-3063   1CD9 00 
-3064   1CDA 20 57 41 52 _s21: .db " WARNINGS: WHEN YOU ARE ONE ROOM AWAY FROM A WUMPUS OR HAZARD, THE COMPUTER SAYS:\n", 0
-3064   1CDE 4E 49 4E 47 
-3064   1CE2 53 3A 20 57 
-3064   1CE6 48 45 4E 20 
-3064   1CEA 59 4F 55 20 
-3064   1CEE 41 52 45 20 
-3064   1CF2 4F 4E 45 20 
-3064   1CF6 52 4F 4F 4D 
-3064   1CFA 20 41 57 41 
-3064   1CFE 59 20 46 52 
-3064   1D02 4F 4D 20 41 
-3064   1D06 20 57 55 4D 
-3064   1D0A 50 55 53 20 
-3064   1D0E 4F 52 20 48 
-3064   1D12 41 5A 41 52 
-3064   1D16 44 2C 20 54 
-3064   1D1A 48 45 20 43 
-3064   1D1E 4F 4D 50 55 
-3064   1D22 54 45 52 20 
-3064   1D26 53 41 59 53 
-3064   1D2A 3A 0A 00 
-3065   1D2D 20 20 20 57 _s22: .db "   WUMPUS: I SMELL A WUMPUS\n", 0
-3065   1D31 55 4D 50 55 
-3065   1D35 53 3A 20 49 
-3065   1D39 20 53 4D 45 
-3065   1D3D 4C 4C 20 41 
-3065   1D41 20 57 55 4D 
-3065   1D45 50 55 53 0A 
-3065   1D49 00 
-3066   1D4A 20 20 20 42 _s23: .db "   BAT: BATS NEARBY\n", 0
-3066   1D4E 41 54 3A 20 
-3066   1D52 42 41 54 53 
-3066   1D56 20 4E 45 41 
-3066   1D5A 52 42 59 0A 
-3066   1D5E 00 
-3067   1D5F 20 20 20 50 _s24: .db "   PIT: I FEEL A DRAFT\n\n", 0
-3067   1D63 49 54 3A 20 
-3067   1D67 49 20 46 45 
-3067   1D6B 45 4C 20 41 
-3067   1D6F 20 44 52 41 
-3067   1D73 46 54 0A 0A 
-3067   1D77 00 
-3068   1D78 0A 00       _s25: .db "\n", 0
-3069   1D7A 49 20 53 4D _s26: .db "I SMELL A WUMPUS!\n", 0
-3069   1D7E 45 4C 4C 20 
-3069   1D82 41 20 57 55 
-3069   1D86 4D 50 55 53 
-3069   1D8A 21 0A 00 
-3070   1D8D 49 20 46 45 _s27: .db "I FEEL A DRAFT\n", 0
-3070   1D91 45 4C 20 41 
-3070   1D95 20 44 52 41 
-3070   1D99 46 54 0A 00 
-3071   1D9D 42 41 54 53 _s28: .db "BATS NEARBY!\n", 0
-3071   1DA1 20 4E 45 41 
-3071   1DA5 52 42 59 21 
-3071   1DA9 0A 00 
-3072   1DAB 59 4F 55 20 _s29: .db "YOU ARE IN ROOM ", 0
-3072   1DAF 41 52 45 20 
-3072   1DB3 49 4E 20 52 
-3072   1DB7 4F 4F 4D 20 
-3072   1DBB 00 
-3073   1DBC 54 55 4E 4E _s30: .db "TUNNELS LEAD TO ", 0
-3073   1DC0 45 4C 53 20 
-3073   1DC4 4C 45 41 44 
-3073   1DC8 20 54 4F 20 
-3073   1DCC 00 
-3074   1DCD 2C 20 00    _s31: .db ", ", 0
-3075   1DD0 53 48 4F 4F _s32: .db "SHOOT OR MOVE (S-M): ", 0
-3075   1DD4 54 20 4F 52 
-3075   1DD8 20 4D 4F 56 
-3075   1DDC 45 20 28 53 
-3075   1DE0 2D 4D 29 3A 
-3075   1DE4 20 00 
-3076   1DE6 54 53 4B 20 _s33: .db "TSK TSK TSK - WUMPUS GOT YOU!\n", 0
-3076   1DEA 54 53 4B 20 
-3076   1DEE 54 53 4B 20 
-3076   1DF2 2D 20 57 55 
-3076   1DF6 4D 50 55 53 
-3076   1DFA 20 47 4F 54 
-3076   1DFE 20 59 4F 55 
-3076   1E02 21 0A 00 
-3077   1E05 0A 4E 55 4D _s34: .db "\nNUMBER OF ROOMS (1-5): ", 0
-3077   1E09 42 45 52 20 
-3077   1E0D 4F 46 20 52 
-3077   1E11 4F 4F 4D 53 
-3077   1E15 20 28 31 2D 
-3077   1E19 35 29 3A 20 
-3077   1E1D 00 
-3078   1E1E 52 4F 4F 4D _s35: .db "ROOM #", 0
-3078   1E22 20 23 00 
-3079   1E25 41 52 52 4F _s36: .db "ARROWS ARENT THAT CROOKED - TRY ANOTHER ROOM\n", 0
-3079   1E29 57 53 20 41 
-3079   1E2D 52 45 4E 54 
-3079   1E31 20 54 48 41 
-3079   1E35 54 20 43 52 
-3079   1E39 4F 4F 4B 45 
-3079   1E3D 44 20 2D 20 
-3079   1E41 54 52 59 20 
-3079   1E45 41 4E 4F 54 
-3079   1E49 48 45 52 20 
-3079   1E4D 52 4F 4F 4D 
-3079   1E51 0A 00 
-3080   1E53 41 48 41 21 _s37: .db "AHA! YOU GOT THE WUMPUS!\n", 0
-3080   1E57 20 59 4F 55 
-3080   1E5B 20 47 4F 54 
-3080   1E5F 20 54 48 45 
-3080   1E63 20 57 55 4D 
-3080   1E67 50 55 53 21 
-3080   1E6B 0A 00 
-3081   1E6D 4F 55 43 48 _s38: .db "OUCH! ARROW GOT YOU!\n", 0
-3081   1E71 21 20 41 52 
-3081   1E75 52 4F 57 20 
-3081   1E79 47 4F 54 20 
-3081   1E7D 59 4F 55 21 
-3081   1E81 0A 00 
-3082   1E83 4D 49 53 53 _s39: .db "MISSED\n", 0
-3082   1E87 45 44 0A 00 
-3083   1E8B 0A 57 48 45 _s40: .db "\nWHERE TO: ", 0
-3083   1E8F 52 45 20 54 
-3083   1E93 4F 3A 20 00 
-3084   1E97 4E 4F 54 20 _s41: .db "NOT POSSIBLE\n", 0
-3084   1E9B 50 4F 53 53 
-3084   1E9F 49 42 4C 45 
-3084   1EA3 0A 00 
-3085   1EA5 5A 41 50 2D _s42: .db "ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!\n", 0
-3085   1EA9 2D 53 55 50 
-3085   1EAD 45 52 20 42 
-3085   1EB1 41 54 20 53 
-3085   1EB5 4E 41 54 43 
-3085   1EB9 48 21 20 45 
-3085   1EBD 4C 53 45 57 
-3085   1EC1 48 45 52 45 
-3085   1EC5 56 49 4C 4C 
-3085   1EC9 45 20 46 4F 
-3085   1ECD 52 20 59 4F 
-3085   1ED1 55 21 0A 00 
-3086   1ED5 2E 2E 2E 20 _s43: .db "... OOPS! BUMPED A WUMPUS!\n", 0
-3086   1ED9 4F 4F 50 53 
-3086   1EDD 21 20 42 55 
-3086   1EE1 4D 50 45 44 
-3086   1EE5 20 41 20 57 
-3086   1EE9 55 4D 50 55 
-3086   1EED 53 21 0A 00 
-3087   1EF1 59 59 59 59 _s44: .db "YYYYIIIIEEEE . . . FELL IN PIT\n", 0
-3087   1EF5 49 49 49 49 
-3087   1EF9 45 45 45 45 
-3087   1EFD 20 2E 20 2E 
-3087   1F01 20 2E 20 46 
-3087   1F05 45 4C 4C 20 
-3087   1F09 49 4E 20 50 
-3087   1F0D 49 54 0A 00 
-3088   1F11 2A 2A 2A 2A _s45: .db "*********************\n", 0
-3088   1F15 2A 2A 2A 2A 
-3088   1F19 2A 2A 2A 2A 
-3088   1F1D 2A 2A 2A 2A 
-3088   1F21 2A 2A 2A 2A 
-3088   1F25 2A 0A 00 
-3089   1F28 2A 2A 20 48 _s46: .db "** HUNT THE WUMPUS **\n", 0
-3089   1F2C 55 4E 54 20 
-3089   1F30 54 48 45 20 
-3089   1F34 57 55 4D 50 
-3089   1F38 55 53 20 2A 
-3089   1F3C 2A 0A 00 
-3090   1F3F 57 75 6D 70 _s47: .db "Wumpus is at ", 0
-3090   1F43 75 73 20 69 
-3090   1F47 73 20 61 74 
-3090   1F4B 20 00 
-3091   1F4D 2C 20 70 69 _s48: .db ", pits at ", 0
-3091   1F51 74 73 20 61 
-3091   1F55 74 20 00 
-3092   1F58 20 26 20 00 _s49: .db " & ", 0
-3093   1F5C 2C 20 62 61 _s50: .db ", bats at ", 0
-3093   1F60 74 73 20 61 
-3093   1F64 74 20 00 
-3094   1F67 48 45 45 20 _s51: .db "HEE HEE HEE - THE WUMPUS WILL GET YOU NEXT TIME!!\n", 0
-3094   1F6B 48 45 45 20 
-3094   1F6F 48 45 45 20 
-3094   1F73 2D 20 54 48 
-3094   1F77 45 20 57 55 
-3094   1F7B 4D 50 55 53 
-3094   1F7F 20 57 49 4C 
-3094   1F83 4C 20 47 45 
-3094   1F87 54 20 59 4F 
-3094   1F8B 55 20 4E 45 
-3094   1F8F 58 54 20 54 
-3094   1F93 49 4D 45 21 
-3094   1F97 21 0A 00 
-3095   1F9A 48 41 20 48 _s52: .db "HA HA HA - YOU LOSE!\n", 0
-3095   1F9E 41 20 48 41 
-3095   1FA2 20 2D 20 59 
-3095   1FA6 4F 55 20 4C 
-3095   1FAA 4F 53 45 21 
-3095   1FAE 0A 00 
-3096   1FB0             
-3097   1FB0 B2 1F       _heap_top: .dw _heap
-3098   1FB2 00          _heap: .db 0
-3099   1FB3             ; --- END DATA SEGMENT
-3100   1FB3             
-3101   1FB3             .end
+2793   15D4 E7            pop d
+2794   15D5 5A            add d, b
+2795   15D6 E4            pop a
+2796   15D7 32            mov bl, [d]
+2797   15D8 A7 00         mov bh, 0
+2798   15DA 38 00 00      mov c, 0
+2799   15DD DD            push bl
+2800   15DE 07 E9 15      call putchar
+2801   15E1 51 01 00      add sp, 1
+2802   15E4             ; --- END FUNCTION CALL
+2803   15E4 0A 9F 15      jmp _while55_cond
+2804   15E7             _while55_exit:
+2805   15E7 F9            leave
+2806   15E8 09            ret
+2807   15E9             
+2808   15E9             putchar:
+2809   15E9 F8 00 00      enter 0 ; (push bp; mov bp, sp)
+2810   15EC             ; --- BEGIN INLINE ASM SEGMENT
+2811   15EC FA 05 00      lea d, [bp + 5] ; $c
+2812   15EF 1E            mov al, [d]
+2813   15F0 23            mov ah, al
+2814   15F1 19 00         mov al, 0
+2815   15F3 05 03         syscall sys_io      ; char in AH
+2816   15F5             ; --- END INLINE ASM SEGMENT
+2817   15F5 F9            leave
+2818   15F6 09            ret
+2819   15F7             
+2820   15F7             scann:
+2821   15F7 F8 00 00      enter 0 ; (push bp; mov bp, sp)
+2822   15FA             ; int m; 
+2823   15FA 52 02 00      sub sp, 2
+2824   15FD             ; --- BEGIN INLINE ASM SEGMENT
+2825   15FD F8 08 00      enter 8
+2826   1600 FA F9 FF      lea d, [bp +- 7]
+2827   1603 07 4B 16      call _gets_scann
+2828   1606 07 3B 16      call _strlen_scann      ; get string length in C
+2829   1609 7E            dec c
+2830   160A FD 4E         mov si, d
+2831   160C 12            mov a, c
+2832   160D FD 99         shl a
+2833   160F 3B E8 16      mov d, table_power_scann
+2834   1612 59            add d, a
+2835   1613 38 00 00      mov c, 0
+2836   1616             mul_loop_scann:
+2837   1616 F6            lodsb      ; load ASCII to al
+2838   1617 B9 00         cmp al, 0
+2839   1619 C6 2C 16      je mul_exit_scann
+2840   161C 6F 30         sub al, $30    ; make into integer
+2841   161E 22 00         mov ah, 0
+2842   1620 2A            mov b, [d]
+2843   1621 AC            mul a, b      ; result in B since it fits in 16bits
+2844   1622 11            mov a, b
+2845   1623 28            mov b, c
+2846   1624 54            add a, b
+2847   1625 39            mov c, a
+2848   1626 63 02 00      sub d, 2
+2849   1629 0A 16 16      jmp mul_loop_scann
+2850   162C             mul_exit_scann:
+2851   162C 12            mov a, c
+2852   162D F9            leave
+2853   162E FA FF FF      lea d, [bp + -1] ; $m
+2854   1631 43            mov [d], a
+2855   1632             ; --- END INLINE ASM SEGMENT
+2856   1632             ; return m; 
+2857   1632 FA FF FF      lea d, [bp + -1] ; $m
+2858   1635 2A            mov b, [d]
+2859   1636 38 00 00      mov c, 0
+2860   1639 F9            leave
+2861   163A 09            ret
+2862   163B             ; --- BEGIN INLINE ASM SEGMENT
+2863   163B             _strlen_scann:
+2864   163B DA            push d
+2865   163C 38 00 00      mov c, 0
+2866   163F             _strlen_L1_scann:
+2867   163F BD 00         cmp byte [d], 0
+2868   1641 C6 49 16      je _strlen_ret_scann
+2869   1644 79            inc d
+2870   1645 78            inc c
+2871   1646 0A 3F 16      jmp _strlen_L1_scann
+2872   1649             _strlen_ret_scann:
+2873   1649 E7            pop d
+2874   164A 09            ret
+2875   164B             _gets_scann:
+2876   164B DA            push d
+2877   164C             _gets_loop_scann:
+2878   164C 19 01         mov al, 1
+2879   164E 05 03         syscall sys_io      ; receive in AH
+2880   1650 B9 00         cmp al, 0        ; check error code (AL)
+2881   1652 C6 4C 16      je _gets_loop_scann      ; if no char received, retry
+2882   1655 76 1B         cmp ah, 27
+2883   1657 C6 78 16      je _gets_ansi_esc_scann
+2884   165A 76 0A         cmp ah, $0A        ; LF
+2885   165C C6 E3 16      je _gets_end_scann
+2886   165F 76 0D         cmp ah, $0D        ; CR
+2887   1661 C6 E3 16      je _gets_end_scann
+2888   1664 76 5C         cmp ah, $5C        ; '\\'
+2889   1666 C6 A4 16      je _gets_escape_scann
+2890   1669 76 08         cmp ah, $08      ; check for backspace
+2891   166B C6 74 16      je _gets_backspace_scann
+2892   166E 1A            mov al, ah
+2893   166F 3E            mov [d], al
+2894   1670 79            inc d
+2895   1671 0A 4C 16      jmp _gets_loop_scann
+2896   1674             _gets_backspace_scann:
+2897   1674 7F            dec d
+2898   1675 0A 4C 16      jmp _gets_loop_scann
+2899   1678             _gets_ansi_esc_scann:
+2900   1678 19 01         mov al, 1
+2901   167A 05 03         syscall sys_io        ; receive in AH without echo
+2902   167C B9 00         cmp al, 0          ; check error code (AL)
+2903   167E C6 78 16      je _gets_ansi_esc_scann    ; if no char received, retry
+2904   1681 76 5B         cmp ah, '['
+2905   1683 C7 4C 16      jne _gets_loop_scann
+2906   1686             _gets_ansi_esc_2_scann:
+2907   1686 19 01         mov al, 1
+2908   1688 05 03         syscall sys_io          ; receive in AH without echo
+2909   168A B9 00         cmp al, 0            ; check error code (AL)
+2910   168C C6 86 16      je _gets_ansi_esc_2_scann  ; if no char received, retry
+2911   168F 76 44         cmp ah, 'D'
+2912   1691 C6 9C 16      je _gets_left_arrow_scann
+2913   1694 76 43         cmp ah, 'C'
+2914   1696 C6 A0 16      je _gets_right_arrow_scann
+2915   1699 0A 4C 16      jmp _gets_loop_scann
+2916   169C             _gets_left_arrow_scann:
+2917   169C 7F            dec d
+2918   169D 0A 4C 16      jmp _gets_loop_scann
+2919   16A0             _gets_right_arrow_scann:
+2920   16A0 79            inc d
+2921   16A1 0A 4C 16      jmp _gets_loop_scann
+2922   16A4             _gets_escape_scann:
+2923   16A4 19 01         mov al, 1
+2924   16A6 05 03         syscall sys_io      ; receive in AH
+2925   16A8 B9 00         cmp al, 0        ; check error code (AL)
+2926   16AA C6 A4 16      je _gets_escape_scann      ; if no char received, retry
+2927   16AD 76 6E         cmp ah, 'n'
+2928   16AF C6 CE 16      je _gets_LF_scann
+2929   16B2 76 72         cmp ah, 'r'
+2930   16B4 C6 D5 16      je _gets_CR_scann
+2931   16B7 76 30         cmp ah, '0'
+2932   16B9 C6 DC 16      je _gets_NULL_scann
+2933   16BC 76 5C         cmp ah, $5C  
+2934   16BE C6 C7 16      je _gets_slash_scann
+2935   16C1 1A            mov al, ah        ; if not a known escape, it is just a normal letter
+2936   16C2 3E            mov [d], al
+2937   16C3 79            inc d
+2938   16C4 0A 4C 16      jmp _gets_loop_scann
+2939   16C7             _gets_slash_scann:
+2940   16C7 19 5C         mov al, $5C
+2941   16C9 3E            mov [d], al
+2942   16CA 79            inc d
+2943   16CB 0A 4C 16      jmp _gets_loop_scann
+2944   16CE             _gets_LF_scann:
+2945   16CE 19 0A         mov al, $0A
+2946   16D0 3E            mov [d], al
+2947   16D1 79            inc d
+2948   16D2 0A 4C 16      jmp _gets_loop_scann
+2949   16D5             _gets_CR_scann:
+2950   16D5 19 0D         mov al, $0D
+2951   16D7 3E            mov [d], al
+2952   16D8 79            inc d
+2953   16D9 0A 4C 16      jmp _gets_loop_scann
+2954   16DC             _gets_NULL_scann:
+2955   16DC 19 00         mov al, $00
+2956   16DE 3E            mov [d], al
+2957   16DF 79            inc d
+2958   16E0 0A 4C 16      jmp _gets_loop_scann
+2959   16E3             _gets_end_scann:
+2960   16E3 19 00         mov al, 0
+2961   16E5 3E            mov [d], al        ; terminate string
+2962   16E6 E7            pop d
+2963   16E7 09            ret
+2964   16E8             table_power_scann:
+2965   16E8 01 00       .dw 1              ; 1
+2966   16EA 0A 00       .dw $A             ; 10
+2967   16EC 64 00       .dw $64            ; 100
+2968   16EE E8 03       .dw $3E8           ; 1000
+2969   16F0 10 27       .dw $2710          ; 10000
+2970   16F2 A0 86 01 00 .dw $86A0, $1      ; 100000
+2971   16F6 40 42 0F 00 .dw $4240, $F      ; 1000000
+2972   16FA 80 96 98 00 .dw $9680, $98     ; 10000000
+2973   16FE 00 E1 F5 05 .dw $E100, $5F5    ; 100000000
+2974   1702 00 CA 9A 3B .dw $CA00, $3B9A   ; 1000000000
+2975   1706             ; --- END INLINE ASM SEGMENT
+2976   1706 F9            leave
+2977   1707 09            ret
+2978   1708             ; --- END TEXT SEGMENT
+2979   1708             
+2980   1708             ; --- BEGIN DATA SEGMENT
+2981   1708 00 00       _arrows: .fill 2, 0
+2982   170A 00 00       _debug: .dw $0000
+2983   170C 1D 00       _rand_val: .dw $001d
+2984   170E 01 00       _rand_inc: .dw $0001
+2985   1710 00 00 00 00 _loc_data: .fill 12, 0
+2985   1714 00 00 00 00 
+2985   1718 00 00 00 00 
+2986   171C 00 00       _finished: .fill 2, 0
+2987   171E 01 00 04 00 _cave_data: .dw $0001,$0004,$0007,$0000,$0002,$0009,$0001,$0003,$000b,$0002,$0004,$000d,$0000,$0003,$0005,
+2987   1722 07 00 00 00 
+2987   1726 02 00 09 00 
+2987   172A 01 00 03 00 
+2987   172E 0B 00 02 00 
+2987   1732 04 00 0D 00 
+2987   1736 00 00 03 00 
+2987   173A 05 00 
+2988   173C 00 00       .dw 
+2989   173E 00 00       .dw 
+2990   1740 04 00 06 00 .dw $0004,$0006,$000e,$0005,$0007,$0010,$0000,$0006,$0008,$0007,$0009,$0011,$0001,$0008,$000a,$0009,
+2990   1744 0E 00 05 00 
+2990   1748 07 00 10 00 
+2990   174C 00 00 06 00 
+2990   1750 08 00 07 00 
+2990   1754 09 00 11 00 
+2990   1758 01 00 08 00 
+2990   175C 0A 00 09 00 
+2991   1760 0B 00 12 00 .dw $000b,$0012,$0002,$000a,$000c,$000b,$000d,$0013,$0003,$000c,$000e,$0005,$000d,$000f,$000e,$0010,
+2991   1764 02 00 0A 00 
+2991   1768 0C 00 0B 00 
+2991   176C 0D 00 13 00 
+2991   1770 03 00 0C 00 
+2991   1774 0E 00 05 00 
+2991   1778 0D 00 0F 00 
+2991   177C 0E 00 10 00 
+2992   1780 13 00 06 00 .dw $0013,$0006,$000f,$0011,$0008,$0010,$0012,$000a,$0011,$0013,$000c,$000f,$0012,
+2992   1784 0F 00 11 00 
+2992   1788 08 00 10 00 
+2992   178C 12 00 0A 00 
+2992   1790 11 00 13 00 
+2992   1794 0C 00 0F 00 
+2992   1798 12 00 
+2993   179A 49 4E 53 54 _s0: .db "INSTRUCTIONS (Y-N): ", 0
+2993   179E 52 55 43 54 
+2993   17A2 49 4F 4E 53 
+2993   17A6 20 28 59 2D 
+2993   17AA 4E 29 3A 20 
+2993   17AE 00 
+2994   17AF 4E 45 57 20 _s1: .db "NEW GAME (Y-N): ", 0
+2994   17B3 47 41 4D 45 
+2994   17B7 20 28 59 2D 
+2994   17BB 4E 29 3A 20 
+2994   17BF 00 
+2995   17C0 0A 0A 00    _s2: .db "\n\n", 0
+2996   17C3 57 45 4C 43 _s3: .db "WELCOME TO HUNT THE WUMPUS\n", 0
+2996   17C7 4F 4D 45 20 
+2996   17CB 54 4F 20 48 
+2996   17CF 55 4E 54 20 
+2996   17D3 54 48 45 20 
+2996   17D7 57 55 4D 50 
+2996   17DB 55 53 0A 00 
+2997   17DF 54 48 45 20 _s4: .db "THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM HAS 3 TUNNELS LEADING TO OTHER ROOMS.\n", 0
+2997   17E3 57 55 4D 50 
+2997   17E7 55 53 20 4C 
+2997   17EB 49 56 45 53 
+2997   17EF 20 49 4E 20 
+2997   17F3 41 20 43 41 
+2997   17F7 56 45 20 4F 
+2997   17FB 46 20 32 30 
+2997   17FF 20 52 4F 4F 
+2997   1803 4D 53 2E 20 
+2997   1807 45 41 43 48 
+2997   180B 20 52 4F 4F 
+2997   180F 4D 20 48 41 
+2997   1813 53 20 33 20 
+2997   1817 54 55 4E 4E 
+2997   181B 45 4C 53 20 
+2997   181F 4C 45 41 44 
+2997   1823 49 4E 47 20 
+2997   1827 54 4F 20 4F 
+2997   182B 54 48 45 52 
+2997   182F 20 52 4F 4F 
+2997   1833 4D 53 2E 0A 
+2997   1837 00 
+2998   1838 4C 4F 4F 4B _s5: .db "LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS.\n\n", 0
+2998   183C 20 41 54 20 
+2998   1840 41 20 44 4F 
+2998   1844 44 45 43 41 
+2998   1848 48 45 44 52 
+2998   184C 4F 4E 20 54 
+2998   1850 4F 20 53 45 
+2998   1854 45 20 48 4F 
+2998   1858 57 20 54 48 
+2998   185C 49 53 20 57 
+2998   1860 4F 52 4B 53 
+2998   1864 2E 0A 0A 00 
+2999   1868 20 48 41 5A _s6: .db " HAZARDS:\n", 0
+2999   186C 41 52 44 53 
+2999   1870 3A 0A 00 
+3000   1873 20 42 4F 54 _s7: .db " BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM. IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n", 0
+3000   1877 54 4F 4D 4C 
+3000   187B 45 53 53 20 
+3000   187F 50 49 54 53 
+3000   1883 3A 20 54 57 
+3000   1887 4F 20 52 4F 
+3000   188B 4F 4D 53 20 
+3000   188F 48 41 56 45 
+3000   1893 20 42 4F 54 
+3000   1897 54 4F 4D 4C 
+3000   189B 45 53 53 20 
+3000   189F 50 49 54 53 
+3000   18A3 20 49 4E 20 
+3000   18A7 54 48 45 4D 
+3000   18AB 2E 20 49 46 
+3000   18AF 20 59 4F 55 
+3000   18B3 20 47 4F 20 
+3000   18B7 54 48 45 52 
+3000   18BB 45 2C 20 59 
+3000   18BF 4F 55 20 46 
+3000   18C3 41 4C 4C 20 
+3000   18C7 49 4E 54 4F 
+3000   18CB 20 54 48 45 
+3000   18CF 20 50 49 54 
+3000   18D3 20 28 26 20 
+3000   18D7 4C 4F 53 45 
+3000   18DB 21 29 0A 00 
+3001   18DF 20 53 55 50 _s8: .db " SUPER BATS: TWO OTHER ROOMS HAVE SUPER BATS. IF YOU GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER\n", 0
+3001   18E3 45 52 20 42 
+3001   18E7 41 54 53 3A 
+3001   18EB 20 54 57 4F 
+3001   18EF 20 4F 54 48 
+3001   18F3 45 52 20 52 
+3001   18F7 4F 4F 4D 53 
+3001   18FB 20 48 41 56 
+3001   18FF 45 20 53 55 
+3001   1903 50 45 52 20 
+3001   1907 42 41 54 53 
+3001   190B 2E 20 49 46 
+3001   190F 20 59 4F 55 
+3001   1913 20 47 4F 20 
+3001   1917 54 48 45 52 
+3001   191B 45 2C 20 41 
+3001   191F 20 42 41 54 
+3001   1923 20 47 52 41 
+3001   1927 42 53 20 59 
+3001   192B 4F 55 20 41 
+3001   192F 4E 44 20 54 
+3001   1933 41 4B 45 53 
+3001   1937 20 59 4F 55 
+3001   193B 20 54 4F 20 
+3001   193F 53 4F 4D 45 
+3001   1943 20 4F 54 48 
+3001   1947 45 52 0A 00 
+3002   194B 20 20 20 52 _s9: .db "   ROOM AT RANDOM. (WHICH MAY BE TROUBLESOME)\n\n", 0
+3002   194F 4F 4F 4D 20 
+3002   1953 41 54 20 52 
+3002   1957 41 4E 44 4F 
+3002   195B 4D 2E 20 28 
+3002   195F 57 48 49 43 
+3002   1963 48 20 4D 41 
+3002   1967 59 20 42 45 
+3002   196B 20 54 52 4F 
+3002   196F 55 42 4C 45 
+3002   1973 53 4F 4D 45 
+3002   1977 29 0A 0A 00 
+3003   197B 20 57 55 4D _s10: .db " WUMPUS: THE WUMPUS IS NOT BOTHERED BY HAZARDS (HE HAS SUCKER FEET AND IS TOO BIG FOR A BAT TO LIFT).  USUALLY\n", 0
+3003   197F 50 55 53 3A 
+3003   1983 20 54 48 45 
+3003   1987 20 57 55 4D 
+3003   198B 50 55 53 20 
+3003   198F 49 53 20 4E 
+3003   1993 4F 54 20 42 
+3003   1997 4F 54 48 45 
+3003   199B 52 45 44 20 
+3003   199F 42 59 20 48 
+3003   19A3 41 5A 41 52 
+3003   19A7 44 53 20 28 
+3003   19AB 48 45 20 48 
+3003   19AF 41 53 20 53 
+3003   19B3 55 43 4B 45 
+3003   19B7 52 20 46 45 
+3003   19BB 45 54 20 41 
+3003   19BF 4E 44 20 49 
+3003   19C3 53 20 54 4F 
+3003   19C7 4F 20 42 49 
+3003   19CB 47 20 46 4F 
+3003   19CF 52 20 41 20 
+3003   19D3 42 41 54 20 
+3003   19D7 54 4F 20 4C 
+3003   19DB 49 46 54 29 
+3003   19DF 2E 20 20 55 
+3003   19E3 53 55 41 4C 
+3003   19E7 4C 59 0A 00 
+3004   19EB 20 20 20 48 _s11: .db "   HE IS ASLEEP.  TWO THINGS WAKE HIM UP: YOU SHOOTING AN ARROW OR YOU ENTERING HIS ROOM.\n", 0
+3004   19EF 45 20 49 53 
+3004   19F3 20 41 53 4C 
+3004   19F7 45 45 50 2E 
+3004   19FB 20 20 54 57 
+3004   19FF 4F 20 54 48 
+3004   1A03 49 4E 47 53 
+3004   1A07 20 57 41 4B 
+3004   1A0B 45 20 48 49 
+3004   1A0F 4D 20 55 50 
+3004   1A13 3A 20 59 4F 
+3004   1A17 55 20 53 48 
+3004   1A1B 4F 4F 54 49 
+3004   1A1F 4E 47 20 41 
+3004   1A23 4E 20 41 52 
+3004   1A27 52 4F 57 20 
+3004   1A2B 4F 52 20 59 
+3004   1A2F 4F 55 20 45 
+3004   1A33 4E 54 45 52 
+3004   1A37 49 4E 47 20 
+3004   1A3B 48 49 53 20 
+3004   1A3F 52 4F 4F 4D 
+3004   1A43 2E 0A 00 
+3005   1A46 20 20 20 49 _s12: .db "   IF THE WUMPUS WAKES HE MOVES (P=.75) ONE ROOM OR STAYS STILL (P=.25).  AFTER THAT, IF HE IS WHERE YOU\n", 0
+3005   1A4A 46 20 54 48 
+3005   1A4E 45 20 57 55 
+3005   1A52 4D 50 55 53 
+3005   1A56 20 57 41 4B 
+3005   1A5A 45 53 20 48 
+3005   1A5E 45 20 4D 4F 
+3005   1A62 56 45 53 20 
+3005   1A66 28 50 3D 2E 
+3005   1A6A 37 35 29 20 
+3005   1A6E 4F 4E 45 20 
+3005   1A72 52 4F 4F 4D 
+3005   1A76 20 4F 52 20 
+3005   1A7A 53 54 41 59 
+3005   1A7E 53 20 53 54 
+3005   1A82 49 4C 4C 20 
+3005   1A86 28 50 3D 2E 
+3005   1A8A 32 35 29 2E 
+3005   1A8E 20 20 41 46 
+3005   1A92 54 45 52 20 
+3005   1A96 54 48 41 54 
+3005   1A9A 2C 20 49 46 
+3005   1A9E 20 48 45 20 
+3005   1AA2 49 53 20 57 
+3005   1AA6 48 45 52 45 
+3005   1AAA 20 59 4F 55 
+3005   1AAE 0A 00 
+3006   1AB0 20 20 20 41 _s13: .db "   ARE, HE EATS YOU UP AND YOU LOSE!\n\n", 0
+3006   1AB4 52 45 2C 20 
+3006   1AB8 48 45 20 45 
+3006   1ABC 41 54 53 20 
+3006   1AC0 59 4F 55 20 
+3006   1AC4 55 50 20 41 
+3006   1AC8 4E 44 20 59 
+3006   1ACC 4F 55 20 4C 
+3006   1AD0 4F 53 45 21 
+3006   1AD4 0A 0A 00 
+3007   1AD7 20 59 4F 55 _s14: .db " YOU: EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW\n", 0
+3007   1ADB 3A 20 45 41 
+3007   1ADF 43 48 20 54 
+3007   1AE3 55 52 4E 20 
+3007   1AE7 59 4F 55 20 
+3007   1AEB 4D 41 59 20 
+3007   1AEF 4D 4F 56 45 
+3007   1AF3 20 4F 52 20 
+3007   1AF7 53 48 4F 4F 
+3007   1AFB 54 20 41 20 
+3007   1AFF 43 52 4F 4F 
+3007   1B03 4B 45 44 20 
+3007   1B07 41 52 52 4F 
+3007   1B0B 57 0A 00 
+3008   1B0E 20 4D 4F 56 _s15: .db " MOVING: YOU CAN MOVE ONE ROOM (THRU ONE TUNNEL)\n", 0
+3008   1B12 49 4E 47 3A 
+3008   1B16 20 59 4F 55 
+3008   1B1A 20 43 41 4E 
+3008   1B1E 20 4D 4F 56 
+3008   1B22 45 20 4F 4E 
+3008   1B26 45 20 52 4F 
+3008   1B2A 4F 4D 20 28 
+3008   1B2E 54 48 52 55 
+3008   1B32 20 4F 4E 45 
+3008   1B36 20 54 55 4E 
+3008   1B3A 4E 45 4C 29 
+3008   1B3E 0A 00 
+3009   1B40 20 41 52 52 _s16: .db " ARROWS: YOU HAVE 5 ARROWS. YOU LOSE WHEN YOU RUN OUT\n", 0
+3009   1B44 4F 57 53 3A 
+3009   1B48 20 59 4F 55 
+3009   1B4C 20 48 41 56 
+3009   1B50 45 20 35 20 
+3009   1B54 41 52 52 4F 
+3009   1B58 57 53 2E 20 
+3009   1B5C 59 4F 55 20 
+3009   1B60 4C 4F 53 45 
+3009   1B64 20 57 48 45 
+3009   1B68 4E 20 59 4F 
+3009   1B6C 55 20 52 55 
+3009   1B70 4E 20 4F 55 
+3009   1B74 54 0A 00 
+3010   1B77 20 20 20 45 _s17: .db "   EACH ARROW CAN GO FROM 1 TO 5 ROOMS. YOU AIM BY TELLING THE COMPUTER THE ROOM#S YOU WANT THE ARROW TO GO TO.\n", 0
+3010   1B7B 41 43 48 20 
+3010   1B7F 41 52 52 4F 
+3010   1B83 57 20 43 41 
+3010   1B87 4E 20 47 4F 
+3010   1B8B 20 46 52 4F 
+3010   1B8F 4D 20 31 20 
+3010   1B93 54 4F 20 35 
+3010   1B97 20 52 4F 4F 
+3010   1B9B 4D 53 2E 20 
+3010   1B9F 59 4F 55 20 
+3010   1BA3 41 49 4D 20 
+3010   1BA7 42 59 20 54 
+3010   1BAB 45 4C 4C 49 
+3010   1BAF 4E 47 20 54 
+3010   1BB3 48 45 20 43 
+3010   1BB7 4F 4D 50 55 
+3010   1BBB 54 45 52 20 
+3010   1BBF 54 48 45 20 
+3010   1BC3 52 4F 4F 4D 
+3010   1BC7 23 53 20 59 
+3010   1BCB 4F 55 20 57 
+3010   1BCF 41 4E 54 20 
+3010   1BD3 54 48 45 20 
+3010   1BD7 41 52 52 4F 
+3010   1BDB 57 20 54 4F 
+3010   1BDF 20 47 4F 20 
+3010   1BE3 54 4F 2E 0A 
+3010   1BE7 00 
+3011   1BE8 20 20 20 49 _s18: .db "   IF THE ARROW CANT GO THAT WAY (IF NO TUNNEL) IT MOVES AT RANDOM TO THE NEXT ROOM.\n", 0
+3011   1BEC 46 20 54 48 
+3011   1BF0 45 20 41 52 
+3011   1BF4 52 4F 57 20 
+3011   1BF8 43 41 4E 54 
+3011   1BFC 20 47 4F 20 
+3011   1C00 54 48 41 54 
+3011   1C04 20 57 41 59 
+3011   1C08 20 28 49 46 
+3011   1C0C 20 4E 4F 20 
+3011   1C10 54 55 4E 4E 
+3011   1C14 45 4C 29 20 
+3011   1C18 49 54 20 4D 
+3011   1C1C 4F 56 45 53 
+3011   1C20 20 41 54 20 
+3011   1C24 52 41 4E 44 
+3011   1C28 4F 4D 20 54 
+3011   1C2C 4F 20 54 48 
+3011   1C30 45 20 4E 45 
+3011   1C34 58 54 20 52 
+3011   1C38 4F 4F 4D 2E 
+3011   1C3C 0A 00 
+3012   1C3E 20 20 20 49 _s19: .db "   IF THE ARROW HITS THE WUMPUS, YOU WIN.\n", 0
+3012   1C42 46 20 54 48 
+3012   1C46 45 20 41 52 
+3012   1C4A 52 4F 57 20 
+3012   1C4E 48 49 54 53 
+3012   1C52 20 54 48 45 
+3012   1C56 20 57 55 4D 
+3012   1C5A 50 55 53 2C 
+3012   1C5E 20 59 4F 55 
+3012   1C62 20 57 49 4E 
+3012   1C66 2E 0A 00 
+3013   1C69 20 20 20 49 _s20: .db "   IF THE ARROW HITS YOU, YOU LOSE.\n", 0
+3013   1C6D 46 20 54 48 
+3013   1C71 45 20 41 52 
+3013   1C75 52 4F 57 20 
+3013   1C79 48 49 54 53 
+3013   1C7D 20 59 4F 55 
+3013   1C81 2C 20 59 4F 
+3013   1C85 55 20 4C 4F 
+3013   1C89 53 45 2E 0A 
+3013   1C8D 00 
+3014   1C8E 20 57 41 52 _s21: .db " WARNINGS: WHEN YOU ARE ONE ROOM AWAY FROM A WUMPUS OR HAZARD, THE COMPUTER SAYS:\n", 0
+3014   1C92 4E 49 4E 47 
+3014   1C96 53 3A 20 57 
+3014   1C9A 48 45 4E 20 
+3014   1C9E 59 4F 55 20 
+3014   1CA2 41 52 45 20 
+3014   1CA6 4F 4E 45 20 
+3014   1CAA 52 4F 4F 4D 
+3014   1CAE 20 41 57 41 
+3014   1CB2 59 20 46 52 
+3014   1CB6 4F 4D 20 41 
+3014   1CBA 20 57 55 4D 
+3014   1CBE 50 55 53 20 
+3014   1CC2 4F 52 20 48 
+3014   1CC6 41 5A 41 52 
+3014   1CCA 44 2C 20 54 
+3014   1CCE 48 45 20 43 
+3014   1CD2 4F 4D 50 55 
+3014   1CD6 54 45 52 20 
+3014   1CDA 53 41 59 53 
+3014   1CDE 3A 0A 00 
+3015   1CE1 20 20 20 57 _s22: .db "   WUMPUS: I SMELL A WUMPUS\n", 0
+3015   1CE5 55 4D 50 55 
+3015   1CE9 53 3A 20 49 
+3015   1CED 20 53 4D 45 
+3015   1CF1 4C 4C 20 41 
+3015   1CF5 20 57 55 4D 
+3015   1CF9 50 55 53 0A 
+3015   1CFD 00 
+3016   1CFE 20 20 20 42 _s23: .db "   BAT: BATS NEARBY\n", 0
+3016   1D02 41 54 3A 20 
+3016   1D06 42 41 54 53 
+3016   1D0A 20 4E 45 41 
+3016   1D0E 52 42 59 0A 
+3016   1D12 00 
+3017   1D13 20 20 20 50 _s24: .db "   PIT: I FEEL A DRAFT\n\n", 0
+3017   1D17 49 54 3A 20 
+3017   1D1B 49 20 46 45 
+3017   1D1F 45 4C 20 41 
+3017   1D23 20 44 52 41 
+3017   1D27 46 54 0A 0A 
+3017   1D2B 00 
+3018   1D2C 0A 00       _s25: .db "\n", 0
+3019   1D2E 49 20 53 4D _s26: .db "I SMELL A WUMPUS!\n", 0
+3019   1D32 45 4C 4C 20 
+3019   1D36 41 20 57 55 
+3019   1D3A 4D 50 55 53 
+3019   1D3E 21 0A 00 
+3020   1D41 49 20 46 45 _s27: .db "I FEEL A DRAFT\n", 0
+3020   1D45 45 4C 20 41 
+3020   1D49 20 44 52 41 
+3020   1D4D 46 54 0A 00 
+3021   1D51 42 41 54 53 _s28: .db "BATS NEARBY!\n", 0
+3021   1D55 20 4E 45 41 
+3021   1D59 52 42 59 21 
+3021   1D5D 0A 00 
+3022   1D5F 59 4F 55 20 _s29: .db "YOU ARE IN ROOM ", 0
+3022   1D63 41 52 45 20 
+3022   1D67 49 4E 20 52 
+3022   1D6B 4F 4F 4D 20 
+3022   1D6F 00 
+3023   1D70 54 55 4E 4E _s30: .db "TUNNELS LEAD TO ", 0
+3023   1D74 45 4C 53 20 
+3023   1D78 4C 45 41 44 
+3023   1D7C 20 54 4F 20 
+3023   1D80 00 
+3024   1D81 2C 20 00    _s31: .db ", ", 0
+3025   1D84 53 48 4F 4F _s32: .db "SHOOT OR MOVE (S-M): ", 0
+3025   1D88 54 20 4F 52 
+3025   1D8C 20 4D 4F 56 
+3025   1D90 45 20 28 53 
+3025   1D94 2D 4D 29 3A 
+3025   1D98 20 00 
+3026   1D9A 54 53 4B 20 _s33: .db "TSK TSK TSK - WUMPUS GOT YOU!\n", 0
+3026   1D9E 54 53 4B 20 
+3026   1DA2 54 53 4B 20 
+3026   1DA6 2D 20 57 55 
+3026   1DAA 4D 50 55 53 
+3026   1DAE 20 47 4F 54 
+3026   1DB2 20 59 4F 55 
+3026   1DB6 21 0A 00 
+3027   1DB9 0A 4E 55 4D _s34: .db "\nNUMBER OF ROOMS (1-5): ", 0
+3027   1DBD 42 45 52 20 
+3027   1DC1 4F 46 20 52 
+3027   1DC5 4F 4F 4D 53 
+3027   1DC9 20 28 31 2D 
+3027   1DCD 35 29 3A 20 
+3027   1DD1 00 
+3028   1DD2 52 4F 4F 4D _s35: .db "ROOM #", 0
+3028   1DD6 20 23 00 
+3029   1DD9 41 52 52 4F _s36: .db "ARROWS ARENT THAT CROOKED - TRY ANOTHER ROOM\n", 0
+3029   1DDD 57 53 20 41 
+3029   1DE1 52 45 4E 54 
+3029   1DE5 20 54 48 41 
+3029   1DE9 54 20 43 52 
+3029   1DED 4F 4F 4B 45 
+3029   1DF1 44 20 2D 20 
+3029   1DF5 54 52 59 20 
+3029   1DF9 41 4E 4F 54 
+3029   1DFD 48 45 52 20 
+3029   1E01 52 4F 4F 4D 
+3029   1E05 0A 00 
+3030   1E07 41 48 41 21 _s37: .db "AHA! YOU GOT THE WUMPUS!\n", 0
+3030   1E0B 20 59 4F 55 
+3030   1E0F 20 47 4F 54 
+3030   1E13 20 54 48 45 
+3030   1E17 20 57 55 4D 
+3030   1E1B 50 55 53 21 
+3030   1E1F 0A 00 
+3031   1E21 4F 55 43 48 _s38: .db "OUCH! ARROW GOT YOU!\n", 0
+3031   1E25 21 20 41 52 
+3031   1E29 52 4F 57 20 
+3031   1E2D 47 4F 54 20 
+3031   1E31 59 4F 55 21 
+3031   1E35 0A 00 
+3032   1E37 4D 49 53 53 _s39: .db "MISSED\n", 0
+3032   1E3B 45 44 0A 00 
+3033   1E3F 0A 57 48 45 _s40: .db "\nWHERE TO: ", 0
+3033   1E43 52 45 20 54 
+3033   1E47 4F 3A 20 00 
+3034   1E4B 4E 4F 54 20 _s41: .db "NOT POSSIBLE\n", 0
+3034   1E4F 50 4F 53 53 
+3034   1E53 49 42 4C 45 
+3034   1E57 0A 00 
+3035   1E59 5A 41 50 2D _s42: .db "ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!\n", 0
+3035   1E5D 2D 53 55 50 
+3035   1E61 45 52 20 42 
+3035   1E65 41 54 20 53 
+3035   1E69 4E 41 54 43 
+3035   1E6D 48 21 20 45 
+3035   1E71 4C 53 45 57 
+3035   1E75 48 45 52 45 
+3035   1E79 56 49 4C 4C 
+3035   1E7D 45 20 46 4F 
+3035   1E81 52 20 59 4F 
+3035   1E85 55 21 0A 00 
+3036   1E89 2E 2E 2E 20 _s43: .db "... OOPS! BUMPED A WUMPUS!\n", 0
+3036   1E8D 4F 4F 50 53 
+3036   1E91 21 20 42 55 
+3036   1E95 4D 50 45 44 
+3036   1E99 20 41 20 57 
+3036   1E9D 55 4D 50 55 
+3036   1EA1 53 21 0A 00 
+3037   1EA5 59 59 59 59 _s44: .db "YYYYIIIIEEEE . . . FELL IN PIT\n", 0
+3037   1EA9 49 49 49 49 
+3037   1EAD 45 45 45 45 
+3037   1EB1 20 2E 20 2E 
+3037   1EB5 20 2E 20 46 
+3037   1EB9 45 4C 4C 20 
+3037   1EBD 49 4E 20 50 
+3037   1EC1 49 54 0A 00 
+3038   1EC5 2A 2A 2A 2A _s45: .db "*********************\n", 0
+3038   1EC9 2A 2A 2A 2A 
+3038   1ECD 2A 2A 2A 2A 
+3038   1ED1 2A 2A 2A 2A 
+3038   1ED5 2A 2A 2A 2A 
+3038   1ED9 2A 0A 00 
+3039   1EDC 2A 2A 20 48 _s46: .db "** HUNT THE WUMPUS **\n", 0
+3039   1EE0 55 4E 54 20 
+3039   1EE4 54 48 45 20 
+3039   1EE8 57 55 4D 50 
+3039   1EEC 55 53 20 2A 
+3039   1EF0 2A 0A 00 
+3040   1EF3 57 75 6D 70 _s47: .db "Wumpus is at ", 0
+3040   1EF7 75 73 20 69 
+3040   1EFB 73 20 61 74 
+3040   1EFF 20 00 
+3041   1F01 2C 20 70 69 _s48: .db ", pits at ", 0
+3041   1F05 74 73 20 61 
+3041   1F09 74 20 00 
+3042   1F0C 20 26 20 00 _s49: .db " & ", 0
+3043   1F10 2C 20 62 61 _s50: .db ", bats at ", 0
+3043   1F14 74 73 20 61 
+3043   1F18 74 20 00 
+3044   1F1B 48 45 45 20 _s51: .db "HEE HEE HEE - THE WUMPUS WILL GET YOU NEXT TIME!!\n", 0
+3044   1F1F 48 45 45 20 
+3044   1F23 48 45 45 20 
+3044   1F27 2D 20 54 48 
+3044   1F2B 45 20 57 55 
+3044   1F2F 4D 50 55 53 
+3044   1F33 20 57 49 4C 
+3044   1F37 4C 20 47 45 
+3044   1F3B 54 20 59 4F 
+3044   1F3F 55 20 4E 45 
+3044   1F43 58 54 20 54 
+3044   1F47 49 4D 45 21 
+3044   1F4B 21 0A 00 
+3045   1F4E 48 41 20 48 _s52: .db "HA HA HA - YOU LOSE!\n", 0
+3045   1F52 41 20 48 41 
+3045   1F56 20 2D 20 59 
+3045   1F5A 4F 55 20 4C 
+3045   1F5E 4F 53 45 21 
+3045   1F62 0A 00 
+3046   1F64             
+3047   1F64 66 1F       _heap_top: .dw _heap
+3048   1F66 00          _heap: .db 0
+3049   1F67             ; --- END DATA SEGMENT
+3050   1F67             
+3051   1F67             .end
 tasm: Number of errors = 0

@@ -1,5 +1,5 @@
 ; --- FILENAME: programs/wumpus.c
-; --- DATE:     24-07-2025 at 06:39:33
+; --- DATE:     26-07-2025 at 17:28:21
 .include "lib/asm/kernel.exp"
 .include "lib/asm/bios.exp"
 
@@ -2521,46 +2521,6 @@ _if45_TRUE:
 ; --- END FUNCTION CALL
   jmp _if45_exit
 _if45_exit:
-; int c; 
-  sub sp, 2
-; c = getlet("NEW GAME (Y-N): "); 
-  lea d, [bp + -1] ; $c
-  push d
-; --- START FUNCTION CALL
-  mov b, _s1 ; "NEW GAME (Y-N): "
-  swp b
-  push b
-  call getlet
-  add sp, 2
-; --- END FUNCTION CALL
-  pop d
-  mov [d], b
-; if (c == 'N') { 
-_if46_cond:
-  lea d, [bp + -1] ; $c
-  mov b, [d]
-  mov c, 0
-; --- START RELATIONAL
-  push a
-  mov a, b
-  mov32 cb, $0000004e
-  cmp a, b
-  seq ; ==
-  pop a
-; --- END RELATIONAL
-  cmp b, 0
-  je _if46_exit
-_if46_TRUE:
-; exit(1); 
-; --- START FUNCTION CALL
-  mov32 cb, $00000001
-  swp b
-  push b
-  call exit
-  add sp, 2
-; --- END FUNCTION CALL
-  jmp _if46_exit
-_if46_exit:
   leave
   ret
 
@@ -2605,7 +2565,7 @@ getchar:
 toupper:
   enter 0 ; (push bp; mov bp, sp)
 ; if (ch >= 'a' && ch <= 'z')  
-_if47_cond:
+_if46_cond:
   lea d, [bp + 5] ; $ch
   mov bl, [d]
   mov bh, 0
@@ -2637,8 +2597,8 @@ _if47_cond:
   pop a
 ; --- END LOGICAL AND
   cmp b, 0
-  je _if47_else
-_if47_TRUE:
+  je _if46_else
+_if46_TRUE:
 ; return ch - 'a' + 'A'; 
   lea d, [bp + 5] ; $ch
   mov bl, [d]
@@ -2657,8 +2617,8 @@ _if47_TRUE:
 ; --- END TERMS
   leave
   ret
-  jmp _if47_exit
-_if47_else:
+  jmp _if46_exit
+_if46_else:
 ; return ch; 
   lea d, [bp + 5] ; $ch
   mov bl, [d]
@@ -2666,7 +2626,7 @@ _if47_else:
   mov c, 0
   leave
   ret
-_if47_exit:
+_if46_exit:
   leave
   ret
 
@@ -2683,7 +2643,7 @@ print_unsigned:
   pop d
   mov [d], b
 ; if(num == 0){ 
-_if48_cond:
+_if47_cond:
   lea d, [bp + 5] ; $num
   mov b, [d]
   mov c, 0
@@ -2696,8 +2656,8 @@ _if48_cond:
   pop a
 ; --- END RELATIONAL
   cmp b, 0
-  je _if48_exit
-_if48_TRUE:
+  je _if47_exit
+_if47_TRUE:
 ; putchar('0'); 
 ; --- START FUNCTION CALL
   mov32 cb, $00000030
@@ -2708,10 +2668,10 @@ _if48_TRUE:
 ; return; 
   leave
   ret
-  jmp _if48_exit
-_if48_exit:
+  jmp _if47_exit
+_if47_exit:
 ; while (num > 0) { 
-_while49_cond:
+_while48_cond:
   lea d, [bp + 5] ; $num
   mov b, [d]
   mov c, 0
@@ -2724,8 +2684,8 @@ _while49_cond:
   pop a
 ; --- END RELATIONAL
   cmp b, 0
-  je _while49_exit
-_while49_block:
+  je _while48_exit
+_while48_block:
 ; digits[i] = '0' + (num % 10); 
   lea d, [bp + -4] ; $digits
   push a
@@ -2795,10 +2755,10 @@ _while49_block:
   lea d, [bp + -6] ; $i
   mov [d], b
   mov b, a
-  jmp _while49_cond
-_while49_exit:
+  jmp _while48_cond
+_while48_exit:
 ; while (i > 0) { 
-_while56_cond:
+_while55_cond:
   lea d, [bp + -6] ; $i
   mov b, [d]
   mov c, 0
@@ -2811,8 +2771,8 @@ _while56_cond:
   pop a
 ; --- END RELATIONAL
   cmp b, 0
-  je _while56_exit
-_while56_block:
+  je _while55_exit
+_while55_block:
 ; i--; 
   lea d, [bp + -6] ; $i
   mov b, [d]
@@ -2840,8 +2800,8 @@ _while56_block:
   call putchar
   add sp, 1
 ; --- END FUNCTION CALL
-  jmp _while56_cond
-_while56_exit:
+  jmp _while55_cond
+_while55_exit:
   leave
   ret
 
@@ -3012,16 +2972,6 @@ table_power_scann:
 .dw $9680, $98     ; 10000000
 .dw $E100, $5F5    ; 100000000
 .dw $CA00, $3B9A   ; 1000000000
-; --- END INLINE ASM SEGMENT
-  leave
-  ret
-
-exit:
-  enter 0 ; (push bp; mov bp, sp)
-; --- BEGIN INLINE ASM SEGMENT
-  lea d, [bp + 5] ; $status
-  mov b, [d] ; return value
-  syscall sys_terminate_proc
 ; --- END INLINE ASM SEGMENT
   leave
   ret
