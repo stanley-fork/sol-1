@@ -78,8 +78,9 @@ _timer_ctrl       .equ $ffe3         ; timer control register
 _stack_begin      .equ $f7ff         ; beginning of stack
 _fifo_size        .equ 4096
 
-_mbr              .equ 446
-_superblock       .equ 1024
+_mbr                     .equ 446
+_superblock              .equ 1024
+_block_group_descriptor  .equ 2048
 
 text_org          .equ $400          ; code origin address for all user processes
 
@@ -129,7 +130,19 @@ text_org          .equ $400          ; code origin address for all user processe
 ; | `s_uuid`              | Unique ID of the filesystem              | 16                   | 128-bit UUID                    |
 ; | `s_volume_name`       | Label of the filesystem                  | 16                   | Usually ASCII, padded           |
 ; | `s_feature_flags`     | Compatibility flags                      | 4                    | 32-bit unsigned int             |
-; 
+
+; BLOCK GROUP DESCRIPTOR starts at 2048
+; | Offset | Size (bytes) | Field Name             | Description                               |
+; | ------ | ------------ | ---------------------- | ----------------------------------------- |
+; | 0x00   | 4            | `bg_block_bitmap`      | Block ID of the **block bitmap**          |
+; | 0x04   | 4            | `bg_inode_bitmap`      | Block ID of the **inode bitmap**          |
+; | 0x08   | 4            | `bg_inode_table`       | Starting block of **inode table**         |
+; | 0x0C   | 2            | `bg_free_blocks_count` | Free blocks in this group                 |
+; | 0x0E   | 2            | `bg_free_inodes_count` | Free inodes in this group                 |
+; | 0x10   | 2            | `bg_used_dirs_count`   | Number of inodes allocated to directories |
+; | 0x12   | 2            | (padding or reserved)  | Usually zero                              |
+; | 0x14   | 12           | Reserved / padding     | Reserved for future use                   |
+
 ; 
 ; inode for root dir is #2, #0 and #1 not used
 ; block size: 2048
@@ -408,14 +421,14 @@ ctrlz:
 ; ------------------------------------------------------------------------------------------------------------------;
 ; ------------------------------------------------------------------------------------------------------------------;
 ; DISK LAYOUT:
-; Metadata               | Size (bytes)    | Blocks (2048 bytes)              |  Comment
-; ---------------------- | --------------- | -------------------------------- | ----------------------------------
-; Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |
-; Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |
-; Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |
-; Block Bitmap           | 16,384 bytes    | 8 blocks                         | 16384*2048 = 33554432 blocks.  33554432*8 = 256MB of disk space
-; Inode Bitmap           | 2,048 bytes     | 1 block                          | 2048*8=16384. total of 16384 bits, meaning 16384 inodes, which is a standard default of 1 inode per 16KB of disk space
-; Inode Table            | 2,097,152 bytes | 1024 blocks                      | 128bytes per inode entry. 2097152 / 128 = 16384 inodes
+; Metadata               | Size (bytes)    | Blocks (2048 bytes)              |Start Block |  Comment
+; ---------------------- | --------------- | -------------------------------- |------------|-----------------------------------
+; Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |  0         |
+; Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |  0         |
+; Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |  1         |
+; Block Bitmap           | 16,384 bytes    | 8 blocks                         |  2         | 16384*2048 = 33554432 blocks.  33554432*8 = 256MB of disk space
+; Inode Bitmap           | 2,048 bytes     | 1 block                          |  10        | 2048*8=16384. total of 16384 bits, meaning 16384 inodes, which is a standard default of 1 inode per 16KB of disk space
+; Inode Table            | 2,097,152 bytes | 1024 blocks                      |  11        | 128bytes per inode entry. 2097152 / 128 = 16384 inodes
 ; 
 ; first 512 bytes: bootloader from 0 to 445, MBR partition table from 446 to 511 (64 bytes)
 ; up to 4 partitions, each 16 bytes long
@@ -452,6 +465,17 @@ ctrlz:
 ; | `s_volume_name`       | Label of the filesystem                  | 16                   | Usually ASCII, padded           |
 ; | `s_feature_flags`     | Compatibility flags                      | 4                    | 32-bit unsigned int             |
 ; 
+; BLOCK GROUP DESCRIPTOR starts at 2048
+; | Offset | Size (bytes) | Field Name             | Description                               |
+; | ------ | ------------ | ---------------------- | ----------------------------------------- |
+; | 0x00   | 4            | `bg_block_bitmap`      | Block ID of the **block bitmap**          |
+; | 0x04   | 4            | `bg_inode_bitmap`      | Block ID of the **inode bitmap**          |
+; | 0x08   | 4            | `bg_inode_table`       | Starting block of **inode table**         |
+; | 0x0C   | 2            | `bg_free_blocks_count` | Free blocks in this group                 |
+; | 0x0E   | 2            | `bg_free_inodes_count` | Free inodes in this group                 |
+; | 0x10   | 2            | `bg_used_dirs_count`   | Number of inodes allocated to directories |
+; | 0x12   | 2            | (padding or reserved)  | Usually zero                              |
+; | 0x14   | 12           | Reserved / padding     | Reserved for future use                   |
 ; 
 ; inode for root dir is #2, #0 and #1 not used
 ; block size: 2048
@@ -600,7 +624,27 @@ sys_mkfs:
   mov word[_superblock + 62], $0000  ;
   mov word[_superblock + 62], $0000  ; s_feature_flags
 
-
+; BLOCK GROUP DESCRIPTOR starts at 2048
+; | Offset | Size (bytes) | Field Name             | Description                               |
+; | ------ | ------------ | ---------------------- | ----------------------------------------- |
+; | 0x00   | 4            | `bg_block_bitmap`      | Block ID of the **block bitmap**          |
+; | 0x04   | 4            | `bg_inode_bitmap`      | Block ID of the **inode bitmap**          |
+; | 0x08   | 4            | `bg_inode_table`       | Starting block of **inode table**         |
+; | 0x0C   | 2            | `bg_free_blocks_count` | Free blocks in this group                 |
+; | 0x0E   | 2            | `bg_free_inodes_count` | Free inodes in this group                 |
+; | 0x10   | 2            | `bg_used_dirs_count`   | Number of inodes allocated to directories |
+; | 0x12   | 2            | (padding or reserved)  | Usually zero                              |
+; | 0x14   | 12           | Reserved / padding     | Reserved for future use                   |
+  mov word[_block_group_descriptor +  0], $0002  ; bg_block_bitmap
+  mov word[_block_group_descriptor +  2], $0000  ; bg_block_bitmap
+  mov word[_block_group_descriptor +  4], $000A  ; bg_inode_bitmap
+  mov word[_block_group_descriptor +  6], $0000  ; bg_inode_bitmap
+  mov word[_block_group_descriptor +  8], $000B  ; bg_inode_table
+  mov word[_block_group_descriptor + 10], $0000  ; bg_inode_table
+  mov word[_block_group_descriptor + 12], $0000  ; bg_free_blocks_count
+  mov word[_block_group_descriptor + 14], $0000  ; bg_free_inodes_count
+  mov word[_block_group_descriptor + 16], $0000  ; bg_used_dirs_count
+  mov word[_block_group_descriptor + 18], $0000  ; reserved
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; floppy drive syscalls
