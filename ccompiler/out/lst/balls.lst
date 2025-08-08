@@ -1,5 +1,5 @@
-0001   0000             ; --- FILENAME: test.c
-0002   0000             ; --- DATE:     29-07-2025 at 00:45:39
+0001   0000             ; --- FILENAME: programs/balls.c
+0002   0000             ; --- DATE:     29-07-2025 at 00:52:50
 0003   0000             .include "lib/asm/kernel.exp"
 0001+  0000             fdc_al_restore   .EQU  $0000
 0002+  0000             fdc_al_step      .EQU  $0001
@@ -2653,9 +2653,9 @@
 2522   1439 14 00       .dw $0014
 2523   143B 01 00       .dw $0001
 2524   143D             
-out/test.asm line 2525: Unknown token: (.)
-out/test.asm line 2525: Unknown token.    
-out/test.asm line 2525: Label not found: (dw)
+out/balls.asm line 2525: Unknown token: (.)
+out/balls.asm line 2525: Unknown token.    
+out/balls.asm line 2525: Label not found: (dw)
 2525   143D FF          .db .dw $ffff
 2526   143E 0A 00       .dw $000a
 2527   1440 14 00       .dw $0014

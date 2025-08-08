@@ -417,7 +417,7 @@ ctrlz:
   jmp syscall_pause_proc      ; pause current process and go back to the shell
 
 ; ------------------------------------------------------------------------------------------------------------------;
-; ext2 file system
+; EXT2 FILE SYSTEM
 ; ------------------------------------------------------------------------------------------------------------------;
 ; ------------------------------------------------------------------------------------------------------------------;
 ; DISK LAYOUT:
@@ -426,7 +426,7 @@ ctrlz:
 ; Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |  0         |
 ; Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |  0         |
 ; Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |  1         |
-; Block Bitmap           | 16,384 bytes    | 8 blocks                         |  2         | 16384*2048 = 33554432 blocks.  33554432*8 = 256MB of disk space
+; Block Bitmap           | 16,384 bytes    | 8 blocks                         |  2         | 16384*8 = 131072 blocks.  131072*2048 bytes = 256MB of disk space
 ; Inode Bitmap           | 2,048 bytes     | 1 block                          |  10        | 2048*8=16384. total of 16384 bits, meaning 16384 inodes, which is a standard default of 1 inode per 16KB of disk space
 ; Inode Table            | 2,097,152 bytes | 1024 blocks                      |  11        | 128bytes per inode entry. 2097152 / 128 = 16384 inodes
 ; 
@@ -446,7 +446,6 @@ ctrlz:
 ; 5-7  | End CHS
 ; 8-11 | Start LBA (little endian)
 ; 12-15| Size in sectors (little endian)
-; 
 ; 
 ; SUPERBLOCK:
 ; | Field                 | Description                              | Typical Size (bytes) | Notes                           |
@@ -518,133 +517,101 @@ ctrlz:
 sys_mkfs:
 ; master boot record
 ; partition 0
-  mov byte[transient_area + 446 + 0 +  0], $80      ; boot flag, 0x80 = active
-  mov word[transient_area + 446 + 0 +  1], $0000    ; start of CHS
-  mov byte[transient_area + 446 + 0 +  3], $00      ; start of CHS
-  mov byte[transient_area + 446 + 0 +  4], $83      ; artition type, 0x83 = linux/ext2
-  mov word[transient_area + 446 + 0 +  5], $0000    ; end of CHS
-  mov byte[transient_area + 446 + 0 +  7], $00      ; end of CHS
-  mov word[transient_area + 446 + 0 +  8], $0001    ; start LBA of file system, at sector 1
-  mov word[transient_area + 446 + 0 + 10], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + 446 + 0 + 12], $0000    ; size of file system in sectors/lba, 256MB
-  mov word[transient_area + 446 + 0 + 14], $0008    ; 256MB = 524288 sectors
-; partition 1
-  mov byte[transient_area + 446 + 16 +  0], $00      ; boot flag, 0x00 = inactive
-  mov word[transient_area + 446 + 16 +  1], $0000    ; start of CHS
-  mov byte[transient_area + 446 + 16 +  3], $00      ; start of CHS
-  mov byte[transient_area + 446 + 16 +  4], $83      ; artition type, 0x83 = linux/ext2
-  mov word[transient_area + 446 + 16 +  5], $0000    ; end of CHS
-  mov byte[transient_area + 446 + 16 +  7], $00      ; end of CHS
-  mov word[transient_area + 446 + 16 +  8], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + 446 + 16 + 10], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + 446 + 16 + 12], $0000    ; size of file system in sectors/lba, 256MB
-  mov word[transient_area + 446 + 16 + 14], $0000    ; 256MB = 524288 sectors
-; partition 2
-  mov byte[transient_area + 446 + 32 +  0], $00      ; boot flag, 0x00 = inactive
-  mov word[transient_area + 446 + 32 +  1], $0000    ; start of CHS
-  mov byte[transient_area + 446 + 32 +  3], $00      ; start of CHS
-  mov byte[transient_area + 446 + 32 +  4], $83      ; artition type, 0x83 = linux/ext2
-  mov word[transient_area + 446 + 32 +  5], $0000    ; end of CHS
-  mov byte[transient_area + 446 + 32 +  7], $00      ; end of CHS
-  mov word[transient_area + 446 + 32 +  8], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + 446 + 32 + 10], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + 446 + 32 + 12], $0000    ; size of file system in sectors/lba, 256MB
-  mov word[transient_area + 446 + 32 + 14], $0000    ; 256MB = 524288 sectors
-; partition 3
-  mov byte[transient_area + 446 + 48 +  0], $00      ; boot flag, 0x00 = inactive
-  mov word[transient_area + 446 + 48 +  1], $0000    ; start of CHS
-  mov byte[transient_area + 446 + 48 +  3], $00      ; start of CHS
-  mov byte[transient_area + 446 + 48 +  4], $83      ; artition type, 0x83 = linux/ext2
-  mov word[transient_area + 446 + 48 +  5], $0000    ; end of CHS
-  mov byte[transient_area + 446 + 48 +  7], $00      ; end of CHS
-  mov word[transient_area + 446 + 48 +  8], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + 446 + 48 + 10], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + 446 + 48 + 12], $0000    ; size of file system in sectors/lba, 256MB
-  mov word[transient_area + 446 + 48 + 14], $0000    ; 256MB = 524288 sectors
+  mov byte[transient_area + _mbr + 0 +  0], $80      ; boot flag, 0x80 = active
+  mov word[transient_area + _mbr + 0 +  1], $0000    ; start of CHS
+  mov byte[transient_area + _mbr + 0 +  3], $00      ; start of CHS
+  mov byte[transient_area + _mbr + 0 +  4], $83      ; artition type, 0x83 = linux/ext2
+  mov word[transient_area + _mbr + 0 +  5], $0000    ; end of CHS
+  mov byte[transient_area + _mbr + 0 +  7], $00      ; end of CHS
+  mov word[transient_area + _mbr + 0 +  8], $0001    ; start LBA of file system, at sector 1
+  mov word[transient_area + _mbr + 0 + 10], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + _mbr + 0 + 12], $0000    ; size of file system in sectors/lba, 256MB
+  mov word[transient_area + _mbr + 0 + 14], $0008    ; 256MB = 524288 sectors
+; partition 1             
+  mov byte[transient_area + _mbr + 16 +  0], $00      ; boot flag, 0x00 = inactive
+  mov word[transient_area + _mbr + 16 +  1], $0000    ; start of CHS
+  mov byte[transient_area + _mbr + 16 +  3], $00      ; start of CHS
+  mov byte[transient_area + _mbr + 16 +  4], $83      ; artition type, 0x83 = linux/ext2
+  mov word[transient_area + _mbr + 16 +  5], $0000    ; end of CHS
+  mov byte[transient_area + _mbr + 16 +  7], $00      ; end of CHS
+  mov word[transient_area + _mbr + 16 +  8], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + _mbr + 16 + 10], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + _mbr + 16 + 12], $0000    ; size of file system in sectors/lba, 256MB
+  mov word[transient_area + _mbr + 16 + 14], $0000    ; 256MB = 524288 sectors
+; partition 2             
+  mov byte[transient_area + _mbr + 32 +  0], $00      ; boot flag, 0x00 = inactive
+  mov word[transient_area + _mbr + 32 +  1], $0000    ; start of CHS
+  mov byte[transient_area + _mbr + 32 +  3], $00      ; start of CHS
+  mov byte[transient_area + _mbr + 32 +  4], $83      ; artition type, 0x83 = linux/ext2
+  mov word[transient_area + _mbr + 32 +  5], $0000    ; end of CHS
+  mov byte[transient_area + _mbr + 32 +  7], $00      ; end of CHS
+  mov word[transient_area + _mbr + 32 +  8], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + _mbr + 32 + 10], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + _mbr + 32 + 12], $0000    ; size of file system in sectors/lba, 256MB
+  mov word[transient_area + _mbr + 32 + 14], $0000    ; 256MB = 524288 sectors
+; partition 3             
+  mov byte[transient_area + _mbr + 48 +  0], $00      ; boot flag, 0x00 = inactive
+  mov word[transient_area + _mbr + 48 +  1], $0000    ; start of CHS
+  mov byte[transient_area + _mbr + 48 +  3], $00      ; start of CHS
+  mov byte[transient_area + _mbr + 48 +  4], $83      ; artition type, 0x83 = linux/ext2
+  mov word[transient_area + _mbr + 48 +  5], $0000    ; end of CHS
+  mov byte[transient_area + _mbr + 48 +  7], $00      ; end of CHS
+  mov word[transient_area + _mbr + 48 +  8], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + _mbr + 48 + 10], $0000    ; start LBA of file system, at sector 1
+  mov word[transient_area + _mbr + 48 + 12], $0000    ; size of file system in sectors/lba, 256MB
+  mov word[transient_area + _mbr + 48 + 14], $0000    ; 256MB = 524288 sectors
 ; --- MBR signature ---
   mov word [510], $AA55          ; Must be present for BIOS to boot
 
-; Metadata               | Size (bytes)    | Blocks (2048 bytes)              |  Comment
-; ---------------------- | --------------- | -------------------------------- | ----------------------------------
-; Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |
-; Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |
-; Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |
-; Block Bitmap           | 16,384 bytes    | 8 blocks                         | 16384*8 = 131072bits .  131072*2048 = 256MB of disk space
-; Inode Bitmap           | 2,048 bytes     | 1 block                          | 2048*8=16384. total of 16384 bits, meaning 16384 inodes, which is a standard default of 1 inode per 16KB of disk space
-; Inode Table            | 2,097,152 bytes | 1024 blocks                      | 128bytes per inode entry. 2097152 / 128 = 16384 inodes
 ; SUPERBLOCK:
-; | Field                 | Description                              | Typical Size (bytes) | Notes                           |
-; | --------------------- | ---------------------------------------- | -------------------- | ------------------------------- |
-; | `s_inodes_count`      | Total number of inodes in the filesystem | 4                    | 32-bit unsigned int             |
-; | `s_blocks_count`      | Total number of data blocks              | 4                    | 32-bit unsigned int             |
-; | `s_free_inodes_count` | Number of free inodes                    | 4                    | 32-bit unsigned int             |
-; | `s_free_blocks_count` | Number of free blocks                    | 4                    | 32-bit unsigned int             |
-; | `s_first_data_block`  | Block number of the first data block     | 4                    | 32-bit unsigned int             |
-; | `s_log_block_size`    | Block size = 1024 << `s_log_block_size`  | 4                    | 32-bit unsigned int             |
-; | `s_inode_size`        | Size of each inode (in bytes)            | 2                    | 16-bit unsigned int             |
-; | `s_magic`             | Filesystem signature (`0xEF53`)          | 2                    | 16-bit unsigned int             |
-; | `s_mtime`             | Last mount time                          | 4                    | 32-bit unsigned int (Unix time) |
-; | `s_wtime`             | Last write time                          | 4                    | 32-bit unsigned int (Unix time) |
-; | `s_uuid`              | Unique ID of the filesystem              | 16                   | 128-bit UUID                    |
-; | `s_volume_name`       | Label of the filesystem                  | 16                   | Usually ASCII, padded           |
-; | `s_feature_flags`     | Compatibility flags                      | 4                    | 32-bit unsigned int             |
-; superblock
-  mov word[_superblock +  0], $4000  ;
-  mov word[_superblock +  2], $0000  ; s_inodes_count = 16384
-  mov word[_superblock +  4], $0000  ;
-  mov word[_superblock +  6], $0002  ; s_blocks_count = 131072 blocks = $20000
-  mov word[_superblock +  8], $0000  ;
-  mov word[_superblock + 10], $0002  ; s_free_inodes_count = 131072 blocks = $20000
-  mov word[_superblock + 12], $0000  ;
-  mov word[_superblock + 14], $0002  ; s_free_blocks_count = 131072 blocks = $20000
-  mov word[_superblock + 16], $0000  ;
-  mov word[_superblock + 18], $0000  ; s_first_data_block = 0 (because superblock is contained within first 2048 byte block)
-  mov word[_superblock + 20], $0001  ;
-  mov word[_superblock + 22], $0000  ; s_log_block_size = 1 (1024 << 1 == 2048)
-  mov word[_superblock + 24], $0080  ; s_inode_size = 128
-  mov word[_superblock + 26], $EF53  ; s_magic = ef53
-  mov word[_superblock + 28], $0000  ; s_mtime
-  mov word[_superblock + 30], $0000  ; s_wtime
-  mov word[_superblock + 32], $0000  ; s_uuid
-  mov word[_superblock + 34], $0000  ; s_uuid
-  mov word[_superblock + 36], $0000  ; s_uuid
-  mov word[_superblock + 38], $0000  ; s_uuid
-  mov word[_superblock + 40], $0000  ; s_uuid
-  mov word[_superblock + 42], $0000  ; s_uuid
-  mov word[_superblock + 44], $0000  ; s_uuid
-  mov word[_superblock + 46], $0000  ; s_uuid
-  mov word[_superblock + 48], $0000  ; s_volume_name
-  mov word[_superblock + 50], $0000  ; s_volume_name
-  mov word[_superblock + 52], $0000  ; s_volume_name
-  mov word[_superblock + 54], $0000  ; s_volume_name
-  mov word[_superblock + 56], $0000  ; s_volume_name
-  mov word[_superblock + 58], $0000  ; s_volume_name
-  mov word[_superblock + 60], $0000  ; s_volume_name
-  mov word[_superblock + 62], $0000  ; s_volume_name
-  mov word[_superblock + 62], $0000  ;
-  mov word[_superblock + 62], $0000  ; s_feature_flags
+  mov word[transient_area + _superblock +  0], $4000  ;
+  mov word[transient_area + _superblock +  2], $0000  ; s_inodes_count = 16384
+  mov word[transient_area + _superblock +  4], $0000  ;
+  mov word[transient_area + _superblock +  6], $0002  ; s_blocks_count = 131072 blocks = $20000
+  mov word[transient_area + _superblock +  8], $4000  ;
+  mov word[transient_area + _superblock + 10], $0000  ; s_free_inodes_count = 16384 inodes = $4000
+  mov word[transient_area + _superblock + 12], $0000  ;
+  mov word[transient_area + _superblock + 14], $0002  ; s_free_blocks_count = 131072 blocks = $20000
+  mov word[transient_area + _superblock + 16], $0000  ;
+  mov word[transient_area + _superblock + 18], $0000  ; s_first_data_block = 0 (because superblock is contained within first 2048 byte block)
+  mov word[transient_area + _superblock + 20], $0001  ;
+  mov word[transient_area + _superblock + 22], $0000  ; s_log_block_size = 1 (1024 << 1 == 2048)
+  mov word[transient_area + _superblock + 24], $0080  ; s_inode_size = 128
+  mov word[transient_area + _superblock + 26], $EF53  ; s_magic = ef53
+  mov word[transient_area + _superblock + 28], $0000  ; s_mtime
+  mov word[transient_area + _superblock + 30], $0000  ; s_wtime
+  mov word[transient_area + _superblock + 32], $0000  ; s_uuid
+  mov word[transient_area + _superblock + 34], $0000  ; s_uuid
+  mov word[transient_area + _superblock + 36], $0000  ; s_uuid
+  mov word[transient_area + _superblock + 38], $0000  ; s_uuid
+  mov word[transient_area + _superblock + 40], $0000  ; s_uuid
+  mov word[transient_area + _superblock + 42], $0000  ; s_uuid
+  mov word[transient_area + _superblock + 44], $0000  ; s_uuid
+  mov word[transient_area + _superblock + 46], $0000  ; s_uuid
+  mov word[transient_area + _superblock + 48], $0000  ; s_volume_name
+  mov word[transient_area + _superblock + 50], $0000  ; s_volume_name
+  mov word[transient_area + _superblock + 52], $0000  ; s_volume_name
+  mov word[transient_area + _superblock + 54], $0000  ; s_volume_name
+  mov word[transient_area + _superblock + 56], $0000  ; s_volume_name
+  mov word[transient_area + _superblock + 58], $0000  ; s_volume_name
+  mov word[transient_area + _superblock + 60], $0000  ; s_volume_name
+  mov word[transient_area + _superblock + 62], $0000  ; s_volume_name
+  mov word[transient_area + _superblock + 62], $0000  ;
+  mov word[transient_area + _superblock + 62], $0000  ; s_feature_flags
 
 ; BLOCK GROUP DESCRIPTOR starts at 2048
-; | Offset | Size (bytes) | Field Name             | Description                               |
-; | ------ | ------------ | ---------------------- | ----------------------------------------- |
-; | 0x00   | 4            | `bg_block_bitmap`      | Block ID of the **block bitmap**          |
-; | 0x04   | 4            | `bg_inode_bitmap`      | Block ID of the **inode bitmap**          |
-; | 0x08   | 4            | `bg_inode_table`       | Starting block of **inode table**         |
-; | 0x0C   | 2            | `bg_free_blocks_count` | Free blocks in this group                 |
-; | 0x0E   | 2            | `bg_free_inodes_count` | Free inodes in this group                 |
-; | 0x10   | 2            | `bg_used_dirs_count`   | Number of inodes allocated to directories |
-; | 0x12   | 2            | (padding or reserved)  | Usually zero                              |
-; | 0x14   | 12           | Reserved / padding     | Reserved for future use                   |
-  mov word[_block_group_descriptor +  0], $0002  ; bg_block_bitmap
-  mov word[_block_group_descriptor +  2], $0000  ; bg_block_bitmap
-  mov word[_block_group_descriptor +  4], $000A  ; bg_inode_bitmap
-  mov word[_block_group_descriptor +  6], $0000  ; bg_inode_bitmap
-  mov word[_block_group_descriptor +  8], $000B  ; bg_inode_table
-  mov word[_block_group_descriptor + 10], $0000  ; bg_inode_table
-  mov word[_block_group_descriptor + 12], $0000  ; bg_free_blocks_count
-  mov word[_block_group_descriptor + 14], $0000  ; bg_free_inodes_count
-  mov word[_block_group_descriptor + 16], $0000  ; bg_used_dirs_count
-  mov word[_block_group_descriptor + 18], $0000  ; reserved
+  mov word[transient_area + _block_group_descriptor +  0], $0002  ; bg_block_bitmap
+  mov word[transient_area + _block_group_descriptor +  2], $0000  ; bg_block_bitmap
+  mov word[transient_area + _block_group_descriptor +  4], $000A  ; bg_inode_bitmap
+  mov word[transient_area + _block_group_descriptor +  6], $0000  ; bg_inode_bitmap
+  mov word[transient_area + _block_group_descriptor +  8], $000B  ; bg_inode_table
+  mov word[transient_area + _block_group_descriptor + 10], $0000  ; bg_inode_table
+  mov word[transient_area + _block_group_descriptor + 12], $0000  ; bg_free_blocks_count = 0x200_0000
+  mov word[transient_area + _block_group_descriptor + 14], $0200  ; bg_free_inodes_count
+  mov word[transient_area + _block_group_descriptor + 16], $0000  ; bg_used_dirs_count
+  mov word[transient_area + _block_group_descriptor + 18], $0000  ; reserved
+
+
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; floppy drive syscalls
