@@ -1,16 +1,16 @@
 <header>
 <style>
-    a:link { color: #10DB50; } /* unvisited links */
-    a:visited { color: #10DB50; } /* visited links */
+    a:link { color: #00ff50; } /* unvisited links */
+    a:visited { color: #00ff50; } /* visited links */
     a:hover { color: white; } /* mouse over link */
     a:active { color: white; } /* selected link */
 
     body{
-          color:#F0F070;
+          color:#00F040;
 	}
 </style>
 	<nav>
-	<div>
+	<div style="font-size: 20px; background-color:#003000;">
 		<a href="index.php">home</a> |
 		<a href="terminal.php">sol-1 terminal</a> |
 		<a href="photos.php">photos</a> |

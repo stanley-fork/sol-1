@@ -13,7 +13,6 @@
             background-position: center;
             background-repeat: no-repeat;
             height: 100vh; /* Viewport height */
-	    background-repeat: no-repeat;
   	    background-attachment: fixed;
         }
 
