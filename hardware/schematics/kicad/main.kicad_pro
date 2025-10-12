@@ -706,6 +706,22 @@
     [
       "8dc530de-176d-4542-9ed1-97157904b8fd",
       "Root"
+    ],
+    [
+      "6d82b379-17a4-433e-9e67-048f9ff9896a",
+      "microcode_alu"
+    ],
+    [
+      "9f2ca146-e135-4f03-bd24-d11dff48023e",
+      "registers_paging"
+    ],
+    [
+      "de1a6b02-d7d8-456e-b849-cd6cafea1125",
+      "memory_peripherals"
+    ],
+    [
+      "f24c6437-f4bc-4a63-817f-e018368e200b",
+      "front_panel"
     ]
   ],
   "text_variables": {}
