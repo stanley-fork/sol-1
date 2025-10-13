@@ -69,9 +69,9 @@ void printf(const char *format, ...){
         case 'L':
           format_p++;
           if(*format_p == 'd' || *format_p == 'i')
-            print_signed_long(*(long *)p);
+            print_signed_long(*(long int*)p);
           else if(*format_p == 'u')
-            print_unsigned_long(*(unsigned long *)p);
+            print_unsigned_long(*(unsigned long int*)p);
           else if(*format_p == 'x')
             printx32(*(long int *)p);
           else err("Unexpected format in printf.");
@@ -543,150 +543,160 @@ int gets(char *s){
 }
 
 void print_signed(int num) {
-  char digits[5];
+  char digits[5];  // enough for "-32768"
   int i = 0;
+  unsigned int absval;
 
   if (num < 0) {
     putchar('-');
-    num = -num;
+    absval = (unsigned int)(-(num + 1)) + 1;  // safe for -32768
+  } else {
+    absval = (unsigned int)num;
   }
-  else if (num == 0) {
+
+  if (absval == 0) {
     putchar('0');
     return;
   }
 
-  while (num > 0) {
-    digits[i] = '0' + (num % 10);
-    num = num / 10;
-    i++;
+  while (absval > 0) {
+    digits[i++] = '0' + (absval % 10);
+    absval = absval / 10;
   }
 
   while (i > 0) {
-    i--;
-    putchar(digits[i]);
+    putchar(digits[--i]);
   }
 }
 
 void print_signed_long(long int num) {
-  char digits[10];
+  char digits[10];  // fits 2,147,483,647
   int i = 0;
+  unsigned long int absval;
 
   if (num < 0) {
     putchar('-');
-    num = -num;
+    // handle LONG_MIN safely
+    absval = (unsigned long int)(-(num + 1)) + 1;
+  } else {
+    absval = (unsigned long int)num;
   }
-  else if (num == 0) {
+
+  if (absval == 0) {
+    putchar('0');
+    return;
+  }
+
+  while (absval > 0) {
+    digits[i++] = '0' + (absval % 10);
+    absval = absval / 10;
+  }
+
+  while (i > 0) {
+    putchar(digits[--i]);
+  }
+}
+
+void print_unsigned(unsigned int num) {
+  char digits[5];
+  int i = 0;
+  
+  if(num == 0){
     putchar('0');
     return;
   }
 
   while (num > 0) {
-    digits[i] = '0' + (num % 10);
+    digits[i++] = '0' + (num % 10);
     num = num / 10;
-    i++;
   }
 
+  // Print the digits in reverse order using putchar()
   while (i > 0) {
-    i--;
-    putchar(digits[i]);
+    putchar(digits[--i]);
   }
 }
 
 void print_unsigned_long(unsigned long int num) {
   char digits[10];
-  int i;
-  i = 0;
+  int i = 0;
+
   if(num == 0){
     putchar('0');
     return;
   }
+
   while (num > 0) {
-    digits[i] = '0' + (num % 10);
+    digits[i++] = '0' + (num % 10);
     num = num / 10;
-    i++;
   }
+
   // Print the digits in reverse order using putchar()
   while (i > 0) {
-    i--;
-    putchar(digits[i]);
+    putchar(digits[--i]);
   }
 }
 
-void sprint_unsigned(char *dest, unsigned int num) {
-  char digits[5];
-  int i;
-  int len = 0;
-
-  i = 0;
-  if(num == 0){
-    *dest++ = '0';
-    return 1;
-  }
-  while (num > 0) {
-    digits[i] = '0' + (num % 10);
-    num = num / 10;
-    i++;
-  }
-  // Print the digits in reverse order using putchar()
-  while (i > 0) {
-    i--;
-    *dest++ = digits[i];
-    len++;
-  }
-  *dest = '\0';
-  return len;
-}
-
-void print_unsigned(unsigned int num) {
-  char digits[5];
-  int i;
-  i = 0;
-  if(num == 0){
-    putchar('0');
-    return;
-  }
-  while (num > 0) {
-    digits[i] = '0' + (num % 10);
-    num = num / 10;
-    i++;
-  }
-  // Print the digits in reverse order using putchar()
-  while (i > 0) {
-    i--;
-    putchar(digits[i]);
-  }
-}
-
-void sprint_signed(char *dest, int num) {
+int sprint_unsigned(char *dest, unsigned int num) {
   char digits[5];
   int i = 0;
   int len = 0;
 
-  if (num < 0) {
-    *dest++ = '-';
-    num = -num;
-    len++;
-  }
-  else if (num == 0) {
+  if(num == 0){
     *dest++ = '0';
     *dest = '\0';
     return 1;
   }
 
   while (num > 0) {
-    digits[i] = '0' + (num % 10);
+    digits[i++] = '0' + (num % 10);
     num = num / 10;
-    i++;
   }
 
+  // Print the digits in reverse order using putchar()
   while (i > 0) {
-    i--;
-    *dest++ = digits[i];
+    *dest++ = digits[--i];
     len++;
   }
   *dest = '\0';
+
   return len;
 }
+
+int sprint_signed(char *dest, int num) {
+  char digits[5];   // enough for 32768
+  int i = 0;
+  int len = 0;
+  unsigned int absval;
+
+  if (num < 0) {
+    *dest++ = '-';
+    len++;
+    absval = (unsigned int)(-(num + 1)) + 1;  // safe even for -32768
+  } else {
+    absval = (unsigned int)num;
+  }
+
+  if (absval == 0) {
+    *dest++ = '0';
+    *dest = '\0';
+    return len + 1;
+  }
+
+  while (absval > 0) {
+    digits[i++] = '0' + (absval % 10);
+    absval = absval / 10;
+  }
+
+  while (i > 0) {
+    *dest++ = digits[--i];
+    len++;
+  }
+
+  *dest = '\0';
+  return len;
+}
+
 
 void date(){
   asm{
