@@ -3921,45 +3921,25 @@ t_type parse_factors(void){
       temp_tok = curr_token.tok;
       type2 = parse_atomic();
       expr_out = cast(expr_out, type2);
-      if(temp_tok == STAR){
-          emitln("", "  push a     ; save left operand");
-          emitln("", "  xor a, b   ; xor sign bits");
-          emitln("", "  swp a      ; swap bytes");
-          emitln("", "  mov cl, al ; save result of xor into 'dl'");
-          emitln("", "  pop a      ; restore left side operator");
-          emitln("", "  push cl    ; save result of xor above");
-
-          emitln("", "  swp a  ");
-          emitln("", "  test al, $80  ");
-          emitln("", "  swp a  ");
-          emitln("", "  jz skip_invert_a_%d  ", highest_label_index);
-          emitln("", "  neg a ");
-          emitln("", "skip_invert_a_%d:   ", highest_label_index);
-          emitln("", "  swp b");
-          emitln("", "  test bl, $80  ");
-          emitln("", "  swp b");
-          emitln("", "  jz skip_invert_b_%d  ", highest_label_index);
-          emitln("", "  neg b ");
-          emitln("", "skip_invert_b_%d:   ", highest_label_index);
-
-          emitln("", "  mul a, b ; *");
-          emitln("", "  mov g, a");
-          emitln("", "  mov a, b");
-
-          emitln("", "  pop bl");
-          emitln("", "  test bl, $80");
+if(temp_tok == STAR){
+          emitln("", "  xor al, bl    ; XOR low bytes to check sign difference");
+          emitln("", "  push al       ; Save sign result");
+          emitln("", "  test al, $80  ; Check if A is negative");
+          emitln("", "  jz skip_invert_a_%d", highest_label_index);
+          emitln("", "  neg a        ; Negate A if negative");
+          emitln("", "skip_invert_a_%d:", highest_label_index);
+          emitln("", "  test bl, $80  ; Check if B is negative");
+          emitln("", "  jz skip_invert_b_%d", highest_label_index);
+          emitln("", "  neg b        ; Negate B if negative");
+          emitln("", "skip_invert_b_%d:", highest_label_index);
+          emitln("", "  mul a, b     ; Multiply A and B");
+          emitln("", "  mov g, a     ; Save result in G");
+          emitln("", "  pop al       ; Restore sign result");
+          emitln("", "  test al, $80  ; Check if result should be negative");
           emitln("", "  jz _same_signs_%d", highest_label_index);
-
-          emitln("", "  mov bl, al");
-          emitln("", "  not a");
-          emitln("", "  neg b");
-          emitln("", "  adc a, 0");
-          emitln("", "  mov g, a");
-          emitln("", "  mov a, b");
-
+          emitln("", "  neg g        ; Negate result if signs differ");
           emitln("", "_same_signs_%d:", highest_label_index);
-
-          expr_out.size_modifier = SIZEMOD_LONG; // set it as a 32bit int
+          expr_out.size_modifier = SIZEMOD_LONG; // Set as 32-bit int
       }
       else if(temp_tok == FSLASH){
         emitln("", "  push g ; save 'g' as the div instruction uses it");
