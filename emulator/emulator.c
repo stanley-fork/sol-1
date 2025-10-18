@@ -122,7 +122,7 @@ void do_reset(){
 }
 
 void main_loop(){
-  for(int i = 0; i < 100; i++){
+  for(int i = 0; i < 10; i++){
     clk = ~clk;
     execute_micro_instruction();
   }
@@ -143,10 +143,12 @@ void execute_micro_instruction(){
 
   // Rising edge
   if(clk){
-    // TODO: add sign extension to micro_offset
-    micro_offset = u_offset_0 | u_offset_1 << 1 | u_offset_2 << 2 | u_offset_3 << 3 | u_offset_4 << 4 | u_offset_5 << 5 | u_offset_6 << 6;
-    // micro address next
+    micro_offset = u_offset_0 | u_offset_1 << 1 | u_offset_2 << 2 | u_offset_3 << 3 | u_offset_4 << 4 | u_offset_5 << 5 | u_offset_6 << 6 |
+    // below is for sign-extending micro_address.
+                   u_offset_6 << 15 | u_offset_6 << 14 | u_offset_6 << 13 | u_offset_6 << 12 | u_offset_6 << 11 | u_offset_6 << 10 | u_offset_6 << 9 |
+                   u_offset_6 << 8 | u_offset_6 << 7;
 
+    // micro address next
     mux_a = typ_1 && (typ_0 || !typ_0 && any_interruption);
     mux_b = typ_1 && !typ_0;
 

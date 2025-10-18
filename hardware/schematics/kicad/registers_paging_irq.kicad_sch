@@ -15404,7 +15404,7 @@
 	)
 	(bus
 		(pts
-			(xy 48.26 59.69) (xy 48.26 74.93)
+			(xy 48.26 7.62) (xy 48.26 74.93)
 		)
 		(stroke
 			(width 0.762)
@@ -32982,6 +32982,16 @@
 		)
 		(uuid "ed920e34-6cc3-480e-90a0-13834b547ac6")
 	)
+	(bus
+		(pts
+			(xy 64.77 7.62) (xy 48.26 7.62)
+		)
+		(stroke
+			(width 0.762)
+			(type default)
+		)
+		(uuid "ed97167a-e52d-4d21-a48f-541fa5ab0ffa")
+	)
 	(wire
 		(pts
 			(xy 97.79 200.66) (xy 80.01 200.66)
@@ -41246,6 +41256,16 @@
 		)
 		(uuid "bbf6f872-64cb-4e18-a6fe-17d6a8e3057e")
 	)
+	(label "zbus[0..7]"
+		(at 48.26 59.69 0)
+		(effects
+			(font
+				(size 3.048 3.048)
+			)
+			(justify left bottom)
+		)
+		(uuid "bd3963a9-c5b1-4e09-8004-e0ca6bd42df7")
+	)
 	(label "page_table_we"
 		(at 378.46 1197.61 0)
 		(effects
@@ -46757,6 +46777,17 @@
 				(hide yes)
 			)
 		)
+	)
+	(hierarchical_label "zbus[0..7]"
+		(shape input)
+		(at 64.77 7.62 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "181ed607-cf2d-454c-8d83-014e51834805")
 	)
 	(symbol
 		(lib_id "main-eagle-import:74377N")

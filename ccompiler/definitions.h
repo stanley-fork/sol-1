@@ -17,6 +17,9 @@
 #define MAX_STRUCT_ELEMENTS        32
 #define MAX_UNION_DECLARATIONS     64
 #define MAX_UNION_ELEMENTS         32
+#define CLASS_DECLARATIONS         32
+#define MAX_CLASS_VARIABLES        64
+#define MAX_CLASS_METHODS          64
 #define MAX_TYPEDEFS               128
 #define MAX_USER_FUNC              512
 #define PROG_SIZE                  512 * 1024

@@ -27,7 +27,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Sheetfile" "microcode_alu.kicad_sch"
+		(property "Sheetfile" "../kicad/microcode_alu.kicad_sch"
 			(at 40.64 215.2146 0)
 			(show_name yes)
 			(effects
@@ -67,7 +67,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Sheetfile" "registers_paging_irq.kicad_sch"
+		(property "Sheetfile" "../kicad/registers_paging_irq.kicad_sch"
 			(at 39.37 363.8046 0)
 			(show_name yes)
 			(effects
@@ -117,7 +117,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Sheetfile" "memory_peripherals.kicad_sch"
+		(property "Sheetfile" "../kicad/memory_peripherals.kicad_sch"
 			(at 314.96 220.2946 0)
 			(show_name yes)
 			(effects
@@ -156,7 +156,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Sheetfile" "front_panel.kicad_sch"
+		(property "Sheetfile" "../kicad/front_panel.kicad_sch"
 			(at 248.92 362.5346 0)
 			(effects
 				(font
