@@ -163,8 +163,9 @@ int main(int argc, char *argv[]){
 
   declare_heap_global_var();
   pre_processor();
+  
   pre_scan();
-
+  
   // count total number of c lines
   total_c_lines = count_total_lines(c_in);
 
@@ -198,6 +199,18 @@ int main(int argc, char *argv[]){
 
   emitln("", "\n.end");
   *asm_p = '\0';
+
+  printf("\n**************************************************");
+
+  printf("\nGLOBAL VARIABLE TABLE:\n");
+  for(int i = 0; i < global_var_tos; i++){
+    dbg_print_var_info(global_var_table[i]);
+  }
+  printf("\nFUNCTION TABLE:\n");
+  for(int i = 0; i < function_table_tos; i++){
+    dbg_print_function_info(function_table[i]);
+  }
+  printf("\n");
 
   //optimize_asm();
   apc_ratio = (float)total_asm_lines / (float)total_c_lines;
@@ -1023,7 +1036,7 @@ void pre_processor(void){
   declare_all_defines();
   search_and_add_func();
   add_library_type_declarations();
-
+  
   printf("replacing defines with their declared values...");
   prog = c_in; 
   for(;;){
@@ -1978,7 +1991,6 @@ void declare_typedef(void){
   }
 // *********************************************************************************************
   if(curr_token.tok_type != IDENTIFIER) error(ERR_FATAL, "Identifier expected");
-  printf("token: %s", curr_token.token_str);
   if(type.primitive_type == DT_VOID && type.ind_level == 0) error(ERR_FATAL, "Invalid type in variable: %s", curr_token.token_str);
 
   type.dims[0] = 0;
@@ -5752,11 +5764,17 @@ void emit_global_var_initialization(t_var *var){
           get_var_base_addr(temp, curr_token.token_str);
           emit_data("_%s: .dw _%s_data\n", var->name, temp);
         }
+        else{ // value is a constant
+          emit_data("_%s: .dw %s\n", var->name, curr_token.token_str);
+        }
         break;
       case DT_UNION:
         if(curr_token.tok_type == IDENTIFIER){
           get_var_base_addr(temp, curr_token.token_str);
           emit_data("_%s: .dw _%s_data\n", var->name, temp);
+        }
+        else{ // value is a constant
+          emit_data("_%s: .dw %s\n", var->name, curr_token.token_str);
         }
     }
   }

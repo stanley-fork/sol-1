@@ -52,3 +52,37 @@ int strlen(char *str) {
     
     return length;
 }
+
+char *strchr(char *str, unsigned char c) {
+  while (*str) {
+    if (*str == c) {
+        return str;
+    }
+    str++;
+  }
+  if (c == 0) {
+    return str; // return pointer to null terminator if searching for '\0'
+  }
+  return 0;
+}
+
+char *strstr(char *haystack, char *needle) {
+  int i, j;
+
+  if (*needle == 0) {
+    return haystack; // empty needle matches at start
+  }
+
+  for (i = 0; haystack[i] != 0; i++) {
+    for (j = 0; needle[j] != 0; j++) {
+      if (haystack[i + j] != needle[j]) {
+          break;
+      }
+    }
+    if (needle[j] == 0) {
+      return &haystack[i];
+    }
+  }
+
+  return 0;
+}
