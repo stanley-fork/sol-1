@@ -1054,9 +1054,9 @@ int main(){
   char *p;
   printf("\n");
 
-  program = malloc(16384);
-  bin_out = malloc(16384);
-  opcode_table = malloc(12310);
+  program = alloc(16384);
+  bin_out = alloc(16384);
+  opcode_table = alloc(12310);
 
   loadfile(0x0000, program);
   loadfile("./config.d/op_tbl", opcode_table);

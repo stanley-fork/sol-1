@@ -1,4 +1,3 @@
-#include <stddef.h>
 #include <string.h>
 
 #define NULL 0
@@ -7,14 +6,14 @@
 
 struct _FILE{
   int handle;
-  uint8_t filename[256];
-  uint8_t mode; // 0: RD, 1: WR, 2: RW, 3: APPEND
-  uint8_t loc; // position of seek head
+  unsigned char filename[256];
+  unsigned char mode; // 0: RD, 1: WR, 2: RW, 3: APPEND
+  unsigned char loc; // position of seek head
 };
 
 typedef struct _FILE FILE;
 
-FILE *fopen(char *filename, uint8_t mode){
+FILE *fopen(char *filename, unsigned char mode){
   FILE *fp;
   static int max_handle = 0;
 

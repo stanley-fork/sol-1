@@ -236,14 +236,12 @@ void add_library_type_declarations(){
   char *temp_prog, *temp_prog2;
   char *prog_at_identifier;
   int paren, braces;
-  uint8_t is_struct_enum_union;
 
   printf("adding library type definitions...");
 
   strcat(c_in, "\n");
   prog = include_files_buffer;
   for(;;){
-    is_struct_enum_union = 0;
     temp_prog = prog;
     get();
     temp_prog2 = prog;
@@ -270,61 +268,58 @@ void add_library_type_declarations(){
         curr_token.tok == SIGNED   || curr_token.tok == UNSIGNED ||
         curr_token.tok == LONG     || curr_token.tok == SHORT    ||
         curr_token.tok == REGISTER || curr_token.tok == VOLATILE
-      ){
-        get();
-      }
+      ) get();
       if(curr_token.tok == STRUCT || curr_token.tok == ENUM || curr_token.tok == UNION){
-        is_struct_enum_union = 1;
-        get();
+        get(); // get struct/enum/union name
       }
-      get();
-      // if not a struct, union, or enum, then the var type has just been gotten
-      if(curr_token.tok == STAR){
-        while(curr_token.tok == STAR){
+      get(); // get '{', '*', or name
+      if(curr_token.tok == OPENING_BRACE){ // struct declaration
+        strcat(c_in, "\n");
+        prog = temp_prog;
+        for(;;){ // copy everything before the '{'
           get();
-        }
-      }
-      get(); // get semicolon, assignment, comma, or opening braces
-      if(curr_token.tok != OPENING_PAREN){ //it must be a function declaration
-        if(is_struct_enum_union){
-          strcat(c_in, "\n");
-          prog = temp_prog;
-          for(;;){ // copy everything before the '{'
-            get();
-            if(curr_token.tok == OPENING_BRACE) break;
-            strcat(c_in, curr_token.token_str);
-            strcat(c_in, " ");
-          }
-          strcat(c_in, curr_token.token_str); // concat '{' which was got before the loop broke
-          braces = 1;
-          for(;;){ // now copy whats inside the braces
-            get();
-            strcat(c_in, curr_token.token_str);
-            strcat(c_in, " ");
-            if(curr_token.tok == OPENING_BRACE) braces++;
-            else if(curr_token.tok == CLOSING_BRACE) braces--;
-            if(braces == 0) break;
-          }
-          get(); if(curr_token.tok != SEMICOLON) error(ERR_FATAL, "semicolon expected in struct declaration");
+          if(curr_token.tok == OPENING_BRACE) break;
           strcat(c_in, curr_token.token_str);
+          strcat(c_in, " ");
         }
-        else{
+        strcat(c_in, curr_token.token_str); // concat '{' which was got before the loop broke
+        braces = 1;
+        for(;;){ // now copy whats inside the braces
+          get();
+          strcat(c_in, curr_token.token_str);
+          strcat(c_in, " ");
+          if(curr_token.tok == OPENING_BRACE) braces++;
+          else if(curr_token.tok == CLOSING_BRACE) braces--;
+          if(braces == 0) break;
+        }
+        get(); 
+        if(curr_token.tok != SEMICOLON) error(ERR_FATAL, "semicolon expected in struct declaration");
+        strcat(c_in, curr_token.token_str);
+      }
+      else{
+        if(curr_token.tok == STAR){
+          while(curr_token.tok == STAR){
+            get();
+          }
+        }
+        get(); // get semicolon, assignment, comma
+        if(curr_token.tok != OPENING_PAREN){ 
           prog = temp_prog;
           get_line();
           strcat(c_in, "\n");
           strcat(c_in, curr_token.string_const);
         }
-      }
-      else{ // is a function, skip it
-        paren = 1;
-        for(;;){
-          get();
-          if(curr_token.tok == OPENING_PAREN) paren++;
-          else if(curr_token.tok == CLOSING_PAREN) paren--;
-          if(paren == 0) break;
+        else{ // is a function, skip it
+          paren = 1;
+          for(;;){
+            get();
+            if(curr_token.tok == OPENING_PAREN) paren++;
+            else if(curr_token.tok == CLOSING_PAREN) paren--;
+            if(paren == 0) break;
+          }
+          get(); // get '{'
+          skip_block(1);
         }
-        get(); // get '{'
-        skip_block(1);
       }
     }
   }
@@ -802,6 +797,20 @@ int is_register(char *name){
 void declare_heap_global_var(){
   printf("declaring the heap memory...");
   strcpy(global_var_table[global_var_tos].name, "heap_top");
+  global_var_table[global_var_tos].type.primitive_type = DT_CHAR;
+  global_var_table[global_var_tos].type.is_constant    = FALSE;
+  global_var_table[global_var_tos].type.dims[0]        = 0;
+  global_var_table[global_var_tos].type.ind_level      = 1;
+  global_var_table[global_var_tos].type.size_modifier  = SIZEMOD_NORMAL;
+  global_var_table[global_var_tos].type.sign_modifier  = SIGNMOD_UNSIGNED;
+  global_var_table[global_var_tos].type.is_func_ptr    = FALSE;
+  global_var_table[global_var_tos].is_parameter        = FALSE;
+  global_var_table[global_var_tos].is_volatile         = FALSE;
+  global_var_table[global_var_tos].is_static           = FALSE;
+  global_var_table[global_var_tos].is_register         = FALSE;
+  global_var_tos++;
+
+  strcpy(global_var_table[global_var_tos].name, "heap");
   global_var_table[global_var_tos].type.primitive_type = DT_CHAR;
   global_var_table[global_var_tos].type.is_constant    = FALSE;
   global_var_table[global_var_tos].type.dims[0]        = 0;
@@ -1969,6 +1978,7 @@ void declare_typedef(void){
   }
 // *********************************************************************************************
   if(curr_token.tok_type != IDENTIFIER) error(ERR_FATAL, "Identifier expected");
+  printf("token: %s", curr_token.token_str);
   if(type.primitive_type == DT_VOID && type.ind_level == 0) error(ERR_FATAL, "Invalid type in variable: %s", curr_token.token_str);
 
   type.dims[0] = 0;
@@ -3627,10 +3637,12 @@ t_type parse_relational(void){
   return expr_out;
 }
 
+// todo: deal with 32bit ints!
 t_type parse_bitwise_shift(void){
   t_tok temp_tok;
   t_type type1, type2, expr_out;
 
+  // a >> 2 << 3;
   temp_tok = 0;
   type1 = parse_terms();
   expr_out = type1;

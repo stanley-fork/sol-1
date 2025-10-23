@@ -1,8 +1,8 @@
 object fmain: Tfmain
-  Left = -4
-  Top = -4
-  Width = 1928
-  Height = 1160
+  Left = 468
+  Top = 167
+  Width = 1036
+  Height = 802
   Caption = 'Photon Microcode Compiler ver. 1.0'
   Color = 2829611
   Ctl3D = False
@@ -46,8 +46,8 @@ object fmain: Tfmain
   object Panel1: TPanel
     Left = 0
     Top = 46
-    Width = 1920
-    Height = 1083
+    Width = 1020
+    Height = 718
     Align = alClient
     BevelOuter = bvNone
     Color = 1184274
@@ -62,7 +62,7 @@ object fmain: Tfmain
       Left = 691
       Top = 0
       Width = 8
-      Height = 1083
+      Height = 718
       Cursor = crHSplit
       AutoSnap = False
       Color = 2829611
@@ -73,7 +73,7 @@ object fmain: Tfmain
       Left = 0
       Top = 0
       Width = 201
-      Height = 1083
+      Height = 718
       Align = alLeft
       BevelOuter = bvNone
       Color = 1184274
@@ -110,6 +110,12 @@ object fmain: Tfmain
           Cursor = crHandPoint
           Caption = 'Offset'
           Flat = True
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clLime
+          Font.Height = -12
+          Font.Name = 'Consolas'
+          Font.Style = []
+          ParentFont = False
           OnClick = SpeedButton12Click
         end
         object SpeedButton13: TSpeedButton
@@ -120,6 +126,12 @@ object fmain: Tfmain
           Cursor = crHandPoint
           Caption = 'Imm'
           Flat = True
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clLime
+          Font.Height = -12
+          Font.Name = 'Consolas'
+          Font.Style = []
+          ParentFont = False
           OnClick = SpeedButton13Click
         end
         object combo_type: TComboBox
@@ -136,7 +148,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 50
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -167,7 +179,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 50
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -226,7 +238,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 50
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -250,7 +262,7 @@ object fmain: Tfmain
           Color = 2829611
           Ctl3D = False
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -268,7 +280,7 @@ object fmain: Tfmain
         Align = alTop
         Caption = 'ALU to ZBus'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
+        Font.Color = clLime
         Font.Height = -12
         Font.Name = 'Consolas'
         Font.Style = []
@@ -288,7 +300,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -314,7 +326,7 @@ object fmain: Tfmain
         Align = alTop
         Caption = 'Arithmetic Flags In'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
+        Font.Color = clLime
         Font.Height = -12
         Font.Name = 'Consolas'
         Font.Style = []
@@ -334,7 +346,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -366,7 +378,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -397,7 +409,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -429,7 +441,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -455,7 +467,7 @@ object fmain: Tfmain
         Align = alTop
         Caption = 'ALU Inputs A/B'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
+        Font.Color = clLime
         Font.Height = -12
         Font.Name = 'Consolas'
         Font.Style = []
@@ -475,7 +487,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 50
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -538,7 +550,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 50
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -568,7 +580,7 @@ object fmain: Tfmain
         Align = alTop
         Caption = 'MDR In/Out Src'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
+        Font.Color = clLime
         Font.Height = -12
         Font.Name = 'Consolas'
         Font.Style = []
@@ -587,7 +599,7 @@ object fmain: Tfmain
           Color = 2829611
           Ctl3D = False
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -615,7 +627,7 @@ object fmain: Tfmain
           Color = 2829611
           Ctl3D = False
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -639,7 +651,7 @@ object fmain: Tfmain
         Align = alTop
         Caption = 'Micro Flags In'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
+        Font.Color = clLime
         Font.Height = -12
         Font.Name = 'Consolas'
         Font.Style = []
@@ -659,7 +671,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -688,7 +700,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -717,7 +729,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -748,7 +760,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -774,7 +786,7 @@ object fmain: Tfmain
         Align = alTop
         Caption = 'ALU Operation/Carry '
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
+        Font.Color = clLime
         Font.Height = -12
         Font.Name = 'Consolas'
         Font.Style = []
@@ -794,7 +806,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 50
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -835,7 +847,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 50
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -870,7 +882,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 50
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -895,7 +907,7 @@ object fmain: Tfmain
         Caption = 'MAR In Src'
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
+        Font.Color = clLime
         Font.Height = -12
         Font.Name = 'Consolas'
         Font.Style = []
@@ -915,7 +927,7 @@ object fmain: Tfmain
           Color = 2829611
           Ctl3D = False
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -940,7 +952,7 @@ object fmain: Tfmain
         Caption = 'Shift Src'
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
+        Font.Color = clLime
         Font.Height = -12
         Font.Name = 'Consolas'
         Font.Style = []
@@ -961,7 +973,7 @@ object fmain: Tfmain
           Ctl3D = False
           DropDownCount = 20
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -984,8 +996,8 @@ object fmain: Tfmain
     object Panel4: TPanel
       Left = 699
       Top = 0
-      Width = 1221
-      Height = 1083
+      Width = 321
+      Height = 718
       Align = alClient
       BevelOuter = bvNone
       Color = 1184274
@@ -999,8 +1011,8 @@ object fmain: Tfmain
       object list_names: TListBox
         Left = 0
         Top = 0
-        Width = 1221
-        Height = 1083
+        Width = 321
+        Height = 718
         AutoComplete = False
         Align = alClient
         BevelInner = bvNone
@@ -1008,7 +1020,7 @@ object fmain: Tfmain
         Columns = 4
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
+        Font.Color = clLime
         Font.Height = -12
         Font.Name = 'Consolas'
         Font.Style = []
@@ -1023,7 +1035,7 @@ object fmain: Tfmain
       Left = 209
       Top = 0
       Width = 482
-      Height = 1083
+      Height = 718
       Align = alLeft
       BevelOuter = bvNone
       Color = 1184274
@@ -1038,7 +1050,7 @@ object fmain: Tfmain
         Left = 449
         Top = 0
         Width = 33
-        Height = 1083
+        Height = 718
         Align = alRight
         BevelOuter = bvNone
         Color = 1184274
@@ -1047,7 +1059,7 @@ object fmain: Tfmain
           Left = 0
           Top = 0
           Width = 33
-          Height = 1083
+          Height = 718
           Align = alClient
           BevelEdges = []
           BevelInner = bvNone
@@ -1059,7 +1071,7 @@ object fmain: Tfmain
           Columns = 1
           Ctl3D = False
           Font.Charset = ANSI_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -11
           Font.Name = 'Consolas'
           Font.Style = []
@@ -1143,14 +1155,14 @@ object fmain: Tfmain
         Left = 0
         Top = 0
         Width = 449
-        Height = 1083
+        Height = 718
         Align = alClient
         BevelOuter = bvNone
         Color = 1184274
         TabOrder = 1
         object Splitter2: TSplitter
           Left = 0
-          Top = 568
+          Top = 203
           Width = 449
           Height = 8
           Cursor = crVSplit
@@ -1164,7 +1176,7 @@ object fmain: Tfmain
           Left = 0
           Top = 0
           Width = 449
-          Height = 568
+          Height = 203
           Cursor = crArrow
           OnClickCheck = control_listClickCheck
           Align = alClient
@@ -1174,7 +1186,7 @@ object fmain: Tfmain
           Columns = 3
           Ctl3D = False
           Font.Charset = ANSI_CHARSET
-          Font.Color = clWhite
+          Font.Color = clLime
           Font.Height = -12
           Font.Name = 'Consolas'
           Font.Style = []
@@ -1308,7 +1320,7 @@ object fmain: Tfmain
         end
         object Panel3: TPanel
           Left = 0
-          Top = 576
+          Top = 211
           Width = 449
           Height = 507
           Align = alBottom
@@ -1330,13 +1342,15 @@ object fmain: Tfmain
             Color = 1184274
             Ctl3D = False
             Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWhite
+            Font.Color = clLime
             Font.Height = -12
             Font.Name = 'Consolas'
             Font.Style = []
+            HideSelection = False
             MaxLength = 256
             ParentCtl3D = False
             ParentFont = False
+            ScrollBars = ssVertical
             TabOrder = 0
             WantTabs = True
             OnKeyDown = memo_infoKeyDown
@@ -1351,10 +1365,10 @@ object fmain: Tfmain
             BevelInner = bvNone
             BevelOuter = bvNone
             BorderStyle = bsNone
-            Color = 1184274
+            Color = 2960685
             Ctl3D = False
             Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWhite
+            Font.Color = clLime
             Font.Height = -16
             Font.Name = 'Consolas'
             Font.Style = [fsBold]
@@ -1371,7 +1385,7 @@ object fmain: Tfmain
       Left = 201
       Top = 0
       Width = 8
-      Height = 1083
+      Height = 718
       Align = alLeft
       BevelOuter = bvNone
       Color = 2829611
@@ -1390,7 +1404,7 @@ object fmain: Tfmain
   object Panel5: TPanel
     Left = 0
     Top = 0
-    Width = 1920
+    Width = 1020
     Height = 46
     Align = alTop
     BevelOuter = bvNone
@@ -1413,7 +1427,7 @@ object fmain: Tfmain
       Caption = 'Quit'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1429,7 +1443,7 @@ object fmain: Tfmain
       Caption = 'Reset'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1445,7 +1459,7 @@ object fmain: Tfmain
       Caption = 'Export'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold, fsUnderline]
@@ -1461,7 +1475,7 @@ object fmain: Tfmain
       Caption = 'I+'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1477,7 +1491,7 @@ object fmain: Tfmain
       Caption = 'C+'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1493,7 +1507,7 @@ object fmain: Tfmain
       Caption = 'C-'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1509,7 +1523,7 @@ object fmain: Tfmain
       Caption = 'I-'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1525,7 +1539,7 @@ object fmain: Tfmain
       Caption = 'SHR'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1541,7 +1555,7 @@ object fmain: Tfmain
       Caption = 'SHL'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1557,7 +1571,7 @@ object fmain: Tfmain
       Caption = 'Paste cycles'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1573,7 +1587,7 @@ object fmain: Tfmain
       Caption = 'Copy cycles'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1589,7 +1603,7 @@ object fmain: Tfmain
       Caption = 'Save As'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold, fsUnderline]
@@ -1605,7 +1619,7 @@ object fmain: Tfmain
       Caption = 'Save'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold, fsUnderline]
@@ -1621,7 +1635,7 @@ object fmain: Tfmain
       Caption = 'Open'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold, fsUnderline]
@@ -1637,7 +1651,7 @@ object fmain: Tfmain
       Caption = 'New'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold, fsUnderline]
@@ -1653,7 +1667,7 @@ object fmain: Tfmain
       Caption = 'Copy Instruction'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1669,7 +1683,7 @@ object fmain: Tfmain
       Caption = 'Paste Instruction'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1685,7 +1699,7 @@ object fmain: Tfmain
       Caption = 'Mode: Read-only'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1701,7 +1715,7 @@ object fmain: Tfmain
       Caption = 'Toggle Editor'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Consolas'
       Font.Style = [fsBold]
@@ -1709,7 +1723,7 @@ object fmain: Tfmain
       OnClick = SpeedButton19Click
     end
     object panelstatus: TPanel
-      Left = 1485
+      Left = 585
       Top = 0
       Width = 435
       Height = 46

@@ -457,9 +457,9 @@ ctrlz:
 ; | `s_first_data_block`  | Block number of the first data block     | 4                    | 32-bit unsigned int             |
 ; | `s_log_block_size`    | Block size = 1024 << `s_log_block_size`  | 4                    | 32-bit unsigned int             |
 ; | `s_inode_size`        | Size of each inode (in bytes)            | 2                    | 16-bit unsigned int             |
-; | `s_magic`             | Filesystem signature (`0xEF53`)          | 2                    | 16-bit unsigned int             |
-; | `s_mtime`             | Last mount time                          | 4                    | 32-bit unsigned int (Unix time) |
-; | `s_wtime`             | Last write time                          | 4                    | 32-bit unsigned int (Unix time) |
+; | `s_magic`             | Last mount time                          | 4                    | 32-bit unsigned int (Unix time) |
+; | `s_wtime`             | Filesystem signature (`0xEF53`)          | 2                    | 16-bit unsigned int             |
+; | `s_mtime`             | Last write time                          | 4                    | 32-bit unsigned int (Unix time) |
 ; | `s_uuid`              | Unique ID of the filesystem              | 16                   | 128-bit UUID                    |
 ; | `s_volume_name`       | Label of the filesystem                  | 16                   | Usually ASCII, padded           |
 ; | `s_feature_flags`     | Compatibility flags                      | 4                    | 32-bit unsigned int             |

@@ -125,6 +125,7 @@ void main_loop(){
   for(int i = 0; i < 10; i++){
     clk = ~clk;
     execute_micro_instruction();
+
   }
 }
 
@@ -142,7 +143,10 @@ void execute_micro_instruction(){
   printf("\n\n\nClk: %c\n", clk ? 'H' : 'L');  
 
   // Rising edge
+  // Register Writes
   if(clk){
+    update_control_bits(); 
+
     micro_offset = u_offset_0 | u_offset_1 << 1 | u_offset_2 << 2 | u_offset_3 << 3 | u_offset_4 << 4 | u_offset_5 << 5 | u_offset_6 << 6 |
     // below is for sign-extending micro_address.
                    u_offset_6 << 15 | u_offset_6 << 14 | u_offset_6 << 13 | u_offset_6 << 12 | u_offset_6 << 11 | u_offset_6 << 10 | u_offset_6 << 9 |
@@ -193,9 +197,9 @@ void execute_micro_instruction(){
 
   }
   // Falling edge
+  // Update Microcode Word D-FlipFlops
+  // Update any logic that depends on immediate values of micro-control word
   if(!clk){
-    update_control_bits();
-
     alu_op = alu_op_3 << 3 | alu_op_2 << 2 | alu_op_1 << 1 | alu_op_0;
     alu_a_src = alu_a_src_5 << 5 | alu_a_src_4 << 4 | alu_a_src_3 << 3 | alu_a_src_2 << 2 | alu_a_src_1 << 1 | alu_a_src_0;
     alu_b_src = alu_b_src_2 << 2 | alu_b_src_1 << 1 | alu_b_src_0;
