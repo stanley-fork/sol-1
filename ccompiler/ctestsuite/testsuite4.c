@@ -1,11 +1,28 @@
 #include <stdio.h>
 
 void main(){
-  int pass = 1;
-  int expression = 1;
+  int pass[10];
+  int i;
+  int nbr_tests = 10;
 
-  pass = pass && expression ? 1 : 0;
+  // initialize pass array with -1's
+  for(i = 0; i < nbr_tests; i++){
+    pass[i] = -1;
+  }
 
-  printf("result: %s\n", pass ? "passed" : "failed");
+  pass[0] = test0();
+
+  for(i = 0; i < nbr_tests; i++)
+    printf("Test %d, Result: %d\n", i, pass[i]);
 }
 
+int test0(){
+  int result = 1;
+
+  result = result && sizeof(char) == 1;
+  result = result && sizeof(int) == 2;
+  result = result && sizeof(long int) == 4;
+  result = result && sizeof(char**) == 2;
+  result = result && sizeof(int**) == 2;
+
+}

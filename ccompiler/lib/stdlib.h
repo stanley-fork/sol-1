@@ -13,7 +13,8 @@ struct block{
     struct block *next;
 };
 
-struct block *free_list = 0;
+typedef struct block block_t;
+block_t *free_list = 0;
 
 void exit(int status){
   asm{
@@ -32,25 +33,25 @@ void *memset(char *s, char c, int size){
 }
 
 int atoi(char *str) {
-    int result = 0;  // Initialize result
-    int sign = 1;    // Initialize sign as positive
+  int result = 0;  // Initialize result
+  int sign = 1;    // Initialize sign as positive
 
-    // Skip leading whitespaces
-    while (*str == ' ') str++;
+  // Skip leading whitespaces
+  while (*str == ' ') str++;
 
-    // Check for optional sign
-    if (*str == '-' || *str == '+') {
-        if (*str == '-') sign = -1;
-        str++;
-    }
+  // Check for optional sign
+  if (*str == '-' || *str == '+') {
+    if (*str == '-') sign = -1;
+    str++;
+  }
 
-    // Loop through all digits of input string
-    while (*str >= '0' && *str <= '9') {
-        result = result * 10 + (*str - '0');
-        str++;
-    }
+  // Loop through all digits of input string
+  while (*str >= '0' && *str <= '9') {
+    result = result * 10 + (*str - '0');
+    str++;
+  }
 
-    return sign * result;
+  return sign * result;
 }
 
 int seconds(){
@@ -90,44 +91,45 @@ unsigned int rand(void) {
 }
 
 void *alloc(unsigned int size) {
-    struct block **b = &free_list;
-    struct block *prev = 0;
-    struct block *pp;
-    struct block *blk = *b;
+  block_t **b = &free_list;
+  block_t *prev = 0;
+  block_t *pp;
+  block_t *blk = *b;
 
-    // Align size to 2 bytes
-    if (size & 1) size++;
+  // Align size to 2 bytes
+  if (size & 1) size++;
 
-    // Search free list
-    while (*b) {
-        pp = *b;
-        if (pp->size >= size) {
-            if (prev)
-                prev->next = blk->next;
-            else
-                free_list = blk->next;
-            return (void*)(blk + 1);
-        }
-        prev = *b;
-        b = &pp->next;
+  // Search free list
+  while (*b) {
+    pp = *b;
+    if (pp->size >= size) {
+      if (prev)
+        prev->next = blk->next;
+      else
+        free_list = blk->next;
+      return (void*)(blk + sizeof(struct block));
     }
-    
-    // No suitable free block → allocate new
-    if (heap_top + sizeof(struct block) + size > heap + HEAP_SIZE)
-        return 0; // out of memory
+    prev = *b;
+    b = &pp->next;
+  }
+  
+  // No suitable free block → allocate new
+  if (heap_top + sizeof(struct block) + size > heap + HEAP_SIZE)
+    return 0; // out of memory
 
-    blk = heap_top;
-    blk->size = size;
-    heap_top = heap_top + sizeof(struct block) + size;
-    return (void*)(blk + 1);
+  blk = heap_top;
+  blk->size = size;
+  heap_top = heap_top + sizeof(block_t) + size;
+  return (void*)(blk + sizeof(struct block));
 }
 
-void free(void *ptr) {
-    if (!ptr) return;
-    struct block *blk = ((struct block*)ptr) - 1;
-    blk->next = free_list;
-    free_list = blk;
+void free(char *ptr) {
+  if (!ptr) return;
+  block_t *blk = ptr - sizeof(struct block);
+  blk->next = free_list;
+  free_list = blk;
 }
+
 /*
 // heap and heap_top are defined internally by the compiler
 // so that 'heap' is the last variable in memory and therefore can grow upwards

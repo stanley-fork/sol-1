@@ -2,6 +2,8 @@
   A C compiler for the Sol-1 Homebrew Minicomputer
 
   TODO:
+  ** pointer arithmetic is imcomplete. operations dont take into account the pointer type, such as int, char, struct, etc types.
+     meaning int *p; p+1;, for example adds 1 instead of 2 as offsets.
   ** fix goto: at present we cannot jump to a label that is declared after the goto.
   ** look at cast() function for improvements.
   ** implement 'register' keyworded type local variables  
@@ -200,6 +202,7 @@ int main(int argc, char *argv[]){
   emitln("", "\n.end");
   *asm_p = '\0';
 
+  /*
   printf("\n**************************************************");
 
   printf("\nGLOBAL VARIABLE TABLE:\n");
@@ -211,7 +214,7 @@ int main(int argc, char *argv[]){
     dbg_print_function_info(function_table[i]);
   }
   printf("\n");
-
+*/
   //optimize_asm();
   apc_ratio = (float)total_asm_lines / (float)total_c_lines;
   printf("\n*** c compiler statistics ***"
@@ -1258,6 +1261,8 @@ t_type get_type(){
     type.sign_modifier = SIGNMOD_SIGNED; // set as signed by default             
     type.size_modifier = SIZEMOD_NORMAL; // set as signed by default               
     type.is_constant = FALSE;
+    type.is_func_ptr = FALSE;
+    type.ind_level = 0;
     while(curr_token.tok == SIGNED || curr_token.tok == UNSIGNED || curr_token.tok == LONG || curr_token.tok == SHORT){    
            if(curr_token.tok == SIGNED)   type.sign_modifier = SIGNMOD_SIGNED;         
       else if(curr_token.tok == UNSIGNED) type.sign_modifier = SIGNMOD_UNSIGNED;            
@@ -1286,10 +1291,13 @@ t_type get_type(){
         error(ERR_FATAL, "Undeclared union: %s", curr_token.token_str);
       type.struct_enum_union_id = struct_enum_union_id;
     }
-    // check if is function pointer
+    // check if is pointer
     get();
-    if(curr_token.tok == OPENING_PAREN){
-      type.is_func_ptr = TRUE;
+    if(curr_token.tok == STAR){
+      while(curr_token.tok == STAR){
+        get();
+        type.ind_level++;
+      }
     }
     back();
   }
@@ -3707,7 +3715,6 @@ t_type parse_terms(void){
       if(temp_tok == PLUS){
         if(type_is_32bit(cast(expr_out, type2))){
           if(!type_is_32bit(expr_out))
-          //TODO: do we need to push g into the stack to save before using? could overwrite?
             emitln("", "  mov g, 0");
           else if(!type_is_32bit(type2))
             emitln("", "  mov c, 0");
@@ -4050,6 +4057,9 @@ t_type parse_sizeof(){
     else if(global_var_exists(curr_token.token_str) != -1){  // is a global variable
       var_id = global_var_exists(curr_token.token_str);
       emitln("", "  mov32 cb, %d", get_total_type_size(global_var_table[var_id].type));
+    }
+    else if(search_typedef(curr_token.token_str) != -1){
+      emitln("", "  mov32 cb, %d", get_total_type_size(typedef_table[search_typedef(curr_token.token_str)].type));
     }
     else{
       error(ERR_FATAL, "(Parse atomic) Undeclared identifier: %s", curr_token.token_str);

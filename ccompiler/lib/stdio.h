@@ -89,6 +89,7 @@ void printf(const char *format, ...){
           break;
 
         case 'x':
+        case 'p':
           printx16(*(int*)p);
           /*asm{
             ccmovd p
@@ -172,6 +173,7 @@ void scanf(const char *format, ...){
           break;
 
         case 'x':
+        case 'p':
           p = p + 2;
           break;
 
@@ -238,6 +240,7 @@ void sprintf(char *dest, const char *format, ...){
           break;
 
         case 'x':
+        case 'p':
           p = p + 2;
           break;
 
