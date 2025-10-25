@@ -69,24 +69,22 @@ It is published here for educational purposes.
 
 ### Licensing Terms
 
-CC BY-NC-SA 4.0 DEED
-Attribution-NonCommercial-ShareAlike 4.0 International
+Sol-1 Homebrew CPU/Minicomputer is a CPU + system around it, made from 74 series logic from scratch
+as an educational project.
+Copyright (C) 2025  Paulo Constantino
 
-You are free to:
-Share — copy and redistribute the material in any medium or format.
-Adapt — remix, transform, and build upon the material.
-The licensor cannot revoke these freedoms as long as you follow the license terms.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-Under the following terms:
-Attribution — You must give appropriate credit , provide a link to the license, and indicate if changes were made. 
-You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
-NonCommercial — You may not use the material for commercial purposes.
-ShareAlike — If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
-Notices:
-No warranties are given. The license may not give you all of the permissions necessary for your intended use. 
-For example, other rights such as publicity, privacy, or moral rights may limit how you use the material.
+You should have received a copy of the GNU General Public License
+along with this program; if not, see
+<https://www.gnu.org/licenses/>.
 
-Paulo Constantino
-
+contact: pconstantino@sol-1.org

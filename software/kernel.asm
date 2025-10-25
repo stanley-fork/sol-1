@@ -426,7 +426,7 @@ ctrlz:
 ; Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |  0         |
 ; Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |  0         |
 ; Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |  1         |
-; Block Bitmap           | 16,384 bytes    | 8 blocks                         |  2         | 16384*8 = 131072 blocks.  131072*2048 bytes = 256MB of disk space
+; Block Bitmap           | 16,384 bytes    | 8 blocks                         |  2         | 16384*8 = 131072 raw data blocks.  131072*2048 bytes = 256MB of disk space
 ; Inode Bitmap           | 2,048 bytes     | 1 block                          |  10        | 2048*8=16384. total of 16384 bits, meaning 16384 inodes, which is a standard default of 1 inode per 16KB of disk space
 ; Inode Table            | 2,097,152 bytes | 1024 blocks                      |  11        | 128bytes per inode entry. 2097152 / 128 = 16384 inodes
 ; 
