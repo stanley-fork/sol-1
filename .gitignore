@@ -3,3 +3,4 @@
 *.un
 *.lck
 .vscode/
+solfs/disk.bin
