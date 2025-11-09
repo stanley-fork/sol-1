@@ -1,10 +1,8 @@
 #include <stdio.h>
-//#include <string.h>
-int *p;
 
 int main(){
 
-    p+1;
+    printf("\nHello World\n");
 
   return 0;
 }
