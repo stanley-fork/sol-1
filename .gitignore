@@ -4,4 +4,3 @@
 *.lck
 .vscode/
 solfs/disk.bin
-disk_creator/disk.bin
