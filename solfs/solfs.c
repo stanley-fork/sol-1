@@ -636,7 +636,8 @@ uint16_t block_bitmap_alloc(){
       if((block_byte >> j) == 0){
         *(blocks_bitmap_p + i) = *(blocks_bitmap_p + i) | (0x01 << j); // set block as used
         ((struct superblock *)(superblock_p))->free_blocks_count--; // decrease number of free blocks in superblock
-        return i * 8 + j; // check each bit inside the byte
+        memset(data_blocks_p + (i * 8 + j) * BLOCK_SIZE, 0, BLOCK_SIZE); // fill the data b,ock with 0's
+        return i * 8 + j; // return block number
       }
     }
   }
@@ -676,13 +677,13 @@ void init_directory(uint16_t block_index, uint16_t self_inode, uint16_t parent_i
   strcpy(dotdot->name, "..");
 }
 
+// allocate free block for directory
+// allocate new inode for directory
+// initialize new block as an empty directory
+// add new directory entry to parent directory
+//   search through block pointer list in parent inode
+//   for each block, search for space to add new entry
 uint16_t create_directory(char *name, uint16_t parent_inode){
-  // allocate free block for directory
-  // allocate new inode for directory
-  // initialize new block as an empty directory
-  // add new directory entry to parent directory
-  //   search through block pointer list in parent inode
-  //   for each block, search for space to add new entry
   struct inode_table_entry new_inode;
   uint16_t inode_num;
   uint16_t block_num;
@@ -714,6 +715,10 @@ uint16_t create_directory(char *name, uint16_t parent_inode){
   // add new entry to parent directory based on parent_inode
   for(int i = 0; i < NUM_INODE_BLOCK_POINTERS - 1; i++){ // loop through each of the direct pointer blocks first
     parent_block_num = (inode_table_p + parent_inode)->block[i];
+    if(parent_block_num == 0){ // if the block we are working with does not actually exist, then allocate it
+      parent_block_num = block_bitmap_alloc();
+      printf("block pointer %d empty. allocating new data block: %d\n", i, parent_block_num);
+    }
     // pointer to the directory block
     parent_data_block_p = data_blocks_p + parent_block_num * BLOCK_SIZE; 
     // search for space inside block for new entry
@@ -771,6 +776,7 @@ char *name_from_inode(char *name, uint16_t inode, uint16_t parent_inode){
     }
   }
 
+  // search indirect blocks
   indirect_block_num = (inode_table_p + parent_inode)->block[INDIRECT_BLOCK_POINTER_INDEX]; // block number of indirect data block
   indirect_data_block_p = data_blocks_p + indirect_block_num * BLOCK_SIZE;  // pointer to data block that contains pointers to data blocks
   for(int i = 0; i < NUM_BLOCK_POINTERS_PER_BLOCK; i++){
@@ -779,7 +785,7 @@ char *name_from_inode(char *name, uint16_t inode, uint16_t parent_inode){
     // search for space inside block for new entry
     for(int i_entry = 0; i_entry < NUM_DIR_ENTRIES; i_entry++){
       curr_entry = (struct directory_entry *)curr_data_block_p + i_entry;
-      if(curr_entry->inode == inode){ // empty entry
+      if(curr_entry->inode == inode){
         strcpy(name, curr_entry->name);
         return name; 
       }
