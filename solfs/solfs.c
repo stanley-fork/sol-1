@@ -188,6 +188,8 @@ uint16_t superblock_free_blocks_dec();
 uint16_t superblock_free_blocks_inc();
 uint16_t superblock_free_inodes_dec();
 uint16_t superblock_free_inodes_inc();
+void print_inode_table();
+void print_bitmap_table();
 
 unsigned char disk[TOTAL_DISK_SIZE];
 unsigned char mbr_data[] = {
@@ -259,184 +261,180 @@ int main(int argc, char **argv){
   fs_state.curr_inode = 2; // #2 is root
   strcpy(fs_state.directory_str, "/"); // clear directory name
 
-  if(argc > 1){
-    if(!strcmp(argv[1], "-r")){
-      if(argc > 2){
-        if(!strcmp(argv[2], "-b")) show_block_bitmap = 1;
-        if(!strcmp(argv[2], "-i")) show_inode_bitmap = 1;
-      }
-      if(argc > 3){
-        if(!strcmp(argv[3], "-b")) show_block_bitmap = 1;
-        if(!strcmp(argv[3], "-i")) show_inode_bitmap = 1;
-      }
-      read_partition();
-      exit(1);
-    }
-    else if(!strcmp(argv[1], "-n")){
-      navigate();
-    }
-    // generate disk image
-    else if(!strcmp(argv[1], "-w")){
-      // LOAD BOOTLOADER AND WRITE TO BOOT SECTOR
-      if(loadfile_bootloader("../software/obj/boot.obj", disk) == -1){
-        printf("> exiting...\n");
-        return 0;
-      };
-
-      // COPY MBR TABLE TO DISK
-      for(int i = 0; i < sizeof(mbr_data); i++){
-        *(mbr_p + i) = mbr_data[i];
-      }
-
-      // SET BOOTLOADER SIGNATURE
-      *(uint16_t *)(signature_p) = 0x55AA;
-
-      // SUPERBLOCK
-      // start block: 0
-      // start offset: 1024
-      // size: 1024 bytes
-      superblock.inodes_count      = NUM_INODES; // Total number of inodes in the filesystem  
-      superblock.blocks_count      = NUM_DATA_BLOCKS; // Total number of data blocks         
-      superblock.free_inodes_count = NUM_INODES; // Number of free inodes                 
-      superblock.free_blocks_count = NUM_DATA_BLOCKS; // Number of free blocks                
-      superblock.block_bitmap      = BLOCK_BITMAP_BLOCK_NUM; // Block ID of the **block bitmap**
-      superblock.inode_bitmap      = INODE_BITMAP_BLOCK_NUM; // Block ID of the **inode bitmap**
-      superblock.inode_table       = INODE_TABLE_BLOCK_NUM; // Starting block of **inode table**
-      superblock.first_data_block  = 0; // Block number of the first data block   
-      superblock.used_dirs_count   = 1; // Number of inodes allocated to directories
-      superblock.log_block_size    = 1; // Block size = 1024 << `s_log_block_size` 
-      superblock.mtime             = 0; // Last mount time (unix time)              
-      superblock.wtime             = 0; // Last write time (unix time)              
-      memset(superblock.uuid, 0, 16); // Unique ID of the filesystem            
-      strcpy(superblock.volume_name, "Sol-1 Volume"); // Label of the filesystem               
-      superblock.feature_flags     = 0; // Compatibility flags                  
-      *(struct superblock *)(superblock_p) = superblock;
-
-      
-      // BLOCK BITMAP
-      // start block: 2
-      // start offset: 4096
-      // size = 4 * 2048 = 8192 bytes
-      *(blocks_bitmap_p) = 0x01; // the very first bit is set to 1 so it can never be found as free
-      for(int i = 1; i < BLOCKS_BITMAP_SIZE; i++){
-        *(blocks_bitmap_p + i) = 0x00; // set each bitmap byte to 0
-      }
-
-      // INODE BITMAP
-      // start block: 6
-      // start offset: 12288
-      // size = 1 block = 2048 bytes
-      *(inode_bitmap_p) = 0x03; // inode bits 0, 1 are set to used so they can never be found as free
-      for(int i = 1; i < INODE_BITMAP_SIZE; i++){
-        *(inode_bitmap_p + i) = 0x00; // set each bitmap byte to 0
-      }
-
-      // INODE TABLE
-      // start block: 7
-      // start offset: 14336
-      // size = 1024 blocks = 2,097,152 bytes
-      inode_table_entry.mode        = 0; // File type and permissions 
-      inode_table_entry.uid         = 0; // Owner user ID
-      inode_table_entry.size        = 0; // Size of the file in bytes
-      inode_table_entry.atime       = 0; // Last access time (timestamp)
-      inode_table_entry.ctime       = 0; // Creation time (timestamp)
-      inode_table_entry.mtime       = 0; // Last modification time (timestamp)
-      inode_table_entry.dtime       = 0; // Deletion time (timestamp) 
-      inode_table_entry.gid         = 0; // Group ID         
-      inode_table_entry.links_count = 0; // Number of hard links
-      inode_table_entry.blocks      = 0; // Number of 512-byte blocks allocated 
-      inode_table_entry.flags       = 0; // File flags
-      memset(inode_table_entry.block, 0, NUM_INODE_BLOCK_POINTERS * 2); // Pointers to data blocks (47 direct)
-
-      // reset entire inode table to unused
-      for(int i = 0; i < INODE_TABLE_NUM_ENTRIES; i++){
-        *(inode_table_p + i) = inode_table_entry;
-      }
-
-      // CREATE ROOT DIRECTORY
-      memset(&root_inode, 0, sizeof(root_inode)); // reset entire inode
-      root_inode.mode        = 0x41ED;   // directory (0x4000) + rwxr-xr-x (0x1ED)
-      root_inode.uid         = 0;        // root user
-      root_inode.gid         = 0;
-      root_inode.size        = 2048;     // one block for the directory
-      root_inode.atime       = root_inode.ctime = root_inode.mtime = time(NULL);
-      root_inode.links_count = 2;        // "." and parent ("..")
-      root_inode.blocks      = 1; 
-      root_inode.block[0]    = block_bitmap_alloc(); // allocate block for root and set pointer in inode entry (will allocate block 1)
-      // allocate inode bitmap and set inode table entry for root
-      create_inode(root_inode); // this will allocate inode #2 for root
-      // ADD . AND .. ENTRIES TO ROOT DIRECTORY
-      init_directory(root_inode.block[0], 2, 2);
-      printf("> root directory created: %d\n", 2);
-
-      // create /usr directory
-      uint16_t usr_inode  = create_directory("usr",   2); // create /usr directory
-      uint16_t tmp_inode  = create_directory("tmp",   2); // create /usr directory
-      uint16_t etc_inode  = create_directory("etc",   2); // create /usr directory
-      uint16_t bin_inode  = create_directory("bin",   2); // create /usr directory
-      uint16_t sbin_inode = create_directory("sbin",  2); // create /usr directory
-      uint16_t boot_inode = create_directory("boot",  2); // create /usr directory
-      uint16_t asm_inode  = create_directory("asm",   2); // create /usr directory
-      uint16_t cc_inode   = create_directory("cc",    2); // create /usr directory
-      uint16_t home_inode = create_directory("home",  2); // create /usr directory
-      uint16_t src_inode  = create_directory("src",   2); // create /usr directory
-
-      uint16_t usr_bin_inode   = create_directory("bin", usr_inode);
-      uint16_t usr_sbin_inode  = create_directory("sbin",  usr_inode);
-      uint16_t usr_games_inode = create_directory("games", usr_inode);
-      uint16_t usr_share_inode = create_directory("share", usr_inode);
-      uint16_t usr_local_inode = create_directory("local", usr_inode);
-
-      create_file("ls", "../software/obj/ls.obj", usr_bin_inode);
-      create_file("mkbin", "../software/obj/mkbin.obj", usr_bin_inode);
-      create_file("mkdir", "../software/obj/mkdir.obj", usr_bin_inode);
-      create_file("rmdir", "../software/obj/rmdir.obj", usr_bin_inode);
-      create_file("cat", "../software/obj/cat.obj", usr_bin_inode);
-      create_file("clear", "../software/obj/clear.obj", usr_bin_inode);
-      create_file("chmod", "../software/obj/chmod.obj", usr_bin_inode);
-      create_file("date", "../software/obj/date.obj", usr_bin_inode);
-      create_file("echo", "../software/obj/echo.obj", usr_bin_inode);
-      create_file("ed", "../software/obj/ed.obj", usr_bin_inode);
-      create_file("mv", "../software/obj/mv.obj", usr_bin_inode);
-      create_file("ps", "../software/obj/ps.obj", usr_bin_inode);
-      create_file("pwd", "../software/obj/pwd.obj", usr_bin_inode);
-      create_file("reboot", "../software/obj/reboot.obj", usr_bin_inode);
-      create_file("rm", "../software/obj/rm.obj", usr_bin_inode);
-      create_file("rmdir", "../software/obj/rmdir.obj", usr_bin_inode);
-
-      create_file("shell", "../software/obj/shell.obj", usr_sbin_inode);
-
-      create_file("boot", "../software/obj/boot.obj", boot_inode);
-      create_file("kernel1.0", "../software/obj/kernel.obj", boot_inode);
-
-      create_file("shell.cfg", "../solarium/etc/shell.cfg", etc_inode);
-      create_file(".shellrc", "../solarium/etc/.shellrc", etc_inode);
-
-      print_directory(usr_bin_inode);
-
-      // generate disk image file
-      FILE *f = fopen("disk.bin", "wb"); // open for writing in binary mode
-      if (!f) {
-          perror("Failed to open file");
-          return 1;
-      }
-
-      // fwrite(pointer, size_of_each_item, number_of_items, file_pointer)
-      size_t written = fwrite(disk, 1, TOTAL_DISK_SIZE, f);
-      if (written != TOTAL_DISK_SIZE) {
-          perror("Failed to write all bytes");
-          fclose(f);
-          return 1;
-      }
-      fclose(f);
-    }
-  }
-  else{
+  if(argc == 1){
     printf("usage: solfs -w : write disk\n");
     printf("       solfs -r : read disk image and show parameters\n");
     printf("       solfs -n : navigate disk\n");
   }
 
+  if(!strcmp(argv[1], "-r")){
+    if(argc > 2){
+      if(!strcmp(argv[2], "-b")) show_block_bitmap = 1;
+      if(!strcmp(argv[2], "-i")) show_inode_bitmap = 1;
+    }
+    if(argc > 3){
+      if(!strcmp(argv[3], "-b")) show_block_bitmap = 1;
+      if(!strcmp(argv[3], "-i")) show_inode_bitmap = 1;
+    }
+    read_partition();
+    exit(1);
+  }
+  if(!strcmp(argv[1], "-n")){
+    navigate();
+  }
+    // generate disk image
+  if(!strcmp(argv[1], "-w")){
+    // LOAD BOOTLOADER AND WRITE TO BOOT SECTOR
+    if(loadfile_bootloader("../software/obj/boot.obj", disk) == -1){
+      printf("> exiting...\n");
+      return 0;
+    };
+
+    // COPY MBR TABLE TO DISK
+    for(int i = 0; i < sizeof(mbr_data); i++){
+      *(mbr_p + i) = mbr_data[i];
+    }
+
+    // SET BOOTLOADER SIGNATURE
+    *(uint16_t *)(signature_p) = 0x55AA;
+
+    // SUPERBLOCK
+    // start block: 0
+    // start offset: 1024
+    // size: 1024 bytes
+    superblock.inodes_count      = NUM_INODES; // Total number of inodes in the filesystem  
+    superblock.blocks_count      = NUM_DATA_BLOCKS; // Total number of data blocks         
+    superblock.free_inodes_count = NUM_INODES; // Number of free inodes                 
+    superblock.free_blocks_count = NUM_DATA_BLOCKS; // Number of free blocks                
+    superblock.block_bitmap      = BLOCK_BITMAP_BLOCK_NUM; // Block ID of the **block bitmap**
+    superblock.inode_bitmap      = INODE_BITMAP_BLOCK_NUM; // Block ID of the **inode bitmap**
+    superblock.inode_table       = INODE_TABLE_BLOCK_NUM; // Starting block of **inode table**
+    superblock.first_data_block  = 0; // Block number of the first data block   
+    superblock.used_dirs_count   = 1; // Number of inodes allocated to directories
+    superblock.log_block_size    = 1; // Block size = 1024 << `s_log_block_size` 
+    superblock.mtime             = 0; // Last mount time (unix time)              
+    superblock.wtime             = 0; // Last write time (unix time)              
+    memset(superblock.uuid, 0, 16); // Unique ID of the filesystem            
+    strcpy(superblock.volume_name, "Sol-1 Volume"); // Label of the filesystem               
+    superblock.feature_flags     = 0; // Compatibility flags                  
+    *(struct superblock *)(superblock_p) = superblock;
+
+    
+    // BLOCK BITMAP
+    // start block: 2
+    // start offset: 4096
+    // size = 4 * 2048 = 8192 bytes
+    *(blocks_bitmap_p) = 0x01; // the very first bit is set to 1 so it can never be found as free
+    for(int i = 1; i < BLOCKS_BITMAP_SIZE; i++){
+      *(blocks_bitmap_p + i) = 0x00; // set each bitmap byte to 0
+    }
+
+    // INODE BITMAP
+    // start block: 6
+    // start offset: 12288
+    // size = 1 block = 2048 bytes
+    *(inode_bitmap_p) = 0x03; // inode bits 0, 1 are set to used so they can never be found as free
+    for(int i = 1; i < INODE_BITMAP_SIZE; i++){
+      *(inode_bitmap_p + i) = 0x00; // set each bitmap byte to 0
+    }
+
+    // INODE TABLE
+    // start block: 7
+    // start offset: 14336
+    // size = 1024 blocks = 2,097,152 bytes
+    inode_table_entry.mode        = 0; // File type and permissions 
+    inode_table_entry.uid         = 0; // Owner user ID
+    inode_table_entry.size        = 0; // Size of the file in bytes
+    inode_table_entry.atime       = 0; // Last access time (timestamp)
+    inode_table_entry.ctime       = 0; // Creation time (timestamp)
+    inode_table_entry.mtime       = 0; // Last modification time (timestamp)
+    inode_table_entry.dtime       = 0; // Deletion time (timestamp) 
+    inode_table_entry.gid         = 0; // Group ID         
+    inode_table_entry.links_count = 0; // Number of hard links
+    inode_table_entry.blocks      = 0; // Number of 512-byte blocks allocated 
+    inode_table_entry.flags       = 0; // File flags
+    memset(inode_table_entry.block, 0, NUM_INODE_BLOCK_POINTERS * 2); // Pointers to data blocks (47 direct)
+
+    // reset entire inode table to unused
+    for(int i = 0; i < INODE_TABLE_NUM_ENTRIES; i++){
+      *(inode_table_p + i) = inode_table_entry;
+    }
+
+    // CREATE ROOT DIRECTORY
+    memset(&root_inode, 0, sizeof(root_inode)); // reset entire inode
+    root_inode.mode        = 0x41ED;   // directory (0x4000) + rwxr-xr-x (0x1ED)
+    root_inode.uid         = 0;        // root user
+    root_inode.gid         = 0;
+    root_inode.size        = 2048;     // one block for the directory
+    root_inode.atime       = root_inode.ctime = root_inode.mtime = time(NULL);
+    root_inode.links_count = 2;        // "." and parent ("..")
+    root_inode.blocks      = 1; 
+    root_inode.block[0]    = block_bitmap_alloc(); // allocate block for root and set pointer in inode entry (will allocate block 1)
+    // allocate inode bitmap and set inode table entry for root
+    create_inode(root_inode); // this will allocate inode #2 for root
+    // ADD . AND .. ENTRIES TO ROOT DIRECTORY
+    init_directory(root_inode.block[0], 2, 2);
+    printf("> root directory created: %d\n", 2);
+
+    // create /usr directory
+    uint16_t usr_inode  = create_directory("usr",   2); // create /usr directory
+    uint16_t tmp_inode  = create_directory("tmp",   2); // create /usr directory
+    uint16_t etc_inode  = create_directory("etc",   2); // create /usr directory
+    uint16_t bin_inode  = create_directory("bin",   2); // create /usr directory
+    uint16_t sbin_inode = create_directory("sbin",  2); // create /usr directory
+    uint16_t boot_inode = create_directory("boot",  2); // create /usr directory
+    uint16_t asm_inode  = create_directory("asm",   2); // create /usr directory
+    uint16_t cc_inode   = create_directory("cc",    2); // create /usr directory
+    uint16_t home_inode = create_directory("home",  2); // create /usr directory
+    uint16_t src_inode  = create_directory("src",   2); // create /usr directory
+
+    uint16_t usr_bin_inode   = create_directory("bin", usr_inode);
+    uint16_t usr_sbin_inode  = create_directory("sbin",  usr_inode);
+    uint16_t usr_games_inode = create_directory("games", usr_inode);
+    uint16_t usr_share_inode = create_directory("share", usr_inode);
+    uint16_t usr_local_inode = create_directory("local", usr_inode);
+
+    create_file("ls", "../software/obj/ls.obj", usr_bin_inode);
+    create_file("mkbin", "../software/obj/mkbin.obj", usr_bin_inode);
+    create_file("mkdir", "../software/obj/mkdir.obj", usr_bin_inode);
+    create_file("rmdir", "../software/obj/rmdir.obj", usr_bin_inode);
+    create_file("cat", "../software/obj/cat.obj", usr_bin_inode);
+    create_file("clear", "../software/obj/clear.obj", usr_bin_inode);
+    create_file("chmod", "../software/obj/chmod.obj", usr_bin_inode);
+    create_file("date", "../software/obj/date.obj", usr_bin_inode);
+    create_file("echo", "../software/obj/echo.obj", usr_bin_inode);
+    create_file("ed", "../software/obj/ed.obj", usr_bin_inode);
+    create_file("mv", "../software/obj/mv.obj", usr_bin_inode);
+    create_file("ps", "../software/obj/ps.obj", usr_bin_inode);
+    create_file("pwd", "../software/obj/pwd.obj", usr_bin_inode);
+    create_file("reboot", "../software/obj/reboot.obj", usr_bin_inode);
+    create_file("rm", "../software/obj/rm.obj", usr_bin_inode);
+    create_file("rmdir", "../software/obj/rmdir.obj", usr_bin_inode);
+
+    create_file("shell", "../software/obj/shell.obj", usr_sbin_inode);
+
+    create_file("boot", "../software/obj/boot.obj", boot_inode);
+    create_file("kernel1.0", "../software/obj/kernel.obj", boot_inode);
+
+    create_file("shell.cfg", "../solarium/etc/shell.cfg", etc_inode);
+    create_file(".shellrc", "../solarium/etc/.shellrc", etc_inode);
+
+    // generate disk image file
+    FILE *f = fopen("disk.bin", "wb"); // open for writing in binary mode
+    if (!f) {
+        perror("Failed to open file");
+        return 1;
+    }
+
+    // fwrite(pointer, size_of_each_item, number_of_items, file_pointer)
+    size_t written = fwrite(disk, 1, TOTAL_DISK_SIZE, f);
+    if (written != TOTAL_DISK_SIZE) {
+        perror("Failed to write all bytes");
+        fclose(f);
+        return 1;
+    }
+    fclose(f);
+  }
 
   return 1;
 }
@@ -618,6 +616,10 @@ void read_partition(){
   printf("Feature Flags: %x\n", feature_flags);
 
   printf("\n");
+  print_inode_table();
+  printf("\n\n");
+  print_bitmap_table();
+  printf("\n");
 
   // BLOCK BITMAP
   // start block: 2
@@ -644,6 +646,50 @@ void read_partition(){
   }
 }
 
+void print_inode_table(){
+  struct inode_table_entry *inode_entry_p;
+  uint8_t inode_byte;
+  uint32_t total_num_bytes_used = 0;
+
+  printf("*** inode table ***\n");
+  // run through inode bitmap bytes 0 to 2047 (NUM_INODES / 8) == (16384 / 8) == 2048
+  for(int i = 0; i < NUM_INODES / 8; i++){
+    inode_byte = *(inode_bitmap_p + i); // read byte
+    for(int j = 0; j < 8; j++){ 
+      if((inode_byte & (0x01 << j))){
+        inode_entry_p = inode_table_p + i * 8 + j;
+        printf("inode: %d, num blocks: %d( ", i * 8 + j, inode_entry_p->blocks);
+        for(int i = 0; i < inode_entry_p->blocks; i++){
+          if(inode_entry_p->block[i]) printf("%d ", inode_entry_p->block[i]);
+          total_num_bytes_used += BLOCK_SIZE;
+        }
+        printf("), mode: %x, size: %d bytes\n", inode_entry_p->mode, inode_entry_p->size);
+      }
+    }
+  }
+
+  printf("\ndisk used: %d bytes\n", total_num_bytes_used);
+//  printf("\n\n*** inode table bit layout ***\n");
+//  // run through inode bitmap bytes 0 to 2047 (NUM_INODES / 8) == (16384 / 8) == 2048
+//  for(int i = 0; i < NUM_INODES / 8; i++){
+//    inode_byte = *(inode_bitmap_p + i); // read byte
+//    for(int j = 0; j < 8; j++){ 
+//      printf("%1d", (inode_byte & (0x01 << j)) == 0 ? 0 : 1);
+//    }
+//  }
+
+}
+
+void print_bitmap_table(){
+  uint8_t data_byte;
+
+  printf("*** data blocks bitmap ***\n");
+  for(int i = 0; i < NUM_DATA_BLOCKS / 8; i++){
+    data_byte = *(blocks_bitmap_p + i); // read byte
+    printf("%02x ", data_byte);
+  }
+}
+
 uint16_t inode_bitmap_alloc(){
   uint8_t inode_byte;
 
@@ -651,8 +697,10 @@ uint16_t inode_bitmap_alloc(){
   for(int i = 0; i < NUM_INODES / 8; i++){
     inode_byte = *(inode_bitmap_p + i); // read byte
     for(int j = 0; j < 8; j++){ 
-      *(inode_bitmap_p + i) = *(inode_bitmap_p + i) | (0x01 << j); // set inode as used
-      if((inode_byte >> j) == 0) return i * 8 + j; // check each bit inside the byte
+      if((inode_byte & (0x01 << j)) == 0){
+        *(inode_bitmap_p + i) = *(inode_bitmap_p + i) | (0x01 << j); // set inode as used
+        return i * 8 + j; // check each bit inside the byte
+      }
     }
   }
 
@@ -666,7 +714,7 @@ uint16_t block_bitmap_alloc(){
   for(int i = 0; i < NUM_DATA_BLOCKS / 8; i++){
     block_byte = *(blocks_bitmap_p + i); // read byte
     for(int j = 0; j < 8; j++){ 
-      if((block_byte >> j) == 0){
+      if((block_byte & (0x01 << j)) == 0){
         *(blocks_bitmap_p + i) = *(blocks_bitmap_p + i) | (0x01 << j); // set block as used
         superblock_free_blocks_dec();
         memset(data_blocks_p + (i * 8 + j), 0, BLOCK_SIZE); // fill the data b,ock with 0's
@@ -680,11 +728,10 @@ uint16_t block_bitmap_alloc(){
 
 uint16_t create_inode(struct inode_table_entry inode_entry){
   uint16_t inode_index;
-  struct superblock *sp = (struct superblock *)superblock_p;
 
   if((inode_index = inode_bitmap_alloc()) != -1){
     *(inode_table_p + inode_index) = inode_entry;
-    sp->free_inodes_count--; // decrease the number of free inodes in superblock
+    superblock_free_inodes_dec();
     return inode_index;
   }
 
@@ -790,10 +837,8 @@ uint16_t create_file(char *name, char * filename, uint16_t parent_dir_inode){
   new_inode.atime       = new_inode.ctime = new_inode.mtime = time(NULL);
   new_inode.links_count = 1;
   new_inode.blocks      = num_blocks_needed; // number of data blocks used by this file
-  for(int i = 0; i < num_blocks_needed; i++){ // allocate data blocks for file
+  for(int i = 0; i < num_blocks_needed; i++) // allocate data blocks for file
     new_inode.block[i] = block_bitmap_alloc();
-    superblock_free_blocks_dec(); // decrease number of free blocks 
-  }
   inode_num = create_inode(new_inode); // create and insert new inode into inode table
 
   superblock_free_inodes_dec(); // decrease total number of free inodes in superblock
@@ -806,7 +851,7 @@ uint16_t create_file(char *name, char * filename, uint16_t parent_dir_inode){
 
   // now add an entry for this file into the parent directory
   // inode(2) | name(62) |   total size = 64
-  printf("  now adding file entry into directory: %d\n", parent_dir_inode);
+  printf("  new inode for file: %d. now adding file entry into directory with inode: %d\n", inode_num, parent_dir_inode);
   for(int i = 0; i < NUM_INODE_BLOCK_POINTERS; i++){ // loop through each of the direct pointer blocks
     parent_block_num = (inode_table_p + parent_dir_inode)->block[i];
     if(parent_block_num == 0){ // if the block we are working with does not actually exist, then allocate it
