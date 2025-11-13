@@ -85,83 +85,84 @@ _block_group_descriptor  .equ 2048
 text_org          .equ $400          ; code origin address for all user processes
 
 
-; ------------------------------------------------------------------------------------------------------------------;
-; DISK LAYOUT:
-; | Metadata               | Size (bytes)    | Blocks (2048 bytes)              |
-; | ---------------------- | --------------- | -------------------------------- |
-; | Bootloader/MBR         | 512 bytes       | 0.25 (1 sector)                  |
-; | Superblock             | 1024 bytes      | 1 block (2048 bytes, must align) |
-; | Block Group Descriptor | \~32 bytes      | 1 block (2048 bytes)             |
-; | Block Bitmap           | 16,384 bytes    | 8 blocks                         |
-; | Inode Bitmap           | 2,048 bytes     | 1 block                          |
-; | Inode Table            | 2,097,152 bytes | 1024 blocks                      |
-; 
-; first 512 bytes: bootloader from 0 to 445, MBR partition table from 446 to 511 (64 bytes)
-; up to 4 partitions, each 16 bytes long
-; MBR:
-; Byte | Description
-; -----|----------------------------
-; 0    | Boot flag (0x80 active, 0x00 inactive)
-; 1-3  | Start CHS (head, sector, cylinder)
-; 4    | Partition type (filesystem ID)
-;   0x83 = Linux native (ext2/3/4)
-;   0x07 = NTFS/exFAT
-;   0x0B = FAT32 CHS
-;   0x0C = FAT32 LBA
-;   0x05 = Extended partition
-; 5-7  | End CHS
-; 8-11 | Start LBA (little endian)
-; 12-15| Size in sectors (little endian)
-; 
-; 
-; SUPERBLOCK:
-; | Field                 | Description                              | Typical Size (bytes) | Notes                           |
-; | --------------------- | ---------------------------------------- | -------------------- | ------------------------------- |
-; | `s_inodes_count`      | Total number of inodes in the filesystem | 4                    | 32-bit unsigned int             |
-; | `s_blocks_count`      | Total number of data blocks              | 4                    | 32-bit unsigned int             |
-; | `s_free_inodes_count` | Number of free inodes                    | 4                    | 32-bit unsigned int             |
-; | `s_free_blocks_count` | Number of free blocks                    | 4                    | 32-bit unsigned int             |
-; | `s_first_data_block`  | Block number of the first data block     | 4                    | 32-bit unsigned int             |
-; | `s_log_block_size`    | Block size = 1024 << `s_log_block_size`  | 4                    | 32-bit unsigned int             |
-; | `s_inode_size`        | Size of each inode (in bytes)            | 2                    | 16-bit unsigned int             |
-; | `s_magic`             | Filesystem signature (`0xEF53`)          | 2                    | 16-bit unsigned int             |
-; | `s_mtime`             | Last mount time                          | 4                    | 32-bit unsigned int (Unix time) |
-; | `s_wtime`             | Last write time                          | 4                    | 32-bit unsigned int (Unix time) |
-; | `s_uuid`              | Unique ID of the filesystem              | 16                   | 128-bit UUID                    |
-; | `s_volume_name`       | Label of the filesystem                  | 16                   | Usually ASCII, padded           |
-; | `s_feature_flags`     | Compatibility flags                      | 4                    | 32-bit unsigned int             |
-
-; BLOCK GROUP DESCRIPTOR starts at 2048
-; | Offset | Size (bytes) | Field Name             | Description                               |
-; | ------ | ------------ | ---------------------- | ----------------------------------------- |
-; | 0x00   | 4            | `bg_block_bitmap`      | Block ID of the **block bitmap**          |
-; | 0x04   | 4            | `bg_inode_bitmap`      | Block ID of the **inode bitmap**          |
-; | 0x08   | 4            | `bg_inode_table`       | Starting block of **inode table**         |
-; | 0x0C   | 2            | `bg_free_blocks_count` | Free blocks in this group                 |
-; | 0x0E   | 2            | `bg_free_inodes_count` | Free inodes in this group                 |
-; | 0x10   | 2            | `bg_used_dirs_count`   | Number of inodes allocated to directories |
-; | 0x12   | 2            | (padding or reserved)  | Usually zero                              |
-; | 0x14   | 12           | Reserved / padding     | Reserved for future use                   |
-
-; 
-; inode for root dir is #2, #0 and #1 not used
-; block size: 2048
-
-; inode-table format:
-; | Field         | Size (bytes) | Description                                                                                  |
-; | ------------- | ------------ | -------------------------------------------------------------------------------------------- |
-; | `mode`        | 2            | File type and permissions                                                                    |
-; | `uid`         | 2            | Owner user ID                                                                                |
-; | `size`        | 4            | Size of the file in bytes                                                                    |
-; | `atime`       | 4            | Last access time (timestamp)                                                                 |
-; | `ctime`       | 4            | Creation time (timestamp)                                                                    |
-; | `mtime`       | 4            | Last modification time (timestamp)                                                           |
-; | `dtime`       | 4            | Deletion time (timestamp)                                                                    |
-; | `gid`         | 2            | Group ID                                                                                     |
-; | `links_count` | 2            | Number of hard links                                                                         |
-; | `blocks`      | 4            | Number of 512-byte blocks allocated                                                          |
-; | `flags`       | 4            | File flags                                                                                   |
-; | `block`       | 15 x 4 = 60  | Pointers to data blocks (12 direct, 1 single indirect, 1 double indirect, 1 triple indirect) |
+;  ------------------------------------------------------------------------------------------------------------------;
+;  DISK LAYOUT:
+;  Metadata               | Size (bytes)      | Blocks (2048 bytes)              |Start Block |  Comment
+;  ---------------------- | ----------------- | -------------------------------- |------------|-----------------------------------
+;  Bootloader/MBR         | 512 bytes         | 0.25 (1 sector)                  |  0         |
+;  Superblock             | 1024 bytes        | 1 block (2048 bytes, must align) |  0         |
+;                         |                   | 1 block (2048 bytes)             |  1         | reserved
+;  Block Bitmap           | 8,192 bytes       | 4 blocks                         |  2         | 4*2048*8 = 4*16384 = 65536 raw data blocks.  65536*2048 bytes = 134217728 bytes of disk space = 128MB
+;  Inode Bitmap           | 2,048 bytes       | 1 block                          |  6         | 2048*8=16384. total of 16384 bits, meaning 16384 inodes, which is 1 inode per 8KB of disk space
+;  Inode Table            | 2,097,152 bytes   | 1024 blocks                      |  7         | 128bytes per inode entry. 2097152 / 128 = 16384 inodes
+;  Data Blocks            | 134,217,728 bytes | 65528 blocks                     | 1031       | 65528 blocks = 134,201,344 bytes
+;  
+;  first 512 bytes: bootloader from 0 to 445, MBR partition table from 446 to 511 (64 bytes)
+;  up to 4 partitions, each 16 bytes long
+;  MBR:
+;  Byte | Description
+;  -----|----------------------------
+;  0    | Boot flag (0x80 active, 0x00 inactive)
+;  1-3  | Start CHS (head, sector, cylinder)
+;  4    | Partition type (filesystem ID)
+;    0x83 = Linux native (ext2/3/4)
+;    0x07 = NTFS/exFAT
+;    0x0B = FAT32 CHS
+;    0x0C = FAT32 LBA
+;    0x05 = Extended partition
+;    0x86 = Sol-1 partition
+;  5-7  | End CHS
+;  8-11 | Start LBA (little endian)
+;  12-15| Size in sectors (little endian)
+;  
+;  
+;  the superblock describers the filesystem as a whole such as inode count, free inode count, location of the raw data bitmap, inode table, etc.  
+;  SUPERBLOCK:
+;  | Field               | Description                               | Typical Size (bytes) | Notes                           |
+;  | ------------------- | ----------------------------------------- | -------------------- | ------------------------------- |
+;  | inodes_count        | Total number of inodes in the filesystem  | 2                    | 16-bit unsigned int             |
+;  | blocks_count        | Total number of data blocks               | 2                    | 16-bit unsigned int             |
+;  | free_inodes_count   | Number of free inodes                     | 2                    | 16-bit unsigned int             |
+;  | free_blocks_count   | Number of free blocks                     | 2                    | 16-bit unsigned int             |
+;  | block_bitmap        | Block ID of the **block bitmap**          | 2                    | 16-bit unsigned int
+;  | inode_bitmap        | Block ID of the **inode bitmap**          | 2                    | 16-bit unsigned int
+;  | inode_table         | Starting block of **inode table**         | 2                    | 16-bit unsigned int
+;  | first_data_block    | Block number of the first data block      | 2                    | 16-bit unsigned int             |
+;  | used_dirs_count     | Number of inodes allocated to directories | 2
+;  | log_block_size      | Block size = 1024 << `s_log_block_size    | 2                    | 16-bit unsigned int             |
+;  | mtime               | Last mount time                           | 4                    | 32-bit unsigned int (Unix time) |
+;  | wtime               | Last write time                           | 4                    | 32-bit unsigned int (Unix time) |
+;  | uuid                | Unique ID of the filesystem               | 16                   | 128-bit UUID                    |
+;  | volume_name         | Label of the filesystem                   | 16                   | Usually ASCII, padded           |
+;  | feature_flags       | Compatibility flags                       | 4                    | 32-bit unsigned int             |
+;  
+;  inode for root dir is #2, #0 and #1 not used
+;  raw data block #0 is not used. because 0 as a block ID means not used
+;  block size: 2048
+;  inode-table format:
+;  | Field         | Size (bytes) | Description                                                                                  |
+;  | ------------- | ------------ | -------------------------------------------------------------------------------------------- |
+;  | `mode`        | 2            | File type and permissions                                                                    |
+;  | `uid`         | 2            | Owner user ID                                                                                |
+;  | `size`        | 4            | Size of the file in bytes                                                                    |
+;  | `atime`       | 4            | Last access time (timestamp)                                                                 |
+;  | `ctime`       | 4            | Creation time (timestamp)                                                                    |
+;  | `mtime`       | 4            | Last modification time (timestamp)                                                           |
+;  | `dtime`       | 4            | Deletion time (timestamp)                                                                    |
+;  | `gid`         | 2            | Group ID                                                                                     |
+;  | `links_count` | 2            | Number of hard links                                                                         |
+;  | `blocks`      | 2            | Number of 2048-byte blocks allocated                                                         |
+;  | `flags`       | 4            | File flags                                                                                   |
+;  | `block`       | 47 * 2 = 94  | Pointers to data blocks (47 direct only) 
+;
+;
+;  DIRECTORY ENTRY
+;  this is the structure for file entries inside a directory.
+;  2048 / 64 = 32 entries
+;
+;  each entry is 64 bytes wide
+;  uint16_t inode;      // Inode number (0 if entry is unused)
+;  char     name[62];   // File name (null terminated)
 
 
 ; file entry attributes
@@ -417,103 +418,7 @@ ctrlz:
   jmp syscall_pause_proc      ; pause current process and go back to the shell
 
 sys_mkfs:
-; master boot record
-; partition 0
-  mov byte[transient_area + _mbr + 0 +  0], $80      ; boot flag, 0x80 = active
-  mov word[transient_area + _mbr + 0 +  1], $0000    ; start of CHS
-  mov byte[transient_area + _mbr + 0 +  3], $00      ; start of CHS
-  mov byte[transient_area + _mbr + 0 +  4], $83      ; artition type, 0x83 = linux/ext2
-  mov word[transient_area + _mbr + 0 +  5], $0000    ; end of CHS
-  mov byte[transient_area + _mbr + 0 +  7], $00      ; end of CHS
-  mov word[transient_area + _mbr + 0 +  8], $0001    ; start LBA of file system, at sector 1
-  mov word[transient_area + _mbr + 0 + 10], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + _mbr + 0 + 12], $0000    ; size of file system in sectors/lba, 256MB
-  mov word[transient_area + _mbr + 0 + 14], $0008    ; 256MB = 524288 sectors
-; partition 1             
-  mov byte[transient_area + _mbr + 16 +  0], $00      ; boot flag, 0x00 = inactive
-  mov word[transient_area + _mbr + 16 +  1], $0000    ; start of CHS
-  mov byte[transient_area + _mbr + 16 +  3], $00      ; start of CHS
-  mov byte[transient_area + _mbr + 16 +  4], $83      ; artition type, 0x83 = linux/ext2
-  mov word[transient_area + _mbr + 16 +  5], $0000    ; end of CHS
-  mov byte[transient_area + _mbr + 16 +  7], $00      ; end of CHS
-  mov word[transient_area + _mbr + 16 +  8], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + _mbr + 16 + 10], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + _mbr + 16 + 12], $0000    ; size of file system in sectors/lba, 256MB
-  mov word[transient_area + _mbr + 16 + 14], $0000    ; 256MB = 524288 sectors
-; partition 2             
-  mov byte[transient_area + _mbr + 32 +  0], $00      ; boot flag, 0x00 = inactive
-  mov word[transient_area + _mbr + 32 +  1], $0000    ; start of CHS
-  mov byte[transient_area + _mbr + 32 +  3], $00      ; start of CHS
-  mov byte[transient_area + _mbr + 32 +  4], $83      ; artition type, 0x83 = linux/ext2
-  mov word[transient_area + _mbr + 32 +  5], $0000    ; end of CHS
-  mov byte[transient_area + _mbr + 32 +  7], $00      ; end of CHS
-  mov word[transient_area + _mbr + 32 +  8], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + _mbr + 32 + 10], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + _mbr + 32 + 12], $0000    ; size of file system in sectors/lba, 256MB
-  mov word[transient_area + _mbr + 32 + 14], $0000    ; 256MB = 524288 sectors
-; partition 3             
-  mov byte[transient_area + _mbr + 48 +  0], $00      ; boot flag, 0x00 = inactive
-  mov word[transient_area + _mbr + 48 +  1], $0000    ; start of CHS
-  mov byte[transient_area + _mbr + 48 +  3], $00      ; start of CHS
-  mov byte[transient_area + _mbr + 48 +  4], $83      ; artition type, 0x83 = linux/ext2
-  mov word[transient_area + _mbr + 48 +  5], $0000    ; end of CHS
-  mov byte[transient_area + _mbr + 48 +  7], $00      ; end of CHS
-  mov word[transient_area + _mbr + 48 +  8], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + _mbr + 48 + 10], $0000    ; start LBA of file system, at sector 1
-  mov word[transient_area + _mbr + 48 + 12], $0000    ; size of file system in sectors/lba, 256MB
-  mov word[transient_area + _mbr + 48 + 14], $0000    ; 256MB = 524288 sectors
-; --- MBR signature ---
-  mov word [510], $AA55          ; Must be present for BIOS to boot
-
-; SUPERBLOCK:
-  mov word[transient_area + _superblock +  0], $4000  ;
-  mov word[transient_area + _superblock +  2], $0000  ; s_inodes_count = 16384
-  mov word[transient_area + _superblock +  4], $0000  ;
-  mov word[transient_area + _superblock +  6], $0002  ; s_blocks_count = 131072 blocks = $20000
-  mov word[transient_area + _superblock +  8], $4000  ;
-  mov word[transient_area + _superblock + 10], $0000  ; s_free_inodes_count = 16384 inodes = $4000
-  mov word[transient_area + _superblock + 12], $0000  ;
-  mov word[transient_area + _superblock + 14], $0002  ; s_free_blocks_count = 131072 blocks = $20000
-  mov word[transient_area + _superblock + 16], $0000  ;
-  mov word[transient_area + _superblock + 18], $0000  ; s_first_data_block = 0 (because superblock is contained within first 2048 byte block)
-  mov word[transient_area + _superblock + 20], $0001  ;
-  mov word[transient_area + _superblock + 22], $0000  ; s_log_block_size = 1 (1024 << 1 == 2048)
-  mov word[transient_area + _superblock + 24], $0080  ; s_inode_size = 128
-  mov word[transient_area + _superblock + 26], $EF53  ; s_magic = ef53
-  mov word[transient_area + _superblock + 28], $0000  ; s_mtime
-  mov word[transient_area + _superblock + 30], $0000  ; s_wtime
-  mov word[transient_area + _superblock + 32], $0000  ; s_uuid
-  mov word[transient_area + _superblock + 34], $0000  ; s_uuid
-  mov word[transient_area + _superblock + 36], $0000  ; s_uuid
-  mov word[transient_area + _superblock + 38], $0000  ; s_uuid
-  mov word[transient_area + _superblock + 40], $0000  ; s_uuid
-  mov word[transient_area + _superblock + 42], $0000  ; s_uuid
-  mov word[transient_area + _superblock + 44], $0000  ; s_uuid
-  mov word[transient_area + _superblock + 46], $0000  ; s_uuid
-  mov word[transient_area + _superblock + 48], $0000  ; s_volume_name
-  mov word[transient_area + _superblock + 50], $0000  ; s_volume_name
-  mov word[transient_area + _superblock + 52], $0000  ; s_volume_name
-  mov word[transient_area + _superblock + 54], $0000  ; s_volume_name
-  mov word[transient_area + _superblock + 56], $0000  ; s_volume_name
-  mov word[transient_area + _superblock + 58], $0000  ; s_volume_name
-  mov word[transient_area + _superblock + 60], $0000  ; s_volume_name
-  mov word[transient_area + _superblock + 62], $0000  ; s_volume_name
-  mov word[transient_area + _superblock + 62], $0000  ;
-  mov word[transient_area + _superblock + 62], $0000  ; s_feature_flags
-
-; BLOCK GROUP DESCRIPTOR starts at 2048
-  mov word[transient_area + _block_group_descriptor +  0], $0002  ; bg_block_bitmap
-  mov word[transient_area + _block_group_descriptor +  2], $0000  ; bg_block_bitmap
-  mov word[transient_area + _block_group_descriptor +  4], $000A  ; bg_inode_bitmap
-  mov word[transient_area + _block_group_descriptor +  6], $0000  ; bg_inode_bitmap
-  mov word[transient_area + _block_group_descriptor +  8], $000B  ; bg_inode_table
-  mov word[transient_area + _block_group_descriptor + 10], $0000  ; bg_inode_table
-  mov word[transient_area + _block_group_descriptor + 12], $0000  ; bg_free_blocks_count = 0x200_0000
-  mov word[transient_area + _block_group_descriptor + 14], $0200  ; bg_free_inodes_count
-  mov word[transient_area + _block_group_descriptor + 16], $0000  ; bg_used_dirs_count
-  mov word[transient_area + _block_group_descriptor + 18], $0000  ; reserved
-
-
+  sysret
 
 ; ------------------------------------------------------------------------------------------------------------------;
 ; floppy drive syscalls
