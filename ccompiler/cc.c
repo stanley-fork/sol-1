@@ -1261,8 +1261,6 @@ t_type get_type(){
     type.sign_modifier = SIGNMOD_SIGNED; // set as signed by default             
     type.size_modifier = SIZEMOD_NORMAL; // set as signed by default               
     type.is_constant = FALSE;
-    type.is_func_ptr = FALSE;
-    type.ind_level = 0;
     while(curr_token.tok == SIGNED || curr_token.tok == UNSIGNED || curr_token.tok == LONG || curr_token.tok == SHORT){    
            if(curr_token.tok == SIGNED)   type.sign_modifier = SIGNMOD_SIGNED;         
       else if(curr_token.tok == UNSIGNED) type.sign_modifier = SIGNMOD_UNSIGNED;            
@@ -1291,13 +1289,10 @@ t_type get_type(){
         error(ERR_FATAL, "Undeclared union: %s", curr_token.token_str);
       type.struct_enum_union_id = struct_enum_union_id;
     }
-    // check if is pointer
+    // check if is function pointer
     get();
-    if(curr_token.tok == STAR){
-      while(curr_token.tok == STAR){
-        get();
-        type.ind_level++;
-      }
+    if(curr_token.tok == OPENING_PAREN){
+      type.is_func_ptr = TRUE;
     }
     back();
   }
