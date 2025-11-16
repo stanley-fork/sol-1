@@ -1289,12 +1289,6 @@ t_type get_type(){
         error(ERR_FATAL, "Undeclared union: %s", curr_token.token_str);
       type.struct_enum_union_id = struct_enum_union_id;
     }
-    // check if is function pointer
-    get();
-    if(curr_token.tok == OPENING_PAREN){
-      type.is_func_ptr = TRUE;
-    }
-    back();
   }
 
   return type;
